@@ -726,9 +726,10 @@ Player movement occurs as a result of packet events, which
 happen before SV_Frame is called
 ==================
 */
-void SV_Frame( int msec ) {
-	int		frameMsec;
-	int		startTime;
+void SV_Frame( float msec ) {
+	float		frameMsec;
+	float		startTime;
+
 
 	// the menu kills the server with this cvar
 	if ( sv_killserver->integer ) {

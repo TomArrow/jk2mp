@@ -383,6 +383,8 @@ void SCR_DrawDemoRecording( void ) {
 	const float	ratio = cls.ratioFix;
 	char string[1024];
 	int pos;
+	int intRealTime;
+	intRealTime = cls.realtime;
 
 	if ( !clc.demorecording ) {
 		return;
@@ -390,12 +392,14 @@ void SCR_DrawDemoRecording( void ) {
 	if ( clc.spDemoRecording ) {
 		return;
 	}
+
+	
 	
 	if (cl_drawRecording->integer >= 2 && cls.recordingShader) {
 		vec4_t colour = {1.0f, 0.1f, 0.1f, 1.0f};
 		const float size = 10.0f;
 		re.SetColor(colour);
-		if ((cl_drawRecording->integer == 3 && (cls.realtime % 1536) < 768) || cl_drawRecording->integer != 3)
+		if ((cl_drawRecording->integer == 3 && (intRealTime % 1536) < 768) || cl_drawRecording->integer != 3)
 			re.DrawStretchPic(0-size*ratio/1.84f, SCREEN_HEIGHT-size*1.92f, size*3*ratio, size*3, 0, 0, 1, 1, cls.recordingShader);
 		SCR_DrawStringExt2(0+(size+4)*ratio, SCREEN_HEIGHT-size-2, size*ratio, size, "REC", colour, qtrue, qfalse);
 	} else if (cl_drawRecording->integer) {
@@ -540,7 +544,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		case CA_CONNECTED:
 			// connecting clients will only show the connection dialog
 			// refresh to update the time
-			VM_Call( uivm, UI_REFRESH, cls.realtime );
+			VM_Call(uivm, UI_REFRESH, (int)cls.realtime);
 			VM_Call( uivm, UI_DRAW_CONNECT_SCREEN, qfalse );
 			break;
 		case CA_LOADING:
@@ -551,7 +555,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 			// also draw the connection information, so it doesn't
 			// flash away too briefly on local or lan games
 			// refresh to update the time
-			VM_Call( uivm, UI_REFRESH, cls.realtime );
+			VM_Call( uivm, UI_REFRESH, (int) cls.realtime );
 			VM_Call( uivm, UI_DRAW_CONNECT_SCREEN, qtrue );
 			break;
 		case CA_ACTIVE:
@@ -563,7 +567,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 
 	// the menu draws next
 	if ( cls.keyCatchers & KEYCATCH_UI && uivm ) {
-		VM_Call( uivm, UI_REFRESH, cls.realtime );
+		VM_Call(uivm, UI_REFRESH, (int)cls.realtime);
 	}
 
 	// console draws next

@@ -177,7 +177,7 @@ typedef enum {
 //	void	UI_MouseEvent( int dx, int dy );
 
 	UI_REFRESH,
-//	void	UI_Refresh( int time );
+//	void	UI_Refresh( float time );
 
 	UI_IS_FULLSCREEN,
 //	qboolean UI_IsFullscreen( void );

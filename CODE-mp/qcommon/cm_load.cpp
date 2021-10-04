@@ -115,8 +115,9 @@ void CMod_LoadSubmodels( lump_t *l ) {
 	cm.cmodels = (struct cmodel_s *)Hunk_Alloc( count * sizeof( *cm.cmodels ), h_high );
 	cm.numSubModels = count;
 
-	if ( count > MAX_SUBMODELS ) {
-		Com_Error( ERR_DROP, "MAX_SUBMODELS exceeded" );
+	if (count > MAX_SUBMODELS) {
+		//Com_Error( ERR_DROP, "MAX_SUBMODELS exceeded" );  //TriForce: SP Fix
+		count = MAX_SUBMODELS - 1; //TriForce: SP Fix
 	}
 
 	for ( i=0 ; i<count ; i++, in++, out++)
@@ -762,13 +763,15 @@ cmodel_t	*CM_ClipHandleToModel( clipHandle_t handle ) {
 	if ( handle == BOX_MODEL_HANDLE ) {
 		return &box_model;
 	}
-	if ( handle < MAX_SUBMODELS ) {
-		Com_Error( ERR_DROP, "CM_ClipHandleToModel: bad handle %i < %i < %i", 
-			cm.numSubModels, handle, MAX_SUBMODELS );
+	//TriForce: SP Fix
+	if (handle < MAX_SUBMODELS) {
+		// Com_Error( ERR_DROP, "CM_ClipHandleToModel: bad handle %i < %i < %i", cm.numSubModels, handle, MAX_SUBMODELS ); //TriForce: SP Fix
+		return &box_model;
 	}
-	Com_Error( ERR_DROP, "CM_ClipHandleToModel: bad handle %i", handle + MAX_SUBMODELS );
-
-	return NULL;
+	//Com_Error( ERR_DROP, "CM_ClipHandleToModel: bad handle %i", handle + MAX_SUBMODELS ); //TriForce: SP Fix
+	return &box_model;
+	//return NULL; //TriForce: SP Fix
+	//TriForce: SP Fix
 
 }
 

@@ -5,13 +5,24 @@ extern GLuint pboIds[2];
 #endif
 void R_MME_GetShot( void* output ) {
 #ifdef JEDIACADEMY_GLOW
+	int rollingShutterFactor = 1;
+	static int rollingShutterProgress = rollingShutterFactor-1;
+
+
+
+	//Com_Printf("Current progress: %d\n", rollingShutterProgress);
+
+	void* displacedOutput = (byte*)output + rollingShutterProgress * 3 * glConfig.vidWidth*glConfig.vidHeight / rollingShutterFactor;
+
+	//+ 3*glConfig.vidWidth*glConfig.vidHeight / 10
+
 	if (!mme_pbo->integer || r_stereoSeparation->value != 0) {
-		qglReadPixels( 0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_RGB, GL_UNSIGNED_BYTE, output ); 
+		qglReadPixels(0, glConfig.vidHeight / rollingShutterFactor * rollingShutterProgress, glConfig.vidWidth, glConfig.vidHeight / rollingShutterFactor, GL_RGB, GL_UNSIGNED_BYTE, displacedOutput);
 	} else {
 		static int index = 0;
 		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[index]);
 		index = index ^ 1;
-		qglReadPixels( 0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_RGB, GL_UNSIGNED_BYTE, 0 );
+		qglReadPixels(0, glConfig.vidHeight / rollingShutterFactor * rollingShutterProgress, glConfig.vidWidth, glConfig.vidHeight / rollingShutterFactor, GL_RGB, GL_UNSIGNED_BYTE, 0);
 
 		// map the PBO to process its data by CPU
 		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[index]);
@@ -23,6 +34,9 @@ void R_MME_GetShot( void* output ) {
 		// back to conventional pixel operation
 		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
 	}
+
+	rollingShutterProgress--;
+	if (rollingShutterProgress == -1) rollingShutterProgress = rollingShutterFactor - 1;
 #else
 	qglReadPixels( 0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_RGB, GL_UNSIGNED_BYTE, output ); 
 #endif

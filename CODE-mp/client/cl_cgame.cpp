@@ -1452,6 +1452,10 @@ CL_SetCGameTime
 ==================
 */
 void CL_SetCGameTime( void ) {
+
+	int intRealTime;
+	intRealTime = (int)cls.realtime;
+
 	// getting a valid frame message ends the connection process
 	if ( cls.state != CA_ACTIVE ) {
 		if ( cls.state != CA_PRIMED ) {
@@ -1518,7 +1522,7 @@ void CL_SetCGameTime( void ) {
 		}
 #endif
 
-		cl.serverTime = cls.realtime + cl.serverTimeDelta - tn;
+		cl.serverTime = intRealTime + cl.serverTimeDelta - tn;
 
 		// guarantee that time will never flow backwards, even if
 		// serverTimeDelta made an adjustment or cl_timeNudge was changed

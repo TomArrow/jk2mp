@@ -401,6 +401,7 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	int deltaTime;
 	qboolean hadSkip;
 	qboolean captureFrame;
+	int rollingShutterFactor = 1;
 	float captureFPS;
 	float frameSpeed;
 	int blurTotal, blurIndex;
@@ -440,7 +441,7 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	captureFrame = (qboolean) (demo.capture.active && !demo.play.paused);
 	if ( captureFrame ) {
 		trap_MME_BlurInfo( &blurTotal, &blurIndex );
-		captureFPS = mov_captureFPS.value;
+		captureFPS = mov_captureFPS.value*rollingShutterFactor;
 		if ( blurTotal > 0) {
 			captureFPS *= blurTotal;
 			blurFraction = blurIndex / (float)blurTotal;
@@ -780,7 +781,7 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	if (captureFrame) {
 		char fileName[MAX_OSPATH];
 		Com_sprintf( fileName, sizeof( fileName ), "capture/%s/%s", mme_demoFileName.string, mov_captureName.string );
-		trap_MME_Capture( fileName, captureFPS, demo.viewFocus, demo.viewRadius );
+		trap_MME_Capture( fileName, captureFPS/rollingShutterFactor, demo.viewFocus, demo.viewRadius );
 	} else {
 		if (demo.editType && !cg.playerCent)
 			demoDrawCrosshair();

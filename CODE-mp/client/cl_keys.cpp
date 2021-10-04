@@ -428,7 +428,10 @@ void Field_VariableSizeDraw( field_t *edit, int x, int y, int width, int size, q
 		return;
 	}
 
-	if ( (int)( cls.realtime >> 8 ) & 1 ) {
+	int intRealTime;
+	intRealTime = cls.realtime;
+
+	if ((int)(intRealTime >> 8) & 1) {
 		return;		// off blink
 	}
 

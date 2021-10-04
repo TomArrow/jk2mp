@@ -905,7 +905,7 @@ int demoSeek( int seekTime ) {
 }
 
 void demoRenderFrame( stereoFrame_t stereo ) {
-	VM_Call( cgvm, CG_DRAW_ACTIVE_FRAME, cls.realtime, stereo, 2 );	
+	VM_Call( cgvm, CG_DRAW_ACTIVE_FRAME, (int)cls.realtime, stereo, 2 );	
 }
 
 void demoGetSnapshotNumber( int *snapNumber, int *serverTime ) {
@@ -956,7 +956,8 @@ qboolean demoGetSnapshot( int snapNumber, snapshot_t *snap ) {
 
 void CL_DemoSetCGameTime( void ) {
 	/* We never timeout */
-	clc.lastPacketTime = cls.realtime;
+
+	clc.lastPacketTime = (float)cls.realtime;
 }
 
 void CL_DemoShutDown( void ) {

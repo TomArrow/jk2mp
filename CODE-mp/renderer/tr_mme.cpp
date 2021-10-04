@@ -241,8 +241,11 @@ int R_MME_MultiPassNext( ) {
 
 static void R_MME_MultiShot( byte * target ) {
 	if ( !passData.control.totalFrames ) {
+		//Com_Printf("GetShot");
 		R_MME_GetShot( target );
-	} else {
+	}
+	else {
+		Com_Printf("MemCpy");
 		Com_Memcpy( target, passData.dof.accum, mainData.pixelCount * 3 );
 	}
 }
@@ -254,6 +257,10 @@ qboolean R_MME_TakeShot( void ) {
 	qboolean audio = qfalse, audioTaken = qfalse;
 	qboolean doGamma;
 	mmeBlurControl_t* blurControl = &blurData.control;
+
+	int rollingShutterFactor = 1;
+
+	static int rollingShutterProgress = 0;
 
 	if ( !shotData.take || allocFailed || tr.finishStereo )
 		return qfalse;
@@ -405,6 +412,7 @@ qboolean R_MME_TakeShot( void ) {
 			}
 		}
 	} 
+	//Com_Printf("FrameInTakeShot");
 	if ( mme_saveShot->integer > 1 || (!blurControl->totalFrames && mme_saveShot->integer )) {
 		byte *shotBuf = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 5 );
 		R_MME_MultiShot( shotBuf );
@@ -430,7 +438,9 @@ qboolean R_MME_TakeShot( void ) {
 		if (!audioTaken)
 			audio = ri.S_MMEAviImport(inSound, &sizeSound);
 		audioTaken = qtrue;
-		R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBuf, audio, sizeSound, inSound );
+		if (rollingShutterProgress == rollingShutterFactor-1){
+			R_MME_SaveShot(&shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBuf, audio, sizeSound, inSound);
+		}
 		ri.Hunk_FreeTempMemory( shotBuf );
 	}
 
@@ -451,6 +461,12 @@ qboolean R_MME_TakeShot( void ) {
 			ri.Hunk_FreeTempMemory( depthShot );
 		}
 	}
+
+	rollingShutterProgress++;
+	if (rollingShutterProgress == rollingShutterFactor){
+		rollingShutterProgress = 0;
+	}
+
 	return qtrue;
 }
 

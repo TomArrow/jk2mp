@@ -1278,5 +1278,5 @@ qboolean UI_GameCommand( void ) {
 		return qfalse;
 	}
 
-	return (qboolean)VM_Call( uivm, UI_CONSOLE_COMMAND, cls.realtime );
+	return (qboolean)VM_Call( uivm, UI_CONSOLE_COMMAND, (int)cls.realtime );
 }

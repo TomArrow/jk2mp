@@ -31,7 +31,7 @@ void _UI_Init( qboolean );
 void _UI_Shutdown( void );
 void _UI_KeyEvent( int key, qboolean down );
 void _UI_MouseEvent( int dx, int dy );
-void _UI_Refresh( int realtime );
+void _UI_Refresh( float realtime );
 qboolean _UI_IsFullscreen( void );
 int vmMain( int command, int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9, int arg10, int arg11  ) {
   switch ( command ) {
@@ -455,7 +455,7 @@ const char *UI_GetStripEdString(const char *refSection, const char *refName)
 }
 
 #define	UI_FPS_FRAMES	4
-void _UI_Refresh( int realtime )
+void _UI_Refresh( float realtime )
 {
 	static int index;
 	static int	previousTimes[UI_FPS_FRAMES];

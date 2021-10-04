@@ -451,7 +451,7 @@ void CL_ReadDemoMessage( void ) {
 		return;
 	}
 
-	clc.lastPacketTime = cls.realtime;
+	clc.lastPacketTime = (float)cls.realtime;
 	buf.readcount = 0;
 	CL_ParseServerMessage( &buf );
 }
@@ -1580,11 +1580,11 @@ void CL_CheckForResend( void ) {
 		return;
 	}
 
-	if ( cls.realtime - clc.connectTime < RETRANSMIT_TIMEOUT ) {
+	if ( (float)cls.realtime - clc.connectTime < RETRANSMIT_TIMEOUT ) {
 		return;
 	}
 
-	clc.connectTime = cls.realtime;	// for retransmit requests
+	clc.connectTime = (float)cls.realtime;	// for retransmit requests
 	clc.connectPacketCount++;
 
 
@@ -2100,7 +2100,7 @@ void CL_CheckTimeout( void ) {
 	//
 	if ( ( !cl_paused->integer || !sv_paused->integer ) 
 		&& cls.state >= CA_CONNECTED && cls.state != CA_CINEMATIC
-	    && cls.realtime - clc.lastPacketTime > cl_timeout->value*1000) {
+	    && (float)cls.realtime - clc.lastPacketTime > cl_timeout->value*1000) {
 		if (++cl.timeoutcount > 5) {	// timeoutcount saves debugger
 			const char *psTimedOut = SP_GetStringTextString("SVINGAME_SERVER_CONNECTION_TIMED_OUT");
 			Com_Printf ("\n%s\n",psTimedOut);
@@ -2152,11 +2152,11 @@ CL_Frame
 static unsigned int frameCount;
 static float avgFrametime=0.0;
 extern void SP_CheckForLanguageUpdates(void);
-void CL_Frame ( int msec ) {
+void CL_Frame ( float msec ) {
 	if ( !com_cl_running->integer ) {
 		return;
 	}
-
+		
 	SP_CheckForLanguageUpdates();	// will take zero time to execute unless language changes, then will reload strings.
 									//	of course this still doesn't work for menus...
 
@@ -2169,6 +2169,7 @@ void CL_Frame ( int msec ) {
 
 	// if recording an avi, lock to a fixed fps
 	if (cl_avidemo->integer > 0 && msec) {
+
 		// save the current screen
 		if (cls.state == CA_ACTIVE || cl_forceavidemo->integer) {
 			float frameTime, fps;
@@ -2190,13 +2191,14 @@ void CL_Frame ( int msec ) {
 			//TODO use mme_depthFocus
 			re.Capture( shotName, fps, 0, 0 );
 			frameTime += clc.aviDemoRemain;
-			msec = (int)frameTime;
+			msec = frameTime;
 			clc.aviDemoRemain = frameTime - msec;
 			/* Signal this frame to be recorded */
 			S_MMERecord(shotName, 1.0f / fps);
 		}
 	}
 
+	
 	// save the msec before checking pause
 	cls.realFrametime = msec;
 

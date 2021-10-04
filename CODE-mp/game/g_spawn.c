@@ -440,6 +440,46 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 		G_ParseField( level.spawnVars[i][0], level.spawnVars[i][1], ent );
 	}
 
+	//TriForce: SP Fix
+	if (ent->model[0] == '*')
+	{
+		int      j;
+		int      k;
+		char   modelNum[16];
+
+		k = 0;
+
+		memset(modelNum, 0, sizeof(modelNum));
+
+		for (j = 1; j < strlen(ent->model); j++)
+		{
+			modelNum[k] = ent->model[j];
+			k++;
+		}
+
+		if (atoi(modelNum) > 127)
+		{
+			G_FreeEntity(ent);
+			return;
+		}
+	}
+
+
+	if (Q_stricmp(ent->classname, "target_speaker") == 0)
+	{
+		if (ent->spawnflags & 1 || ent->spawnflags & 8)
+		{
+			G_FreeEntity(ent);
+			return;
+		}
+	}
+
+	if (Q_stricmp(ent->classname, "func_usable") == 0)
+	{
+		G_ParseField("spawnflags", "8", ent);
+	}
+	//TriForce: SP Fix
+
 	// check for "notsingle" flag
 	if ( g_gametype.integer == GT_SINGLE_PLAYER ) {
 		G_SpawnInt( "notsingle", "0", &i );

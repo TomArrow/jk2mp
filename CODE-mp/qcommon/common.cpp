@@ -2732,8 +2732,8 @@ void Com_WriteConfig_f( void ) {
 Com_ModifyMsec
 ================
 */
-int Com_ModifyMsec( int msec ) {
-	int		clampTime;
+float Com_ModifyMsec( float msec ) {
+	float		clampTime;
 
 	//
 	// modify time for debugging values
@@ -2747,8 +2747,8 @@ int Com_ModifyMsec( int msec ) {
 	}
 	
 	// don't let it scale below 1 msec
-	if ( msec < 1 && com_timescale->value) {
-		msec = 1;
+	if ( msec < 0.0001 && com_timescale->value) {
+		msec = 0.0001;
 	}
 
 	if ( com_dedicated->integer ) {
@@ -2787,15 +2787,16 @@ void Com_Frame( void ) {
 
 try
 {
-	int		msec, minMsec;
-	static int	lastTime;
+	float msec;
+	float		minMsec;
+	static float	lastTime;
 	int key;
  
-	int		timeBeforeFirstEvents;
-	int           timeBeforeServer;
-	int           timeBeforeEvents;
-	int           timeBeforeClient;
-	int           timeAfter;
+	float		timeBeforeFirstEvents;
+	float           timeBeforeServer;
+	float           timeBeforeEvents;
+	float           timeBeforeClient;
+	float           timeAfter;
 
 
 	// bk001204 - init to zero.
@@ -2848,7 +2849,7 @@ try
 	// mess with msec if needed
 	com_frameMsec = msec;
 	msec = Com_ModifyMsec( msec );
-
+	
 	//
 	// server side
 	//

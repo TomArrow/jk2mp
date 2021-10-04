@@ -807,7 +807,7 @@ qboolean CL_ReadyToSendPacket( void ) {
 
 	// If we are downloading, we send no less than 50ms between packets
 	if ( *clc.downloadTempName &&
-		cls.realtime - clc.lastPacketSentTime < 50 ) {
+		(float)cls.realtime - clc.lastPacketSentTime < 50 ) {
 		return qfalse;
 	}
 
@@ -816,7 +816,7 @@ qboolean CL_ReadyToSendPacket( void ) {
 	if ( cls.state != CA_ACTIVE && 
 		cls.state != CA_PRIMED && 
 		!*clc.downloadTempName &&
-		cls.realtime - clc.lastPacketSentTime < 1000 ) {
+		(float)cls.realtime - clc.lastPacketSentTime < 1000 ) {
 		return qfalse;
 	}
 
@@ -957,10 +957,10 @@ void CL_WritePacket( void ) {
 	// deliver the message
 	//
 	packetNum = clc.netchan.outgoingSequence & PACKET_MASK;
-	cl.outPackets[ packetNum ].p_realtime = cls.realtime;
+	cl.outPackets[ packetNum ].p_realtime = (float)cls.realtime;
 	cl.outPackets[ packetNum ].p_serverTime = oldcmd->serverTime;
 	cl.outPackets[ packetNum ].p_cmdNumber = cl.cmdNumber;
-	clc.lastPacketSentTime = cls.realtime;
+	clc.lastPacketSentTime = (float)cls.realtime;
 
 	if ( cl_showSend->integer ) {
 		Com_Printf( "%i ", buf.cursize );

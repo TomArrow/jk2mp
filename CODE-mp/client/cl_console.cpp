@@ -471,7 +471,7 @@ void Con_DrawNotify (void)
 	int		x, v;
 	short	*text;
 	int		i;
-	int		time;
+	float		time;
 	int		skip;
 	int		currentColor;
 
@@ -641,7 +641,12 @@ void Con_DrawSolidConsole( float frac ) {
 	re.DrawStretchPic( 0, y, SCREEN_WIDTH, 2, 0, 0, 0, 0, cls.whiteShader );
 
 	i = strlen(version);
-	y = (cls.realtime >> 6);
+
+
+	int intRealTime;
+	intRealTime = cls.realtime;
+
+	y = (intRealTime >> 6);
 	for (x=0 ; x<i ; x++) {
 		if (version[x] ==' ')
 			continue;
