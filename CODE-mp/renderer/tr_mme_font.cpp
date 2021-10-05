@@ -74,23 +74,25 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/qcommon.h"
 
 #ifndef __linux__
-//#define BUILD_FREETYPE
+#define BUILD_FREETYPE
 #endif
 
 #ifdef BUILD_FREETYPE
-#include <ft2build.h>
-#include <freetype/fterrors.h>
-#include <freetype/ftsystem.h>
-#include <freetype/ftimage.h>
-#include <freetype/freetype.h>
-#include <freetype/ftoutln.h>
+extern "C" {
+	#include "ft2build.h"
+	#include "freetype/fterrors.h"
+	#include "freetype/ftsystem.h"
+	#include "freetype/ftimage.h"
+	#include "freetype/freetype.h"
+	#include "freetype/ftoutln.h"
 
+}
 #define _FLOOR(x)  ((x) & -64)
 #define _CEIL(x)   (((x)+63) & -64)
 #define _TRUNC(x)  ((x) >> 6)
 
-FT_Library ftLibrary = NULL; 
-#pragma comment (lib, "freetype2410.lib")
+FT_Library ftLibrary = NULL;
+#pragma comment (lib, "freetype.lib")
 #endif
 
 #define MAX_FONTS 6
