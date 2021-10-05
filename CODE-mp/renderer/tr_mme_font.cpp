@@ -78,20 +78,19 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 #ifdef BUILD_FREETYPE
-extern "C" {
-	#include "ft2build.h"
-	#include "freetype/fterrors.h"
-	#include "freetype/ftsystem.h"
-	#include "freetype/ftimage.h"
-	#include "freetype/freetype.h"
-	#include "freetype/ftoutln.h"
+#include <ft2build.h>
+#include <freetype/fttypes.h>
+#include <freetype/fterrors.h>
+#include <freetype/ftsystem.h>
+#include <freetype/ftimage.h>
+#include <freetype/freetype.h>
+#include <freetype/ftoutln.h>
 
-}
 #define _FLOOR(x)  ((x) & -64)
 #define _CEIL(x)   (((x)+63) & -64)
 #define _TRUNC(x)  ((x) >> 6)
 
-FT_Library ftLibrary = NULL;
+FT_Library ftLibrary = NULL; 
 #pragma comment (lib, "freetype.lib")
 #endif
 
