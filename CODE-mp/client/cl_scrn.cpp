@@ -384,7 +384,7 @@ void SCR_DrawDemoRecording( void ) {
 	char string[1024];
 	int pos;
 	int intRealTime;
-	intRealTime = cls.realtime;
+	intRealTime = cls.realtime+0.5;
 
 	if ( !clc.demorecording ) {
 		return;
@@ -544,7 +544,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		case CA_CONNECTED:
 			// connecting clients will only show the connection dialog
 			// refresh to update the time
-			VM_Call(uivm, UI_REFRESH, (int)cls.realtime);
+			VM_Call(uivm, UI_REFRESH, (int)(cls.realtime + 0.5));
 			VM_Call( uivm, UI_DRAW_CONNECT_SCREEN, qfalse );
 			break;
 		case CA_LOADING:
@@ -555,7 +555,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 			// also draw the connection information, so it doesn't
 			// flash away too briefly on local or lan games
 			// refresh to update the time
-			VM_Call( uivm, UI_REFRESH, (int) cls.realtime );
+			VM_Call( uivm, UI_REFRESH, (int)( cls.realtime+0.5) );
 			VM_Call( uivm, UI_DRAW_CONNECT_SCREEN, qtrue );
 			break;
 		case CA_ACTIVE:
@@ -567,7 +567,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 
 	// the menu draws next
 	if ( cls.keyCatchers & KEYCATCH_UI && uivm ) {
-		VM_Call(uivm, UI_REFRESH, (int)cls.realtime);
+		VM_Call(uivm, UI_REFRESH, (int)(cls.realtime + 0.5));
 	}
 
 	// console draws next

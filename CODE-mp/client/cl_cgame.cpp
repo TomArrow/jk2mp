@@ -1454,7 +1454,7 @@ CL_SetCGameTime
 void CL_SetCGameTime( void ) {
 
 	int intRealTime;
-	intRealTime = (int)cls.realtime;
+	intRealTime = (int)(cls.realtime+0.5);
 
 	// getting a valid frame message ends the connection process
 	if ( cls.state != CA_ACTIVE ) {

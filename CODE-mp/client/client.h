@@ -19,7 +19,7 @@ typedef struct {
 	qboolean		valid;			// cleared if delta parsing was invalid
 	int				snapFlags;		// rate delayed and dropped commands
 
-	float				serverTime;		// server time the message is valid for (in msec)
+	int				serverTime;		// server time the message is valid for (in msec)
 
 	int				messageNum;		// copied from netchan->incoming_sequence
 	int				deltaNum;		// messageNum the delta is from
@@ -146,11 +146,11 @@ demo through a file.
 typedef struct {
 
 	int			clientNum;
-	float			lastPacketSentTime;			// for retransmits during connection
-	float			lastPacketTime;				// for timeouts
+	int			lastPacketSentTime;			// for retransmits during connection
+	int			lastPacketTime;				// for timeouts
 
 	netadr_t	serverAddress;
-	float			connectTime;				// for connection retransmits
+	int			connectTime;				// for connection retransmits
 	int			connectPacketCount;			// for display on connection dialog
 	char		serverMessage[MAX_STRING_TOKENS];	// for display on connection dialog
 
@@ -198,7 +198,7 @@ typedef struct {
 
 	int			timeDemoFrames;		// counter of rendered frames
 	int			timeDemoStart;		// cls.realtime before first frame
-	float			timeDemoBaseTime;	// each frame will be at this time + frameNum * 50
+	int			timeDemoBaseTime;	// each frame will be at this time + frameNum * 50
 
 	// big stuff at end of structure so most offsets are 15 bits or less
 	netchan_t	netchan;
@@ -264,10 +264,10 @@ typedef struct {
 	qboolean	cgameStarted;
 
 	int			framecount;
-	float			frametime;			// msec since last frame
+	double			frametime;			// msec since last frame
 
-	float			realtime;			// ignores pause
-	float			realFrametime;		// ignoring pause, so console always works
+	double			realtime;			// ignores pause
+	double			realFrametime;		// ignoring pause, so console always works
 
 	int			numlocalservers;
 	serverInfo_t	localServers[MAX_OTHER_SERVERS];

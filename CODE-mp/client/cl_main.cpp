@@ -451,7 +451,7 @@ void CL_ReadDemoMessage( void ) {
 		return;
 	}
 
-	clc.lastPacketTime = (float)cls.realtime;
+	clc.lastPacketTime = cls.realtime;
 	buf.readcount = 0;
 	CL_ParseServerMessage( &buf );
 }
@@ -2152,7 +2152,7 @@ CL_Frame
 static unsigned int frameCount;
 static float avgFrametime=0.0;
 extern void SP_CheckForLanguageUpdates(void);
-void CL_Frame ( float msec ) {
+void CL_Frame ( double msec ) {
 	if ( !com_cl_running->integer ) {
 		return;
 	}
@@ -2168,7 +2168,7 @@ void CL_Frame ( float msec ) {
 	}
 
 	// if recording an avi, lock to a fixed fps
-	if (cl_avidemo->integer > 0 && msec) {
+	if (cl_avidemo->integer > 0 && (int)(msec+0.5)) {
 
 		// save the current screen
 		if (cls.state == CA_ACTIVE || cl_forceavidemo->integer) {

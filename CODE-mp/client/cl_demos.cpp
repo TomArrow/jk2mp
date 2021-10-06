@@ -905,7 +905,7 @@ int demoSeek( int seekTime ) {
 }
 
 void demoRenderFrame( stereoFrame_t stereo ) {
-	VM_Call( cgvm, CG_DRAW_ACTIVE_FRAME, (int)cls.realtime, stereo, 2 );	
+	VM_Call( cgvm, CG_DRAW_ACTIVE_FRAME, (int)(cls.realtime+0.5), stereo, 2 );	
 }
 
 void demoGetSnapshotNumber( int *snapNumber, int *serverTime ) {

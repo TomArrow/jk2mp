@@ -471,7 +471,7 @@ void Con_DrawNotify (void)
 	int		x, v;
 	short	*text;
 	int		i;
-	float		time;
+	double		time;
 	int		skip;
 	int		currentColor;
 
@@ -644,7 +644,7 @@ void Con_DrawSolidConsole( float frac ) {
 
 
 	int intRealTime;
-	intRealTime = cls.realtime;
+	intRealTime = cls.realtime+0.5;
 
 	y = (intRealTime >> 6);
 	for (x=0 ; x<i ; x++) {

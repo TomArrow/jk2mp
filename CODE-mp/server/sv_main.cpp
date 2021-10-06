@@ -726,9 +726,9 @@ Player movement occurs as a result of packet events, which
 happen before SV_Frame is called
 ==================
 */
-void SV_Frame( float msec ) {
-	float		frameMsec;
-	float		startTime;
+void SV_Frame( double msec ) {
+	double		frameMsec;
+	double		startTime;
 
 
 	// the menu kills the server with this cvar
@@ -751,16 +751,16 @@ void SV_Frame( float msec ) {
 	if ( sv_fps->integer < 1 ) {
 		Cvar_Set( "sv_fps", "10" );
 	}
-	frameMsec = 1000 / sv_fps->integer ;
+	frameMsec = 1000.0 / (double)sv_fps->integer ;
 
-	sv.timeResidual += msec;
+	sv.timeResidual += (int)(msec+0.5);
 
 	if (!com_dedicated->integer) SV_BotFrame( svs.time + sv.timeResidual );
 
-	if ( com_dedicated->integer && sv.timeResidual < frameMsec && (!com_timescale || com_timescale->value >= 1) ) {
+	if ( com_dedicated->integer && sv.timeResidual < (int)(frameMsec+0.5) && (!com_timescale || com_timescale->value >= 1) ) {
 		// NET_Sleep will give the OS time slices until either get a packet
 		// or time enough for a server frame has gone by
-		NET_Sleep(frameMsec - sv.timeResidual);
+		NET_Sleep((int)(frameMsec + 0.5) - sv.timeResidual);
 		return;
 	}
 
@@ -808,9 +808,9 @@ void SV_Frame( float msec ) {
 	if (com_dedicated->integer) SV_BotFrame( svs.time );
 
 	// run the game simulation in chunks
-	while ( sv.timeResidual >= frameMsec ) {
-		sv.timeResidual -= frameMsec;
-		svs.time += frameMsec;
+	while ( sv.timeResidual >= (int)(frameMsec + 0.5)) {
+		sv.timeResidual -= (int)(frameMsec + 0.5);
+		svs.time += (int)(frameMsec + 0.5);
 
 		// let everything in the world think and move
 		VM_Call( gvm, GAME_RUN_FRAME, svs.time );

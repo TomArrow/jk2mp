@@ -808,7 +808,7 @@ void CL_InitKeyCommands( void );
 void CL_Init( void );
 void CL_Disconnect( qboolean showMainMenu );
 void CL_Shutdown( void );
-void CL_Frame( float msec );
+void CL_Frame( double msec );
 qboolean CL_GameCommand( void );
 void CL_KeyEvent (int key, qboolean down, unsigned time);
 
@@ -857,7 +857,7 @@ void SCR_DebugGraph (float value, int color);	// FIXME: move logging to common?
 //
 void SV_Init( void );
 void SV_Shutdown( char *finalmsg );
-void SV_Frame( float msec );
+void SV_Frame( double msec );
 void SV_PacketEvent( netadr_t from, msg_t *msg );
 qboolean SV_GameCommand( void );
 

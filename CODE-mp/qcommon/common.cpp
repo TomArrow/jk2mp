@@ -2732,30 +2732,30 @@ void Com_WriteConfig_f( void ) {
 Com_ModifyMsec
 ================
 */
-float Com_ModifyMsec( float msec ) {
-	float		clampTime;
+float Com_ModifyMsec( double msec ) {
+	double		clampTime;
 
 	//
 	// modify time for debugging values
 	//
 	if ( com_fixedtime->integer ) {
-		msec = com_fixedtime->integer;
+		msec = (double)com_fixedtime->integer;
 	} else if ( com_timescale->value ) {
 		msec *= com_timescale->value;
 	} else if (com_cameraMode->integer) {
 		msec *= com_timescale->value;
 	}
 	
-	// don't let it scale below 1 msec
-	if ( msec < 0.0001 && com_timescale->value) {
-		msec = 0.0001;
-	}
+	// don't let it scale below 1 msec // why not?
+	//if ( msec < 0.0001 && com_timescale->value) {
+	//	msec = 0.0001;
+	//}
 
 	if ( com_dedicated->integer ) {
 		// dedicated servers don't want to clamp for a much longer
 		// period, because it would mess up all the client's views
 		// of time.
-		if ( msec > 500 ) {
+		if ( msec > 500.0 ) {
 			Com_Printf( "Hitch warning: %i msec frame time\n", msec );
 		}
 		clampTime = 5000;
@@ -2787,9 +2787,9 @@ void Com_Frame( void ) {
 
 try
 {
-	float msec;
-	float		minMsec;
-	static float	lastTime;
+	double msec;
+	double		minMsec;
+	static double	lastTime;
 	int key;
  
 	float		timeBeforeFirstEvents;
@@ -2831,23 +2831,23 @@ try
 
 	// we may want to spin here if things are going too fast
 	if ( !com_dedicated->integer && com_maxfps->integer > 0 && !com_timedemo->integer ) {
-		minMsec = 1000 / com_maxfps->integer;
+		minMsec = 1000.0 / (double)com_maxfps->integer;
 	} else {
-		minMsec = 1;
+		minMsec = 1.0;
 	}
 	do {
 		com_frameTime = Com_EventLoop();
-		if ( lastTime > com_frameTime ) {
-			lastTime = com_frameTime;		// possible on first frame
+		if ( lastTime > (double)com_frameTime ) {
+			lastTime = (double)com_frameTime;		// possible on first frame
 		}
-		msec = com_frameTime - lastTime;
+		msec = (double)com_frameTime - lastTime;
 	} while ( msec < minMsec );
 	Cbuf_Execute ();
 
-	lastTime = com_frameTime;
+	lastTime = (double)com_frameTime;
 
 	// mess with msec if needed
-	com_frameMsec = msec;
+	com_frameMsec = (int)(msec+0.5);
 	msec = Com_ModifyMsec( msec );
 	
 	//
