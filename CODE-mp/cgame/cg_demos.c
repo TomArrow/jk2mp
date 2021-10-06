@@ -401,7 +401,7 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	int deltaTime;
 	qboolean hadSkip;
 	qboolean captureFrame;
-	int rollingShutterFactor = 1;
+	int rollingShutterFactor = 108;
 	float captureFPS;
 	float frameSpeed;
 	int blurTotal, blurIndex;

@@ -249,6 +249,19 @@ static void R_MME_MultiShot( byte * target ) {
 		Com_Memcpy( target, passData.dof.accum, mainData.pixelCount * 3 );
 	}
 }
+static void R_MME_MultiShot( byte * target,int rollingShutterFactor,int rollingShutterProgress ) {
+	if ( !passData.control.totalFrames ) {
+		//Com_Printf("GetShot");
+		R_MME_GetShot( target, rollingShutterFactor,rollingShutterProgress );
+	}
+	else {
+		Com_Printf("MemCpy");
+		Com_Memcpy( target, passData.dof.accum, mainData.pixelCount * 3 );
+	}
+}
+
+bool shotBufPermInitialized = false;
+byte* shotBufPerm;
 
 qboolean R_MME_TakeShot( void ) {
 	int pixelCount;
@@ -258,7 +271,7 @@ qboolean R_MME_TakeShot( void ) {
 	qboolean doGamma;
 	mmeBlurControl_t* blurControl = &blurData.control;
 
-	int rollingShutterFactor = 1;
+	int rollingShutterFactor = 108;
 
 	static int rollingShutterProgress = 0;
 
@@ -414,34 +427,44 @@ qboolean R_MME_TakeShot( void ) {
 	} 
 	//Com_Printf("FrameInTakeShot");
 	if ( mme_saveShot->integer > 1 || (!blurControl->totalFrames && mme_saveShot->integer )) {
-		byte *shotBuf = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 5 );
-		R_MME_MultiShot( shotBuf );
+		//byte *shotBuf = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 5 );
+		if (!shotBufPermInitialized) {
+			shotBufPerm = (byte*)ri.Hunk_AllocateTempMemory(pixelCount * 5);
+			shotBufPermInitialized = true;
+		}
+		//byte *shotBuf = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 5 );
+		R_MME_MultiShot( shotBufPerm, rollingShutterFactor,rollingShutterProgress );
 		
-		if ( doGamma ) 
-			R_GammaCorrect( shotBuf, pixelCount * 3 );
-
-		if ( shotData.main.type == mmeShotTypeRGBA ) {
-			int i;
-			byte *alphaBuf = shotBuf + pixelCount * 4;
-			if ( mme_saveDepth->integer > 1 || (!blurControl->totalFrames && mme_saveDepth->integer )) {
-				R_MME_GetDepth( alphaBuf );
-//			} else if ( mme_saveStencil->integer > 1 || (!blurControl->totalFrames && mme_saveStencil->integer )) {
-//				R_MME_GetStencil( alphaBuf );
-			}
-			for ( i = pixelCount - 1 ; i >= 0; i-- ) {
-				shotBuf[i * 4 + 0] = shotBuf[i*3 + 0];
-				shotBuf[i * 4 + 1] = shotBuf[i*3 + 1];
-				shotBuf[i * 4 + 2] = shotBuf[i*3 + 2];
-				shotBuf[i * 4 + 3] = alphaBuf[i];
-			}
-		}
-		if (!audioTaken)
-			audio = ri.S_MMEAviImport(inSound, &sizeSound);
-		audioTaken = qtrue;
+		
 		if (rollingShutterProgress == rollingShutterFactor-1){
-			R_MME_SaveShot(&shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBuf, audio, sizeSound, inSound);
+
+			if (doGamma)
+				R_GammaCorrect(shotBufPerm, pixelCount * 3);
+
+			if (shotData.main.type == mmeShotTypeRGBA) {
+				int i;
+				byte* alphaBuf = shotBufPerm + pixelCount * 4;
+				if (mme_saveDepth->integer > 1 || (!blurControl->totalFrames && mme_saveDepth->integer)) {
+					R_MME_GetDepth(alphaBuf);
+					//			} else if ( mme_saveStencil->integer > 1 || (!blurControl->totalFrames && mme_saveStencil->integer )) {
+					//				R_MME_GetStencil( alphaBuf );
+				}
+				for (i = pixelCount - 1; i >= 0; i--) {
+					shotBufPerm[i * 4 + 0] = shotBufPerm[i * 3 + 0];
+					shotBufPerm[i * 4 + 1] = shotBufPerm[i * 3 + 1];
+					shotBufPerm[i * 4 + 2] = shotBufPerm[i * 3 + 2];
+					shotBufPerm[i * 4 + 3] = alphaBuf[i];
+				}
+			}
+
+			if (!audioTaken)
+				audio = ri.S_MMEAviImport(inSound, &sizeSound);
+
+			audioTaken = qtrue;
+
+			R_MME_SaveShot(&shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBufPerm, audio, sizeSound, inSound);
 		}
-		ri.Hunk_FreeTempMemory( shotBuf );
+		//ri.Hunk_FreeTempMemory( shotBuf );
 	}
 
 	if ( shotData.main.type == mmeShotTypeRGB ) {
