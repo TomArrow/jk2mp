@@ -265,6 +265,7 @@ typedef void *(APIENTRY * PFNGLMAPBUFFERARBPROC) (GLenum target, GLenum access);
 typedef GLboolean (APIENTRY * PFNGLUNMAPBUFFERARBPROC) (GLenum target);
 #define GL_READ_ONLY_ARB                  0x88B8
 #define GL_STREAM_READ_ARB                0x88E1
+#define GL_DYNAMIC_READ_ARB               0x88E9
 #define GL_PIXEL_PACK_BUFFER_ARB          0x88EB
 
 /* Already in glext.h

@@ -1,6 +1,7 @@
 // Copyright (C) 2009 Sjoerd van der Berg ( harekiet @ gmail.com )
 
 #include "tr_mme.h"
+#include <vector>
 
 static char *workAlloc = 0;
 static char *workAlign = 0;
@@ -67,6 +68,15 @@ cvar_t	*mme_saveOverwrite;
 cvar_t	*mme_saveShot;
 cvar_t	*mme_saveStencil;
 cvar_t	*mme_saveDepth;
+cvar_t  *mme_rollingShutterPixels;
+cvar_t  *mme_rollingShutterMultiplier;
+
+
+#ifdef JEDIACADEMY_GLOW
+extern std::vector<GLuint> pboIds;
+extern std::vector<int> pboRollingShutterProgresses;
+extern int rollingShutterBufferCount;
+#endif
 
 static void R_MME_MakeBlurBlock( mmeBlurBlock_t *block, int size, mmeBlurControl_t* control ) {
 	memset( block, 0, sizeof( *block ) );
@@ -249,10 +259,10 @@ static void R_MME_MultiShot( byte * target ) {
 		Com_Memcpy( target, passData.dof.accum, mainData.pixelCount * 3 );
 	}
 }
-static void R_MME_MultiShot( byte * target,int rollingShutterFactor,int rollingShutterProgress ) {
+static void R_MME_MultiShot( byte * target,int rollingShutterFactor,int rollingShutterProgress,int rollingShutterPixels,int pboId) {
 	if ( !passData.control.totalFrames ) {
 		//Com_Printf("GetShot");
-		R_MME_GetShot( target, rollingShutterFactor,rollingShutterProgress );
+		R_MME_GetShot( target, rollingShutterFactor,rollingShutterProgress,rollingShutterPixels, pboId );
 	}
 	else {
 		Com_Printf("MemCpy");
@@ -271,9 +281,10 @@ qboolean R_MME_TakeShot( void ) {
 	qboolean doGamma;
 	mmeBlurControl_t* blurControl = &blurData.control;
 
-	int rollingShutterFactor = 108;
+	//int mme_rollingShutterPixels = Cvar_Get("mme_rollingShutterPixels","1",);
+	int rollingShutterFactor = glConfig.vidHeight/mme_rollingShutterPixels->integer;
 
-	static int rollingShutterProgress = 0;
+	//static int rollingShutterProgress = 0;
 
 	if ( !shotData.take || allocFailed || tr.finishStereo )
 		return qfalse;
@@ -433,36 +444,50 @@ qboolean R_MME_TakeShot( void ) {
 			shotBufPermInitialized = true;
 		}
 		//byte *shotBuf = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 5 );
-		R_MME_MultiShot( shotBufPerm, rollingShutterFactor,rollingShutterProgress );
-		
-		
-		if (rollingShutterProgress == rollingShutterFactor-1){
 
-			if (doGamma)
-				R_GammaCorrect(shotBufPerm, pixelCount * 3);
+		for (int i = 0; i < rollingShutterBufferCount; i++) {
 
-			if (shotData.main.type == mmeShotTypeRGBA) {
-				int i;
-				byte* alphaBuf = shotBufPerm + pixelCount * 4;
-				if (mme_saveDepth->integer > 1 || (!blurControl->totalFrames && mme_saveDepth->integer)) {
-					R_MME_GetDepth(alphaBuf);
-					//			} else if ( mme_saveStencil->integer > 1 || (!blurControl->totalFrames && mme_saveStencil->integer )) {
-					//				R_MME_GetStencil( alphaBuf );
-				}
-				for (i = pixelCount - 1; i >= 0; i--) {
-					shotBufPerm[i * 4 + 0] = shotBufPerm[i * 3 + 0];
-					shotBufPerm[i * 4 + 1] = shotBufPerm[i * 3 + 1];
-					shotBufPerm[i * 4 + 2] = shotBufPerm[i * 3 + 2];
-					shotBufPerm[i * 4 + 3] = alphaBuf[i];
+			int& rollingShutterProgress = pboRollingShutterProgresses[i];
+
+			if(rollingShutterProgress >= 0){ // the later pbos have negative offsets because they start capturing later
+
+				R_MME_MultiShot(shotBufPerm, rollingShutterFactor,rollingShutterProgress,mme_rollingShutterPixels->integer,i );
+		
+			
+				if (rollingShutterProgress == rollingShutterFactor-1){
+
+					if (doGamma)
+						R_GammaCorrect(shotBufPerm, pixelCount * 3);
+
+					if (shotData.main.type == mmeShotTypeRGBA) {
+						int i;
+						byte* alphaBuf = shotBufPerm + pixelCount * 4;
+						if (mme_saveDepth->integer > 1 || (!blurControl->totalFrames && mme_saveDepth->integer)) {
+							R_MME_GetDepth(alphaBuf);
+							//			} else if ( mme_saveStencil->integer > 1 || (!blurControl->totalFrames && mme_saveStencil->integer )) {
+							//				R_MME_GetStencil( alphaBuf );
+						}
+						for (i = pixelCount - 1; i >= 0; i--) {
+							shotBufPerm[i * 4 + 0] = shotBufPerm[i * 3 + 0];
+							shotBufPerm[i * 4 + 1] = shotBufPerm[i * 3 + 1];
+							shotBufPerm[i * 4 + 2] = shotBufPerm[i * 3 + 2];
+							shotBufPerm[i * 4 + 3] = alphaBuf[i];
+						}
+					}
+
+					if (!audioTaken)
+						audio = ri.S_MMEAviImport(inSound, &sizeSound);
+
+					audioTaken = qtrue;
+
+					R_MME_SaveShot(&shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBufPerm, audio, sizeSound, inSound);
 				}
 			}
+			rollingShutterProgress++;
+			if (rollingShutterProgress == rollingShutterFactor) {
+				rollingShutterProgress = 0;
+			}
 
-			if (!audioTaken)
-				audio = ri.S_MMEAviImport(inSound, &sizeSound);
-
-			audioTaken = qtrue;
-
-			R_MME_SaveShot(&shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBufPerm, audio, sizeSound, inSound);
 		}
 		//ri.Hunk_FreeTempMemory( shotBuf );
 	}
@@ -485,10 +510,7 @@ qboolean R_MME_TakeShot( void ) {
 		}
 	}
 
-	rollingShutterProgress++;
-	if (rollingShutterProgress == rollingShutterFactor){
-		rollingShutterProgress = 0;
-	}
+	
 
 	return qtrue;
 }
@@ -622,6 +644,9 @@ void R_MME_Init(void) {
 	mme_saveDepth = ri.Cvar_Get ( "mme_saveDepth", "0", CVAR_ARCHIVE );
 	mme_saveShot = ri.Cvar_Get ( "mme_saveShot", "1", CVAR_ARCHIVE );
 	mme_workMegs = ri.Cvar_Get ( "mme_workMegs", "128", CVAR_LATCH | CVAR_ARCHIVE );
+
+	mme_rollingShutterPixels = ri.Cvar_Get ( "mme_rollingShutterPixels", "1", CVAR_ARCHIVE );
+	mme_rollingShutterMultiplier = ri.Cvar_Get ( "mme_rollingShutterMultiplier", "1", CVAR_ARCHIVE );
 
 	mme_worldShader->modified = qtrue;
 

@@ -180,7 +180,8 @@ void captureSave( fileHandle_t fileHandle ) {
 
 	trap_Cvar_VariableStringBuffer( "mov_captureCvars", buf, sizeof( buf ));
 	if (!buf[0]) {
-		trap_Cvar_Set( "mov_captureCvars", "mov_captureName mov_captureFPS mov_musicFile mov_musicStart mov_filterMask mov_saberTeamColour mme_blurFrames mme_blurOverlap mme_blurType mme_depthFocus mme_depthRange mme_screenShotFormat mme_saveDepth mme_saveShot mme_saveWav");
+		//trap_Cvar_Set( "mov_captureCvars", "mov_captureName mov_captureFPS mov_musicFile mov_musicStart mov_filterMask mov_saberTeamColour mme_blurFrames mme_blurOverlap mme_blurType mme_depthFocus mme_depthRange mme_screenShotFormat mme_saveDepth mme_saveShot mme_saveWav");
+		trap_Cvar_Set( "mov_captureCvars", "mov_captureName mov_captureFPS mov_musicFile mov_musicStart mov_filterMask mov_saberTeamColour mme_blurFrames mme_blurOverlap mme_blurType mme_depthFocus mme_depthRange mme_screenShotFormat mme_saveDepth mme_saveShot mme_saveWav mme_rollingShutterPixels mme_rollingShutterMultiplier");
 		trap_Cvar_VariableStringBuffer( "mov_captureCvars", buf, sizeof( buf ));
 	}
 

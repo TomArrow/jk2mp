@@ -1,6 +1,8 @@
 // tr_init.c -- functions that are not called every frame
 
+
 #include "tr_local.h"
+#include <cmath>
 
 #ifndef DEDICATED
 #if !defined __TR_WORLDEFFECTS_H
@@ -1036,7 +1038,10 @@ extern qboolean Sys_LowPhysicalMemory();
 #endif
 
 #ifdef JEDIACADEMY_GLOW
-GLuint pboIds[2];
+//GLuint pboIds[2];
+vector<GLuint> pboIds(2);
+vector<int> pboRollingShutterProgresses(2);
+int rollingShutterBufferCount = 1;
 #endif
 /*
 ===============
@@ -1153,14 +1158,34 @@ void R_Init( void ) {
 #endif
 #ifdef JEDIACADEMY_GLOW
 	{
+		int bufferCountNeededForRollingshutter = (int)(ceil(mme_rollingShutterMultiplier->value) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
+		rollingShutterBufferCount = bufferCountNeededForRollingshutter;
+
+		int rollingShutterFactor = glConfig.vidHeight / mme_rollingShutterPixels->integer;
+
 		// create 2 pixel buffer objects, you need to delete them when program exits.
 		// glBufferDataARB with NULL pointer reserves only memory space.
 		int dataSize = glConfig.vidWidth * glConfig.vidHeight * 3;
-		qglGenBuffersARB(2, pboIds);
-		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[0]);
-		qglBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, dataSize, 0, GL_STREAM_READ_ARB);
+
+		// create more pixel buffers if we need that for rolling shutter
+		if (rollingShutterBufferCount > pboIds.size()) {
+			pboIds.resize(rollingShutterBufferCount);
+			pboRollingShutterProgresses.resize(rollingShutterBufferCount);
+		}
+
+		//qglGenBuffersARB(2, pboIds);
+		qglGenBuffersARB(pboIds.size(), pboIds.data());
+
+		for (int i = 0; i < pboIds.size(); i++) {
+			qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[i]);
+			qglBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, dataSize, 0, GL_DYNAMIC_READ_ARB);
+
+			pboRollingShutterProgresses[i] = (int)(-(float)i * mme_rollingShutterMultiplier->value* rollingShutterFactor);
+		}
+		/*qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[0]);
+		qglBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, dataSize, 0, GL_DYNAMIC_READ_ARB);
 		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[1]);
-		qglBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, dataSize, 0, GL_STREAM_READ_ARB);
+		qglBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, dataSize, 0, GL_DYNAMIC_READ_ARB);*/
 
 		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
 	}

@@ -401,7 +401,10 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	int deltaTime;
 	qboolean hadSkip;
 	qboolean captureFrame;
-	int rollingShutterFactor = 108;
+	//int rollingShutterFactor = 108;
+	int mme_rollingShutterPixels = CG_Cvar_GetInt("mme_rollingShutterPixels");
+	float mme_rollingShutterMultiplier = CG_Cvar_Get("mme_rollingShutterMultiplier");
+	int rollingShutterFactor = cgs.glconfig.vidHeight/ mme_rollingShutterPixels;
 	float captureFPS;
 	float frameSpeed;
 	int blurTotal, blurIndex;
@@ -441,7 +444,7 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	captureFrame = (qboolean) (demo.capture.active && !demo.play.paused);
 	if ( captureFrame ) {
 		trap_MME_BlurInfo( &blurTotal, &blurIndex );
-		captureFPS = mov_captureFPS.value*rollingShutterFactor;
+		captureFPS = mov_captureFPS.value*(float)rollingShutterFactor/ mme_rollingShutterMultiplier;
 		if ( blurTotal > 0) {
 			captureFPS *= blurTotal;
 			blurFraction = blurIndex / (float)blurTotal;
@@ -781,7 +784,7 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	if (captureFrame) {
 		char fileName[MAX_OSPATH];
 		Com_sprintf( fileName, sizeof( fileName ), "capture/%s/%s", mme_demoFileName.string, mov_captureName.string );
-		trap_MME_Capture( fileName, captureFPS/rollingShutterFactor, demo.viewFocus, demo.viewRadius );
+		trap_MME_Capture( fileName, captureFPS/(float)rollingShutterFactor* mme_rollingShutterMultiplier, demo.viewFocus, demo.viewRadius );
 	} else {
 		if (demo.editType && !cg.playerCent)
 			demoDrawCrosshair();
