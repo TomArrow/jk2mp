@@ -404,6 +404,7 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	//int rollingShutterFactor = 108;
 	int mme_rollingShutterPixels = CG_Cvar_GetInt("mme_rollingShutterPixels");
 	float mme_rollingShutterMultiplier = CG_Cvar_Get("mme_rollingShutterMultiplier");
+	int bufferCountNeededForRollingshutter = (int)(ceil(mme_rollingShutterMultiplier) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
 	int rollingShutterFactor = cgs.glconfig.vidHeight/ mme_rollingShutterPixels;
 	float captureFPS;
 	float frameSpeed;

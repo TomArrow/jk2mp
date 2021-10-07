@@ -1042,6 +1042,7 @@ extern qboolean Sys_LowPhysicalMemory();
 vector<GLuint> pboIds(2);
 vector<int> pboRollingShutterProgresses(2);
 int rollingShutterBufferCount = 1;
+int progressOvershoot = 0;
 #endif
 /*
 ===============
@@ -1163,6 +1164,8 @@ void R_Init( void ) {
 
 		int rollingShutterFactor = glConfig.vidHeight / mme_rollingShutterPixels->integer;
 
+		progressOvershoot = (int)((float)rollingShutterFactor / mme_rollingShutterMultiplier->value * (float)bufferCountNeededForRollingshutter) - rollingShutterFactor;
+
 		// create 2 pixel buffer objects, you need to delete them when program exits.
 		// glBufferDataARB with NULL pointer reserves only memory space.
 		int dataSize = glConfig.vidWidth * glConfig.vidHeight * 3;
@@ -1180,7 +1183,10 @@ void R_Init( void ) {
 			qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[i]);
 			qglBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, dataSize, 0, GL_DYNAMIC_READ_ARB);
 
-			pboRollingShutterProgresses[i] = (int)(-(float)i * mme_rollingShutterMultiplier->value* rollingShutterFactor);
+			//pboRollingShutterProgresses[i] = (int)(-(float)i * mme_rollingShutterMultiplier->value* rollingShutterFactor);
+			//pboRollingShutterProgresses[i] = (int)(-(float)i * rollingShutterFactor);
+			pboRollingShutterProgresses[i] = (int)(-(float)i * ((float)rollingShutterFactor/ (float)bufferCountNeededForRollingshutter));
+			//pboRollingShutterProgresses[i] = (int)(-(float)i * ((float)rollingShutterFactor/ mme_rollingShutterMultiplier->value));
 		}
 		/*qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[0]);
 		qglBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, dataSize, 0, GL_DYNAMIC_READ_ARB);

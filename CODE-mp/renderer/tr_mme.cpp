@@ -76,6 +76,7 @@ cvar_t  *mme_rollingShutterMultiplier;
 extern std::vector<GLuint> pboIds;
 extern std::vector<int> pboRollingShutterProgresses;
 extern int rollingShutterBufferCount;
+extern int progressOvershoot;
 #endif
 
 static void R_MME_MakeBlurBlock( mmeBlurBlock_t *block, int size, mmeBlurControl_t* control ) {
@@ -485,7 +486,8 @@ qboolean R_MME_TakeShot( void ) {
 			}
 			rollingShutterProgress++;
 			if (rollingShutterProgress == rollingShutterFactor) {
-				rollingShutterProgress = 0;
+				//rollingShutterProgress = 0;
+				rollingShutterProgress = -progressOvershoot; // Since the rolling shutter multiplier can be a non-integer, sometimes we have to pause rendering frames for a little. Imagine if the rolling shutter is half the shutter speed. Then half the time we're not actually recording anything.
 			}
 
 		}
