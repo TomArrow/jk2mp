@@ -20,7 +20,7 @@ extern void CG_InterpolatePlayerState( qboolean grabAngles );
 
 extern void trap_FX_Reset ( void );
 extern void trap_MME_BlurInfo( int* total, int * index );
-extern void trap_MME_Capture( const char *baseName, float fps, float focus, float radius );
+extern void trap_MME_Capture( const char *baseName, float fps, float focus, float radius);
 extern int trap_MME_SeekTime( int seekTime );
 extern void trap_MME_Music( const char *musicName, float time, float length );
 extern void trap_MME_TimeFraction( float timeFraction );
@@ -785,7 +785,7 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	if (captureFrame) {
 		char fileName[MAX_OSPATH];
 		Com_sprintf( fileName, sizeof( fileName ), "capture/%s/%s", mme_demoFileName.string, mov_captureName.string );
-		trap_MME_Capture( fileName, captureFPS/(float)rollingShutterFactor* mme_rollingShutterMultiplier, demo.viewFocus, demo.viewRadius );
+		trap_MME_Capture( fileName, captureFPS/(float)rollingShutterFactor* mme_rollingShutterMultiplier, demo.viewFocus, demo.viewRadius);
 	} else {
 		if (demo.editType && !cg.playerCent)
 			demoDrawCrosshair();

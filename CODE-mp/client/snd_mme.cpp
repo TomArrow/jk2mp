@@ -5,6 +5,7 @@
 #include "snd_local.h"
 #include "snd_mix.h"
 #include <vector>
+#include <cgame\tr_types.h>
 
 #define MME_SNDCHANNELS 128
 #define MME_LOOPCHANNELS 128
@@ -12,6 +13,7 @@
 extern	cvar_t	*mme_saveWav;
 extern	cvar_t	*mme_rollingShutterPixels;
 extern	cvar_t	*mme_rollingShutterMultiplier;
+extern glconfig_t	glConfig;
 extern	std::vector<int> pboRollingShutterProgresses;
 
 typedef struct {
@@ -104,8 +106,8 @@ Called from CL_Frame() in cl_main.c when shooting avidemo
 #define MAXUPDATE 4096
 void S_MMEUpdate(float scale) {
 	
-	for (int i = 0; i < pboRollingShutterProgresses.size(); i++) {
-		if (pboRollingShutterProgresses[i] == 0) { // This is the first rolling shutter line/block of lines captured
+	//for (int i = 0; i < pboRollingShutterProgresses.size(); i++) {
+	//	if (pboRollingShutterProgresses[i] == 0) { // This is the first rolling shutter line/block of lines captured
 
 
 			int count, speed;
@@ -147,14 +149,16 @@ void S_MMEUpdate(float scale) {
 			mmeSound.fileSize += count * 4;
 			mmeSound.gotFrame = qfalse;
 
-		}
-	}
+	//	}
+	//}
 }
 
 void S_MMERecord( const char *baseName, float deltaTime ) {
 
-	for (int i = 0; i < pboRollingShutterProgresses.size(); i++) {
-		if (pboRollingShutterProgresses[i] == 0) { // This is the first rolling shutter line/block of lines captured
+	int rollingShutterFactor = glConfig.vidHeight/ mme_rollingShutterPixels->integer;
+	deltaTime = deltaTime / (float)rollingShutterFactor * mme_rollingShutterMultiplier->value;
+	//for (int i = 0; i < pboRollingShutterProgresses.size(); i++) {
+	//	if (pboRollingShutterProgresses[i] == 0) { // This is the first rolling shutter line/block of lines captured
 			
 			
 			
@@ -199,8 +203,8 @@ void S_MMERecord( const char *baseName, float deltaTime ) {
 			mmeSound.gotFrame = qtrue;
 
 
-		}
-	}
+	//	}
+	//}
 
 	
 }
