@@ -47,6 +47,11 @@
 //#pragma once
 
 #include "tr_local.h"
+
+#ifdef CAPTURE_FLOAT
+#include <cmath>
+#endif
+
 #ifdef _WIN32
 #include "qgl.h"
 #endif
@@ -393,6 +398,9 @@ void R_FrameBuffer_StartFrame( void ) {
 	usedFloat = qfalse;
 #endif
 }
+
+
+
 
 qboolean R_FrameBuffer_Blur( float scale, int frame, int total ) {
 #ifdef HAVE_GLES

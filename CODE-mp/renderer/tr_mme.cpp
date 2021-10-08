@@ -274,6 +274,15 @@ static void R_MME_MultiShot( byte * target,int rollingShutterFactor,int rollingS
 bool shotBufPermInitialized = false;
 byte* shotBufPerm;
 
+inline float pq(float in) {
+	static const float m1 = 1305.0f / 8192.0f;
+	static const float m2 = 2523.0f / 32.0f;
+	static const float c1 = 107.0f / 128.0f;
+	static const float c2 = 2413.0f / 128.0f;
+	static const float c3 = 2392.0f / 128.0f;
+	return std::pow((c1 + c2 * std::pow(in, m1)) / (1 + c3 * std::pow(in, m1)), m2);
+}
+
 qboolean R_MME_TakeShot( void ) {
 	int pixelCount;
 	byte inSound[MME_SAMPLERATE] = {0};
@@ -464,18 +473,22 @@ qboolean R_MME_TakeShot( void ) {
 #ifdef CAPTURE_FLOAT
 					float* asFloatBuffer = (float*)shotBufPerm;
 					for (i = 0; i <pixelCount; i++) {
-						shotBufPerm[i * 3 + 0] = (int)(2055.0f*asFloatBuffer[i * 3 + 0]);
-						shotBufPerm[i * 3 + 1] = (int)(2055.0f*asFloatBuffer[i * 3 + 1]);
-						shotBufPerm[i * 3 + 2] = (int)(2055.0f*asFloatBuffer[i * 3 + 2]);
+						// 1.0f in the source would mean 10,000 nits. 
+						// Let's assume 400 nits for a typical gaming monitor (so the target for 1.0f from source buffer)
+						// 400/10000 = 0.04f
+						// though ideally maybe we can do this 0.04 multiplication already with a shader along with rec2020 conv?
+						shotBufPerm[i * 3 + 0] = (int)(255.0f*pq(asFloatBuffer[i * 3 + 0]*0.04f));
+						shotBufPerm[i * 3 + 1] = (int)(255.0f*pq(asFloatBuffer[i * 3 + 1] * 0.04f));
+						shotBufPerm[i * 3 + 2] = (int)(255.0f*pq(asFloatBuffer[i * 3 + 2] * 0.04f));
 					}
 #endif
 
 					shotData.main.type = mmeShotTypeBGR;
 
-					if (doGamma)
+					/*if (doGamma)
 						R_GammaCorrect(shotBufPerm, pixelCount * 3);
 
-					/*if (shotData.main.type == mmeShotTypeRGBA) {
+					if (shotData.main.type == mmeShotTypeRGBA) {
 						int i;
 						byte* alphaBuf = shotBufPerm + pixelCount * 4;
 						if (mme_saveDepth->integer > 1 || (!blurControl->totalFrames && mme_saveDepth->integer)) {
