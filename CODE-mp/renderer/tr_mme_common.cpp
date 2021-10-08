@@ -9,29 +9,20 @@ extern std::vector<GLuint> pboIds;
 
 void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterProgress,int rollingShutterPixels,int pboId ) {
 #ifdef JEDIACADEMY_GLOW
-	//int rollingShutterFactor = 10;
-	//static int rollingShutterProgress = rollingShutterFactor-1;
 	rollingShutterProgress = rollingShutterFactor-rollingShutterProgress-1;
 
 	
 	{
 
-		//int byteOffset = rollingShutterProgress * 3 * glConfig.vidWidth * glConfig.vidHeight / rollingShutterFactor;
 		int byteOffset = rollingShutterProgress * 3 * glConfig.vidWidth * rollingShutterPixels;
 		GLvoid* byteOffsetAsPointerHack = (GLvoid*)byteOffset; // holy shit this is ugly.
 
-		//static int index = 0;
 		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[pboId]);
-		//index = index ^ 1;
-		//qglReadPixels(0, glConfig.vidHeight / rollingShutterFactor * rollingShutterProgress, glConfig.vidWidth, glConfig.vidHeight / rollingShutterFactor, GL_RGB, GL_UNSIGNED_BYTE, 0);
-		//qglReadBuffer();
 		qglReadBuffer(GL_BACK);
-		//qglReadPixels(0, glConfig.vidHeight / rollingShutterFactor * rollingShutterProgress, glConfig.vidWidth, glConfig.vidHeight / rollingShutterFactor, GL_RGB, GL_UNSIGNED_BYTE, byteOffsetAsPointerHack);
-		qglReadPixels(0, rollingShutterPixels * rollingShutterProgress, glConfig.vidWidth, rollingShutterPixels, GL_RGB, GL_UNSIGNED_BYTE, byteOffsetAsPointerHack);
-		//qglReadPixels(0, glConfig.vidHeight / rollingShutterFactor * rollingShutterProgress, glConfig.vidWidth, glConfig.vidHeight / rollingShutterFactor, GL_BGR_EXT, GL_UNSIGNED_BYTE, byteOffsetAsPointerHack);
-
+		//qglReadPixels(0, rollingShutterPixels * rollingShutterProgress, glConfig.vidWidth, rollingShutterPixels, GL_RGB, GL_UNSIGNED_BYTE, byteOffsetAsPointerHack);
+		qglReadPixels(0, rollingShutterPixels * rollingShutterProgress, glConfig.vidWidth, rollingShutterPixels, GL_BGR_EXT, GL_UNSIGNED_BYTE, byteOffsetAsPointerHack);
+		
 		// map the PBO to process its data by CPU
-		//qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[index]);
 		if (rollingShutterProgress == 0) {
 
 			GLubyte* ptr = (GLubyte*)qglMapBufferARB(GL_PIXEL_PACK_BUFFER_ARB, GL_READ_ONLY_ARB);
@@ -44,8 +35,6 @@ void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterPro
 		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
 	}
 
-	//rollingShutterProgress--;
-	//if (rollingShutterProgress == -1) rollingShutterProgress = rollingShutterFactor - 1;
 #else
 	qglReadPixels( 0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_RGB, GL_UNSIGNED_BYTE, output ); 
 #endif

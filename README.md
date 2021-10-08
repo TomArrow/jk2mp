@@ -1,4 +1,14 @@
-joMME
+joMME - Rolling Shutter Edition
+=====
+
+This is a modified version of joMME which aims to do a single thing: Add a rolling shutter effect. Te intended use is to save rolling shuttered AVI files with the capture avi command. Doing anything else (like depth of field etc) is likely completely broken and might even crash the game. 
+
+There are two variables you can use to modify the rolling shutter behavior:
+- mme_rollingShutterPixels : The "granularity" of the rolling shutter. The amount of lines added to the image at each go. Ideally this is left at 1 pixel, however the performance can be slow. And maybe you might desire a bit more of a "blocky" look. In those cases,feel freee to experiment. The pixel count you specify here must yield a round number when you divide the video resolution height by it. If it doesn,t you will get undefined behavior. Possibly a crash. Don't do that.
+- mme_rollingShutterMultiplier : This is a float value. The default value is 1. You can set it to any value you like in theory. This indicates exactly how many frames (in terms of time) it takes to fill a single frame so to speak. For a realistic experience (as if with a real sensor) you want this to be under 2 likely. But for a more pronounced effect, set this to high values. For example at 60 fps, a value of 5 to 10 gives a noticable effect.
+
+Set both these values before you start any demo. If you change them during the capture, you will get undefined behavior and quite possibly a crash. In particular increasing rollingshuttermultiplier is almost guaranteed to cause a crash during capture. If it doesn't, for some reason, don't assume all is well. You're not supposed to do that! You have been warned.
+
 =====
 
 joMME is an engine modification of Jedi Knight 2: Jedi Outcast for moviemaking. It's a port of q3mme with most of its features and some new ones. Original source code belongs to Raven Software.

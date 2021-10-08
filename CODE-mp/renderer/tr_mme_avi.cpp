@@ -495,7 +495,11 @@ void mmeAviShot( mmeAviFile_t *aviFile, const char *name, mmeShotType_t type, in
 			}
 			outSize = width * height * 3;
 			break;
+		case mmeShotTypeBGR:
+			outSize = width * height * 3;
+			break;
 		} 
+		
 	} else if ( aviFile->format == 1 ) {
 		outSize = SaveJPG( mme_jpegQuality->integer, width, height, type, inBuf, outBuf + 8, outSize );
 	}
@@ -506,7 +510,16 @@ void mmeAviShot( mmeAviFile_t *aviFile, const char *name, mmeShotType_t type, in
 	aviFile->iframes++;
 
 	outSize = (outSize + 9) & ~1;	//make sure we align on 2 byte boundary, hurray M$
-	ri.FS_Write( outBuf, outSize, aviFile->f );
+	if (aviFile->format == 0 && type == mmeShotTypeBGR) {
+		
+		ri.FS_Write(outBuf, 8, aviFile->f);
+		ri.FS_Write(inBuf, outSize - 8, aviFile->f);
+	}
+	else {
+		ri.FS_Write(outBuf, outSize, aviFile->f);
+	}
+	
+	//ri.FS_Write( outBuf, outSize, aviFile->f );
 	aviFile->written += outSize;
 
 	if (outSize > aviFile->maxSize)

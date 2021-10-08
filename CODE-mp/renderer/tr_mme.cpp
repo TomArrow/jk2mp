@@ -457,10 +457,12 @@ qboolean R_MME_TakeShot( void ) {
 			
 				if (rollingShutterProgress == rollingShutterFactor-1){
 
+					shotData.main.type = mmeShotTypeBGR;
+
 					if (doGamma)
 						R_GammaCorrect(shotBufPerm, pixelCount * 3);
 
-					if (shotData.main.type == mmeShotTypeRGBA) {
+					/*if (shotData.main.type == mmeShotTypeRGBA) {
 						int i;
 						byte* alphaBuf = shotBufPerm + pixelCount * 4;
 						if (mme_saveDepth->integer > 1 || (!blurControl->totalFrames && mme_saveDepth->integer)) {
@@ -474,7 +476,7 @@ qboolean R_MME_TakeShot( void ) {
 							shotBufPerm[i * 4 + 2] = shotBufPerm[i * 3 + 2];
 							shotBufPerm[i * 4 + 3] = alphaBuf[i];
 						}
-					}
+					}*/
 
 					if (!audioTaken)
 						audio = ri.S_MMEAviImport(inSound, &sizeSound);
