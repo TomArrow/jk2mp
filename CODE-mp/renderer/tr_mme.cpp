@@ -441,7 +441,11 @@ qboolean R_MME_TakeShot( void ) {
 	if ( mme_saveShot->integer > 1 || (!blurControl->totalFrames && mme_saveShot->integer )) {
 		//byte *shotBuf = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 5 );
 		if (!shotBufPermInitialized) {
+#ifdef CAPTURE_FLOAT
+			shotBufPerm = (byte*)ri.Hunk_AllocateTempMemory(pixelCount * 5*4);
+#else
 			shotBufPerm = (byte*)ri.Hunk_AllocateTempMemory(pixelCount * 5);
+#endif
 			shotBufPermInitialized = true;
 		}
 		//byte *shotBuf = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 5 );
@@ -456,6 +460,15 @@ qboolean R_MME_TakeShot( void ) {
 		
 			
 				if (rollingShutterProgress == rollingShutterFactor-1){
+
+#ifdef CAPTURE_FLOAT
+					float* asFloatBuffer = (float*)shotBufPerm;
+					for (i = 0; i <pixelCount; i++) {
+						shotBufPerm[i * 3 + 0] = (int)(2055.0f*asFloatBuffer[i * 3 + 0]);
+						shotBufPerm[i * 3 + 1] = (int)(2055.0f*asFloatBuffer[i * 3 + 1]);
+						shotBufPerm[i * 3 + 2] = (int)(2055.0f*asFloatBuffer[i * 3 + 2]);
+					}
+#endif
 
 					shotData.main.type = mmeShotTypeBGR;
 

@@ -37,6 +37,8 @@ static void GfxInfo_f( void );
 
 #endif 
 
+glMMEConfig_t	glMMEConfig;
+
 
 cvar_t	*r_flareSize;
 cvar_t	*r_flareFade;
@@ -322,8 +324,21 @@ static void InitOpenGL( void )
 	if ( glConfig.vidWidth == 0 )
 	{
 		GLimp_Init();
+		GL_SetDefaultState();
 		// print info the first time only
 		GfxInfo_f();
+
+		glMMEConfig.glWidth = glConfig.vidWidth;
+		glMMEConfig.glHeight = glConfig.vidHeight;
+
+#ifdef CAPTURE_FLOAT
+		R_FrameBuffer_Init();
+#endif
+	}
+	else
+	{
+		// set default state
+		GL_SetDefaultState();
 	}
 
 	// init command buffers and SMP
@@ -1168,7 +1183,11 @@ void R_Init( void ) {
 
 		// create 2 pixel buffer objects, you need to delete them when program exits.
 		// glBufferDataARB with NULL pointer reserves only memory space.
+#ifdef CAPTURE_FLOAT
+		int dataSize = glConfig.vidWidth * glConfig.vidHeight * 3*4;
+#else
 		int dataSize = glConfig.vidWidth * glConfig.vidHeight * 3;
+#endif
 
 		// create more pixel buffers if we need that for rolling shutter
 		if (rollingShutterBufferCount > pboIds.size()) {
@@ -1183,15 +1202,8 @@ void R_Init( void ) {
 			qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[i]);
 			qglBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, dataSize, 0, GL_DYNAMIC_READ_ARB);
 
-			//pboRollingShutterProgresses[i] = (int)(-(float)i * mme_rollingShutterMultiplier->value* rollingShutterFactor);
-			//pboRollingShutterProgresses[i] = (int)(-(float)i * rollingShutterFactor);
 			pboRollingShutterProgresses[i] = (int)(-(float)i * ((float)rollingShutterFactor/ (float)bufferCountNeededForRollingshutter));
-			//pboRollingShutterProgresses[i] = (int)(-(float)i * ((float)rollingShutterFactor/ mme_rollingShutterMultiplier->value));
 		}
-		/*qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[0]);
-		qglBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, dataSize, 0, GL_DYNAMIC_READ_ARB);
-		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[1]);
-		qglBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, dataSize, 0, GL_DYNAMIC_READ_ARB);*/
 
 		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
 	}
@@ -1277,6 +1289,9 @@ void RE_Shutdown( qboolean destroyWindow ) {
 
 	// shut down platform specific OpenGL stuff
 	if ( destroyWindow ) {
+#ifdef CAPTURE_FLOAT
+		R_FrameBuffer_Shutdown();
+#endif
 		GLimp_Shutdown();
 
 		Com_Memset( &glConfig, 0, sizeof( glConfig ) );

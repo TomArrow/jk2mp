@@ -1298,8 +1298,12 @@ const void	*RB_DrawBuffer( const void *data ) {
 
 	cmd = (const drawBufferCommand_t *)data;
 
-	qglDrawBuffer( cmd->buffer );
-
+#ifndef HAVE_GLES
+	qglDrawBuffer(cmd->buffer);
+#endif
+#ifdef CAPTURE_FLOAT
+	R_FrameBuffer_StartFrame();
+#endif
 	// clear screen for debugging
 	if (tr.world && tr.world->globalFog != -1)
 	{
@@ -1460,7 +1464,9 @@ const void	*RB_SwapBuffers( const void *data ) {
     if ( !glState.finishCalled ) {
         qglFinish();
 	}
-
+#ifdef CAPTURE_FLOAT
+	R_FrameBuffer_EndFrame();
+#endif
     GLimp_LogComment( "***************** RB_SwapBuffers *****************\n\n\n" );
 
     GLimp_EndFrame();

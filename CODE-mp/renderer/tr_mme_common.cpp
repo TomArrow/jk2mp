@@ -11,23 +11,35 @@ void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterPro
 #ifdef JEDIACADEMY_GLOW
 	rollingShutterProgress = rollingShutterFactor-rollingShutterProgress-1;
 
+#ifdef CAPTURE_FLOAT
+	int multiplier = 4;
+#else
+	int multiplier = 1;
+#endif	
 	
 	{
 
-		int byteOffset = rollingShutterProgress * 3 * glConfig.vidWidth * rollingShutterPixels;
+		int byteOffset = rollingShutterProgress * 3 * glConfig.vidWidth * rollingShutterPixels*multiplier;
 		GLvoid* byteOffsetAsPointerHack = (GLvoid*)byteOffset; // holy shit this is ugly.
 
 		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[pboId]);
-		qglReadBuffer(GL_BACK);
-		//qglReadPixels(0, rollingShutterPixels * rollingShutterProgress, glConfig.vidWidth, rollingShutterPixels, GL_RGB, GL_UNSIGNED_BYTE, byteOffsetAsPointerHack);
-		qglReadPixels(0, rollingShutterPixels * rollingShutterProgress, glConfig.vidWidth, rollingShutterPixels, GL_BGR_EXT, GL_UNSIGNED_BYTE, byteOffsetAsPointerHack);
 		
+		//qglReadPixels(0, rollingShutterPixels * rollingShutterProgress, glConfig.vidWidth, rollingShutterPixels, GL_RGB, GL_UNSIGNED_BYTE, byteOffsetAsPointerHack);
+#ifdef CAPTURE_FLOAT
+		// Todo: Test glClampColor
+		// Todo: draw into floating point fbo
+		//qglClamp
+		qglReadPixels(0, rollingShutterPixels * rollingShutterProgress, glConfig.vidWidth, rollingShutterPixels, GL_BGR_EXT, GL_FLOAT, byteOffsetAsPointerHack);
+#else
+		qglReadBuffer(GL_BACK);
+		qglReadPixels(0, rollingShutterPixels * rollingShutterProgress, glConfig.vidWidth, rollingShutterPixels, GL_BGR_EXT, GL_UNSIGNED_BYTE, byteOffsetAsPointerHack);
+#endif
 		// map the PBO to process its data by CPU
 		if (rollingShutterProgress == 0) {
 
 			GLubyte* ptr = (GLubyte*)qglMapBufferARB(GL_PIXEL_PACK_BUFFER_ARB, GL_READ_ONLY_ARB);
 			if (ptr) {
-				memcpy(output, ptr, glConfig.vidHeight * glConfig.vidWidth * 3);
+				memcpy(output, ptr, glConfig.vidHeight * glConfig.vidWidth * 3 * multiplier);
 				qglUnmapBufferARB(GL_PIXEL_PACK_BUFFER_ARB);
 			}
 		}

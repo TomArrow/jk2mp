@@ -26,6 +26,9 @@ extern void WG_RestoreGamma( void );
 
 static qboolean GLW_CreateWindow( int width, int height, int colorbits, qboolean cdsFullscreen );
 
+
+
+
 typedef enum {
 	RSERR_OK,
 
@@ -1344,6 +1347,8 @@ static void GLW_InitExtensions( void )
 		ri.Cvar_Set( "r_ext_texture_filter_anisotropic_avail", "0" );
 	}
 
+
+
 	// GL_EXT_clamp_to_edge
 	glConfig.clampToEdgeAvailable = qfalse;
 	if ( strstr( glConfig.extensions_string, "GL_EXT_texture_edge_clamp" ) )
@@ -1694,6 +1699,87 @@ static void GLW_InitExtensions( void )
 	{
 		g_bDynamicGlowSupported = false;
 		ri.Cvar_Set( "r_DynamicGlow","0" );
+	}
+
+
+	//mme
+	if (strstr(glConfig.extensions_string, "GL_EXT_texture_filter_anisotropic"))
+	{
+
+		qglGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &glMMEConfig.maxAnisotropy);
+		if (glMMEConfig.maxAnisotropy <= 0) {
+			ri.Printf(PRINT_ALL, "...GL_EXT_texture_filter_anisotropic not properly supported!\n");
+		}
+		else {
+			ri.Printf(PRINT_ALL, "...using GL_EXT_texture_filter_anisotropic (max: %d)\n", glMMEConfig.maxAnisotropy);
+		}
+	}
+	else
+	{
+		glMMEConfig.maxAnisotropy = 0;
+		ri.Printf(PRINT_ALL, "...GL_EXT_texture_filter_anisotropic not found\n");
+	}
+
+	glMMEConfig.framebufferObject = qfalse;
+	glMMEConfig.shaderSupport = qfalse;
+	if (strstr(glConfig.extensions_string, "GL_EXT_framebuffer_object") &&
+		(1 || strstr(glConfig.extensions_string, "GL_ARB_texture_non_power_of_two"))) {
+		ri.Printf(PRINT_ALL, "...using GL_EXT_framebuffer_object\n");
+		glMMEConfig.framebufferObject = qtrue;
+		qglGenFramebuffers = (void (APIENTRY*)(GLsizei, GLuint*)) qwglGetProcAddress("glGenFramebuffersEXT");
+		qglBindFramebuffer = (void (APIENTRY*)(GLenum, GLuint)) qwglGetProcAddress("glBindFramebufferEXT");
+		qglGenRenderbuffers = (void (APIENTRY*)(GLsizei, GLuint*)) qwglGetProcAddress("glGenRenderbuffersEXT");
+		qglBindRenderbuffer = (void (APIENTRY*)(GLenum, GLuint)) qwglGetProcAddress("glBindRenderbufferEXT");
+		qglRenderbufferStorage = (void (APIENTRY*)(GLenum, GLenum, GLsizei, GLsizei)) qwglGetProcAddress("glRenderbufferStorageEXT");
+		qglFramebufferRenderbuffer = (void (APIENTRY*)(GLenum, GLenum, GLenum, GLuint)) qwglGetProcAddress("glFramebufferRenderbufferEXT");
+		qglFramebufferTexture2D = (void (APIENTRY*)(GLenum, GLenum, GLenum, GLuint, GLint)) qwglGetProcAddress("glFramebufferTexture2DEXT");
+		qglCheckFramebufferStatus = (GLenum(APIENTRY*)(GLenum)) qwglGetProcAddress("glCheckFramebufferStatusEXT");
+		qglDeleteFramebuffers = (void (APIENTRY*)(GLsizei, const GLuint*)) qwglGetProcAddress("glDeleteFramebuffersEXT");
+		qglDeleteRenderbuffers = (void (APIENTRY*)(GLsizei, const GLuint*)) qwglGetProcAddress("glDeleteRenderbuffersEXT");
+
+		if (!strstr(glConfig.extensions_string, "GL_ARB_depth_texture")) {
+			ri.Printf(PRINT_WARNING, "WARNING: GL_ARB_depth_texture is missing\n");
+		}
+		if (!strstr(glConfig.extensions_string, "GL_EXT_packed_depth_stencil") ||
+			!strstr(glConfig.extensions_string, "GL_NV_packed_depth_stencil")) {
+			ri.Printf(PRINT_WARNING, "WARNING: packed_depth_stencil is missing\n");
+		}
+	}
+	glMMEConfig.framebufferMultiSample = qfalse;
+	if (strstr(glConfig.extensions_string, "GL_EXT_framebuffer_multisample") && strstr(glConfig.extensions_string, "GL_EXT_framebuffer_blit")) {
+		qglRenderbufferStorageMultisampleEXT = (void (APIENTRYP)(GLenum, GLsizei, GLenum, GLsizei, GLsizei))qwglGetProcAddress("glRenderbufferStorageMultisampleEXT");
+		qglBlitFramebufferEXT = (void (APIENTRYP)(GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLbitfield, GLenum))  qwglGetProcAddress("glBlitFramebufferEXT");
+		glMMEConfig.framebufferMultiSample = qfalse;
+	}
+	//added fragment/vertex program extensions
+	if (strstr(glConfig.extensions_string, "GL_ARB_fragment_shader") &&
+		strstr(glConfig.extensions_string, "GL_ARB_vertex_program") &&
+		strstr(glConfig.extensions_string, "GL_ARB_vertex_shader") &&
+		strstr(glConfig.extensions_string, "GL_ARB_fragment_program") &&
+		strstr(glConfig.extensions_string, "GL_ARB_shading_language_100"))
+	{
+		ri.Printf(PRINT_ALL, "...using GL_ARB_fragment_program\n");
+		ri.Printf(PRINT_ALL, "...using GL_ARB_vertex_program\n");
+		ri.Printf(PRINT_ALL, "...using GL_ARB_shading_language_100\n");
+		glMMEConfig.shaderSupport = qtrue;
+		qglAttachShader = (void (APIENTRY*) (GLuint, GLuint)) qwglGetProcAddress("glAttachShader");
+		qglBindAttribLocation = (void (APIENTRY*) (GLuint, GLuint, const GLchar*)) qwglGetProcAddress("glBindAttribLocation");
+		qglCompileShader = (void (APIENTRY*) (GLuint)) qwglGetProcAddress("glCompileShader");
+		qglCreateProgram = (GLuint(APIENTRY*) (void)) qwglGetProcAddress("glCreateProgram");
+		qglCreateShader = (GLuint(APIENTRY*) (GLenum)) qwglGetProcAddress("glCreateShader");
+		qglDeleteProgram = (void (APIENTRY*) (GLuint)) qwglGetProcAddress("glDeleteProgram");
+		qglDeleteShader = (void (APIENTRY*) (GLuint)) qwglGetProcAddress("glDeleteShader");
+		qglShaderSource = (void (APIENTRY*) (GLuint, GLsizei, const GLchar**, const GLint*)) qwglGetProcAddress("glShaderSource");
+		qglLinkProgram = (void (APIENTRY*) (GLuint)) qwglGetProcAddress("glLinkProgram");
+		qglUseProgram = (void (APIENTRY*) (GLuint)) qwglGetProcAddress("glUseProgram");
+		qglGetUniformLocation = (GLint(APIENTRY*) (GLuint, const GLchar*)) qwglGetProcAddress("glGetUniformLocation");
+		qglUniform1f = (void (APIENTRY*) (GLint, GLfloat)) qwglGetProcAddress("glUniform1f");
+		qglUniform2f = (void (APIENTRY*) (GLint, GLfloat, GLfloat)) qwglGetProcAddress("glUniform2f");
+		qglUniform1i = (void (APIENTRY*) (GLint, GLint)) qwglGetProcAddress("glUniform1i");
+		qglGetProgramiv = (void (APIENTRY*) (GLuint, GLenum, GLint*)) qwglGetProcAddress("glGetProgramiv");
+		qglGetProgramInfoLog = (void (APIENTRY*) (GLuint, GLsizei, GLsizei*, GLchar*)) qwglGetProcAddress("glGetProgramInfoLog");
+		qglGetShaderiv = (void (APIENTRY*) (GLuint, GLenum, GLint*)) qwglGetProcAddress("glGetShaderiv");
+		qglGetShaderInfoLog = (void (APIENTRY*) (GLuint, GLsizei, GLsizei*, GLchar*)) qwglGetProcAddress("glGetShaderInfoLog");
 	}
 #endif
 }

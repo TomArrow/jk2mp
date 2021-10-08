@@ -1,4 +1,4 @@
-
+#pragma once
 
 #ifndef TR_LOCAL_H
 #define TR_LOCAL_H
@@ -20,6 +20,8 @@ long myftol( float f );
 #endif
 
 #define JEDIACADEMY_GLOW
+
+#define CAPTURE_FLOAT
 
 // everything that is needed by the backend needs
 // to be double buffered to allow it to run in
@@ -1146,7 +1148,7 @@ extern backEndState_t	backEnd;
 extern trGlobals_t	tr;
 extern glconfig_t	glConfig;		// outside of TR since it shouldn't be cleared during ref re-init
 extern glstate_t	glState;		// outside of TR since it shouldn't be cleared during ref re-init
-
+extern glMMEConfig_t	glMMEConfig;	// outside of TR since it shouldn't be cleared during ref re-init
 
 //
 // cvars
@@ -1999,3 +2001,29 @@ void R_MME_DoNotTake( );
 void R_MME_TimeFraction(float timeFraction);
 
 extern bool g_bTextureRectangleHack;
+
+
+//Framebuffer stuff
+#define FB_FLOAT16 				0x01		//Have a float color buffer
+#define FB_FLOAT32 				0x02		//Have a float color buffer
+#define FB_STENCIL		 		0x04		//Have a stencil buffer
+#define FB_DEPTH		 		0x08		//Have a depth buffer
+#define FB_PACKED				0x10		//Have a packed depth/zbuffer texture
+#define FB_MULTISAMPLE	 		0x20		//Make a multisampled buffer
+
+typedef struct {
+	GLuint 	fbo;
+	GLuint	color;					//Color in a texture
+	GLuint	packed;					//Packed depth/stencil texture
+	GLuint	depth;					//depth render buffer
+	GLuint	stencil;				//stencil render buffer
+	unsigned int flags;				//the creation flags
+	int		width, height;			//Size of the buffer
+} frameBufferData_t;
+
+void R_FrameBuffer_Init(void);
+void R_FrameBuffer_Shutdown(void);
+void R_FrameBuffer_StartFrame(void);
+void R_FrameBuffer_EndFrame(void);
+//Try to do an fbo blur
+qboolean R_FrameBuffer_Blur(float scale, int frame, int total);

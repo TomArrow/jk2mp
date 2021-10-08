@@ -271,6 +271,7 @@
     <ClCompile Include="renderer\tr_curve.cpp" />
     <ClCompile Include="renderer\tr_flares.cpp" />
     <ClCompile Include="renderer\tr_font.cpp" />
+    <ClCompile Include="renderer\tr_framebuffer.cpp" />
     <ClCompile Include="renderer\tr_ghoul2.cpp" />
     <ClCompile Include="renderer\tr_image.cpp" />
     <ClCompile Include="renderer\tr_init.cpp" />
