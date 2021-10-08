@@ -690,11 +690,13 @@ static void Upload32( unsigned *data,
 		}
 		else if ( r_texturebits->integer == 32 )
 		{
-			*pformat = GL_RGB8;
+			//*pformat = GL_RGB8;
+			*pformat = GL_SRGB8;
 		}
 		else
 		{
-			*pformat = 3;
+			//*pformat = 3;
+			*pformat = GL_SRGB8;
 		}
 	}
 	else if ( samples == 4 )
@@ -709,11 +711,13 @@ static void Upload32( unsigned *data,
 		}
 		else if ( r_texturebits->integer == 32 )
 		{
-			*pformat = GL_RGBA8;
+			//*pformat = GL_RGBA8;
+			*pformat = GL_SRGB8_ALPHA8;
 		}
 		else
 		{
-			*pformat = 4;
+			//*pformat = 4;
+			*pformat = GL_SRGB8_ALPHA8;
 		}
 	}
 
