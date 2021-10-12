@@ -59,12 +59,14 @@ void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterPro
 			}
 			qglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIds[pboId]); 
 
+			
+
 			while ((err = qglGetError()) != GL_NO_ERROR)
 			{
 				// Process/log the error.
 				ri.Printf(PRINT_WARNING, "WARNING: OpenGL error during capture (set unpack): %d \n", (int)err);
 			}
-			R_FrameBuffer_HDRConvert(false);
+			R_FrameBuffer_HDRConvert(true);
 			qglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 			qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[pboId]);
 			//R_FrameBuffer_StartHDRRead(); 

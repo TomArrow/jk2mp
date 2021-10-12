@@ -481,9 +481,12 @@ qboolean R_MME_TakeShot( void ) {
 						// Let's assume 400 nits for a typical gaming monitor (so the target for 1.0f from source buffer)
 						// 400/10000 = 0.04f
 						// though ideally maybe we can do this 0.04 multiplication already with a shader along with rec2020 conv?
-						shotBufPerm[i * 3 + 0] = (int)(255.0f*pq(asFloatBuffer[i * 3 + 0]*0.04f));
-						shotBufPerm[i * 3 + 1] = (int)(255.0f*pq(asFloatBuffer[i * 3 + 1] * 0.04f));
-						shotBufPerm[i * 3 + 2] = (int)(255.0f*pq(asFloatBuffer[i * 3 + 2] * 0.04f));
+						//shotBufPerm[i * 3 + 0] = (int)(255.0f*pq(asFloatBuffer[i * 3 + 0]*0.04f));
+						//shotBufPerm[i * 3 + 1] = (int)(255.0f*pq(asFloatBuffer[i * 3 + 1] * 0.04f));
+						//shotBufPerm[i * 3 + 2] = (int)(255.0f*pq(asFloatBuffer[i * 3 + 2] * 0.04f));
+						shotBufPerm[i * 3 + 0] = (int)(255.0f*asFloatBuffer[i * 3 + 0]);
+						shotBufPerm[i * 3 + 1] = (int)(255.0f*asFloatBuffer[i * 3 + 1]);
+						shotBufPerm[i * 3 + 2] = (int)(255.0f*asFloatBuffer[i * 3 + 2]);
 					}
 #endif
 

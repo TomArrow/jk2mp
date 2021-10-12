@@ -433,57 +433,28 @@ qboolean R_FrameBuffer_HDRConvert(bool fromPBO) {
 
 		GLenum err;
 
-		while ((err = qglGetError()) != GL_NO_ERROR)
-		{
-			// Process/log the error.
-			ri.Printf(PRINT_WARNING, "WARNING: OpenGL error during HDR conversion (before): %d \n", (int)err);
-		}
-
-		if (glState.currenttextures[0] != fbo.colorSpaceConv->color) {
-			GL_SelectTexture(0);
-			qglBindTexture(GL_TEXTURE_2D, fbo.colorSpaceConv->color);
-			glState.currenttextures[0] = fbo.colorSpaceConv->color;
-		};
-		//qglBindTexture(GL_TEXTURE_2D,fbo.colorSpaceConv->color); // This throws the error.
-		
-		while ((err = qglGetError()) != GL_NO_ERROR)
-		{
-			// Process/log the error.
-			ri.Printf(PRINT_WARNING, "WARNING: OpenGL error during HDR conversion (bind): %d \n", (int)err);
-		}
-		
-		qglTexImage2D(GL_TEXTURE_2D, 0, RGBA16F_ARB, glConfig.vidWidth, glConfig.vidHeight, 0, GL_BGR_EXT, GL_FLOAT, 0); //when pbo is bound, this will read from pbo
-
-		while ((err = qglGetError()) != GL_NO_ERROR)
-		{
-			// Process/log the error.
-			ri.Printf(PRINT_WARNING, "WARNING: OpenGL error during HDR conversion (teximage): %d \n",(int)err);
-		}
-
-		//qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.colorSpaceConv->fbo);
-		//qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.colorSpaceConv->fbo);
+		qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 		//The color used to blur add this frame
-		//qglColor4f(1, 1, 1, 1);
-		//GL_State(GLS_DEPTHTEST_DISABLE);
+		qglColor4f(1, 1, 1, 1);
+		GL_State(GLS_DEPTHTEST_DISABLE);
+		R_SetGL2DSize(glConfig.vidWidth, glConfig.vidHeight);
 
-		//R_SetGL2DSize(glConfig.vidWidth, glConfig.vidHeight);
+		qglDrawPixels(glConfig.vidWidth, glConfig.vidHeight, GL_BGR_EXT, GL_FLOAT, 0);
+
+		
+
+		
 		//R_DrawQuad(fbo.main->color, glConfig.vidWidth, glConfig.vidHeight);
 		//Reset fbo
-		//qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.colorSpaceConvResult->fbo);
 		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.main->fbo);
 		qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 
 		qglColor4f(1, 1, 1, 1);
-		GL_State(GLS_DEPTHTEST_DISABLE); 
+		GL_State(GLS_DEPTHTEST_DISABLE);
 		qglUseProgram(hdrPqShader->ShaderId());
 		R_DrawQuad(fbo.colorSpaceConv->color, glConfig.vidWidth, glConfig.vidHeight);
 		qglUseProgram(0);
-
-		while ((err = qglGetError()) != GL_NO_ERROR)
-		{
-			// Process/log the error.
-			ri.Printf(PRINT_WARNING, "WARNING: OpenGL error during HDR conversion (drawquad): %d \n", (int)err);
-		}
 	}
 	else {
 		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.colorSpaceConv->fbo);
