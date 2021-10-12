@@ -63,6 +63,9 @@
     <Filter Include="Renderer\libpng">
       <UniqueIdentifier>{09dcce17-f28d-4268-861c-ee72d8eb939b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Renderer\glsl">
+      <UniqueIdentifier>{3d8ddb39-2e8d-4f67-a2d0-f08300faae73}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="client\0_SH_Leak.cpp">
@@ -671,6 +674,9 @@
     <ClCompile Include="renderer\tr_framebuffer.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="renderer\tr_glsl.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="client\client.h">
@@ -1048,6 +1054,9 @@
     <ClInclude Include="png\rpng.h">
       <Filter>Renderer\png</Filter>
     </ClInclude>
+    <ClInclude Include="renderer\tr_glsl.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="win32\qe3.ico">
@@ -1058,5 +1067,13 @@
     <ResourceCompile Include="win32\winquake.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="hdrpq-fragment.glsl">
+      <Filter>Renderer\glsl</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hdrpq-vertex.glsl">
+      <Filter>Renderer\glsl</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>

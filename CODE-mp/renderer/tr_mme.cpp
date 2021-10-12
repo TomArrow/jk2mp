@@ -459,18 +459,22 @@ qboolean R_MME_TakeShot( void ) {
 		}
 		//byte *shotBuf = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 5 );
 
+		bool hdrConversionDone = false;
+
 		for (int i = 0; i < rollingShutterBufferCount; i++) {
 
 			int& rollingShutterProgress = pboRollingShutterProgresses[i];
 
 			if(rollingShutterProgress >= 0){ // the later pbos have negative offsets because they start capturing later
-
+				
 				R_MME_MultiShot(shotBufPerm, rollingShutterFactor,rollingShutterProgress,mme_rollingShutterPixels->integer,i );
-		
+				
 			
 				if (rollingShutterProgress == rollingShutterFactor-1){
 
 #ifdef CAPTURE_FLOAT
+					
+
 					float* asFloatBuffer = (float*)shotBufPerm;
 					for (i = 0; i <pixelCount; i++) {
 						// 1.0f in the source would mean 10,000 nits. 

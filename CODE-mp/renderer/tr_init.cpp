@@ -747,15 +747,16 @@ void GfxInfo_f( void )
 		"GL_EXT_texture_compression_s3tc",
 	};
 
-	ri.Printf( PRINT_ALL, "\nGL_VENDOR: %s\n", glConfig.vendor_string );
-	ri.Printf( PRINT_ALL, "GL_RENDERER: %s\n", glConfig.renderer_string );
-	ri.Printf( PRINT_ALL, "GL_VERSION: %s\n", glConfig.version_string );
+	
 	ri.Printf( PRINT_ALL, "GL_EXTENSIONS: " );
 	R_PrintLongString( glConfig.extensions_string );
 	ri.Printf( PRINT_ALL, "\n" );
 	ri.Printf( PRINT_ALL, "GL_MAX_TEXTURE_SIZE: %d\n", glConfig.maxTextureSize );
 	ri.Printf( PRINT_ALL, "GL_MAX_ACTIVE_TEXTURES_ARB: %d\n", glConfig.maxActiveTextures );
 	ri.Printf( PRINT_ALL, "\nPIXELFORMAT: color(%d-bits) Z(%d-bit) stencil(%d-bits)\n", glConfig.colorBits, glConfig.depthBits, glConfig.stencilBits );
+	ri.Printf(PRINT_ALL, "\nGL_VENDOR: %s\n", glConfig.vendor_string);
+	ri.Printf(PRINT_ALL, "GL_RENDERER: %s\n", glConfig.renderer_string);
+	ri.Printf(PRINT_ALL, "GL_VERSION: %s\n", glConfig.version_string);
 	//ri.Printf( PRINT_ALL, "MODE: %d, %d x %d %s hz:", r_mode->integer, glConfig.vidWidth, glConfig.vidHeight, fsstrings[r_fullscreen->integer == 1] );
 	ri.Printf( PRINT_ALL, "MODE: %d, %d x %d %s%s hz:", r_mode->integer, glConfig.vidWidth, glConfig.vidHeight, r_fullscreen->integer == 0 ? noborderstrings[r_noborder->integer == 1] : noborderstrings[0] ,fsstrings[r_fullscreen->integer == 1] );
 	if ( glConfig.displayFrequency )
@@ -1052,6 +1053,24 @@ extern qboolean Sys_LowPhysicalMemory();
 #define G2_VERT_SPACE_SERVER_SIZE 256
 #endif
 
+void APIENTRY
+MessageCallback(GLenum source,
+	GLenum type,
+	GLuint id,
+	GLenum severity,
+	GLsizei length,
+	const GLchar* message,
+	const void* userParam)
+{
+	ri.Printf(PRINT_WARNING, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+		(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+		type, severity, message);
+}
+
+
+
+
+
 #ifdef JEDIACADEMY_GLOW
 //GLuint pboIds[2];
 vector<GLuint> pboIds(2);
@@ -1076,6 +1095,13 @@ void R_Init( void ) {
 #ifndef DEDICATED
 	Com_Memset( &tess, 0, sizeof( tess ) );
 #endif
+
+
+
+	// During init, enable debug output
+	//qglEnable(GL_DEBUG_OUTPUT); //Nope won't work. Needs opengl 4.3.
+	//qglDebugMessageCallback(MessageCallback, 0);
+
 
 //	Swap_Init();
 

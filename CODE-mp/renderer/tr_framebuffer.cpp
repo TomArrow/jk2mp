@@ -47,6 +47,7 @@
 //#pragma once
 
 #include "tr_local.h"
+#include "tr_glsl.h"
 
 #ifdef CAPTURE_FLOAT
 #include <cmath>
@@ -56,6 +57,7 @@
 #include "qgl.h"
 #endif
 
+cvar_t *r_convertToHDR;
 cvar_t *r_floatBuffer;
 cvar_t *r_fbo;
 cvar_t *r_fboMultiSample;
@@ -83,8 +85,14 @@ static struct {
 	frameBufferData_t *main;
 	frameBufferData_t *blur;
 	frameBufferData_t *dof;
+	frameBufferData_t *colorSpaceConv;
+	frameBufferData_t *colorSpaceConvResult;
 	int screenWidth, screenHeight;
 } fbo;
+
+
+R_GLSL* hdrPqShader;
+//GLuint tmpPBOtexture;
 
 //two functions to bind and unbind the main framebuffer, generally just to be
 //called externaly
@@ -299,6 +307,7 @@ void R_FrameBuffer_Init( void ) {
 	r_fboHeight = ri.Cvar_Get( "r_fboHeight", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_fboMultiSample = ri.Cvar_Get( "r_fboMultiSample", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_floatBuffer = ri.Cvar_Get( "r_floatBuffer", "1", CVAR_ARCHIVE | CVAR_LATCH);
+	r_convertToHDR = ri.Cvar_Get( "r_convertToHDR", "1", CVAR_ARCHIVE | CVAR_LATCH);
 
 	// make sure all the commands added here are also		
 
@@ -374,6 +383,16 @@ void R_FrameBuffer_Init( void ) {
 		fbo.blur = R_FrameBufferCreate( width, height, flags );
 	}
 
+	if (r_convertToHDR->integer) {
+		flags = FB_FLOAT16;
+		fbo.colorSpaceConv = R_FrameBufferCreate(width, height, flags);
+		fbo.colorSpaceConvResult = R_FrameBufferCreate(width, height, flags);
+		hdrPqShader = new R_GLSL("hdrpq-vertex.glsl","hdrpq-fragment.glsl");
+		if (!hdrPqShader->IsWorking()) {
+			ri.Printf(PRINT_WARNING, "WARNING: HDR PQ Shader could not be compiled. HDR conversion disabled.\n");
+		}
+	}
+
 	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, 0 );
 #endif
 }
@@ -399,6 +418,127 @@ void R_FrameBuffer_StartFrame( void ) {
 #endif
 }
 
+
+
+
+qboolean R_FrameBuffer_HDRConvert(bool fromPBO) {
+#ifdef HAVE_GLES
+	//TODO
+	return qfalse;
+#else
+	if (!hdrPqShader->IsWorking())
+		return qfalse;
+	
+	if (fromPBO) { // We assume the PBO is bound!
+
+		GLenum err;
+
+		while ((err = qglGetError()) != GL_NO_ERROR)
+		{
+			// Process/log the error.
+			ri.Printf(PRINT_WARNING, "WARNING: OpenGL error during HDR conversion (before): %d \n", (int)err);
+		}
+
+		if (glState.currenttextures[0] != fbo.colorSpaceConv->color) {
+			GL_SelectTexture(0);
+			qglBindTexture(GL_TEXTURE_2D, fbo.colorSpaceConv->color);
+			glState.currenttextures[0] = fbo.colorSpaceConv->color;
+		};
+		//qglBindTexture(GL_TEXTURE_2D,fbo.colorSpaceConv->color); // This throws the error.
+		
+		while ((err = qglGetError()) != GL_NO_ERROR)
+		{
+			// Process/log the error.
+			ri.Printf(PRINT_WARNING, "WARNING: OpenGL error during HDR conversion (bind): %d \n", (int)err);
+		}
+		
+		qglTexImage2D(GL_TEXTURE_2D, 0, RGBA16F_ARB, glConfig.vidWidth, glConfig.vidHeight, 0, GL_BGR_EXT, GL_FLOAT, 0); //when pbo is bound, this will read from pbo
+
+		while ((err = qglGetError()) != GL_NO_ERROR)
+		{
+			// Process/log the error.
+			ri.Printf(PRINT_WARNING, "WARNING: OpenGL error during HDR conversion (teximage): %d \n",(int)err);
+		}
+
+		//qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.colorSpaceConv->fbo);
+		//qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+		//The color used to blur add this frame
+		//qglColor4f(1, 1, 1, 1);
+		//GL_State(GLS_DEPTHTEST_DISABLE);
+
+		//R_SetGL2DSize(glConfig.vidWidth, glConfig.vidHeight);
+		//R_DrawQuad(fbo.main->color, glConfig.vidWidth, glConfig.vidHeight);
+		//Reset fbo
+		//qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.colorSpaceConvResult->fbo);
+		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.main->fbo);
+		qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+
+		qglColor4f(1, 1, 1, 1);
+		GL_State(GLS_DEPTHTEST_DISABLE); 
+		qglUseProgram(hdrPqShader->ShaderId());
+		R_DrawQuad(fbo.colorSpaceConv->color, glConfig.vidWidth, glConfig.vidHeight);
+		qglUseProgram(0);
+
+		while ((err = qglGetError()) != GL_NO_ERROR)
+		{
+			// Process/log the error.
+			ri.Printf(PRINT_WARNING, "WARNING: OpenGL error during HDR conversion (drawquad): %d \n", (int)err);
+		}
+	}
+	else {
+		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.colorSpaceConv->fbo);
+		qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+		//The color used to blur add this frame
+		qglColor4f(1, 1, 1, 1);
+		GL_State(GLS_DEPTHTEST_DISABLE);
+
+		R_SetGL2DSize(glConfig.vidWidth, glConfig.vidHeight);
+		R_DrawQuad(fbo.main->color, glConfig.vidWidth, glConfig.vidHeight);
+		//Reset fbo
+		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.main->fbo);
+		qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+
+		qglColor4f(1, 1, 1, 1);
+		GL_State(GLS_DEPTHTEST_DISABLE);
+		qglUseProgram(hdrPqShader->ShaderId());
+		R_DrawQuad(fbo.colorSpaceConv->color, glConfig.vidWidth, glConfig.vidHeight);
+		qglUseProgram(0);
+	}
+
+	
+	return qtrue;
+#endif
+}
+
+qboolean R_FrameBuffer_StartHDRRead() {
+#ifdef HAVE_GLES
+	//TODO
+	return qfalse;
+#else
+	if (!hdrPqShader->IsWorking())
+		return qfalse;
+	
+	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.colorSpaceConvResult->fbo);
+	qglReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
+
+	return qtrue;
+#endif
+}
+
+qboolean R_FrameBuffer_EndHDRRead() {
+#ifdef HAVE_GLES
+	//TODO
+	return qfalse;
+#else
+	if (!hdrPqShader->IsWorking())
+		return qfalse;
+	
+	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.main->fbo);
+	qglReadBuffer(GL_BACK);
+
+	return qtrue;
+#endif
+}
 
 
 

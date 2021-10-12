@@ -273,6 +273,7 @@
     <ClCompile Include="renderer\tr_font.cpp" />
     <ClCompile Include="renderer\tr_framebuffer.cpp" />
     <ClCompile Include="renderer\tr_ghoul2.cpp" />
+    <ClCompile Include="renderer\tr_glsl.cpp" />
     <ClCompile Include="renderer\tr_image.cpp" />
     <ClCompile Include="renderer\tr_init.cpp" />
     <ClCompile Include="renderer\tr_light.cpp" />
@@ -431,6 +432,7 @@
     <ClInclude Include="renderer\mdx_format.h" />
     <ClInclude Include="renderer\qgl.h" />
     <ClInclude Include="renderer\tr_font.h" />
+    <ClInclude Include="renderer\tr_glsl.h" />
     <ClInclude Include="renderer\tr_local.h" />
     <ClInclude Include="renderer\tr_mme.h" />
     <ClInclude Include="renderer\tr_public.h" />
@@ -457,6 +459,14 @@
     <ClInclude Include="zlib\zutil.h" />
   </ItemGroup>
   <ItemGroup>
+    <CopyFileToFolders Include="hdrpq-fragment.glsl">
+      <DeploymentContent>true</DeploymentContent>
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="hdrpq-vertex.glsl">
+      <DeploymentContent>true</DeploymentContent>
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
     <None Include="win32\qe3.ico" />
   </ItemGroup>
   <ItemGroup>

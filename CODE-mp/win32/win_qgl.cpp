@@ -52,6 +52,9 @@ int  ( WINAPI * qwglGetLayerPaletteEntries)(HDC, int, int, int,
 BOOL ( WINAPI * qwglRealizeLayerPalette)(HDC, int, BOOL);
 BOOL ( WINAPI * qwglSwapLayerBuffers)(HDC, UINT);
 
+//Debug
+void (APIENTRYP qglDebugMessageCallback) (DEBUGPROC callback, const void* userParam);
+
 void ( APIENTRY * qglAccum )(GLenum op, GLfloat value);
 void ( APIENTRY * qglAlphaFunc )(GLenum func, GLclampf ref);
 GLboolean ( APIENTRY * qglAreTexturesResident )(GLsizei n, const GLuint *textures, GLboolean *residences);

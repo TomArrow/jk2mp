@@ -2027,3 +2027,6 @@ void R_FrameBuffer_StartFrame(void);
 void R_FrameBuffer_EndFrame(void);
 //Try to do an fbo blur
 qboolean R_FrameBuffer_Blur(float scale, int frame, int total);
+qboolean R_FrameBuffer_HDRConvert(bool fromPBO=false);
+qboolean R_FrameBuffer_StartHDRRead();
+qboolean R_FrameBuffer_EndHDRRead();

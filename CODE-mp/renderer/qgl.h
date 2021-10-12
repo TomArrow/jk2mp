@@ -58,6 +58,22 @@
 
 typedef char GLchar;
 
+
+// Debugging
+#define GL_DEBUG_TYPE_ERROR 0x824C
+#define GL_DEBUG_OUTPUT 0x92E0
+
+typedef void (APIENTRY* DEBUGPROC)(GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar* message,
+    const void* userParam);
+extern void (APIENTRYP qglDebugMessageCallback) (DEBUGPROC callback, const void* userParam);
+
+
+
 //===========================================================================
 
 /*
@@ -334,6 +350,7 @@ typedef GLboolean (APIENTRY * PFNGLUNMAPBUFFERARBPROC) (GLenum target);
 #define GL_STREAM_READ_ARB                0x88E1
 #define GL_DYNAMIC_READ_ARB               0x88E9
 #define GL_PIXEL_PACK_BUFFER_ARB          0x88EB
+#define GL_PIXEL_UNPACK_BUFFER_ARB        0x88EC
 
 /* Already in glext.h
 typedef void (APIENTRY *PFNGLCOMBINERPARAMETERFVNVPROC) (GLenum pname,const GLfloat *params);
@@ -862,6 +879,11 @@ extern void (APIENTRYP qglGetProgramInfoLog) (GLuint, GLsizei, GLsizei*, GLchar*
 extern void (APIENTRYP qglGetShaderiv) (GLuint, GLenum, GLint*);
 extern void (APIENTRYP qglGetShaderInfoLog) (GLuint, GLsizei, GLsizei*, GLchar*);
 
+#define     GL_FRAGMENT_SHADER  0x8B30
+#define     GL_VERTEX_SHADER    0x8B31
+#define     GL_DELETE_STATUS    0x8B80
+#define     GL_COMPILE_STATUS    0x8B81
+#define     GL_LINK_STATUS    0x8B82
 
 #elif !defined(MACOS_X)
 

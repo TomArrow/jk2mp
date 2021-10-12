@@ -1301,6 +1301,12 @@ static void GLW_InitExtensions( void )
 
 	ri.Printf( PRINT_ALL, "Initializing OpenGL extensions\n" );
 
+	// Debugging
+	//extern void (APIENTRYP qglDebugMessageCallback) (DEBUGPROC callback, const void* userParam);
+	qglDebugMessageCallback = (void (APIENTRY*) (DEBUGPROC,const void*)) qwglGetProcAddress("glDebugMessageCallback");
+	//glEnable = (void (APIENTRY*) (DEBUGPROC,const void*)) qwglGetProcAddress("glDebugMessageCallback");
+
+
 	// Select our tc scheme
 	GLW_InitTextureCompression();
 
