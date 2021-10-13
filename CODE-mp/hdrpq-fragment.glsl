@@ -20,10 +20,15 @@ void main(void)
 	const vec3 c3vec = c3.xxx;
 	const vec3 charMult = vec3(255.0f,255.0f,255.0f);
 	const vec3 castAdd = vec3(0.5f,0.5f,0.5f);
+
+	// 1.0f in the source would mean 10,000 nits. 
+	// Let's assume 400 nits for a typical gaming monitor (so the target for 1.0f from source buffer)
+	// 400/10000 = 0.04f				
 	vec3 inputColorTmp = 0.04f*texture2D(text_in, gl_TexCoord[0].st).xyz;
 	inputColorTmp *= srgbToHDR;
 	inputColorTmp = pow((c1vec + c2vec * pow(inputColorTmp, m1vec)) / (1.0f + c3vec * pow(inputColorTmp, m1vec)), m2vec);
 	inputColorTmp *= 255.0f; // Prepare for conversion to byte
 	inputColorTmp += 0.5f; // Make it so we don't have to use round() in C++
+	inputColorTmp = clamp(inputColorTmp,0.5f,255.5f);
 	gl_FragColor = vec4(inputColorTmp,1.0f); 
 }

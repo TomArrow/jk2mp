@@ -56,10 +56,10 @@ void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterPro
 			R_FrameBuffer_HDRConvert(true);
 			qglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 			qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[pboId]);
-			//R_FrameBuffer_StartHDRRead(); 
+			R_FrameBuffer_StartHDRRead(); 
 			//qglReadPixels(0, rollingShutterPixels * rollingShutterProgress, glConfig.vidWidth, rollingShutterPixels, GL_BGR_EXT, GL_FLOAT, byteOffsetAsPointerHack);
 			qglReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_BGR_EXT, GL_FLOAT, 0);
-			//R_FrameBuffer_EndHDRRead();
+			R_FrameBuffer_EndHDRRead();
 #endif
 
 

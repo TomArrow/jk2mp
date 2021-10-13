@@ -447,7 +447,7 @@ qboolean R_FrameBuffer_HDRConvert(bool fromPBO) {
 		
 		//R_DrawQuad(fbo.main->color, glConfig.vidWidth, glConfig.vidHeight);
 		//Reset fbo
-		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.main->fbo);
+		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.colorSpaceConvResult->fbo);
 		qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 
 		qglColor4f(1, 1, 1, 1);
@@ -466,6 +466,7 @@ qboolean R_FrameBuffer_HDRConvert(bool fromPBO) {
 		R_SetGL2DSize(glConfig.vidWidth, glConfig.vidHeight);
 		R_DrawQuad(fbo.main->color, glConfig.vidWidth, glConfig.vidHeight);
 		//Reset fbo
+		//qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.main->fbo);
 		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.main->fbo);
 		qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 
@@ -505,7 +506,8 @@ qboolean R_FrameBuffer_EndHDRRead() {
 		return qfalse;
 	
 	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.main->fbo);
-	qglReadBuffer(GL_BACK);
+	qglReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
+	//qglReadBuffer(GL_BACK);
 
 	return qtrue;
 #endif

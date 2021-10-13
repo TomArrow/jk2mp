@@ -2,6 +2,7 @@
 
 #include "tr_mme.h"
 #include <vector>
+#include <algorithm>
 
 static char *workAlloc = 0;
 static char *workAlign = 0;
@@ -448,6 +449,8 @@ qboolean R_MME_TakeShot( void ) {
 	} 
 	//Com_Printf("FrameInTakeShot");
 	if ( mme_saveShot->integer > 1 || (!blurControl->totalFrames && mme_saveShot->integer )) {
+		
+		
 		//byte *shotBuf = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 5 );
 		if (!shotBufPermInitialized) {
 #ifdef CAPTURE_FLOAT
@@ -474,24 +477,43 @@ qboolean R_MME_TakeShot( void ) {
 
 #ifdef CAPTURE_FLOAT
 					
-					bool dither = true;
+					
 
+					bool dither = true;
 					float* asFloatBuffer = (float*)shotBufPerm;
-					for (i = 0; i <pixelCount; i++) {
-						// 1.0f in the source would mean 10,000 nits. 
-						// Let's assume 400 nits for a typical gaming monitor (so the target for 1.0f from source buffer)
-						// 400/10000 = 0.04f
-						// though ideally maybe we can do this 0.04 multiplication already with a shader along with rec2020 conv?
-						//shotBufPerm[i * 3 + 0] = (int)(255.0f*pq(asFloatBuffer[i * 3 + 0]*0.04f));
-						//shotBufPerm[i * 3 + 1] = (int)(255.0f*pq(asFloatBuffer[i * 3 + 1] * 0.04f));
-						//shotBufPerm[i * 3 + 2] = (int)(255.0f*pq(asFloatBuffer[i * 3 + 2] * 0.04f));
-						//shotBufPerm[i * 3 + 0] = (int)(255.0f*asFloatBuffer[i * 3 + 0]);
-						//shotBufPerm[i * 3 + 1] = (int)(255.0f*asFloatBuffer[i * 3 + 1]);
-						//shotBufPerm[i * 3 + 2] = (int)(255.0f*asFloatBuffer[i * 3 + 2]);
-						shotBufPerm[i * 3 + 0] = asFloatBuffer[i * 3 + 0];
-						shotBufPerm[i * 3 + 1] = asFloatBuffer[i * 3 + 1];
-						shotBufPerm[i * 3 + 2] = asFloatBuffer[i * 3 + 2];
+					if (dither) {
+
+						// Floyd-Steinberg dither
+						float oldPixel=0.0f, newPixel = 0.0f, quantError = 0.0f;
+						int stride = glConfig.vidWidth*3;
+
+						for (int i = 0; i < pixelCount*3; i++) {
+
+							oldPixel = asFloatBuffer[i]; // Important note: shader adds 0.5 for the rounded casting. keep in mind.
+							newPixel = 0.5f+ (float)(int)std::clamp(oldPixel,0.5f,255.5f);
+							shotBufPerm[i] = newPixel;
+							// Can we just remove the 0.5 stuff altogether if we add 0.5f to newpixel on generation?
+							// oldPixel-0.5f-newPixel == oldPixel - (newPixel+0.5f)? == oldPixel - newPixel - 0.5f. yup, seems so.
+							quantError = oldPixel - newPixel;
+							asFloatBuffer[i + 3] += quantError * 7.0f / 16.0f; // This is the pixel to the right
+							asFloatBuffer[i + stride -3] += quantError * 3.0f / 16.0f; // This is the pixel to the left in lower row
+							asFloatBuffer[i + stride] += quantError * 5.0f / 16.0f; // This is the pixel to below
+							asFloatBuffer[i + stride +3] += quantError * 1.0f / 16.0f; // This is the pixel to below, to the right
+							
+							// Normally we'd increase the buffer size because the bottom row of the dithering needs extra space
+							// but the shotbuffer is already 5*pixelCount because it was meant to account for depth and whatnot?
+						}
 					}
+					else {
+
+						for (i = 0; i < pixelCount; i++) {
+
+							shotBufPerm[i * 3 + 0] = asFloatBuffer[i * 3 + 0];
+							shotBufPerm[i * 3 + 1] = asFloatBuffer[i * 3 + 1];
+							shotBufPerm[i * 3 + 2] = asFloatBuffer[i * 3 + 2];
+						}
+					}
+					
 #endif
 
 					shotData.main.type = mmeShotTypeBGR;
