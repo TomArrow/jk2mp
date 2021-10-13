@@ -47,12 +47,8 @@ void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterPro
 		if (rollingShutterProgress == 0) {
 #ifdef CAPTURE_FLOAT
 			qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
-			
 			qglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIds[pboId]); 
 
-			
-
-			
 			R_FrameBuffer_HDRConvert(true);
 			qglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 			qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[pboId]);
