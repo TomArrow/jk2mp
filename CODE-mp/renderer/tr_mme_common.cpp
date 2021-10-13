@@ -18,15 +18,16 @@ void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterPro
 #endif	
 	
 	{
-		GLenum err;
-
-		int byteOffset = rollingShutterProgress * 3 * glConfig.vidWidth * rollingShutterPixels*multiplier;
-		GLvoid* byteOffsetAsPointerHack = (GLvoid*)byteOffset; // holy shit this is ugly.
+		/*GLenum err;
 		while ((err = qglGetError()) != GL_NO_ERROR)
 		{
 			// Process/log the error.
 			ri.Printf(PRINT_WARNING, "WARNING: OpenGL error during capture (before): %d \n", (int)err);
-		}
+		}*/
+
+		int byteOffset = rollingShutterProgress * 3 * glConfig.vidWidth * rollingShutterPixels*multiplier;
+		GLvoid* byteOffsetAsPointerHack = (GLvoid*)byteOffset; // holy shit this is ugly.
+		
 		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[pboId]);
 		
 		//qglReadPixels(0, rollingShutterPixels * rollingShutterProgress, glConfig.vidWidth, rollingShutterPixels, GL_RGB, GL_UNSIGNED_BYTE, byteOffsetAsPointerHack);
@@ -42,30 +43,16 @@ void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterPro
 #endif
 
 
-		while ((err = qglGetError()) != GL_NO_ERROR)
-		{
-			// Process/log the error.
-			ri.Printf(PRINT_WARNING, "WARNING: OpenGL error during capture (readpixels): %d \n", (int)err);
-		}
-
 		// map the PBO to process its data by CPU
 		if (rollingShutterProgress == 0) {
 #ifdef CAPTURE_FLOAT
 			qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
-			while ((err = qglGetError()) != GL_NO_ERROR)
-			{
-				// Process/log the error.
-				ri.Printf(PRINT_WARNING, "WARNING: OpenGL error during capture (unset pack): %d \n", (int)err);
-			}
+			
 			qglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIds[pboId]); 
 
 			
 
-			while ((err = qglGetError()) != GL_NO_ERROR)
-			{
-				// Process/log the error.
-				ri.Printf(PRINT_WARNING, "WARNING: OpenGL error during capture (set unpack): %d \n", (int)err);
-			}
+			
 			R_FrameBuffer_HDRConvert(true);
 			qglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 			qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[pboId]);

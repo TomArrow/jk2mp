@@ -474,6 +474,7 @@ qboolean R_MME_TakeShot( void ) {
 
 #ifdef CAPTURE_FLOAT
 					
+					bool dither = true;
 
 					float* asFloatBuffer = (float*)shotBufPerm;
 					for (i = 0; i <pixelCount; i++) {
@@ -484,9 +485,12 @@ qboolean R_MME_TakeShot( void ) {
 						//shotBufPerm[i * 3 + 0] = (int)(255.0f*pq(asFloatBuffer[i * 3 + 0]*0.04f));
 						//shotBufPerm[i * 3 + 1] = (int)(255.0f*pq(asFloatBuffer[i * 3 + 1] * 0.04f));
 						//shotBufPerm[i * 3 + 2] = (int)(255.0f*pq(asFloatBuffer[i * 3 + 2] * 0.04f));
-						shotBufPerm[i * 3 + 0] = (int)(255.0f*asFloatBuffer[i * 3 + 0]);
-						shotBufPerm[i * 3 + 1] = (int)(255.0f*asFloatBuffer[i * 3 + 1]);
-						shotBufPerm[i * 3 + 2] = (int)(255.0f*asFloatBuffer[i * 3 + 2]);
+						//shotBufPerm[i * 3 + 0] = (int)(255.0f*asFloatBuffer[i * 3 + 0]);
+						//shotBufPerm[i * 3 + 1] = (int)(255.0f*asFloatBuffer[i * 3 + 1]);
+						//shotBufPerm[i * 3 + 2] = (int)(255.0f*asFloatBuffer[i * 3 + 2]);
+						shotBufPerm[i * 3 + 0] = asFloatBuffer[i * 3 + 0];
+						shotBufPerm[i * 3 + 1] = asFloatBuffer[i * 3 + 1];
+						shotBufPerm[i * 3 + 2] = asFloatBuffer[i * 3 + 2];
 					}
 #endif
 
