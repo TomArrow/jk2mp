@@ -66,7 +66,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_HAS_STD_BYTE=0;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;DYNAMIC_LINK_GL;BOTLIB;WIN32;_DEBUG;_WINDOWS;_JK2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.;..;../../../freetype/freetype2/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..;bw64;adm;../../../freetype/freetype2/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -102,7 +102,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
       <PrecompiledHeaderOutputFile>$(IntDir)$(ProjectName).pch</PrecompiledHeaderOutputFile>
-      <AdditionalIncludeDirectories>.;..;$(WindowsSDK_IncludePath);$(VC_IncludePath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..;bw64;adm;$(WindowsSDK_IncludePath);$(VC_IncludePath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
