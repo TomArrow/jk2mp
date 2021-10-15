@@ -369,7 +369,7 @@ static int S_MixDopplerFull( int speed, const vec3_t origin, const vec3_t veloci
 	return speed * ratio;
 }
 
-static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int count, int *output, short* outputADM=nullptr) {
+static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int count, int *output, short* outputADM=nullptr, int outputADMOffsetPerSample = 0) {
 	const mixSound_t *sound;
 	int i, leftVol, rightVol;
 	int64_t index, indexAdd, indexTotal;
@@ -392,34 +392,51 @@ static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int co
 	if ( (leftVol | rightVol) <= 0 ) {
 		index += count * indexAdd;
 		index %= indexTotal;
-	} else for (i = 0; i < count;i++) {
-		int sample;
-		while (index >= indexTotal) {
-			index -= indexTotal;
+	}
+	else {
+
+		short* displacedADMOutput = outputADM;
+		for (i = 0; i < count; i++) {
+			int sample;
+			while (index >= indexTotal) {
+				index -= indexTotal;
+			}
+			sample = data[index >> MIX_SHIFT];
+			if (outputADM) {
+				*displacedADMOutput = data[index >> MIX_SHIFT];
+				displacedADMOutput += outputADMOffsetPerSample;
+			}
+			output[i * 2 + 0] += sample * leftVol;
+			output[i * 2 + 1] += sample * rightVol;
+			index += indexAdd;
 		}
-		sample = data[index >> MIX_SHIFT];
-		output[i*2+0] += sample * leftVol;
-		output[i*2+1] += sample * rightVol;
-		index += indexAdd;
 	}
 	loop->index = index;
 }
 
 void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *output, short* outputADM, int admTotalChannelCount) {
-	//mixLoop_t *loop, *first;
-	//const loopQueue_t *lq;
-	//int queueLeft, loopLeft;
-	//int loopFirst = 0;
 	
-	bool* isAlreadyInLoops = new bool[s_loopQueueCount];
+	
+	bool* isAlreadyInLoops = new bool[s_loopQueueCount] {false};
 
 	// Step 1: Decativate loops that arent in the queue anymore:
 	int freeLoopCount = 0;
 	for (int i = 0; i < loopCount;i++) {
+		
+		// This one has an empty parent, no need to search for a match
+		if (!mixLoops[i].parent) {
+			freeLoopCount++;
+			continue;
+		}
+
+		// Find match
 		bool parentIsStillInQueue = false;
 		for (int b = 0; b < s_loopQueueCount; b++) {
+
+			// Same parent. Match.
 			if (s_loopQueue[b].parent == mixLoops[i].parent) {
-				parentIsStillInQueue = true;
+
+				parentIsStillInQueue = true; // Indicate that we have found a match.
 
 				// check if we're still playing the same sound 
 				// if not, update to new sound and reset index (playing offset)
@@ -427,12 +444,14 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 					mixLoops[i].handle = s_loopQueue[b].handle;
 					mixLoops[i].index = 0;
 				}
-				mixLoops[i].queueItem = s_loopQueue[b];
-				isAlreadyInLoops[b] = true;
+				mixLoops[i].queueItem = &s_loopQueue[b];
+				isAlreadyInLoops[b] = true; // Indicate that we do not need to add this later as it's already added.
 
 				break;
 			}
 		}
+
+		// If there is no match, deactivate this one.
 		if (!parentIsStillInQueue) {
 			mixLoops[i].parent = 0;
 			freeLoopCount++;
@@ -441,21 +460,29 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 
 	// Step 2: Fill empty positions with new loops
 	for (int b = 0; b < s_loopQueueCount; b++) {
+		
 
+		// Shouldn't happen but eh, safe is safe
+		if (!s_loopQueue[b].parent) {
+			continue;
+		}
+		// No more free loop positions
 		if (freeLoopCount <= 0) {
 			break; // I guess those remaining queued loops are shit out of luck!
 		}
+		// Is already in the loop array, skip
 		if (isAlreadyInLoops[b]) {
 
 			continue;
 		}
+		// Find free place to put it and put it there.
 		for (int i = 0; i < loopCount; i++) {
 
 			if (!mixLoops[i].parent) {
 				mixLoops[i].parent = s_loopQueue[b].parent;
-				mixLoops[i].index = 0;
 				mixLoops[i].handle = s_loopQueue[b].handle;
-				mixLoops[i].queueItem = s_loopQueue[b];
+				mixLoops[i].index = 0;
+				mixLoops[i].queueItem = &s_loopQueue[b];
 				freeLoopCount--;
 				break;
 			}
@@ -463,15 +490,25 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 	}
 
 	// Step 3: Do the mixing
+	short* displacedADMOutput = outputADM;
 	for (int i = 0; i < loopCount; i++) {
-		if (mixLoops[i].parent) {
-			S_MixLoop(&mixLoops[i], &mixLoops[i].queueItem, speed, count, output);
+		if (!!mixLoops[i].parent) {
+			S_MixLoop(&mixLoops[i], mixLoops[i].queueItem, speed, count, output, displacedADMOutput, admTotalChannelCount);
+			
+		}
+		if (outputADM) {
+			displacedADMOutput++;
 		}
 	}
 
 	delete[] isAlreadyInLoops;
 
-	/*for (queueLeft = s_loopQueueCount, lq = s_loopQueue;queueLeft > 0;queueLeft--, lq++ ) {
+
+	/*mixLoop_t *loop, *first;
+	const loopQueue_t *lq;
+	int queueLeft, loopLeft;
+	int loopFirst = 0;
+	for (queueLeft = s_loopQueueCount, lq = s_loopQueue;queueLeft > 0;queueLeft--, lq++ ) {
 		loopLeft = loopCount - loopFirst;
 		first = mixLoops + loopFirst++;
 		loop = first;

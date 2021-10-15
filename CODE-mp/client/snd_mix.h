@@ -31,7 +31,7 @@ typedef struct {
 	const void		*parent;
 	sfxHandle_t		handle;
 	int				index;
-	loopQueue_t		queueItem;
+	loopQueue_t*	queueItem;
 } mixLoop_t;
 
 typedef struct {
