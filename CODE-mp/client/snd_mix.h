@@ -58,8 +58,8 @@ void S_MMEStopSound(int entityNum, int entchannel, sfxHandle_t sfxHandle);
 
 void S_MixInit(void);
 void S_MixBackground( mixBackground_t *background, int speed, int count, int *output );
-void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *output,  short* outputADM=nullptr);
-void S_MixLoops( mixLoop_t *loop, int loopCount, int speed, int count, int *output, short* outputADM=nullptr);
+void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *output,  short* outputADM=nullptr, int admTotalChannelCount=0);
+void S_MixLoops( mixLoop_t *loop, int loopCount, int speed, int count, int *output, short* outputADM=nullptr, int admTotalChannelCount = 0);
 void S_MixClipOutput (int count, const int *input, short *output, int outStart, int outMask);
 const mixSound_t *S_MixGetSound( sfxHandle_t sfxHandle );
 

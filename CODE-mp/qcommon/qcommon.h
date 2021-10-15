@@ -510,6 +510,7 @@ char	**FS_ListFiles( const char *directory, const char *extension, int *numfiles
 
 void	FS_FreeFileList( char **list );
 qboolean FS_FileExists( const char *file );
+char* FS_GetSanePath( const char *file );
 int		FS_LoadStack();
 
 qboolean FS_FileErase( const char *file );

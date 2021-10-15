@@ -4,6 +4,7 @@
 
 #include "snd_local.h"
 #include "snd_mix.h"
+#include "../renderer/tr_local.h"
 #include <vector>
 #include <cgame\tr_types.h>
 #include <bw64/bw64.hpp>
@@ -143,7 +144,8 @@ void S_MMEUpdate(float scale) {
 			int count, speed;
 			int mixTemp[MAXUPDATE * 2];
 			//short* mixTempADM = new short[MAXUPDATE*(MME_SNDCHANNELS+MME_LOOPCHANNELS)];
-			std::unique_ptr<short[]>  mixTempADM(new short[MAXUPDATE * (MME_SNDCHANNELS + MME_LOOPCHANNELS)]);
+			int ADMchannelcount = MME_SNDCHANNELS + MME_LOOPCHANNELS;
+			static const std::unique_ptr<short[]>  mixTempADM(new short[MAXUPDATE * (ADMchannelcount)]);
 			short mixClip[MAXUPDATE * 2];
 
 			if (!mmeSound.fileHandle && mme_saveWav->integer != 2)
@@ -165,9 +167,10 @@ void S_MMEUpdate(float scale) {
 				speed = 1;
 
 			Com_Memset(mixTemp, 0, sizeof(int) * count * 2);
+			Com_Memset(mixTempADM.get(), 0, sizeof(short) * count * ADMchannelcount);
 			if (speed > 0) {
-				S_MixChannels(mmeSound.channels, MME_SNDCHANNELS, speed, count, mixTemp, mixTempADM.get());
-				S_MixLoops(mmeSound.loops, MME_LOOPCHANNELS, speed, count, mixTemp, mixTempADM.get()+ MME_SNDCHANNELS);
+				S_MixChannels(mmeSound.channels, MME_SNDCHANNELS, speed, count, mixTemp, mixTempADM.get(), ADMchannelcount);
+				S_MixLoops(mmeSound.loops, MME_LOOPCHANNELS, speed, count, mixTemp, mixTempADM.get()+ MME_SNDCHANNELS, ADMchannelcount);
 				S_MixEffects(&mmeSound.effect, speed, count, mixTemp); //Todo make underwater stuff work with ADM.
 			}
 			S_MixClipOutput(count, mixTemp, mixClip, 0, MAXUPDATE - 1);
@@ -181,7 +184,9 @@ void S_MMEUpdate(float scale) {
 			mmeSound.fileSize += count * 4;
 			mmeSound.gotFrame = qfalse;
 
-
+			if (!!mmeSound.adm_bw64Handle) {
+				mmeSound.adm_bw64Handle->write(mixTempADM.get(), count );
+			}
 	//	}
 	//}
 }
@@ -207,8 +212,13 @@ void S_MMERecord( const char *baseName, float deltaTime ) {
 					if (!FS_FileExists(fileName))
 						break;
 				}
-
-				mmeSound.adm_bw64Handle = bw64::writeFile(std::string(fileName), MME_SNDCHANNELS + MME_LOOPCHANNELS,MME_SAMPLERATE,16u);
+				try {
+					mmeSound.adm_bw64Handle = bw64::writeFile(std::string(FS_GetSanePath(fileName)), MME_SNDCHANNELS + MME_LOOPCHANNELS, MME_SAMPLERATE, 16u);
+				}
+				catch (std::runtime_error e) {
+					mmeSound.adm_bw64Handle = nullptr;
+					ri.Printf(PRINT_WARNING,"ADM Error: %s. Possible cause: %s\n",e.what(), strerror(errno));
+				}
 				Q_strncpyz(mmeSound.adm_baseName, baseName, sizeof(mmeSound.adm_baseName));
 			}
 

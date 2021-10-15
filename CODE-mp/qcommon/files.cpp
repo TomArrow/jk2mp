@@ -635,6 +635,23 @@ qboolean FS_FileExists( const char *file )
 	return qfalse;
 }
 
+/*
+================
+FS_GetSanePath
+
+Just get a path that can actually be used without the FS_ functions
+================
+*/
+char* FS_GetSanePath( const char *file )
+{
+
+	char *filepath;
+
+	filepath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, file );
+
+	return filepath;
+}
+
 qboolean FS_FileErase( const char *file )
 {
 	char *testpath;

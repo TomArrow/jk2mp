@@ -205,7 +205,7 @@ static void S_MixSpatialize(const vec3_t origin, float volume, int *left_vol, in
 		*left_vol = 0;
 }
 
-static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, short* outputADM = nullptr) {
+static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, short* outputADM = nullptr, int outputADMOffsetPerSample =0) {
 	const mixSound_t *sound;
 	int i, leftVol, rightVol;
 	int64_t index, indexAdd, indexLeft;
@@ -247,9 +247,15 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, s
 		ch->handle = 0;
 	}
 
+	short* outputADMDisplacedPointer = outputADM;
 	for (i = 0; i < count;i++) {
 		int sample;
 		sample = data[index >> MIX_SHIFT];
+		if (!!outputADM) {
+
+			*outputADMDisplacedPointer = data[index >> MIX_SHIFT];
+			outputADMDisplacedPointer += outputADMOffsetPerSample;
+		}
 		output[i*2+0] += sample * leftVol;
 		output[i*2+1] += sample * rightVol;
 		index += indexAdd;
@@ -258,7 +264,7 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, s
 	ch->index = index;
 }
 
-void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *output, short *outputADM) {
+void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *output, short *outputADM, int admTotalChannelCount) {
 	int queueLeft, freeLeft = channels;
 	int activeCount;
 	mixChannel_t *free = ch;
@@ -314,11 +320,15 @@ void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *o
 skip_alloc:;
 	}
 	activeCount = 0;
-	for (;channels>0;channels--, ch++) {
+	short* admDisplacedPointer = outputADM;
+	for (;channels>0;channels--, ch++ ) {
 		if (ch->handle <= 0 )
 			continue;
 		activeCount++;
-		S_MixChannel( ch, speed, count, output );
+		S_MixChannel( ch, speed, count, output, admDisplacedPointer, admTotalChannelCount);
+		if (!!outputADM) {
+			admDisplacedPointer++;
+		}
 	}
 }
 
@@ -391,11 +401,11 @@ static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int co
 		output[i*2+0] += sample * leftVol;
 		output[i*2+1] += sample * rightVol;
 		index += indexAdd;
-	}
+	}, int admTotalChannelCount = 0
 	loop->index = index;
 }
 
-void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *output, short* outputADM ) {
+void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *output, short* outputADM, int admTotalChannelCount) {
 	mixLoop_t *loop, *first;
 	const loopQueue_t *lq;
 	int queueLeft, loopLeft;
