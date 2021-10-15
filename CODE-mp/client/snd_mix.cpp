@@ -401,25 +401,85 @@ static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int co
 		output[i*2+0] += sample * leftVol;
 		output[i*2+1] += sample * rightVol;
 		index += indexAdd;
-	}, int admTotalChannelCount = 0
+	}
 	loop->index = index;
 }
 
 void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *output, short* outputADM, int admTotalChannelCount) {
-	mixLoop_t *loop, *first;
-	const loopQueue_t *lq;
-	int queueLeft, loopLeft;
-	int loopFirst = 0;
+	//mixLoop_t *loop, *first;
+	//const loopQueue_t *lq;
+	//int queueLeft, loopLeft;
+	//int loopFirst = 0;
+	
+	bool* isAlreadyInLoops = new bool[s_loopQueueCount];
 
-	for (queueLeft = s_loopQueueCount, lq = s_loopQueue;queueLeft > 0;queueLeft--, lq++ ) {
+	// Step 1: Decativate loops that arent in the queue anymore:
+	int freeLoopCount = 0;
+	for (int i = 0; i < loopCount;i++) {
+		bool parentIsStillInQueue = false;
+		for (int b = 0; b < s_loopQueueCount; b++) {
+			if (s_loopQueue[b].parent == mixLoops[i].parent) {
+				parentIsStillInQueue = true;
+
+				// check if we're still playing the same sound 
+				// if not, update to new sound and reset index (playing offset)
+				if (s_loopQueue[b].handle != mixLoops[i].handle) {
+					mixLoops[i].handle = s_loopQueue[b].handle;
+					mixLoops[i].index = 0;
+				}
+				mixLoops[i].queueItem = s_loopQueue[b];
+				isAlreadyInLoops[b] = true;
+
+				break;
+			}
+		}
+		if (!parentIsStillInQueue) {
+			mixLoops[i].parent = 0;
+			freeLoopCount++;
+		}
+	}
+
+	// Step 2: Fill empty positions with new loops
+	for (int b = 0; b < s_loopQueueCount; b++) {
+
+		if (freeLoopCount <= 0) {
+			break; // I guess those remaining queued loops are shit out of luck!
+		}
+		if (isAlreadyInLoops[b]) {
+
+			continue;
+		}
+		for (int i = 0; i < loopCount; i++) {
+
+			if (!mixLoops[i].parent) {
+				mixLoops[i].parent = s_loopQueue[b].parent;
+				mixLoops[i].index = 0;
+				mixLoops[i].handle = s_loopQueue[b].handle;
+				mixLoops[i].queueItem = s_loopQueue[b];
+				freeLoopCount--;
+				break;
+			}
+		}
+	}
+
+	// Step 3: Do the mixing
+	for (int i = 0; i < loopCount; i++) {
+		if (mixLoops[i].parent) {
+			S_MixLoop(&mixLoops[i], &mixLoops[i].queueItem, speed, count, output);
+		}
+	}
+
+	delete[] isAlreadyInLoops;
+
+	/*for (queueLeft = s_loopQueueCount, lq = s_loopQueue;queueLeft > 0;queueLeft--, lq++ ) {
 		loopLeft = loopCount - loopFirst;
 		first = mixLoops + loopFirst++;
 		loop = first;
 		while ( 1 ) {
-			/* Ran out of storage, better just stop mixing for now */
+			// Ran out of storage, better just stop mixing for now 
 			if ( loopLeft <= 0)
 				return;
-			/* Reached end of active loop list, use this new one */
+			// Reached end of active loop list, use this new one 
 			if ( !loop->parent ) {
 				if ( loop != first ) {
 					*loop = *first;
@@ -428,14 +488,14 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 				first->index = 0;
 				first->handle = lq->handle;
 				break;
-			/* Found the same parent */
+			// Found the same parent 
 			} else if ( loop->parent == lq->parent ) {
-				/* check if we're still playing the same sound */
+				// check if we're still playing the same sound 
 				if ( lq->handle != loop->handle ) {
 					loop->handle = lq->handle;
 					first->index = 0;
 				}
-				/* First entry in the list, else swap it */
+				// First entry in the list, else swap it 
 				if ( loop != first ) {
 					int oldIndex = loop->index;
 					*loop = *first;
@@ -444,7 +504,7 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 					first->handle = lq->handle;
 				}
 				break;
-			/* Not found it yet, forward to the next one */
+			// Not found it yet, forward to the next one 
 			} else {
 				--loopLeft;
 				loop++;
@@ -458,7 +518,7 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 
 	for (;loopLeft > 0 && loop->parent; loop++, loopLeft--) {
 		loop->parent = 0;
-	}
+	}*/
 }
 
 void S_MixBackground( mixBackground_t *background, int speed, int count, int *output ) {
