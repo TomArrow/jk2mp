@@ -1333,6 +1333,7 @@ extern cvar_t	*mme_saveOverwrite;
 extern cvar_t	*mme_saveStencil;
 extern cvar_t	*mme_saveShot;
 extern cvar_t	*mme_saveDepth;
+extern cvar_t	* mme_saveADM;
 extern cvar_t	*mme_rollingShutterPixels;
 extern cvar_t	*mme_rollingShutterMultiplier;
 

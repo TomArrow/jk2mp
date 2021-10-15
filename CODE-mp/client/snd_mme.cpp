@@ -6,6 +6,7 @@
 #include "snd_mix.h"
 #include <vector>
 #include <cgame\tr_types.h>
+#include <bw64/bw64.hpp>
 
 #define MME_SNDCHANNELS 128
 #define MME_LOOPCHANNELS 128
@@ -17,6 +18,8 @@ extern glconfig_t	glConfig;
 extern	std::vector<int> pboRollingShutterProgresses;
 
 typedef struct {
+	std::unique_ptr<bw64::Bw64Writer>	adm_bw64Handle;
+	char			adm_baseName[MAX_OSPATH];
 	char			baseName[MAX_OSPATH];
 	fileHandle_t	fileHandle;
 	long			fileSize;
@@ -28,6 +31,29 @@ typedef struct {
 } mmeWav_t;
 
 static mmeWav_t mmeSound;
+
+
+
+/*
+=================================================================================
+
+ADM FILE HANDLING FUNCTIONS
+
+=================================================================================
+*/
+// Make the Bw64Writer accept shorts directly. It will convert to them anyway, why go through float?
+template <>
+uint64_t bw64::Bw64Writer::write(short* inBuffer, uint64_t frames) {
+	uint64_t bytesWritten = frames * formatChunk()->blockAlignment();
+	rawDataBuffer_.resize(bytesWritten);
+	//utils::encodePcmSamples(inBuffer, &rawDataBuffer_[0],
+	//	frames * formatChunk()->channelCount(),
+	//	formatChunk()->bitsPerSample());
+	fileStream_.write((char*)inBuffer, bytesWritten);
+	dataChunk()->setSize(dataChunk()->size() + bytesWritten);
+	chunkHeader(utils::fourCC("data")).size = dataChunk()->size();
+	return frames;
+}
 
 /*
 =================================================================================
@@ -65,6 +91,10 @@ static void S_MMEFillWavHeader(void* buffer, long fileSize, int sampleRate) {
 
 void S_MMEWavClose(void) {
 	byte header[WAV_HEADERSIZE];
+
+	if (!!mmeSound.adm_bw64Handle) {
+		mmeSound.adm_bw64Handle.reset();
+	}
 
 	if (!mmeSound.fileHandle)
 		return;
@@ -112,6 +142,8 @@ void S_MMEUpdate(float scale) {
 
 			int count, speed;
 			int mixTemp[MAXUPDATE * 2];
+			//short* mixTempADM = new short[MAXUPDATE*(MME_SNDCHANNELS+MME_LOOPCHANNELS)];
+			std::unique_ptr<short[]>  mixTempADM(new short[MAXUPDATE * (MME_SNDCHANNELS + MME_LOOPCHANNELS)]);
 			short mixClip[MAXUPDATE * 2];
 
 			if (!mmeSound.fileHandle && mme_saveWav->integer != 2)
@@ -134,9 +166,9 @@ void S_MMEUpdate(float scale) {
 
 			Com_Memset(mixTemp, 0, sizeof(int) * count * 2);
 			if (speed > 0) {
-				S_MixChannels(mmeSound.channels, MME_SNDCHANNELS, speed, count, mixTemp);
-				S_MixLoops(mmeSound.loops, MME_LOOPCHANNELS, speed, count, mixTemp);
-				S_MixEffects(&mmeSound.effect, speed, count, mixTemp);
+				S_MixChannels(mmeSound.channels, MME_SNDCHANNELS, speed, count, mixTemp, mixTempADM.get());
+				S_MixLoops(mmeSound.loops, MME_LOOPCHANNELS, speed, count, mixTemp, mixTempADM.get()+ MME_SNDCHANNELS);
+				S_MixEffects(&mmeSound.effect, speed, count, mixTemp); //Todo make underwater stuff work with ADM.
 			}
 			S_MixClipOutput(count, mixTemp, mixClip, 0, MAXUPDATE - 1);
 			if (mme_saveWav->integer != 2) {
@@ -148,6 +180,7 @@ void S_MMEUpdate(float scale) {
 			}
 			mmeSound.fileSize += count * 4;
 			mmeSound.gotFrame = qfalse;
+
 
 	//	}
 	//}
@@ -165,13 +198,34 @@ void S_MMERecord( const char *baseName, float deltaTime ) {
 			const char* format = Cvar_VariableString("mme_screenShotFormat");
 			const int shot = Cvar_VariableIntegerValue("mme_saveShot");
 			const int depth = Cvar_VariableIntegerValue("mme_saveDepth");
+			const int ADM = Cvar_VariableIntegerValue("mme_saveADM");
+
+			if (Q_stricmp(baseName, mmeSound.adm_baseName) && ADM) {
+				char fileName[MAX_OSPATH];
+				for (int i = 0; i < 100000; i++) {
+					Com_sprintf(fileName, sizeof(fileName), "%s.ADM.%03d.WAV", baseName, i);
+					if (!FS_FileExists(fileName))
+						break;
+				}
+
+				mmeSound.adm_bw64Handle = bw64::writeFile(std::string(fileName), MME_SNDCHANNELS + MME_LOOPCHANNELS,MME_SAMPLERATE,16u);
+				Q_strncpyz(mmeSound.adm_baseName, baseName, sizeof(mmeSound.adm_baseName));
+			}
+
 			if (!mme_saveWav->integer || (mme_saveWav->integer == 2 && (Q_stricmp(format, "avi") || (!shot && !depth))))
 				return;
 			if (Q_stricmp(baseName, mmeSound.baseName) && mme_saveWav->integer != 2) {
 				char fileName[MAX_OSPATH];
 				if (mmeSound.fileHandle)
 					S_MMEWavClose();
-				Com_sprintf(fileName, sizeof(fileName), "%s.wav", baseName);
+
+				/* First see if the file already exist */
+				for (int i = 0; i < 100000; i++) {
+					Com_sprintf(fileName, sizeof(fileName), "%s.%03d.wav", baseName, i);
+					if (!FS_FileExists(fileName))
+						break;
+				}
+				//Com_sprintf(fileName, sizeof(fileName), "%s.wav", baseName);
 				mmeSound.fileHandle = FS_FOpenFileReadWrite(fileName);
 				if (!mmeSound.fileHandle) {
 					mmeSound.fileHandle = FS_FOpenFileWrite(fileName);

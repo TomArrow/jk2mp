@@ -66,6 +66,12 @@
     <Filter Include="Renderer\glsl">
       <UniqueIdentifier>{3d8ddb39-2e8d-4f67-a2d0-f08300faae73}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Renderer\adm">
+      <UniqueIdentifier>{4dcf4bdb-c359-45c7-8547-334e7abe063b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\bw64">
+      <UniqueIdentifier>{69633ed6-44e8-4d15-afdf-9dd13e2a50ae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="client\0_SH_Leak.cpp">
@@ -1056,6 +1062,24 @@
     </ClInclude>
     <ClInclude Include="renderer\tr_glsl.h">
       <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="bw64\bw64.hpp">
+      <Filter>Renderer\bw64</Filter>
+    </ClInclude>
+    <ClInclude Include="bw64\chunks.hpp">
+      <Filter>Renderer\bw64</Filter>
+    </ClInclude>
+    <ClInclude Include="bw64\parser.hpp">
+      <Filter>Renderer\bw64</Filter>
+    </ClInclude>
+    <ClInclude Include="bw64\reader.hpp">
+      <Filter>Renderer\bw64</Filter>
+    </ClInclude>
+    <ClInclude Include="bw64\utils.hpp">
+      <Filter>Renderer\bw64</Filter>
+    </ClInclude>
+    <ClInclude Include="bw64\writer.hpp">
+      <Filter>Renderer\bw64</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

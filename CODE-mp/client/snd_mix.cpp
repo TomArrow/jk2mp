@@ -205,7 +205,7 @@ static void S_MixSpatialize(const vec3_t origin, float volume, int *left_vol, in
 		*left_vol = 0;
 }
 
-static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output ) {
+static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, short* outputADM = nullptr) {
 	const mixSound_t *sound;
 	int i, leftVol, rightVol;
 	int64_t index, indexAdd, indexLeft;
@@ -258,7 +258,7 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output ) 
 	ch->index = index;
 }
 
-void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *output ) {
+void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *output, short *outputADM) {
 	int queueLeft, freeLeft = channels;
 	int activeCount;
 	mixChannel_t *free = ch;
@@ -359,7 +359,7 @@ static int S_MixDopplerFull( int speed, const vec3_t origin, const vec3_t veloci
 	return speed * ratio;
 }
 
-static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int count, int *output ) {
+static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int count, int *output, short* outputADM=nullptr) {
 	const mixSound_t *sound;
 	int i, leftVol, rightVol;
 	int64_t index, indexAdd, indexTotal;
@@ -395,7 +395,7 @@ static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int co
 	loop->index = index;
 }
 
-void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *output ) {
+void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *output, short* outputADM ) {
 	mixLoop_t *loop, *first;
 	const loopQueue_t *lq;
 	int queueLeft, loopLeft;

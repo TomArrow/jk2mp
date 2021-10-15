@@ -69,6 +69,7 @@ cvar_t	*mme_saveOverwrite;
 cvar_t	*mme_saveShot;
 cvar_t	*mme_saveStencil;
 cvar_t	*mme_saveDepth;
+cvar_t	* mme_saveADM;
 cvar_t  *mme_rollingShutterPixels;
 cvar_t  *mme_rollingShutterMultiplier;
 
@@ -704,6 +705,7 @@ void R_MME_Init(void) {
 	mme_depthFocus = ri.Cvar_Get ( "mme_depthFocus", "1024", CVAR_ARCHIVE );
 	mme_saveOverwrite = ri.Cvar_Get ( "mme_saveOverwrite", "0", CVAR_ARCHIVE );
 	mme_saveStencil = ri.Cvar_Get ( "mme_saveStencil", "0", CVAR_INTERNAL);//CVAR_ARCHIVE ); //need to rewrite tr_backend.cpp :s
+	mme_saveADM = ri.Cvar_Get ( "mme_saveADM", "1", CVAR_ARCHIVE );
 	mme_saveDepth = ri.Cvar_Get ( "mme_saveDepth", "0", CVAR_ARCHIVE );
 	mme_saveShot = ri.Cvar_Get ( "mme_saveShot", "1", CVAR_ARCHIVE );
 	mme_workMegs = ri.Cvar_Get ( "mme_workMegs", "128", CVAR_LATCH | CVAR_ARCHIVE );
