@@ -18,9 +18,18 @@ extern	cvar_t	*mme_rollingShutterMultiplier;
 extern glconfig_t	glConfig;
 extern	std::vector<int> pboRollingShutterProgresses;
 
+
+
+
+
+
 typedef struct {
+	// ADM stuff
 	std::unique_ptr<bw64::Bw64Writer>	adm_bw64Handle;
 	char			adm_baseName[MAX_OSPATH];
+	mmeADMChannelInfo_t	adm_channelInfo[MME_LOOPCHANNELS+ MME_SNDCHANNELS];
+	long			admAbsoluteTime;
+
 	char			baseName[MAX_OSPATH];
 	fileHandle_t	fileHandle;
 	long			fileSize;
@@ -45,6 +54,9 @@ ADM FILE HANDLING FUNCTIONS
 // Make the Bw64Writer accept shorts directly. It will convert to them anyway, why go through float?
 template <>
 uint64_t bw64::Bw64Writer::write(short* inBuffer, uint64_t frames) {
+	if (formatChunk()->bitsPerSample() != 16) {
+		throw std::runtime_error("The short overload for Bw64Writer::write can only be called if the Bw64Writer object is set to output 16 bit data.");
+	}
 	uint64_t bytesWritten = frames * formatChunk()->blockAlignment();
 	rawDataBuffer_.resize(bytesWritten);
 	//utils::encodePcmSamples(inBuffer, &rawDataBuffer_[0],
@@ -90,11 +102,53 @@ static void S_MMEFillWavHeader(void* buffer, long fileSize, int sampleRate) {
 	((unsigned long*)buffer)[10] = fileSize-44;	// data chunk length
 }
 
+std::string S_MMEADMMetaCreate() {
+	std::string retVal;
+	for (int i = 0; i < (MME_SNDCHANNELS + MME_LOOPCHANNELS); i++) {
+		for (auto object = mmeSound.adm_channelInfo[i].objects.begin(); object != mmeSound.adm_channelInfo[i].objects.end(); object++) {
+			
+			for (auto block = object->blocks.begin(); block != object->blocks.end(); block++) {
+				retVal.append(object->soundName);
+				retVal.append(";");
+				retVal.append(std::to_string(block->gain));
+				retVal.append(";");
+				retVal.append(std::to_string(block->starttime));
+				retVal.append(";");
+				retVal.append(std::to_string(block->duration));
+				retVal.append(";");
+				retVal.append(std::to_string(block->position[0]));
+				retVal.append(",");
+				retVal.append(std::to_string(block->position[1]));
+				retVal.append(",");
+				retVal.append(std::to_string(block->position[2]));
+				retVal.append("\n");
+
+			}
+		}
+	}
+	return retVal;
+}
+
 void S_MMEWavClose(void) {
 	byte header[WAV_HEADERSIZE];
 
 	if (!!mmeSound.adm_bw64Handle) {
+
+		std::string admMetaData = S_MMEADMMetaCreate();
+		const char* admMetaDataC = admMetaData.c_str();
+		char savePath[MAX_OSPATH];
+
+		Com_sprintf(savePath, sizeof(savePath), "%s.ADMsavetest.txt", mmeSound.adm_baseName);
+		FS_WriteFile(savePath, admMetaDataC, admMetaData.size());
+
 		mmeSound.adm_bw64Handle.reset();
+		mmeSound.admAbsoluteTime = 0;
+		memset(mmeSound.adm_baseName,0,sizeof(mmeSound.adm_baseName));
+		for (int i = 0; i < (MME_SNDCHANNELS + MME_LOOPCHANNELS); i++) {
+
+			mmeSound.adm_channelInfo->objects.clear();
+			
+		}
 	}
 
 	if (!mmeSound.fileHandle)
@@ -104,7 +158,11 @@ void S_MMEWavClose(void) {
 	FS_Seek( mmeSound.fileHandle, 0, FS_SEEK_SET );
 	FS_Write( header, sizeof(header), mmeSound.fileHandle );
 	FS_FCloseFile( mmeSound.fileHandle );
-	Com_Memset( &mmeSound, 0, sizeof(mmeSound) );
+
+	// Dirty!!
+	int admDataSize = sizeof(mmeSound.admAbsoluteTime) + sizeof(mmeSound.adm_baseName)+ sizeof(mmeSound.adm_bw64Handle)+ sizeof(mmeSound.adm_channelInfo);
+	Com_Memset( &mmeSound, admDataSize, sizeof(mmeSound)- admDataSize); // Don't memset the adm stuff because its not all basic C stuff. ADM is cleaned up above.
+	//Com_Memset( &mmeSound, 0, sizeof(mmeSound) );
 }
 
 
@@ -169,8 +227,8 @@ void S_MMEUpdate(float scale) {
 			Com_Memset(mixTemp, 0, sizeof(int) * count * 2);
 			Com_Memset(mixTempADM.get(), 0, sizeof(short) * count * ADMchannelcount);
 			if (speed > 0) {
-				S_MixChannels(mmeSound.channels, MME_SNDCHANNELS, speed, count, mixTemp, mixTempADM.get(), ADMchannelcount);
-				S_MixLoops(mmeSound.loops, MME_LOOPCHANNELS, speed, count, mixTemp, mixTempADM.get()+ MME_SNDCHANNELS, ADMchannelcount);
+				S_MixChannels(mmeSound.channels, MME_SNDCHANNELS, speed, count, mixTemp, mixTempADM.get(), ADMchannelcount, mmeSound.adm_channelInfo, mmeSound.admAbsoluteTime);
+				S_MixLoops(mmeSound.loops, MME_LOOPCHANNELS, speed, count, mixTemp, mixTempADM.get()+ MME_SNDCHANNELS, ADMchannelcount, mmeSound.adm_channelInfo+ MME_SNDCHANNELS, mmeSound.admAbsoluteTime);
 				S_MixEffects(&mmeSound.effect, speed, count, mixTemp); //Todo make underwater stuff work with ADM.
 			}
 			S_MixClipOutput(count, mixTemp, mixClip, 0, MAXUPDATE - 1);
@@ -186,6 +244,7 @@ void S_MMEUpdate(float scale) {
 
 			if (!!mmeSound.adm_bw64Handle) {
 				mmeSound.adm_bw64Handle->write(mixTempADM.get(), count );
+				mmeSound.admAbsoluteTime += count;
 			}
 	//	}
 	//}
@@ -214,6 +273,7 @@ void S_MMERecord( const char *baseName, float deltaTime ) {
 				}
 				try {
 					mmeSound.adm_bw64Handle = bw64::writeFile(std::string(FS_GetSanePath(fileName)), MME_SNDCHANNELS + MME_LOOPCHANNELS, MME_SAMPLERATE, 16u);
+					
 				}
 				catch (std::runtime_error e) {
 					mmeSound.adm_bw64Handle = nullptr;

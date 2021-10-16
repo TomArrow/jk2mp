@@ -164,7 +164,7 @@ void S_MixClipOutput(int count, const int *input, short *output, int outStart, i
 	}
 }
 
-static void S_MixSpatialize(const vec3_t origin, float volume, int *left_vol, int *right_vol) {
+static void S_MixSpatialize(const vec3_t origin, float volume, int *left_vol, int *right_vol, vec3_t admPosition=nullptr ) {
     vec_t		dot;
     vec_t		dist;
     vec_t		lscale, rscale, scale;
@@ -177,6 +177,7 @@ static void S_MixSpatialize(const vec3_t origin, float volume, int *left_vol, in
 	VectorSubtract(origin, s_listenOrigin, source_vec);
 
 	dist = VectorNormalize(source_vec);
+	vec_t absoluteDist = dist;
 	dist -= SOUND_FULLVOLUME;
 	if (dist < 0)
 		dist = 0;			// close enough to be at full volume
@@ -187,6 +188,13 @@ static void S_MixSpatialize(const vec3_t origin, float volume, int *left_vol, in
 	dot = -vec[1];
 	rscale = 0.5 * (1.0 + dot);
 	lscale = 0.5 * (1.0 - dot);
+
+	if (admPosition) { // Todo: Figure out if I have the correct signedness here or if I need to invert some.
+		admPosition[0] = vec[1]* absoluteDist; // left/right
+		admPosition[1] = vec[0]* absoluteDist; // front/back
+		admPosition[2] = vec[2]* absoluteDist; // up/down
+	}
+
 	//rscale = s_separation->value + ( 1.0 - s_separation->value ) * dot;
 	//lscale = s_separation->value - ( 1.0 - s_separation->value ) * dot;
 //	if ( rscale < 0 )
@@ -264,7 +272,7 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, s
 	ch->index = index;
 }
 
-void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *output, short *outputADM, int admTotalChannelCount) {
+void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *output, short *outputADM, int admTotalChannelCount, mmeADMChannelInfo_t* admChannelInfoArray, long admAbsoluteTime) {
 	int queueLeft, freeLeft = channels;
 	int activeCount;
 	mixChannel_t *free = ch;
@@ -369,7 +377,7 @@ static int S_MixDopplerFull( int speed, const vec3_t origin, const vec3_t veloci
 	return speed * ratio;
 }
 
-static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int count, int *output, short* outputADM=nullptr, int outputADMOffsetPerSample = 0) {
+static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int count, int *output, short* outputADM=nullptr, int outputADMOffsetPerSample = 0,vec3_t admPosition = nullptr) {
 	const mixSound_t *sound;
 	int i, leftVol, rightVol;
 	int64_t index, indexAdd, indexTotal;
@@ -382,7 +390,7 @@ static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int co
 		speed = S_MixDopplerOriginal( speed, lq->origin, lq->velocity );
 
 	volume = s_volume->value * lq->volume;
-	S_MixSpatialize( lq->origin, volume, &leftVol, &rightVol );
+	S_MixSpatialize( lq->origin, volume, &leftVol, &rightVol,admPosition );
 	sound = S_MixGetSound( loop->handle );
 
 	index = loop->index;
@@ -414,10 +422,14 @@ static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int co
 	loop->index = index;
 }
 
-void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *output, short* outputADM, int admTotalChannelCount) {
+void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *output, short* outputADM, int admTotalChannelCount, mmeADMChannelInfo_t* admChannelInfoArray, long admAbsoluteTime) {
 	
 	
 	bool* isAlreadyInLoops = new bool[s_loopQueueCount] {false};
+
+	// For ADM:
+	bool* isOngoing = new bool[loopCount] {false}; // Need this pretty much only for the ADM metadata creation
+	bool* isSoundChanged = new bool[loopCount] {false}; // Need this pretty much only for the ADM metadata creation
 
 	// Step 1: Decativate loops that arent in the queue anymore:
 	int freeLoopCount = 0;
@@ -443,8 +455,10 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 				if (s_loopQueue[b].handle != mixLoops[i].handle) {
 					mixLoops[i].handle = s_loopQueue[b].handle;
 					mixLoops[i].index = 0;
+					isSoundChanged[i] = true;
 				}
 				mixLoops[i].queueItem = &s_loopQueue[b];
+				isOngoing[i] = true; // Indicate that this should be the same object
 				isAlreadyInLoops[b] = true; // Indicate that we do not need to add this later as it's already added.
 
 				break;
@@ -491,71 +505,56 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 
 	// Step 3: Do the mixing
 	short* displacedADMOutput = outputADM;
+	mmeADMChannelInfo_t* displacedAdmChannelInfoArray = admChannelInfoArray;
 	for (int i = 0; i < loopCount; i++) {
-		if (!!mixLoops[i].parent) {
-			S_MixLoop(&mixLoops[i], mixLoops[i].queueItem, speed, count, output, displacedADMOutput, admTotalChannelCount);
-			
-		}
+
 		if (outputADM) {
+
+			if (!!mixLoops[i].parent) {
+				
+				if (isOngoing[i] && !isSoundChanged[i]) { // Means it's still the same parent and same sound as before
+					// We only let it stay the same object if both parent and sound are the same
+					mmeADMObject_t* lastObject = &displacedAdmChannelInfoArray->objects.back();
+					//mmeADMBlock_t* lastBlock = &lastObject->blocks.back();
+					mmeADMBlock_t newBlock;
+					newBlock.starttime = admAbsoluteTime;
+					newBlock.duration = count;
+					newBlock.gain = ((float)mixLoops[i].queueItem->volume)/255.0f; // Not sure if the division is exactly correct. But as long as everything is right relative to each other it should be ok.
+					lastObject->blocks.push_back(newBlock);
+				}
+				else {
+					mmeADMObject_t newObject;
+					newObject.soundName = (sfxEntries+mixLoops[i].handle)->name;
+					mmeADMBlock_t newBlock;
+					newBlock.starttime = admAbsoluteTime;
+					newBlock.duration = count; 
+					newBlock.gain = ((float)mixLoops[i].queueItem->volume) / 255.0f; // Not sure if the division is exactly correct. But as long as everything is right relative to each other it should be ok.
+					newObject.blocks.push_back(newBlock);
+					displacedAdmChannelInfoArray->objects.push_back(newObject);
+				}
+
+				vec3_t admPosition;
+				S_MixLoop(&mixLoops[i], mixLoops[i].queueItem, speed, count, output, displacedADMOutput, admTotalChannelCount, admPosition);
+				mmeADMBlock_t* currentBlock = &displacedAdmChannelInfoArray->objects.back().blocks.back();
+				VectorCopy(admPosition, currentBlock->position);
+			}
 			displacedADMOutput++;
+			displacedAdmChannelInfoArray++;
 		}
+		else {
+			if (!!mixLoops[i].parent) {
+
+				S_MixLoop(&mixLoops[i], mixLoops[i].queueItem, speed, count, output, displacedADMOutput, admTotalChannelCount);
+			}
+		}
+		
 	}
 
 	delete[] isAlreadyInLoops;
+	delete[] isOngoing;
+	delete[] isSoundChanged;
 
 
-	/*mixLoop_t *loop, *first;
-	const loopQueue_t *lq;
-	int queueLeft, loopLeft;
-	int loopFirst = 0;
-	for (queueLeft = s_loopQueueCount, lq = s_loopQueue;queueLeft > 0;queueLeft--, lq++ ) {
-		loopLeft = loopCount - loopFirst;
-		first = mixLoops + loopFirst++;
-		loop = first;
-		while ( 1 ) {
-			// Ran out of storage, better just stop mixing for now 
-			if ( loopLeft <= 0)
-				return;
-			// Reached end of active loop list, use this new one 
-			if ( !loop->parent ) {
-				if ( loop != first ) {
-					*loop = *first;
-				}
-				first->parent = lq->parent;
-				first->index = 0;
-				first->handle = lq->handle;
-				break;
-			// Found the same parent 
-			} else if ( loop->parent == lq->parent ) {
-				// check if we're still playing the same sound 
-				if ( lq->handle != loop->handle ) {
-					loop->handle = lq->handle;
-					first->index = 0;
-				}
-				// First entry in the list, else swap it 
-				if ( loop != first ) {
-					int oldIndex = loop->index;
-					*loop = *first;
-					first->index = oldIndex;
-					first->parent = lq->parent;
-					first->handle = lq->handle;
-				}
-				break;
-			// Not found it yet, forward to the next one 
-			} else {
-				--loopLeft;
-				loop++;
-			}
-		}
-		S_MixLoop( first, lq, speed, count, output );
-	}
-
-	loopLeft = loopCount - loopFirst;
-	loop = mixLoops + loopFirst;
-
-	for (;loopLeft > 0 && loop->parent; loop++, loopLeft--) {
-		loop->parent = 0;
-	}*/
 }
 
 void S_MixBackground( mixBackground_t *background, int speed, int count, int *output ) {
