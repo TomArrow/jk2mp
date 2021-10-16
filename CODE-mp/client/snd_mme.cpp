@@ -10,6 +10,8 @@
 #include <bw64/bw64.hpp>
 #include "adm/export.h"
 #include <adm/adm.hpp>
+#include <adm/utilities/object_creation.hpp>
+#include <adm/write.hpp>
 
 #define MME_SNDCHANNELS 128
 #define MME_LOOPCHANNELS 128
@@ -104,11 +106,50 @@ static void S_MMEFillWavHeader(void* buffer, long fileSize, int sampleRate) {
 	((unsigned long*)buffer)[10] = fileSize-44;	// data chunk length
 }
 
-std::string S_MMEADMMetaCreate() {
+void S_MMEADMMetaCreate(std::string filename) {
 
-	auto admProgramme = adm::AudioProgramme::create(adm::AudioProgrammeName("Alice and Bob talking"));
+	auto admProgramme = adm::AudioProgramme::create(adm::AudioProgrammeName("JK2 JOMME ADM EXPORT"));
+	
 
+	
+	for (int i = 0; i < (MME_SNDCHANNELS + MME_LOOPCHANNELS); i++) {
 
+		std::string contentName(i >= MME_SNDCHANNELS ? "SNDCHANNEL" : "LOOPCHANNEL");
+		contentName.append(std::to_string(i));
+		auto contentItem = adm::AudioContent::create(adm::AudioContentName(contentName));
+		admProgramme->addReference(contentItem);
+
+		auto channelObject = adm::createSimpleObject(contentName);
+
+		int o = 0;
+		for (auto object = mmeSound.adm_channelInfo[i].objects.begin(); object != mmeSound.adm_channelInfo[i].objects.end(); object++,o++) {
+			
+			int b = 0;
+			for (auto block = object->blocks.begin(); block != object->blocks.end(); block++,b++) {
+				
+				adm::CartesianPosition cartesianCoordinates((adm::X)block->position[0],(adm::Y)block->position[1],(adm::Z)block->position[2]);
+				auto blockFormat = adm::AudioBlockFormatObjects(cartesianCoordinates);
+				blockFormat.set((adm::Gain)block->gain);
+				double timeInSeconds = ((double)block->starttime) / ((double)MME_SAMPLERATE);
+				std::chrono::nanoseconds timeInNanoSeconds = (std::chrono::nanoseconds)(long long)(0.5+timeInSeconds* 1000000000.0);
+				double durationInSeconds = ((double)block->duration) / ((double)MME_SAMPLERATE);
+				std::chrono::nanoseconds durationInNanoSeconds = (std::chrono::nanoseconds)(long long)(0.5+ durationInSeconds * 1000000000.0);
+				blockFormat.set(adm::Rtime(timeInNanoSeconds));
+				blockFormat.set(adm::Duration(durationInNanoSeconds));
+				channelObject.audioChannelFormat->add(blockFormat);
+
+			}
+		}
+
+		contentItem->addReference(channelObject.audioObject);
+	}
+
+	auto admDocument = adm::Document::create();
+	admDocument->add(admProgramme);
+
+	// write XML data to stdout
+	adm::writeXml(filename,admDocument);
+	/*
 	std::string retVal;
 	retVal.append("channel;object;block;objectName;gain;starttime;duration;position");
 	for (int i = 0; i < (MME_SNDCHANNELS + MME_LOOPCHANNELS); i++) {
@@ -142,7 +183,7 @@ std::string S_MMEADMMetaCreate() {
 			}
 		}
 	}
-	return retVal;
+	return retVal;*/
 }
 
 void S_MMEWavClose(void) {
@@ -150,12 +191,14 @@ void S_MMEWavClose(void) {
 
 	if (!!mmeSound.adm_bw64Handle) {
 
-		std::string admMetaData = S_MMEADMMetaCreate();
-		const char* admMetaDataC = admMetaData.c_str();
-		char savePath[MAX_OSPATH];
+		//std::string admMetaData = S_MMEADMMetaCreate();
+		//const char* admMetaDataC = admMetaData.c_str();
+		char savePath[MAX_OSPATH]; 
 
-		Com_sprintf(savePath, sizeof(savePath), "%s.ADMsavetest.txt", mmeSound.adm_baseName);
-		FS_WriteFile(savePath, admMetaDataC, admMetaData.size());
+		Com_sprintf(savePath, sizeof(savePath), "%s.ADMsavetest.xml", mmeSound.adm_baseName);
+		//FS_WriteFile(savePath, admMetaDataC, admMetaData.size());
+		const char* realPath = FS_GetSanePath(savePath);
+		S_MMEADMMetaCreate(realPath);
 
 		mmeSound.adm_bw64Handle.reset();
 		mmeSound.admAbsoluteTime = 0;
