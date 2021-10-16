@@ -104,10 +104,19 @@ static void S_MMEFillWavHeader(void* buffer, long fileSize, int sampleRate) {
 
 std::string S_MMEADMMetaCreate() {
 	std::string retVal;
+	retVal.append("channel;object;block;objectName;gain;starttime;duration;position");
 	for (int i = 0; i < (MME_SNDCHANNELS + MME_LOOPCHANNELS); i++) {
-		for (auto object = mmeSound.adm_channelInfo[i].objects.begin(); object != mmeSound.adm_channelInfo[i].objects.end(); object++) {
+		int o = 0;
+		for (auto object = mmeSound.adm_channelInfo[i].objects.begin(); object != mmeSound.adm_channelInfo[i].objects.end(); object++,o++) {
 			
-			for (auto block = object->blocks.begin(); block != object->blocks.end(); block++) {
+			int b = 0;
+			for (auto block = object->blocks.begin(); block != object->blocks.end(); block++,b++) {
+				retVal.append(std::to_string(i));
+				retVal.append(";");
+				retVal.append(std::to_string(o));
+				retVal.append(";");
+				retVal.append(std::to_string(b));
+				retVal.append(";");
 				retVal.append(object->soundName);
 				retVal.append(";");
 				retVal.append(std::to_string(block->gain));
@@ -161,7 +170,7 @@ void S_MMEWavClose(void) {
 
 	// Dirty!!
 	int admDataSize = sizeof(mmeSound.admAbsoluteTime) + sizeof(mmeSound.adm_baseName)+ sizeof(mmeSound.adm_bw64Handle)+ sizeof(mmeSound.adm_channelInfo);
-	Com_Memset( &mmeSound, admDataSize, sizeof(mmeSound)- admDataSize); // Don't memset the adm stuff because its not all basic C stuff. ADM is cleaned up above.
+	Com_Memset( ((char*)&mmeSound)+admDataSize, 0, sizeof(mmeSound)- admDataSize); // Don't memset the adm stuff because its not all basic C stuff. ADM is cleaned up above.
 	//Com_Memset( &mmeSound, 0, sizeof(mmeSound) );
 }
 
