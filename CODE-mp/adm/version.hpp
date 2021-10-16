@@ -1,0 +1,6 @@
+#pragma once
+#define ADM_VERSION "0.12.0"
+#define ADM_VERSION_MAJOR 0
+#define ADM_VERSION_MINOR 12
+#define ADM_VERSION_PATCH 0
+#define ADM_BUILD_DATE "2021-10-16T16:57:01"

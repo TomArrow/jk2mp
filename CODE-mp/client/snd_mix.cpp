@@ -349,17 +349,21 @@ skip_alloc:;
 				mmeADMBlock_t newBlock;
 				newBlock.starttime = admAbsoluteTime;
 				newBlock.duration = count;
+				newBlock.gain = 0.5;
 				//newBlock.gain = ((float)mixLoops[i].queueItem->volume) / 255.0f; // Not sure if the division is exactly correct. But as long as everything is right relative to each other it should be ok.
 				// TODO Figure out gain AND make a special note in object for voices! To mark it for that thingie.
 				lastObject->blocks.push_back(newBlock);
 			}
 			else {
 				mmeADMObject_t newObject;
-				newObject.soundName = (sfxEntries + ch->handle)->name;
+				//newObject.soundName = (sfxEntries + ch->handle)->name;
+				newObject.sfxHandle = ch->handle;
+				newObject.channelHandle = (soundChannel_t)ch->entChan;
 				mmeADMBlock_t newBlock;
 				newBlock.starttime = admAbsoluteTime;
 				newBlock.duration = count;
 				//newBlock.gain = ((float)mixLoops[i].queueItem->volume) / 255.0f; // Not sure if the division is exactly correct. But as long as everything is right relative to each other it should be ok.
+				newBlock.gain = 0.5;
 				// TODO Figure out gain AND make a special note in object for voices! To mark it for that thingie.
 				newObject.blocks.push_back(newBlock);
 				displacedAdmChannelInfoArray->objects.push_back(newObject);
@@ -563,12 +567,13 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 					mmeADMBlock_t newBlock;
 					newBlock.starttime = admAbsoluteTime;
 					newBlock.duration = count;
-					newBlock.gain = ((float)mixLoops[i].queueItem->volume)/255.0f; // Not sure if the division is exactly correct. But as long as everything is right relative to each other it should be ok.
+					newBlock.gain = ((float)mixLoops[i].queueItem->volume)/256.0f; // Not sure if the division is exactly correct. But as long as everything is right relative to each other it should be ok.
 					lastObject->blocks.push_back(newBlock);
 				}
 				else {
 					mmeADMObject_t newObject;
-					newObject.soundName = (sfxEntries+mixLoops[i].handle)->name;
+					//newObject.soundName = (sfxEntries+mixLoops[i].handle)->name;
+					newObject.sfxHandle = mixLoops[i].handle;
 					mmeADMBlock_t newBlock;
 					newBlock.starttime = admAbsoluteTime;
 					newBlock.duration = count; 

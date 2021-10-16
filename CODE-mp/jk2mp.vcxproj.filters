@@ -72,6 +72,9 @@
     <Filter Include="Renderer\bw64">
       <UniqueIdentifier>{69633ed6-44e8-4d15-afdf-9dd13e2a50ae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="boost">
+      <UniqueIdentifier>{158da533-b956-4d40-8c98-89191ad55ca7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="client\0_SH_Leak.cpp">
@@ -1080,6 +1083,48 @@
     </ClInclude>
     <ClInclude Include="bw64\writer.hpp">
       <Filter>Renderer\bw64</Filter>
+    </ClInclude>
+    <ClInclude Include="adm\adm.hpp">
+      <Filter>Renderer\adm</Filter>
+    </ClInclude>
+    <ClInclude Include="adm\common_definitions.hpp">
+      <Filter>Renderer\adm</Filter>
+    </ClInclude>
+    <ClInclude Include="adm\document.hpp">
+      <Filter>Renderer\adm</Filter>
+    </ClInclude>
+    <ClInclude Include="adm\element_variant.hpp">
+      <Filter>Renderer\adm</Filter>
+    </ClInclude>
+    <ClInclude Include="adm\elements.hpp">
+      <Filter>Renderer\adm</Filter>
+    </ClInclude>
+    <ClInclude Include="adm\elements_fwd.hpp">
+      <Filter>Renderer\adm</Filter>
+    </ClInclude>
+    <ClInclude Include="adm\errors.hpp">
+      <Filter>Renderer\adm</Filter>
+    </ClInclude>
+    <ClInclude Include="adm\export.h">
+      <Filter>Renderer\adm</Filter>
+    </ClInclude>
+    <ClInclude Include="adm\parse.hpp">
+      <Filter>Renderer\adm</Filter>
+    </ClInclude>
+    <ClInclude Include="adm\path.hpp">
+      <Filter>Renderer\adm</Filter>
+    </ClInclude>
+    <ClInclude Include="adm\route.hpp">
+      <Filter>Renderer\adm</Filter>
+    </ClInclude>
+    <ClInclude Include="adm\route_tracer.hpp">
+      <Filter>Renderer\adm</Filter>
+    </ClInclude>
+    <ClInclude Include="adm\version.hpp">
+      <Filter>Renderer\adm</Filter>
+    </ClInclude>
+    <ClInclude Include="adm\write.hpp">
+      <Filter>Renderer\adm</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

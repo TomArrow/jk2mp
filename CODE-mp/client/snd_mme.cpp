@@ -8,6 +8,8 @@
 #include <vector>
 #include <cgame\tr_types.h>
 #include <bw64/bw64.hpp>
+#include "adm/export.h"
+#include <adm/adm.hpp>
 
 #define MME_SNDCHANNELS 128
 #define MME_LOOPCHANNELS 128
@@ -103,6 +105,10 @@ static void S_MMEFillWavHeader(void* buffer, long fileSize, int sampleRate) {
 }
 
 std::string S_MMEADMMetaCreate() {
+
+	auto admProgramme = adm::AudioProgramme::create(adm::AudioProgrammeName("Alice and Bob talking"));
+
+
 	std::string retVal;
 	retVal.append("channel;object;block;objectName;gain;starttime;duration;position");
 	for (int i = 0; i < (MME_SNDCHANNELS + MME_LOOPCHANNELS); i++) {
@@ -117,7 +123,8 @@ std::string S_MMEADMMetaCreate() {
 				retVal.append(";");
 				retVal.append(std::to_string(b));
 				retVal.append(";");
-				retVal.append(object->soundName);
+				//retVal.append(object->soundName);
+				retVal.append((sfxEntries+ object->sfxHandle)->name);
 				retVal.append(";");
 				retVal.append(std::to_string(block->gain));
 				retVal.append(";");

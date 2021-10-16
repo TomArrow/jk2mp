@@ -178,7 +178,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>freetype.lib;legacy_stdio_definitions.lib;ucrt.lib;winmm.lib;wsock32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libmad.lib;libogg_static.lib;libvorbis_static.lib;win_utf8_io_static.lib;libFLAC_static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>adm.lib;freetype.lib;legacy_stdio_definitions.lib;ucrt.lib;winmm.lib;wsock32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libmad.lib;libogg_static.lib;libvorbis_static.lib;win_utf8_io_static.lib;libFLAC_static.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ProgramDatabaseFile>$(IntDir)$(ProjectName).pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>$(IntDir)$(ProjectName).map</MapFileName>
@@ -438,6 +438,20 @@
     <ClCompile Include="zlib\zutil.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="adm\adm.hpp" />
+    <ClInclude Include="adm\common_definitions.hpp" />
+    <ClInclude Include="adm\document.hpp" />
+    <ClInclude Include="adm\elements.hpp" />
+    <ClInclude Include="adm\elements_fwd.hpp" />
+    <ClInclude Include="adm\element_variant.hpp" />
+    <ClInclude Include="adm\errors.hpp" />
+    <ClInclude Include="adm\export.h" />
+    <ClInclude Include="adm\parse.hpp" />
+    <ClInclude Include="adm\path.hpp" />
+    <ClInclude Include="adm\route.hpp" />
+    <ClInclude Include="adm\route_tracer.hpp" />
+    <ClInclude Include="adm\version.hpp" />
+    <ClInclude Include="adm\write.hpp" />
     <ClInclude Include="botlib\aasfile.h" />
     <ClInclude Include="botlib\be_aas_bsp.h" />
     <ClInclude Include="botlib\be_aas_cluster.h" />

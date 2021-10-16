@@ -19,7 +19,9 @@ typedef struct {
 } mmeADMBlock_t;
 typedef struct {
 	std::vector<mmeADMBlock_t> blocks;
-	std::string soundName;
+	//std::string soundName;
+	sfxHandle_t sfxHandle;
+	soundChannel_t channelHandle;
 } mmeADMObject_t;
 typedef struct {
 	std::vector<mmeADMObject_t> objects;
