@@ -213,7 +213,7 @@ static void S_MixSpatialize(const vec3_t origin, float volume, int *left_vol, in
 		*left_vol = 0;
 }
 
-static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, short* outputADM = nullptr, int outputADMOffsetPerSample =0) {
+static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, short* outputADM = nullptr, int outputADMOffsetPerSample =0, vec3_t admPosition = nullptr) {
 	const mixSound_t *sound;
 	int i, leftVol, rightVol;
 	int64_t index, indexAdd, indexLeft;
@@ -230,7 +230,7 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, s
 	if (!ch->hasOrigin && s_entitySounds[ch->entNum].origin[0] == 0 && s_entitySounds[ch->entNum].origin[1] == 0 && s_entitySounds[ch->entNum].origin[2] == 0)
 		origin = s_listenOrigin;
 
-	S_MixSpatialize( origin, volume , &leftVol, &rightVol );
+	S_MixSpatialize( origin, volume , &leftVol, &rightVol,admPosition );
 	sound = S_MixGetSound( ch->handle );
 
 	index = ch->index;
@@ -276,7 +276,11 @@ void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *o
 	int queueLeft, freeLeft = channels;
 	int activeCount;
 	mixChannel_t *free = ch;
+	int channelIndex = 0; // For ADM
 	const channelQueue_t *q = s_channelQueue;
+
+	bool* isNew = new bool[channels] {false}; // For ADM 
+
 	/* Go through the sound queue and add new channels */
 	for (queueLeft = s_channelQueueCount; queueLeft > 0; queueLeft--, q++) {
 		int scanCount, foundCount;
@@ -312,7 +316,7 @@ void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *o
 			if (foundCount > s_mixSame->integer)
 				goto skip_alloc;
 		}
-		for (;freeLeft > 0;free++, freeLeft--) {
+		for (;freeLeft > 0;free++, freeLeft--,channelIndex++) {
 			if (!free->handle) {
 				free->handle = q->handle;
 				free->entChan = q->entChan;
@@ -322,6 +326,7 @@ void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *o
 				free->hasOrigin = q->hasOrigin;
 				freeLeft--;
 				free++;
+				isNew[channelIndex] = true; // For ADM
 				break;
 			}
 		}
@@ -329,15 +334,54 @@ skip_alloc:;
 	}
 	activeCount = 0;
 	short* admDisplacedPointer = outputADM;
-	for (;channels>0;channels--, ch++ ) {
+	mmeADMChannelInfo_t* displacedAdmChannelInfoArray = admChannelInfoArray;
+	channelIndex = 0; // For ADM
+	for (;channels>0;channels--, ch++, channelIndex++) {
 		if (ch->handle <= 0 )
 			continue;
 		activeCount++;
-		S_MixChannel( ch, speed, count, output, admDisplacedPointer, admTotalChannelCount);
 		if (!!outputADM) {
+
+			if (!isNew[channelIndex] && displacedAdmChannelInfoArray->objects.size() >0) { // Means it's still the same sound as before
+					// We only let it stay the same object if both parent and sound are the same
+				mmeADMObject_t* lastObject = &displacedAdmChannelInfoArray->objects.back();
+				//mmeADMBlock_t* lastBlock = &lastObject->blocks.back();
+				mmeADMBlock_t newBlock;
+				newBlock.starttime = admAbsoluteTime;
+				newBlock.duration = count;
+				//newBlock.gain = ((float)mixLoops[i].queueItem->volume) / 255.0f; // Not sure if the division is exactly correct. But as long as everything is right relative to each other it should be ok.
+				// TODO Figure out gain AND make a special note in object for voices! To mark it for that thingie.
+				lastObject->blocks.push_back(newBlock);
+			}
+			else {
+				mmeADMObject_t newObject;
+				newObject.soundName = (sfxEntries + ch->handle)->name;
+				mmeADMBlock_t newBlock;
+				newBlock.starttime = admAbsoluteTime;
+				newBlock.duration = count;
+				//newBlock.gain = ((float)mixLoops[i].queueItem->volume) / 255.0f; // Not sure if the division is exactly correct. But as long as everything is right relative to each other it should be ok.
+				// TODO Figure out gain AND make a special note in object for voices! To mark it for that thingie.
+				newObject.blocks.push_back(newBlock);
+				displacedAdmChannelInfoArray->objects.push_back(newObject);
+			}
+
+			//S_MixLoop(&mixLoops[i], mixLoops[i].queueItem, speed, count, output, displacedADMOutput, admTotalChannelCount, admPosition);
+			
+
+			vec3_t admPosition;
+			S_MixChannel(ch, speed, count, output, admDisplacedPointer, admTotalChannelCount, admPosition);
+			mmeADMBlock_t* currentBlock = &displacedAdmChannelInfoArray->objects.back().blocks.back();
+			VectorCopy(admPosition, currentBlock->position);
+
 			admDisplacedPointer++;
+			displacedAdmChannelInfoArray++;
+		}
+		else {
+			S_MixChannel(ch, speed, count, output, admDisplacedPointer, admTotalChannelCount);
 		}
 	}
+
+	delete[] isNew;
 }
 
 #define MAX_DOPPLER_SCALE 50			//arbitrary
@@ -512,7 +556,7 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 
 			if (!!mixLoops[i].parent) {
 				
-				if (isOngoing[i] && !isSoundChanged[i]) { // Means it's still the same parent and same sound as before
+				if (isOngoing[i] && !isSoundChanged[i] && displacedAdmChannelInfoArray->objects.size() > 0) { // Means it's still the same parent and same sound as before
 					// We only let it stay the same object if both parent and sound are the same
 					mmeADMObject_t* lastObject = &displacedAdmChannelInfoArray->objects.back();
 					//mmeADMBlock_t* lastBlock = &lastObject->blocks.back();

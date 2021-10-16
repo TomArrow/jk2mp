@@ -8328,8 +8328,10 @@ stillDoSaber:
 #ifndef _DEBUG
 			if (cg.playerCent && cent->currentState.number == cg.playerCent->currentState.number)
 			{
-				trap_S_AddLoopingSound( cent->currentState.number, cg.refdef.vieworg, vec3_origin, 
-					trap_S_RegisterSound( "sound/weapons/saber/saberhum1.wav" ) );
+				trap_S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin,
+					trap_S_RegisterSound( "sound/weapons/saber/saberhum1.wav" ) ); // Modified: I want the hum to come from the saber position.
+				//trap_S_AddLoopingSound( cent->currentState.number, cg.refdef.vieworg, vec3_origin, 
+				//	trap_S_RegisterSound( "sound/weapons/saber/saberhum1.wav" ) );
 			}
 			else
 			{
