@@ -192,13 +192,26 @@ void S_MMEWavClose(void) {
 	if (!!mmeSound.adm_bw64Handle) {
 
 		//std::string admMetaData = S_MMEADMMetaCreate();
-		//const char* admMetaDataC = admMetaData.c_str();
+		//const char* admMetaDataC = admMetaData.c_str(); 
 		char savePath[MAX_OSPATH]; 
 
-		Com_sprintf(savePath, sizeof(savePath), "%s.ADMsavetest.xml", mmeSound.adm_baseName);
+		//Com_sprintf(savePath, sizeof(savePath), "%s.ADMsavetest.xml", mmeSound.adm_baseName);
+		for (int i = 0; i < 100000; i++) {
+			Com_sprintf(savePath, sizeof(savePath), "%s.ADMsavetest.%03d.xml", mmeSound.adm_baseName, i);
+			if (!FS_FileExists(savePath))
+				break;
+		}
 		//FS_WriteFile(savePath, admMetaDataC, admMetaData.size());
 		const char* realPath = FS_GetSanePath(savePath);
-		S_MMEADMMetaCreate(realPath);
+
+		try {
+
+			S_MMEADMMetaCreate(realPath);
+		}
+		catch (std::runtime_error e) {
+			ri.Printf(PRINT_WARNING, "ADM xml Error: %s. Possible cause: %s\n", e.what(), strerror(errno));
+		}
+
 
 		mmeSound.adm_bw64Handle.reset();
 		mmeSound.admAbsoluteTime = 0;
@@ -330,7 +343,9 @@ void S_MMERecord( const char *baseName, float deltaTime ) {
 					if (!FS_FileExists(fileName))
 						break;
 				}
+				FS_CreatePath(fileName); 
 				try {
+					
 					mmeSound.adm_bw64Handle = bw64::writeFile(std::string(FS_GetSanePath(fileName)), MME_SNDCHANNELS + MME_LOOPCHANNELS, MME_SAMPLERATE, 16u);
 					
 				}
