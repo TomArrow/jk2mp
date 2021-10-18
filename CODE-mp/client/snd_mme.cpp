@@ -73,6 +73,63 @@ uint64_t bw64::Bw64Writer::write(short* inBuffer, uint64_t frames) {
 	return frames;
 }
 
+// Just a chunk wrapper for the ADM document basically.
+// It's not meant to be used normally with the bw64 class, only with our special override "writeChunk" below.
+// Basically the goal is to save memory by not having to write to a string first and then to have it copied
+// etc. Just want it to be written straight to the file.
+class ADMChunk : public bw64::Chunk {
+public:
+	static uint32_t Id() { return bw64::utils::fourCC("axml"); }
+	ADMChunk(std::shared_ptr<adm::Document> document) {
+		_document = document;
+	}
+	~ADMChunk() {
+		// Blah
+	}
+	void write(std::ostream &stream) const override { // writes to stream and returns amount of bytes written.
+		// Not implemented
+	}
+	uint64_t doWrite(std::ostream &stream) { // writes to stream and returns amount of bytes written.
+		std::streampos startpos = stream.tellp();
+		adm::writeXml(stream,_document);
+		std::streampos endpos = stream.tellp();
+		uint64_t admXMLlength = endpos - startpos;
+		return admXMLlength;
+	}
+	uint32_t id() const override { return ADMChunk::Id(); }
+	uint64_t size() const override { return _size; }
+private:
+	std::shared_ptr<adm::Document> _document;
+	uint64_t _size;
+};
+
+// Special class for writing ADM chunk straight into the file without having to save it in a string first.
+template<>
+void bw64::Bw64Writer::writeChunk(std::shared_ptr<ADMChunk> chunk) {
+	if (chunk) {
+		uint64_t position = fileStream_.tellp();
+		bw64::utils::writeValue(fileStream_, chunk->id());
+		uint64_t sizePosition = fileStream_.tellp();
+		bw64::utils::writeValue(fileStream_, 0); // placeholder for now
+		
+		uint64_t size = chunk->doWrite(fileStream_);
+		if (size % 2 == 1) {
+			bw64::utils::writeValue(fileStream_, '\0');
+		}
+		uint64_t currentPosition = fileStream_.tellp();
+		fileStream_.seekp(sizePosition);
+		bw64::utils::writeValue(fileStream_, (uint32_t)size);
+		fileStream_.seekp(currentPosition);
+		
+		// we do this later because we didnt know the size before
+		chunkHeaders_.push_back(
+			ChunkHeader(chunk->id(), chunk->size(), position));
+		//bw64::utils::writeChunk<bw64::ChunkType>(fileStream_, chunk,
+		//	chunkSizeForHeader(chunk->id()));
+		//chunks_.push_back(chunk); // this will just have to live with not existing...
+	}
+}
+
 /*
 =================================================================================
 
@@ -112,10 +169,25 @@ inline long long S_AudioSamplesToNanoSeconds(long &inTime) {
 	return (long long)(0.5 + timeInSeconds * 1000000000.0);
 }
 
-void S_MMEADMMetaCreate(std::string filename) {
+template<class T>
+inline std::string getPrintedString(T something) {
+	std::stringstream idStream;
+	id.print(idStream);
+	return idStream.str();
+}
+
+// By how much do we have to divide in-game units to get real units for ADM?
+#define POSITION_UNITS_RATIO 60.0f
+
+void S_MMEADMMetaCreate(std::string filename,bw64::Bw64Writer* writer) {
 
 	auto admProgramme = adm::AudioProgramme::create(adm::AudioProgrammeName("JK2 JOMME ADM EXPORT"));
-	
+
+	auto admDocument = adm::Document::create();
+	admDocument->add(admProgramme);
+
+	std::vector<bw64::AudioId> audioIds;
+
 	long long minBlockDuration = 0; // We set this according to fps so as not to bloat the ADM metadata in slow capturing modes like rolling shutter
 	if (shotData.fps) { // I hope it's (still?) set here
 		double timeInSeconds = 1.0/shotData.fps;
@@ -134,11 +206,8 @@ void S_MMEADMMetaCreate(std::string filename) {
 		// because ADM has a rather low limit on max amount of objects you can have in a file,
 		// therefore having one object per sound would likely exceed the max number quickly.
 		auto channelObject = adm::createSimpleObject(contentName);
-		
-		adm::Start test();
-		
-		//channelObject.audioObject->set((adm::Start)S_AudioSamplesToNanoSeconds(mmeSound.adm_channelInfo[i].objects.begin()->blocks.begin()->starttime));
-		
+
+		int64_t blocksAdded = 0;
 
 		int o = 0;
 		long long lastBlockEndTimeChannelScope = 0;
@@ -148,7 +217,6 @@ void S_MMEADMMetaCreate(std::string filename) {
 			int bLast = object->blocks.size() - 1;
 			long long thisBlockEndTime=0,lastBlockEndTime=0;
 			for (auto block = object->blocks.begin(); block != object->blocks.end(); block++,b++) {
-				
 				
 				long long timeInNanoSeconds = S_AudioSamplesToNanoSeconds(block->starttime);
 				long long durationInNanoSeconds = S_AudioSamplesToNanoSeconds(block->duration);
@@ -162,7 +230,7 @@ void S_MMEADMMetaCreate(std::string filename) {
 					continue; 
 				}
 
-				adm::CartesianPosition cartesianCoordinates((adm::X)block->position[0],(adm::Y)block->position[1],(adm::Z)block->position[2]);
+				adm::CartesianPosition cartesianCoordinates((adm::X)(block->position[0]/ POSITION_UNITS_RATIO),(adm::Y)(block->position[1] / POSITION_UNITS_RATIO),(adm::Z)(block->position[2] / POSITION_UNITS_RATIO));
 				auto blockFormat = adm::AudioBlockFormatObjects(cartesianCoordinates);
 				blockFormat.set((adm::Gain)block->gain);
 
@@ -180,10 +248,21 @@ void S_MMEADMMetaCreate(std::string filename) {
 					// Not contiguous. Add a filler block.
 					// All block formats within an object must be contiguous. Just how it is.
 					long long diff = timeInNanoSeconds - lastBlockEndTimeChannelScope;
-					auto blockFormatFiller = adm::AudioBlockFormatObjects(adm::CartesianPosition((adm::X)0, (adm::Y)0, (adm::Z)0));
-					blockFormatFiller.set(adm::Rtime((std::chrono::nanoseconds)lastBlockEndTimeChannelScope));
-					blockFormatFiller.set(adm::Duration((std::chrono::nanoseconds)diff));
-					channelObject.audioChannelFormat->add(blockFormatFiller);
+					if (diff > 0 && diff > 1) { // If it's only a difference of one nanosecond, it's likely a rounding error too
+
+						auto blockFormatFiller = adm::AudioBlockFormatObjects(adm::CartesianPosition((adm::X)0, (adm::Y)0, (adm::Z)0));
+						blockFormatFiller.set(adm::Rtime((std::chrono::nanoseconds)lastBlockEndTimeChannelScope));
+						blockFormatFiller.set(adm::Duration((std::chrono::nanoseconds)diff));
+						channelObject.audioChannelFormat->add(blockFormatFiller);
+					}
+					else {
+						// Special case: There wasn't actually a gap between the sounds but once again a rounding error.
+						// Adding a filler here makes no sense because the filler would have a negative value or be tiny.
+						// So we just adjust the current block's start time instead. It's not great, but it's only about a 
+						// nanosecond of imperfection so who cares I guess
+						timeInNanoSeconds -= diff; // We remove the diff from the start value
+						durationInNanoSeconds += diff; // Since duration is a relative term, we need to add the diff back on
+					}
 				}
 				if (b == 0) {
 					// If this is the first block in this sound, make the position a jumper.
@@ -203,17 +282,34 @@ void S_MMEADMMetaCreate(std::string filename) {
 				channelObject.audioChannelFormat->add(blockFormat);
 
 
+				blocksAdded++;
 			}
 		}
 
-		contentItem->addReference(channelObject.audioObject);
+		if (blocksAdded > 0) {
+
+			contentItem->addReference(channelObject.audioObject);
+			audioIds.push_back(bw64::AudioId(i + 1,
+				adm::formatId(channelObject.audioTrackUid->get<adm::AudioTrackUidId>()),
+				adm::formatId(channelObject.audioTrackFormat->get<adm::AudioTrackFormatId>()),
+				adm::formatId(channelObject.audioPackFormat->get<adm::AudioPackFormatId>())
+			));
+		}
 	}
 
-	auto admDocument = adm::Document::create();
-	admDocument->add(admProgramme);
 
 	// write XML data to stdout
 	adm::writeXml(filename,admDocument);
+
+	auto chnaChunk = std::make_shared<bw64::ChnaChunk>(audioIds);
+
+	//writer->writeChunk(chnaChunk);
+	writer->setChnaChunk(chnaChunk);
+
+	writer->finalizeDataChunk(); // This will potentially add a padding so that everything is aligned to 2-bytes. 
+	auto admChunk = std::make_shared<ADMChunk>(admDocument);
+	writer->writeChunk(admChunk);
+
 	/*
 	std::string retVal;
 	retVal.append("channel;object;block;objectName;gain;starttime;duration;position");
@@ -271,7 +367,7 @@ void S_MMEWavClose(void) {
 
 		try {
 
-			S_MMEADMMetaCreate(realPath);
+			S_MMEADMMetaCreate(realPath, mmeSound.adm_bw64Handle.get());
 		}
 		catch (std::runtime_error e) {
 			ri.Printf(PRINT_WARNING, "ADM xml Error: %s. Possible cause: %s\n", e.what(), strerror(errno));

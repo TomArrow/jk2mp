@@ -190,7 +190,7 @@ static void S_MixSpatialize(const vec3_t origin, float volume, int *left_vol, in
 	lscale = 0.5 * (1.0 - dot);
 
 	if (admPosition) { // Todo: Figure out if I have the correct signedness here or if I need to invert some.
-		admPosition[0] = vec[1]* absoluteDist; // left/right
+		admPosition[0] = -vec[1]* absoluteDist; // left/right
 		admPosition[1] = vec[0]* absoluteDist; // front/back
 		admPosition[2] = vec[2]* absoluteDist; // up/down
 	}
