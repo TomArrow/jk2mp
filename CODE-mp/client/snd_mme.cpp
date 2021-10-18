@@ -106,6 +106,11 @@ static void S_MMEFillWavHeader(void* buffer, long fileSize, int sampleRate) {
 	((unsigned long*)buffer)[10] = fileSize-44;	// data chunk length
 }
 
+inline long long S_AudioSamplesToNanoSeconds(long &inTime) {
+	double timeInSeconds = ((double)inTime) / ((double)MME_SAMPLERATE);
+	return (long long)(0.5 + timeInSeconds * 1000000000.0);
+}
+
 void S_MMEADMMetaCreate(std::string filename) {
 
 	auto admProgramme = adm::AudioProgramme::create(adm::AudioProgrammeName("JK2 JOMME ADM EXPORT"));
@@ -119,24 +124,72 @@ void S_MMEADMMetaCreate(std::string filename) {
 		auto contentItem = adm::AudioContent::create(adm::AudioContentName(contentName));
 		admProgramme->addReference(contentItem);
 
+		// For clarification: Right now we are using one entire object for each channel
+		// because ADM has a rather low limit on max amount of objects you can have in a file,
+		// therefore having one object per sound would likely exceed the max number quickly.
 		auto channelObject = adm::createSimpleObject(contentName);
+		
+		adm::Start test();
+		
+		//channelObject.audioObject->set((adm::Start)S_AudioSamplesToNanoSeconds(mmeSound.adm_channelInfo[i].objects.begin()->blocks.begin()->starttime));
+		
 
 		int o = 0;
+		long long lastBlockEndTimeChannelScope = 0;
 		for (auto object = mmeSound.adm_channelInfo[i].objects.begin(); object != mmeSound.adm_channelInfo[i].objects.end(); object++,o++) {
 			
 			int b = 0;
+			long long thisBlockEndTime=0,lastBlockEndTime=0;
 			for (auto block = object->blocks.begin(); block != object->blocks.end(); block++,b++) {
 				
+				
+
 				adm::CartesianPosition cartesianCoordinates((adm::X)block->position[0],(adm::Y)block->position[1],(adm::Z)block->position[2]);
 				auto blockFormat = adm::AudioBlockFormatObjects(cartesianCoordinates);
 				blockFormat.set((adm::Gain)block->gain);
-				double timeInSeconds = ((double)block->starttime) / ((double)MME_SAMPLERATE);
-				std::chrono::nanoseconds timeInNanoSeconds = (std::chrono::nanoseconds)(long long)(0.5+timeInSeconds* 1000000000.0);
-				double durationInSeconds = ((double)block->duration) / ((double)MME_SAMPLERATE);
-				std::chrono::nanoseconds durationInNanoSeconds = (std::chrono::nanoseconds)(long long)(0.5+ durationInSeconds * 1000000000.0);
-				blockFormat.set(adm::Rtime(timeInNanoSeconds));
-				blockFormat.set(adm::Duration(durationInNanoSeconds));
+				//double timeInSeconds = ((double)block->starttime) / ((double)MME_SAMPLERATE);
+				//std::chrono::nanoseconds timeInNanoSeconds = (std::chrono::nanoseconds)(long long)(0.5+timeInSeconds* 1000000000.0);
+				//double durationInSeconds = ((double)block->duration) / ((double)MME_SAMPLERATE);
+				//std::chrono::nanoseconds durationInNanoSeconds = (std::chrono::nanoseconds)(long long)(0.5+ durationInSeconds * 1000000000.0);
+				
+				long long timeInNanoSeconds = S_AudioSamplesToNanoSeconds(block->starttime);
+				long long durationInNanoSeconds = S_AudioSamplesToNanoSeconds(block->duration);
+				
+				thisBlockEndTime = timeInNanoSeconds + durationInNanoSeconds; // The time that this block ends in correct numbers
+
+				if (!!lastBlockEndTime  && lastBlockEndTime != timeInNanoSeconds) { // It's at least the second block in this object. They are contiguous. Simply adjust times.
+					// This means that we have a rounding error resulting from conversion of samples to nanoseconds
+					long long diff = timeInNanoSeconds - lastBlockEndTime;
+					timeInNanoSeconds -= diff; // We remove the diff from the start value
+					durationInNanoSeconds += diff; // Since duration is a relative term, we need to add the diff back on
+				}
+				else if (b==0 && !!lastBlockEndTimeChannelScope && lastBlockEndTimeChannelScope != timeInNanoSeconds) { 
+					// This is the first block of this object, but not the first block of this channel. 
+					// Not contiguous. Add a filler block.
+					// All block formats within an object must be contiguous. Just how it is.
+					long long diff = timeInNanoSeconds - lastBlockEndTimeChannelScope;
+					auto blockFormatFiller = adm::AudioBlockFormatObjects(adm::CartesianPosition((adm::X)0, (adm::Y)0, (adm::Z)0));
+					blockFormatFiller.set(adm::Rtime((std::chrono::nanoseconds)lastBlockEndTimeChannelScope));
+					blockFormatFiller.set(adm::Duration((std::chrono::nanoseconds)diff));
+					channelObject.audioChannelFormat->add(blockFormatFiller);
+				}
+				if (b == 0) {
+					// If this is the first block in this sound, make the position a jumper.
+					// TODO technically we are introducing a delay in the position data here because
+					// the position data is for the start of the block, not for its end
+					// but we'll let it slide for now... the correct way would be to 
+					// add the zero-duration blockformats...
+					
+					blockFormat.set(adm::JumpPosition(adm::JumpPositionFlag(true)));
+				}
+
+				blockFormat.set(adm::Rtime((std::chrono::nanoseconds)timeInNanoSeconds));
+				blockFormat.set(adm::Duration((std::chrono::nanoseconds)durationInNanoSeconds));
+
+				lastBlockEndTimeChannelScope = lastBlockEndTime = thisBlockEndTime; // Remember for next iteration
+				
 				channelObject.audioChannelFormat->add(blockFormat);
+
 
 			}
 		}
