@@ -3,12 +3,18 @@
 #include "tr_local.h"
 #include <xmmintrin.h>
 
+
+
 #define AVI_MAX_FRAMES	2000000
 #define AVI_MAX_SIZE	((2*1024-10)*1024*1024)
 #define AVI_HEADER_SIZE	2048
 #define AVI_MAX_FILES	1000
 
 #define BLURMAX 256
+
+
+
+
 
 typedef struct mmeAviFile_s {
 	char name[MAX_OSPATH];
@@ -32,6 +38,15 @@ typedef struct {
 	mmeShotType_t type;
 	mmeAviFile_t avi;
 } mmeShot_t;
+
+typedef struct {
+	qboolean		take;
+	float			fps;
+	float			dofFocus, dofRadius;
+	mmeShot_t		main, stencil, depth;
+	float			jitter[BLURMAX][2];
+} shotData_t;
+ 
 
 typedef struct {
 //	int		pixelCount;

@@ -15,13 +15,9 @@ static struct {
 	float	jitter[BLURMAX][2];
 } blurData;
 
-static struct {
-	qboolean		take;
-	float			fps;
-	float			dofFocus, dofRadius;
-	mmeShot_t		main, stencil, depth;
-	float			jitter[BLURMAX][2];
-} shotData;
+
+
+shotData_t shotData;
 
 //Data to contain the blurring factors
 static struct {

@@ -4,6 +4,7 @@
 
 #include "snd_local.h"
 #include "snd_mix.h"
+#include "../renderer/tr_mme.h"
 #include "../renderer/tr_local.h"
 #include <vector>
 #include <cgame\tr_types.h>
@@ -46,7 +47,7 @@ typedef struct {
 
 static mmeWav_t mmeSound;
 
-
+extern shotData_t shotData;
 
 /*
 =================================================================================
@@ -115,7 +116,12 @@ void S_MMEADMMetaCreate(std::string filename) {
 
 	auto admProgramme = adm::AudioProgramme::create(adm::AudioProgrammeName("JK2 JOMME ADM EXPORT"));
 	
-
+	long long minBlockDuration = 0; // We set this according to fps so as not to bloat the ADM metadata in slow capturing modes like rolling shutter
+	if (shotData.fps) { // I hope it's (still?) set here
+		double timeInSeconds = 1.0/shotData.fps;
+		minBlockDuration= (long long)(0.5 + timeInSeconds * 1000000000.0);
+		// In short, we don't necessarily want more than one position update per frame. What's the point after all? There's interpolation anyway.
+	}
 	
 	for (int i = 0; i < (MME_SNDCHANNELS + MME_LOOPCHANNELS); i++) {
 
@@ -139,21 +145,27 @@ void S_MMEADMMetaCreate(std::string filename) {
 		for (auto object = mmeSound.adm_channelInfo[i].objects.begin(); object != mmeSound.adm_channelInfo[i].objects.end(); object++,o++) {
 			
 			int b = 0;
+			int bLast = object->blocks.size() - 1;
 			long long thisBlockEndTime=0,lastBlockEndTime=0;
 			for (auto block = object->blocks.begin(); block != object->blocks.end(); block++,b++) {
 				
 				
+				long long timeInNanoSeconds = S_AudioSamplesToNanoSeconds(block->starttime);
+				long long durationInNanoSeconds = S_AudioSamplesToNanoSeconds(block->duration);
+
+				if (b>0 && b< bLast && minBlockDuration > (timeInNanoSeconds - lastBlockEndTime)) {
+					// Skip blocks if they are too highly resolved. We want only one block per frame roughly.
+					// Unless it's literally the first or last block, we need a start and an ending after all.
+					// We do not want to bloat the ADM file too much, this is just something to aid in that goal.
+					// This helps not only with the ADM XML filesize (potentially immensely!), it also makes
+					// the ADM generation much faster and thus the program handling more comfortable.
+					continue; 
+				}
 
 				adm::CartesianPosition cartesianCoordinates((adm::X)block->position[0],(adm::Y)block->position[1],(adm::Z)block->position[2]);
 				auto blockFormat = adm::AudioBlockFormatObjects(cartesianCoordinates);
 				blockFormat.set((adm::Gain)block->gain);
-				//double timeInSeconds = ((double)block->starttime) / ((double)MME_SAMPLERATE);
-				//std::chrono::nanoseconds timeInNanoSeconds = (std::chrono::nanoseconds)(long long)(0.5+timeInSeconds* 1000000000.0);
-				//double durationInSeconds = ((double)block->duration) / ((double)MME_SAMPLERATE);
-				//std::chrono::nanoseconds durationInNanoSeconds = (std::chrono::nanoseconds)(long long)(0.5+ durationInSeconds * 1000000000.0);
-				
-				long long timeInNanoSeconds = S_AudioSamplesToNanoSeconds(block->starttime);
-				long long durationInNanoSeconds = S_AudioSamplesToNanoSeconds(block->duration);
+
 				
 				thisBlockEndTime = timeInNanoSeconds + durationInNanoSeconds; // The time that this block ends in correct numbers
 
