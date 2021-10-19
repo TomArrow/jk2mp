@@ -577,7 +577,7 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 					mmeADMBlock_t newBlock;
 					newBlock.starttime = admAbsoluteTime;
 					newBlock.duration = count; 
-					newBlock.gain = ((float)mixLoops[i].queueItem->volume) / 255.0f; // Not sure if the division is exactly correct. But as long as everything is right relative to each other it should be ok.
+					newBlock.gain = ((float)mixLoops[i].queueItem->volume) / 256.0f; // Not sure if the division is exactly correct. But as long as everything is right relative to each other it should be ok.
 					newObject.blocks.push_back(newBlock);
 					displacedAdmChannelInfoArray->objects.push_back(newObject);
 				}

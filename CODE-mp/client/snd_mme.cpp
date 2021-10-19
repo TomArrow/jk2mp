@@ -179,7 +179,7 @@ inline std::string getPrintedString(T something) {
 // By how much do we have to divide in-game units to get real units for ADM?
 #define POSITION_UNITS_RATIO 60.0f
 
-void S_MMEADMMetaCreate(std::string filename,bw64::Bw64Writer* writer) {
+std::string S_MMEADMMetaCreate(std::string filename,bw64::Bw64Writer* writer) {
 
 	auto admProgramme = adm::AudioProgramme::create(adm::AudioProgrammeName("JK2 JOMME ADM EXPORT"));
 
@@ -310,7 +310,7 @@ void S_MMEADMMetaCreate(std::string filename,bw64::Bw64Writer* writer) {
 	auto admChunk = std::make_shared<ADMChunk>(admDocument);
 	writer->writeChunk(admChunk);
 
-	/*
+	
 	std::string retVal;
 	retVal.append("channel;object;block;objectName;gain;starttime;duration;position");
 	for (int i = 0; i < (MME_SNDCHANNELS + MME_LOOPCHANNELS); i++) {
@@ -344,7 +344,7 @@ void S_MMEADMMetaCreate(std::string filename,bw64::Bw64Writer* writer) {
 			}
 		}
 	}
-	return retVal;*/
+	return retVal;
 }
 
 void S_MMEWavClose(void) {
@@ -355,19 +355,25 @@ void S_MMEWavClose(void) {
 		//std::string admMetaData = S_MMEADMMetaCreate();
 		//const char* admMetaDataC = admMetaData.c_str(); 
 		char savePath[MAX_OSPATH]; 
+		char savePathCSV[MAX_OSPATH]; 
 
 		//Com_sprintf(savePath, sizeof(savePath), "%s.ADMsavetest.xml", mmeSound.adm_baseName);
 		for (int i = 0; i < 100000; i++) {
-			Com_sprintf(savePath, sizeof(savePath), "%s.ADMsavetest.%03d.xml", mmeSound.adm_baseName, i);
+			Com_sprintf(savePath, sizeof(savePath), "%s.ADM.%03d.xml", mmeSound.adm_baseName, i);
 			if (!FS_FileExists(savePath))
 				break;
 		}
-		//FS_WriteFile(savePath, admMetaDataC, admMetaData.size());
+		for (int i = 0; i < 100000; i++) {
+			Com_sprintf(savePathCSV, sizeof(savePathCSV), "%s.ADMcsv.%03d.csv", mmeSound.adm_baseName, i);
+			if (!FS_FileExists(savePathCSV))
+				break;
+		}
 		const char* realPath = FS_GetSanePath(savePath);
 
 		try {
 
-			S_MMEADMMetaCreate(realPath, mmeSound.adm_bw64Handle.get());
+			std::string ret = S_MMEADMMetaCreate(realPath, mmeSound.adm_bw64Handle.get());
+			FS_WriteFile(savePathCSV, ret.c_str(), ret.size());
 		}
 		catch (std::runtime_error e) {
 			ri.Printf(PRINT_WARNING, "ADM xml Error: %s. Possible cause: %s\n", e.what(), strerror(errno));
@@ -504,7 +510,7 @@ void S_MMERecord( const char *baseName, float deltaTime ) {
 					if (!FS_FileExists(fileName))
 						break;
 				}
-				FS_CreatePath(fileName); 
+				FS_CreatePath(FS_GetSanePath(fileName));
 				try {
 					
 					mmeSound.adm_bw64Handle = bw64::writeFile(std::string(FS_GetSanePath(fileName)), MME_SNDCHANNELS + MME_LOOPCHANNELS, MME_SAMPLERATE, 16u);
