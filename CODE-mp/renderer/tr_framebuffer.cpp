@@ -435,14 +435,23 @@ qboolean R_FrameBuffer_HDRConvert(bool fromPBO) {
 
 		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.colorSpaceConv->fbo);
 		qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+
+		// Fix random black image when saber flare happens
+		// Credit: https://community.khronos.org/t/gldrawpixels-or-how-to-lose-your-time-infinitely/44513/7
+		//qglClear(GL_DEPTH_BUFFER_BIT); // this alone does NOT fix it
+		qglDisable(GL_TEXTURE_2D);  //this is the one that fixed the black frame on its own
+		//qglDisable(GL_LIGHTING);
+		//qglDisable(GL_DEPTH_TEST);
+
 		//The color used to blur add this frame
 		qglColor4f(1, 1, 1, 1);
-		GL_State(GLS_DEPTHTEST_DISABLE);
+		GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_DEPTHTEST_DISABLE);
 		R_SetGL2DSize(glConfig.vidWidth, glConfig.vidHeight);
+
 
 		qglDrawPixels(glConfig.vidWidth, glConfig.vidHeight, GL_BGR_EXT, GL_FLOAT, 0);
 
-		
+		//qglFinish();
 
 		
 		//R_DrawQuad(fbo.main->color, glConfig.vidWidth, glConfig.vidHeight);
@@ -451,10 +460,11 @@ qboolean R_FrameBuffer_HDRConvert(bool fromPBO) {
 		qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 
 		qglColor4f(1, 1, 1, 1);
-		GL_State(GLS_DEPTHTEST_DISABLE);
+		GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_DEPTHTEST_DISABLE);
 		qglUseProgram(hdrPqShader->ShaderId());
 		R_DrawQuad(fbo.colorSpaceConv->color, glConfig.vidWidth, glConfig.vidHeight);
 		qglUseProgram(0);
+		//qglFinish();
 	}
 	else {
 		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.colorSpaceConv->fbo);
