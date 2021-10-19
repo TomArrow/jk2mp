@@ -317,114 +317,6 @@
     <ClCompile Include="win32\win_qgl.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="jpeg-6\jcapimin.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jccoefct.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jccolor.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jcdctmgr.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jchuff.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jcinit.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jcmainct.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jcmarker.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jcmaster.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jcomapi.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jcparam.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jcphuff.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jcprepct.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jcsample.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jctrans.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jdapimin.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jdapistd.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jdatadst.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jdatasrc.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jdcoefct.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jdcolor.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jddctmgr.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jdhuff.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jdinput.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jdmainct.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jdmarker.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jdmaster.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jdpostct.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jdsample.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jdtrans.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jerror.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jfdctflt.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jidctflt.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jmemmgr.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jmemnobs.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg-6\jutils.cpp">
-      <Filter>Renderer\jpeg files\JPG Source</Filter>
-    </ClCompile>
     <ClCompile Include="server\sv_bot.cpp">
       <Filter>Server</Filter>
     </ClCompile>
@@ -686,6 +578,183 @@
     <ClCompile Include="renderer\tr_glsl.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="jpeg-9a\jaricom.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jcapimin.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jcapistd.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jcarith.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jccoefct.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jccolor.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jcdctmgr.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jchuff.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jcinit.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jcmainct.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jcmarker.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jcmaster.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jcomapi.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jcparam.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jcprepct.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jcsample.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jctrans.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jdapimin.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jdapistd.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jdarith.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jdatadst.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jdatasrc.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jdcoefct.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jdcolor.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jddctmgr.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jdhuff.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jdinput.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jdmainct.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jdmarker.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jdmaster.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jdmerge.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jdpostct.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jdsample.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jdtrans.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jerror.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jfdctflt.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jfdctfst.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jfdctint.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jidctflt.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jidctfst.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jidctint.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jmemmgr.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jmemnobs.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jquant1.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jquant2.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\jutils.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\rdbmp.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\rdcolmap.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\rdgif.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\rdppm.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\rdrle.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\rdswitch.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\rdtarga.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\transupp.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\wrbmp.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\wrgif.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\wrppm.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\wrrle.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg-9a\wrtarga.c">
+      <Filter>Renderer\jpeg files\JPG Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="client\client.h">
@@ -852,39 +921,6 @@
     </ClInclude>
     <ClInclude Include="cgame\tr_types.h">
       <Filter>Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg-6\jchuff.h">
-      <Filter>Renderer\jpeg files\JPG Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg-6\jconfig.h">
-      <Filter>Renderer\jpeg files\JPG Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg-6\jdct.h">
-      <Filter>Renderer\jpeg files\JPG Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg-6\jdhuff.h">
-      <Filter>Renderer\jpeg files\JPG Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg-6\jerror.h">
-      <Filter>Renderer\jpeg files\JPG Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg-6\jinclude.h">
-      <Filter>Renderer\jpeg files\JPG Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg-6\jmemsys.h">
-      <Filter>Renderer\jpeg files\JPG Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg-6\jmorecfg.h">
-      <Filter>Renderer\jpeg files\JPG Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg-6\jpegint.h">
-      <Filter>Renderer\jpeg files\JPG Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg-6\jpeglib.h">
-      <Filter>Renderer\jpeg files\JPG Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg-6\jversion.h">
-      <Filter>Renderer\jpeg files\JPG Headers</Filter>
     </ClInclude>
     <ClInclude Include="server\server.h">
       <Filter>Server</Filter>
@@ -1126,6 +1162,42 @@
     <ClInclude Include="adm\write.hpp">
       <Filter>Renderer\adm</Filter>
     </ClInclude>
+    <ClInclude Include="jpeg-9a\include\jconfig.h">
+      <Filter>Renderer\jpeg files\JPG Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg-9a\include\jmorecfg.h">
+      <Filter>Renderer\jpeg files\JPG Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg-9a\include\jpegint.h">
+      <Filter>Renderer\jpeg files\JPG Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg-9a\include\jpeglib.h">
+      <Filter>Renderer\jpeg files\JPG Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg-9a\cderror.h">
+      <Filter>Renderer\jpeg files\JPG Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg-9a\cdjpeg.h">
+      <Filter>Renderer\jpeg files\JPG Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg-9a\jdct.h">
+      <Filter>Renderer\jpeg files\JPG Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg-9a\jerror.h">
+      <Filter>Renderer\jpeg files\JPG Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg-9a\jinclude.h">
+      <Filter>Renderer\jpeg files\JPG Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg-9a\jmemsys.h">
+      <Filter>Renderer\jpeg files\JPG Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg-9a\jversion.h">
+      <Filter>Renderer\jpeg files\JPG Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg-9a\transupp.h">
+      <Filter>Renderer\jpeg files\JPG Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="win32\qe3.ico">
@@ -1144,5 +1216,10 @@
     <CopyFileToFolders Include="hdrpq-vertex.glsl">
       <Filter>Renderer\glsl</Filter>
     </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="jpeg-9a\CMakeLists.txt">
+      <Filter>Renderer\jpeg files</Filter>
+    </Text>
   </ItemGroup>
 </Project>

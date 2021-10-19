@@ -30,7 +30,7 @@ using namespace std;
  */
 
 #define JPEG_INTERNALS
-#include "../jpeg-6/jpeglib.h"
+#include "../jpeg-9a/include/jpeglib.h"
 //#include "../png/png.h"
 #include "../png/rpng.h"
 
@@ -1573,7 +1573,8 @@ static void LoadJPG( const char *filename, unsigned char **pic, int *width, int 
 
   /* Step 2: specify data source (eg, a file) */
 
-  jpeg_stdio_src(&cinfo, fbuffer);
+  //jpeg_stdio_src(&cinfo, fbuffer);
+  jpeg_mem_src(&cinfo, fbuffer, len + 4096);
 
   /* Step 3: read file parameters with jpeg_read_header() */
 
@@ -1758,29 +1759,29 @@ boolean empty_output_buffer (j_compress_ptr cinfo)
  * to pass write_all_tables=TRUE; then it will take active thought to do the
  * wrong thing.
  */
-
-GLOBAL void
-jpeg_start_compress (j_compress_ptr cinfo, boolean write_all_tables)
-{
-  if (cinfo->global_state != CSTATE_START)
-    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state);
-
-  if (write_all_tables)
-    jpeg_suppress_tables(cinfo, FALSE);	/* mark all tables to be written */
-
-  /* (Re)initialize error mgr and destination modules */
-  (*cinfo->err->reset_error_mgr) ((j_common_ptr) cinfo);
-  (*cinfo->dest->init_destination) (cinfo);
-  /* Perform master selection of active modules */
-  jinit_compress_master(cinfo);
-  /* Set up for the first pass */
-  (*cinfo->master->prepare_for_pass) (cinfo);
-  /* Ready for application to drive first pass through jpeg_write_scanlines
-   * or jpeg_write_raw_data.
-   */
-  cinfo->next_scanline = 0;
-  cinfo->global_state = (cinfo->raw_data_in ? CSTATE_RAW_OK : CSTATE_SCANNING);
-}
+//
+//GLOBAL(void)
+//jpeg_start_compress (j_compress_ptr cinfo, boolean write_all_tables)
+//{
+//  if (cinfo->global_state != CSTATE_START)
+//    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state);
+//
+//  if (write_all_tables)
+//    jpeg_suppress_tables(cinfo, FALSE);	/* mark all tables to be written */
+//
+//  /* (Re)initialize error mgr and destination modules */
+//  (*cinfo->err->reset_error_mgr) ((j_common_ptr) cinfo);
+//  (*cinfo->dest->init_destination) (cinfo);
+//  /* Perform master selection of active modules */
+//  jinit_compress_master(cinfo);
+//  /* Set up for the first pass */
+//  (*cinfo->master->prepare_for_pass) (cinfo);
+//  /* Ready for application to drive first pass through jpeg_write_scanlines
+//   * or jpeg_write_raw_data.
+//   */
+//  cinfo->next_scanline = 0;
+//  cinfo->global_state = (cinfo->raw_data_in ? CSTATE_RAW_OK : CSTATE_SCANNING);
+//}
 
 
 /*
@@ -1798,42 +1799,42 @@ jpeg_start_compress (j_compress_ptr cinfo, boolean write_all_tables)
  * when using a multiple-scanline buffer.
  */
 
-GLOBAL JDIMENSION
-jpeg_write_scanlines (j_compress_ptr cinfo, JSAMPARRAY scanlines,
-		      JDIMENSION num_lines)
-{
-  JDIMENSION row_ctr, rows_left;
-
-  if (cinfo->global_state != CSTATE_SCANNING)
-    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state);
-  if (cinfo->next_scanline >= cinfo->image_height)
-    WARNMS(cinfo, JWRN_TOO_MUCH_DATA);
-
-  /* Call progress monitor hook if present */
-  if (cinfo->progress != NULL) {
-    cinfo->progress->pass_counter = (long) cinfo->next_scanline;
-    cinfo->progress->pass_limit = (long) cinfo->image_height;
-    (*cinfo->progress->progress_monitor) ((j_common_ptr) cinfo);
-  }
-
-  /* Give master control module another chance if this is first call to
-   * jpeg_write_scanlines.  This lets output of the frame/scan headers be
-   * delayed so that application can write COM, etc, markers between
-   * jpeg_start_compress and jpeg_write_scanlines.
-   */
-  if (cinfo->master->call_pass_startup)
-    (*cinfo->master->pass_startup) (cinfo);
-
-  /* Ignore any extra scanlines at bottom of image. */
-  rows_left = cinfo->image_height - cinfo->next_scanline;
-  if (num_lines > rows_left)
-    num_lines = rows_left;
-
-  row_ctr = 0;
-  (*cinfo->main->process_data) (cinfo, scanlines, &row_ctr, num_lines);
-  cinfo->next_scanline += row_ctr;
-  return row_ctr;
-}
+//GLOBAL(JDIMENSION)
+//jpeg_write_scanlines (j_compress_ptr cinfo, JSAMPARRAY scanlines,
+//		      JDIMENSION num_lines)
+//{
+//  JDIMENSION row_ctr, rows_left;
+//
+//  if (cinfo->global_state != CSTATE_SCANNING)
+//    ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state);
+//  if (cinfo->next_scanline >= cinfo->image_height)
+//    WARNMS(cinfo, JWRN_TOO_MUCH_DATA);
+//
+//  /* Call progress monitor hook if present */
+//  if (cinfo->progress != NULL) {
+//    cinfo->progress->pass_counter = (long) cinfo->next_scanline;
+//    cinfo->progress->pass_limit = (long) cinfo->image_height;
+//    (*cinfo->progress->progress_monitor) ((j_common_ptr) cinfo);
+//  }
+//
+//  /* Give master control module another chance if this is first call to
+//   * jpeg_write_scanlines.  This lets output of the frame/scan headers be
+//   * delayed so that application can write COM, etc, markers between
+//   * jpeg_start_compress and jpeg_write_scanlines.
+//   */
+//  if (cinfo->master->call_pass_startup)
+//    (*cinfo->master->pass_startup) (cinfo);
+//
+//  /* Ignore any extra scanlines at bottom of image. */
+//  rows_left = cinfo->image_height - cinfo->next_scanline;
+//  if (num_lines > rows_left)
+//    num_lines = rows_left;
+//
+//  row_ctr = 0;
+//  (*cinfo->main->process_data) (cinfo, scanlines, &row_ctr, num_lines);
+//  cinfo->next_scanline += row_ctr;
+//  return row_ctr;
+//}
 
 /*
  * Terminate destination --- called by jpeg_finish_compress
