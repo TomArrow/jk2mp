@@ -342,6 +342,8 @@ skip_alloc:;
 		activeCount++;
 		if (!!outputADM) {
 
+			admDisplacedPointer = outputADM+channelIndex;
+			displacedAdmChannelInfoArray= admChannelInfoArray+channelIndex;
 			if (!isNew[channelIndex] && displacedAdmChannelInfoArray->objects.size() >0) { // Means it's still the same sound as before
 					// We only let it stay the same object if both parent and sound are the same
 				mmeADMObject_t* lastObject = &displacedAdmChannelInfoArray->objects.back();
@@ -377,8 +379,8 @@ skip_alloc:;
 			mmeADMBlock_t* currentBlock = &displacedAdmChannelInfoArray->objects.back().blocks.back();
 			VectorCopy(admPosition, currentBlock->position);
 
-			admDisplacedPointer++;
-			displacedAdmChannelInfoArray++;
+			//admDisplacedPointer++;
+			//displacedAdmChannelInfoArray++;
 		}
 		else {
 			S_MixChannel(ch, speed, count, output, admDisplacedPointer, admTotalChannelCount);

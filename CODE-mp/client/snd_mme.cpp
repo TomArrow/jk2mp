@@ -177,7 +177,16 @@ inline std::string getPrintedString(T something) {
 }
 
 // By how much do we have to divide in-game units to get real units for ADM?
-#define POSITION_UNITS_RATIO 60.0f
+// Real units in ADM are in reference to absoluteDistance in meters
+// We set that to 100. 100 meters.
+// One game character is roughly 64 units. Let's say that's 2 meters.
+// So we divide by 32 to get meters. Then we divide by 100 to scale the values properly to our reference
+// screen distance of 100 meters (a bit silly I know, but whatever)
+// So overall we divide by 3200
+//#define POSITION_UNITS_RATIO 60.0f
+//#define POSITION_UNITS_RATIO 3200.0f
+// Since the absoluteDistance one seems to be ignored for the most part, we use absolute distances in the file, in meters. so divide by 32
+#define POSITION_UNITS_RATIO 32.0f
 
 std::string S_MMEADMMetaCreate(std::string filename,bw64::Bw64Writer* writer) {
 
@@ -206,6 +215,8 @@ std::string S_MMEADMMetaCreate(std::string filename,bw64::Bw64Writer* writer) {
 		// because ADM has a rather low limit on max amount of objects you can have in a file,
 		// therefore having one object per sound would likely exceed the max number quickly.
 		auto channelObject = adm::createSimpleObject(contentName);
+
+		//channelObject.audioPackFormat->set(adm::AbsoluteDistance(100.0f)); // 100 meters reference distance
 
 		int64_t blocksAdded = 0;
 
