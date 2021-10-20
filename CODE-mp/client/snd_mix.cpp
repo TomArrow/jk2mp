@@ -237,7 +237,7 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, s
 	indexAdd = (sound->speed * speed) >> MIX_SHIFT;
 	indexLeft = sound->samples - index;
 	ch->wasMixed = (leftVol | rightVol) > 0;
-	if (!ch->wasMixed) {
+	/*if (!ch->wasMixed) {
 		indexAdd *= count;
 		if ( indexAdd >= indexLeft ) {
 			ch->handle = 0;
@@ -245,7 +245,7 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, s
 			ch->index += indexAdd;
 		}
 		return;
-	}
+	}*/ // We want ADM to get data even if JK deems it too quiet.
 	data = sound->data;
 	if (!indexAdd)
 		return;
