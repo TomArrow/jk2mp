@@ -67,7 +67,7 @@ typedef struct {
 	mmeBlurControl_t *control;
 } mmeBlurBlock_t;
 
-void R_MME_GetShot( void* output, int rollingShutterFactor=1, int rollingShutterProgress = 0, int rollingShutterPixels=1,int pboId=0 );
+void R_MME_GetShot( void* output, int rollingShutterFactor=1, int rollingShutterProgress = 0, int rollingShutterPixels=1,int rollingShutterBufferIndex =0 );
 void R_MME_GetStencil( void *output );
 void R_MME_GetDepth( byte *output );
 void R_MME_SaveShot( mmeShot_t *shot, int width, int height, float fps, byte *inBuf, qboolean audio, int aSize, byte *aBuf );

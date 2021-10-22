@@ -7,7 +7,7 @@ extern std::vector<GLuint> pboIds;
 #endif
 
 
-void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterProgress,int rollingShutterPixels,int pboId ) {
+void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterProgress,int rollingShutterPixels,int rollingShutterBufferIndex ) {
 #ifdef JEDIACADEMY_GLOW
 	bool doSave = rollingShutterProgress == rollingShutterFactor - 1;
 	rollingShutterProgress = rollingShutterFactor-rollingShutterProgress-1;
@@ -29,7 +29,7 @@ void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterPro
 		int byteOffset = rollingShutterProgress * 3 * glConfig.vidWidth * rollingShutterPixels*multiplier;
 		GLvoid* byteOffsetAsPointerHack = (GLvoid*)byteOffset; // holy shit this is ugly.
 		
-		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[pboId]);
+		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[0]);
 		
 		//qglReadPixels(0, rollingShutterPixels * rollingShutterProgress, glConfig.vidWidth, rollingShutterPixels, GL_RGB, GL_UNSIGNED_BYTE, byteOffsetAsPointerHack);
 #ifdef CAPTURE_FLOAT
@@ -37,17 +37,18 @@ void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterPro
 		// Todo: draw into floating point fbo
 		//qglClamp
 		//qglReadBuffer(GL_BACK);
-		qglReadPixels(0, rollingShutterPixels * rollingShutterProgress, glConfig.vidWidth, rollingShutterPixels, GL_BGR_EXT, GL_FLOAT, byteOffsetAsPointerHack);
+		//qglReadPixels(0, rollingShutterPixels * rollingShutterProgress, glConfig.vidWidth, rollingShutterPixels, GL_BGR_EXT, GL_FLOAT, byteOffsetAsPointerHack);
 #else
-		qglReadBuffer(GL_BACK);
-		qglReadPixels(0, rollingShutterPixels * rollingShutterProgress, glConfig.vidWidth, rollingShutterPixels, GL_BGR_EXT, GL_UNSIGNED_BYTE, byteOffsetAsPointerHack);
+		//qglReadBuffer(GL_BACK);
+		//qglReadPixels(0, rollingShutterPixels * rollingShutterProgress, glConfig.vidWidth, rollingShutterPixels, GL_BGR_EXT, GL_UNSIGNED_BYTE, byteOffsetAsPointerHack);
 #endif
+		R_FrameBuffer_RollingShutterCapture(rollingShutterBufferIndex, rollingShutterPixels * rollingShutterProgress, rollingShutterPixels);
 
 
 		// map the PBO to process its data by CPU
 		if (rollingShutterProgress == 0) {
 #ifdef CAPTURE_FLOAT
-			qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
+			/*qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
 			qglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIds[pboId]); 
 			//qglFinish();
 			R_FrameBuffer_HDRConvert(true);
@@ -56,6 +57,10 @@ void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterPro
 			R_FrameBuffer_StartHDRRead(); 
 			//qglFinish();
 			//qglReadPixels(0, rollingShutterPixels * rollingShutterProgress, glConfig.vidWidth, rollingShutterPixels, GL_BGR_EXT, GL_FLOAT, byteOffsetAsPointerHack);
+			qglReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_BGR_EXT, GL_FLOAT, 0);
+			R_FrameBuffer_EndHDRRead();*/
+			R_FrameBuffer_HDRConvert(HDRCONVSOURCE_FBO,rollingShutterBufferIndex);
+			R_FrameBuffer_StartHDRRead();
 			qglReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_BGR_EXT, GL_FLOAT, 0);
 			R_FrameBuffer_EndHDRRead();
 #endif

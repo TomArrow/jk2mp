@@ -77,6 +77,7 @@ cvar_t	*mme_saveShot;
 cvar_t	*mme_saveStencil;
 cvar_t	*mme_saveDepth;
 cvar_t	* mme_saveADM;
+cvar_t  *mme_rollingShutterBlur;
 cvar_t  *mme_rollingShutterPixels;
 cvar_t  *mme_rollingShutterMultiplier;
 
@@ -269,10 +270,10 @@ static void R_MME_MultiShot( byte * target ) {
 		Com_Memcpy( target, passData.dof.accum, mainData.pixelCount * 3 );
 	}
 }
-static void R_MME_MultiShot( byte * target,int rollingShutterFactor,int rollingShutterProgress,int rollingShutterPixels,int pboId) {
+static void R_MME_MultiShot( byte * target,int rollingShutterFactor,int rollingShutterProgress,int rollingShutterPixels,int rollingShutterBufferIndex) {
 	if ( !passData.control.totalFrames ) {
 		//Com_Printf("GetShot");
-		R_MME_GetShot( target, rollingShutterFactor,rollingShutterProgress,rollingShutterPixels, pboId );
+		R_MME_GetShot( target, rollingShutterFactor,rollingShutterProgress,rollingShutterPixels, rollingShutterBufferIndex);
 	}
 	else {
 		Com_Printf("MemCpy");
@@ -726,6 +727,7 @@ void R_MME_Init(void) {
 	mme_saveShot = ri.Cvar_Get ( "mme_saveShot", "1", CVAR_ARCHIVE );
 	mme_workMegs = ri.Cvar_Get ( "mme_workMegs", "128", CVAR_LATCH | CVAR_ARCHIVE );
 
+	mme_rollingShutterBlur = ri.Cvar_Get ( "mme_rollingShutterBlur", "50", CVAR_ARCHIVE );
 	mme_rollingShutterPixels = ri.Cvar_Get ( "mme_rollingShutterPixels", "1", CVAR_ARCHIVE );
 	mme_rollingShutterMultiplier = ri.Cvar_Get ( "mme_rollingShutterMultiplier", "1", CVAR_ARCHIVE );
 

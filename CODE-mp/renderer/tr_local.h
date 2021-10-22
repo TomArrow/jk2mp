@@ -1336,6 +1336,7 @@ extern cvar_t	*mme_saveStencil;
 extern cvar_t	*mme_saveShot;
 extern cvar_t	*mme_saveDepth;
 extern cvar_t	* mme_saveADM;
+extern cvar_t	*mme_rollingShutterBlur;
 extern cvar_t	*mme_rollingShutterPixels;
 extern cvar_t	*mme_rollingShutterMultiplier;
 
@@ -2024,12 +2025,19 @@ typedef struct {
 	int		width, height;			//Size of the buffer
 } frameBufferData_t;
 
+
+enum HDRConvertSource {
+	HDRCONVSOURCE_MAINFBO,
+	HDRCONVSOURCE_PBO,
+	HDRCONVSOURCE_FBO
+};
 void R_FrameBuffer_Init(void);
 void R_FrameBuffer_Shutdown(void);
 void R_FrameBuffer_StartFrame(void);
 void R_FrameBuffer_EndFrame(void);
+qboolean R_FrameBuffer_RollingShutterCapture(int bufferIndex, int offset, int height);
 //Try to do an fbo blur
 qboolean R_FrameBuffer_Blur(float scale, int frame, int total);
-qboolean R_FrameBuffer_HDRConvert(bool fromPBO=false);
+qboolean R_FrameBuffer_HDRConvert(HDRConvertSource source= HDRCONVSOURCE_MAINFBO, int param=0);
 qboolean R_FrameBuffer_StartHDRRead();
 qboolean R_FrameBuffer_EndHDRRead();

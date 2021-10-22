@@ -1077,7 +1077,7 @@ MessageCallback(GLenum source,
 #ifdef JEDIACADEMY_GLOW
 //GLuint pboIds[2];
 vector<GLuint> pboIds(2);
-vector<int> pboRollingShutterProgresses(2);
+vector<int> pboRollingShutterProgresses(1);
 int rollingShutterBufferCount = 1;
 int progressOvershoot = 0;
 #endif
@@ -1203,12 +1203,6 @@ void R_Init( void ) {
 #endif
 #ifdef JEDIACADEMY_GLOW
 	{
-		int bufferCountNeededForRollingshutter = (int)(ceil(mme_rollingShutterMultiplier->value) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
-		rollingShutterBufferCount = bufferCountNeededForRollingshutter;
-
-		int rollingShutterFactor = glConfig.vidHeight / mme_rollingShutterPixels->integer;
-
-		progressOvershoot = (int)((float)rollingShutterFactor / mme_rollingShutterMultiplier->value * (float)bufferCountNeededForRollingshutter) - rollingShutterFactor;
 
 		// create 2 pixel buffer objects, you need to delete them when program exits.
 		// glBufferDataARB with NULL pointer reserves only memory space.
@@ -1218,20 +1212,16 @@ void R_Init( void ) {
 		int dataSize = glConfig.vidWidth * glConfig.vidHeight * 3;
 #endif
 
-		// create more pixel buffers if we need that for rolling shutter
-		if (rollingShutterBufferCount > pboIds.size()) {
-			pboIds.resize(rollingShutterBufferCount);
-			pboRollingShutterProgresses.resize(rollingShutterBufferCount);
+
+		if (2 > pboIds.size()) { // 2 PBOs, one for capturing, 2 for maybe double buffering, we'll see..
+			pboIds.resize(2);
 		}
 
-		//qglGenBuffersARB(2, pboIds);
 		qglGenBuffersARB(pboIds.size(), pboIds.data());
 
 		for (int i = 0; i < pboIds.size(); i++) {
 			qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[i]);
 			qglBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, dataSize, 0, GL_DYNAMIC_READ_ARB);
-
-			pboRollingShutterProgresses[i] = (int)(-(float)i * ((float)rollingShutterFactor/ (float)bufferCountNeededForRollingshutter));
 		}
 
 		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);

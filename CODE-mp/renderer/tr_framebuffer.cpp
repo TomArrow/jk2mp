@@ -49,6 +49,8 @@
 #include "tr_local.h"
 #include "tr_glsl.h"
 
+#include <vector>
+
 #ifdef CAPTURE_FLOAT
 #include <cmath>
 #endif
@@ -56,6 +58,8 @@
 #ifdef _WIN32
 #include "qgl.h"
 #endif
+
+void R_FrameBuffer_CreateRollingShutterBuffers(int width, int height, int flags);
 
 cvar_t *r_convertToHDR;
 cvar_t *r_floatBuffer;
@@ -87,8 +91,15 @@ static struct {
 	frameBufferData_t *dof;
 	frameBufferData_t *colorSpaceConv;
 	frameBufferData_t *colorSpaceConvResult;
+	std::vector<frameBufferData_t*> rollingShutterBuffers;
 	int screenWidth, screenHeight;
 } fbo;
+
+extern std::vector<int> pboRollingShutterProgresses;
+extern int rollingShutterBufferCount;
+extern int progressOvershoot;
+
+
 
 
 R_GLSL* hdrPqShader;
@@ -126,6 +137,29 @@ void R_DrawQuad( GLuint tex, int width, int height) {
 	  qglTexCoord2f(1.0, 0.0); qglVertex2f(width, height);	
 	  qglTexCoord2f(0.0, 0.0); qglVertex2f(0.0  , height);	
 	qglEnd();	
+#endif
+}
+
+void R_DrawQuadPartial(GLuint tex, int width, int height,int offsetX, int offsetY) {
+#ifdef HAVE_GLES
+	//TODO
+#else
+	qglEnable(GL_TEXTURE_2D);
+	if (glState.currenttextures[0] != tex) {
+		GL_SelectTexture(0);
+		qglBindTexture(GL_TEXTURE_2D, tex);
+		glState.currenttextures[0] = tex;
+	};
+
+	float singlePixelTexWidth = 1.0f / (float)glConfig.vidWidth;
+	float singlePixelTexHeight = 1.0f / (float)glConfig.vidHeight;
+
+	qglBegin(GL_QUADS);
+	qglTexCoord2f(offsetX*singlePixelTexWidth, height * singlePixelTexHeight); qglVertex2f(offsetX, offsetY);
+	qglTexCoord2f(width * singlePixelTexWidth, height * singlePixelTexHeight); qglVertex2f(width, offsetY);
+	qglTexCoord2f(width * singlePixelTexWidth, offsetY * singlePixelTexHeight); qglVertex2f(width, height);
+	qglTexCoord2f(offsetX * singlePixelTexWidth, offsetY * singlePixelTexHeight); qglVertex2f(offsetX, height);
+	qglEnd();
 #endif
 }
 
@@ -383,6 +417,9 @@ void R_FrameBuffer_Init( void ) {
 		fbo.blur = R_FrameBufferCreate( width, height, flags );
 	}
 
+	flags = FB_FLOAT16;
+	R_FrameBuffer_CreateRollingShutterBuffers(width, height,flags);
+
 	if (r_convertToHDR->integer) {
 		flags = FB_FLOAT16;
 		fbo.colorSpaceConv = R_FrameBufferCreate(width, height, flags);
@@ -395,6 +432,30 @@ void R_FrameBuffer_Init( void ) {
 
 	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, 0 );
 #endif
+}
+
+
+
+void R_FrameBuffer_CreateRollingShutterBuffers(int width, int height, int flags) {
+	int bufferCountNeededForRollingshutter = (int)(ceil(mme_rollingShutterMultiplier->value) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
+	rollingShutterBufferCount = bufferCountNeededForRollingshutter;
+
+	int rollingShutterFactor = glConfig.vidHeight / mme_rollingShutterPixels->integer;
+
+	progressOvershoot = (int)((float)rollingShutterFactor / mme_rollingShutterMultiplier->value * (float)bufferCountNeededForRollingshutter) - rollingShutterFactor;
+
+	// create more pixel buffers if we need that for rolling shutter
+	if (rollingShutterBufferCount > fbo.rollingShutterBuffers.size()) {
+		fbo.rollingShutterBuffers.resize(rollingShutterBufferCount);
+		pboRollingShutterProgresses.resize(rollingShutterBufferCount);
+	}
+
+	for (int i = 0; i < fbo.rollingShutterBuffers.size(); i++) {
+		fbo.rollingShutterBuffers[i] = R_FrameBufferCreate(width, height, flags);
+
+		pboRollingShutterProgresses[i] = (int)(-(float)i * ((float)rollingShutterFactor / (float)bufferCountNeededForRollingshutter));
+	}
+
 }
 
 static qboolean usedFloat;
@@ -421,17 +482,31 @@ void R_FrameBuffer_StartFrame( void ) {
 
 
 
-qboolean R_FrameBuffer_HDRConvert(bool fromPBO) {
+qboolean R_FrameBuffer_HDRConvert(HDRConvertSource source, int param) {
 #ifdef HAVE_GLES
 	//TODO
 	return qfalse;
 #else
-	if (!hdrPqShader->IsWorking())
+	if (!hdrPqShader->IsWorking() || (source==HDRCONVSOURCE_FBO &&  !fbo.rollingShutterBuffers[param]))
 		return qfalse;
 	
-	if (fromPBO) { // We assume the PBO is bound!
+	if (source == HDRCONVSOURCE_FBO) {
+		
+		//qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.main->fbo);
+		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.colorSpaceConvResult->fbo);
+		qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 
-		GLenum err;
+		qglColor4f(1, 1, 1, 1);
+		GL_State(GLS_DEPTHTEST_DISABLE);
+		R_SetGL2DSize(glConfig.vidWidth, glConfig.vidHeight);
+		qglUseProgram(hdrPqShader->ShaderId());
+		R_DrawQuad(fbo.rollingShutterBuffers[param]->color, glConfig.vidWidth, glConfig.vidHeight);
+		qglUseProgram(0);
+
+		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.main->fbo);
+		qglReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
+	}
+	else if (source == HDRCONVSOURCE_PBO) { // We assume the PBO is bound!
 
 		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.colorSpaceConv->fbo);
 		qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
@@ -466,7 +541,7 @@ qboolean R_FrameBuffer_HDRConvert(bool fromPBO) {
 		qglUseProgram(0);
 		//qglFinish();
 	}
-	else {
+	else if(source == HDRCONVSOURCE_MAINFBO) {
 		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.colorSpaceConv->fbo);
 		qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 		//The color used to blur add this frame
@@ -524,6 +599,41 @@ qboolean R_FrameBuffer_EndHDRRead() {
 }
 
 
+qboolean R_FrameBuffer_RollingShutterCapture(int bufferIndex, int offset, int height) {
+
+#ifdef HAVE_GLES
+	//TODO
+	return qfalse;
+#else
+	float c;
+	if (!fbo.rollingShutterBuffers[bufferIndex])
+		return qfalse;
+	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.rollingShutterBuffers[bufferIndex]->fbo);
+	qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+	//The color used to blur add this frame
+	c = 1.0f;//1.0f/(float)mme_rollingShutterBlur->integer;
+	qglColor4f(c, c, c, 1);
+	int frame = 0;
+	if (frame == 0) {
+		GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_DEPTHTEST_DISABLE);
+	}
+	else {
+		GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHTEST_DISABLE);
+	}
+	R_SetGL2DSize(glConfig.vidWidth, glConfig.vidHeight);
+	R_DrawQuadPartial(fbo.main->color, glConfig.vidWidth, height, 0,offset);
+	//Reset fbo
+	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.main->fbo);
+	qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+	/*usedFloat = qtrue;
+	if (frame == total - 1) {
+		qglColor4f(1, 1, 1, 1);
+		GL_State(GLS_DEPTHTEST_DISABLE);
+		R_DrawQuad(fbo.blur->color, glConfig.vidWidth, glConfig.vidHeight);
+	}*/
+	return qtrue;
+#endif
+}
 
 qboolean R_FrameBuffer_Blur( float scale, int frame, int total ) {
 #ifdef HAVE_GLES
@@ -591,4 +701,11 @@ void R_FrameBuffer_Shutdown( void ) {
 	R_FrameBufferDelete( fbo.main );
 	R_FrameBufferDelete( fbo.blur );
 	R_FrameBufferDelete( fbo.multiSample );
+	R_FrameBufferDelete( fbo.colorSpaceConv );
+	R_FrameBufferDelete( fbo.colorSpaceConvResult );
+
+	for (int i = 0; i < fbo.rollingShutterBuffers.size(); i++) {
+		R_FrameBufferDelete(fbo.rollingShutterBuffers[i]);
+
+	}
 }
