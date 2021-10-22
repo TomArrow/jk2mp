@@ -155,12 +155,17 @@ void R_DrawQuadPartial(GLuint tex, int width, int height,int offsetX, int offset
 	float singlePixelTexHeight = 1.0f / (float)glConfig.vidHeight;
 	int x2 = offsetX + width; // use instead of width
 	int y2 = offsetY + height; // use instead of height
+	int offsetYInverted = glConfig.vidHeight - 1 - offsetY;
+	int y2Inverted = glConfig.vidHeight - 1 - y2;
 
+	// NOTE: Might also need some switching around of offsetX and X and width but I don't have a use case to test it
+	// so I'm leaving it in this possibly broken state bc its good enough for rolling shutter
+	// Rolling shutter always reads entire width so there's that...
 	qglBegin(GL_QUADS);
-	qglTexCoord2f(offsetX*singlePixelTexWidth, y2 * singlePixelTexHeight); qglVertex2f(offsetX, y2);
-	qglTexCoord2f(x2 * singlePixelTexWidth, y2 * singlePixelTexHeight); qglVertex2f(x2, y2);
-	qglTexCoord2f(x2 * singlePixelTexWidth, offsetY * singlePixelTexHeight); qglVertex2f(x2, offsetY);
-	qglTexCoord2f(offsetX * singlePixelTexWidth, offsetY * singlePixelTexHeight); qglVertex2f(offsetX, offsetY);
+	qglTexCoord2f(offsetX*singlePixelTexWidth, y2 * singlePixelTexHeight); qglVertex2f(offsetX, y2Inverted);
+	qglTexCoord2f(x2 * singlePixelTexWidth, y2 * singlePixelTexHeight); qglVertex2f(x2, y2Inverted);
+	qglTexCoord2f(x2 * singlePixelTexWidth, offsetY * singlePixelTexHeight); qglVertex2f(x2, offsetYInverted);
+	qglTexCoord2f(offsetX * singlePixelTexWidth, offsetY * singlePixelTexHeight); qglVertex2f(offsetX, offsetYInverted);
 	qglEnd();
 #endif
 }
