@@ -3,6 +3,17 @@
 #include "tr_mme.h"
 #include <vector>
 #include <algorithm>
+#include <thread>
+#include <mutex>
+
+
+
+bool shotBufPermInitialized = false;
+byte* shotBufPerm;
+std::thread* saveShotThread;
+std::mutex saveShotThreadMutex;
+
+
 
 static char *workAlloc = 0;
 static char *workAlign = 0;
@@ -269,8 +280,6 @@ static void R_MME_MultiShot( byte * target,int rollingShutterFactor,int rollingS
 	}
 }
 
-bool shotBufPermInitialized = false;
-byte* shotBufPerm;
 
 inline float pq(float in) {
 	static const float m1 = 1305.0f / 8192.0f;
@@ -279,6 +288,19 @@ inline float pq(float in) {
 	static const float c2 = 2413.0f / 128.0f;
 	static const float c3 = 2392.0f / 128.0f;
 	return std::pow((c1 + c2 * std::pow(in, m1)) / (1 + c3 * std::pow(in, m1)), m2);
+}
+
+
+
+void R_MME_FlushMultiThreading() {
+	{
+		std::lock_guard<std::mutex> guard(saveShotThreadMutex);
+		if (saveShotThread) {
+			saveShotThread->join();
+			delete saveShotThread;
+			saveShotThread = nullptr;
+		}
+	}
 }
 
 qboolean R_MME_TakeShot( void ) {
@@ -467,79 +489,75 @@ qboolean R_MME_TakeShot( void ) {
 
 			if(rollingShutterProgress >= 0){ // the later pbos have negative offsets because they start capturing later
 				
+				if (rollingShutterProgress == rollingShutterFactor - 1) {
+					R_MME_FlushMultiThreading();
+				}
+
 				R_MME_MultiShot(shotBufPerm, rollingShutterFactor,rollingShutterProgress,mme_rollingShutterPixels->integer,i );
 				
 			
 				if (rollingShutterProgress == rollingShutterFactor-1){
 
-#ifdef CAPTURE_FLOAT
-					
-					
-
 					bool dither = true;
-					float* asFloatBuffer = (float*)shotBufPerm;
-					if (dither) {
 
-						// Floyd-Steinberg dither
-						float oldPixel=0.0f, newPixel = 0.0f, quantError = 0.0f;
-						int stride = glConfig.vidWidth*3;
+					std::lock_guard<std::mutex> guard(saveShotThreadMutex);
+					saveShotThread = new std::thread([&, dither,pixelCount]{
+						qboolean audio=qfalse, audioTaken = qfalse;
+						int sizeSound = 0;
+						byte inSound[MME_SAMPLERATE] = { 0 };
 
-						for (int i = 0; i < pixelCount*3; i++) {
+#ifdef CAPTURE_FLOAT
 
-							oldPixel = asFloatBuffer[i]; // Important note: shader adds 0.5 for the rounded casting. keep in mind.
-							newPixel = 0.5f+ (float)(int)std::clamp(oldPixel,0.5f,255.5f);
-							shotBufPerm[i] = newPixel;
-							// Can we just remove the 0.5 stuff altogether if we add 0.5f to newpixel on generation?
-							// oldPixel-0.5f-newPixel == oldPixel - (newPixel+0.5f)? == oldPixel - newPixel - 0.5f. yup, seems so.
-							quantError = oldPixel - newPixel;
-							asFloatBuffer[i + 3] += quantError * 7.0f / 16.0f; // This is the pixel to the right
-							asFloatBuffer[i + stride -3] += quantError * 3.0f / 16.0f; // This is the pixel to the left in lower row
-							asFloatBuffer[i + stride] += quantError * 5.0f / 16.0f; // This is the pixel to below
-							asFloatBuffer[i + stride +3] += quantError * 1.0f / 16.0f; // This is the pixel to below, to the right
-							
-							// Normally we'd increase the buffer size because the bottom row of the dithering needs extra space
-							// but the shotbuffer is already 5*pixelCount because it was meant to account for depth and whatnot?
+
+
+						float* asFloatBuffer = (float*)shotBufPerm;
+						if (dither) {
+
+							// Floyd-Steinberg dither
+							float oldPixel = 0.0f, newPixel = 0.0f, quantError = 0.0f;
+							int stride = glConfig.vidWidth * 3;
+
+							for (int i = 0; i < pixelCount * 3; i++) {
+
+								oldPixel = asFloatBuffer[i]; // Important note: shader adds 0.5 for the rounded casting. keep in mind.
+								newPixel = 0.5f + (float)(int)std::clamp(oldPixel, 0.5f, 255.5f);
+								shotBufPerm[i] = newPixel;
+								// Can we just remove the 0.5 stuff altogether if we add 0.5f to newpixel on generation?
+								// oldPixel-0.5f-newPixel == oldPixel - (newPixel+0.5f)? == oldPixel - newPixel - 0.5f. yup, seems so.
+								quantError = oldPixel - newPixel;
+								asFloatBuffer[i + 3] += quantError * 7.0f / 16.0f; // This is the pixel to the right
+								asFloatBuffer[i + stride - 3] += quantError * 3.0f / 16.0f; // This is the pixel to the left in lower row
+								asFloatBuffer[i + stride] += quantError * 5.0f / 16.0f; // This is the pixel to below
+								asFloatBuffer[i + stride + 3] += quantError * 1.0f / 16.0f; // This is the pixel to below, to the right
+
+								// Normally we'd increase the buffer size because the bottom row of the dithering needs extra space
+								// but the shotbuffer is already 5*pixelCount because it was meant to account for depth and whatnot?
+							}
 						}
-					}
-					else {
+						else {
 
-						for (i = 0; i < pixelCount; i++) {
+							for (int i = 0; i < pixelCount; i++) {
 
-							shotBufPerm[i * 3 + 0] = asFloatBuffer[i * 3 + 0];
-							shotBufPerm[i * 3 + 1] = asFloatBuffer[i * 3 + 1];
-							shotBufPerm[i * 3 + 2] = asFloatBuffer[i * 3 + 2];
+								shotBufPerm[i * 3 + 0] = asFloatBuffer[i * 3 + 0];
+								shotBufPerm[i * 3 + 1] = asFloatBuffer[i * 3 + 1];
+								shotBufPerm[i * 3 + 2] = asFloatBuffer[i * 3 + 2];
+							}
 						}
-					}
-					
+
 #endif
 
-					shotData.main.type = mmeShotTypeBGR;
+						shotData.main.type = mmeShotTypeBGR;
 
-					/*if (doGamma)
-						R_GammaCorrect(shotBufPerm, pixelCount * 3);
+						if (!audioTaken)
+							audio = ri.S_MMEAviImport(inSound, &sizeSound);
 
-					if (shotData.main.type == mmeShotTypeRGBA) {
-						int i;
-						byte* alphaBuf = shotBufPerm + pixelCount * 4;
-						if (mme_saveDepth->integer > 1 || (!blurControl->totalFrames && mme_saveDepth->integer)) {
-							R_MME_GetDepth(alphaBuf);
-							//			} else if ( mme_saveStencil->integer > 1 || (!blurControl->totalFrames && mme_saveStencil->integer )) {
-							//				R_MME_GetStencil( alphaBuf );
-						}
-						for (i = pixelCount - 1; i >= 0; i--) {
-							shotBufPerm[i * 4 + 0] = shotBufPerm[i * 3 + 0];
-							shotBufPerm[i * 4 + 1] = shotBufPerm[i * 3 + 1];
-							shotBufPerm[i * 4 + 2] = shotBufPerm[i * 3 + 2];
-							shotBufPerm[i * 4 + 3] = alphaBuf[i];
-						}
-					}*/
+						audioTaken = qtrue;
 
-					if (!audioTaken)
-						audio = ri.S_MMEAviImport(inSound, &sizeSound);
+						R_MME_SaveShot(&shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBufPerm, audio, sizeSound, inSound);
+						
+						//delete shotDataThreadCopy;
+					});
 
-					audioTaken = qtrue;
-
-					R_MME_SaveShot(&shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBufPerm, audio, sizeSound, inSound);
 				}
 			}
 			rollingShutterProgress++;
@@ -661,6 +679,8 @@ void R_MME_BlurInfo( int* total, int *index ) {
 }
 
 void R_MME_Shutdown(void) {
+
+	R_MME_FlushMultiThreading();
 	aviClose( &shotData.main.avi );
 	aviClose( &shotData.depth.avi );
 	aviClose( &shotData.stencil.avi );

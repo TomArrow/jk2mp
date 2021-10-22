@@ -46,7 +46,7 @@ typedef struct {
 	mmeShot_t		main, stencil, depth;
 	float			jitter[BLURMAX][2];
 } shotData_t;
- 
+
 
 typedef struct {
 //	int		pixelCount;

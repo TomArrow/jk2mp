@@ -9,6 +9,7 @@ extern std::vector<GLuint> pboIds;
 
 void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterProgress,int rollingShutterPixels,int pboId ) {
 #ifdef JEDIACADEMY_GLOW
+	bool doSave = rollingShutterProgress == rollingShutterFactor - 1;
 	rollingShutterProgress = rollingShutterFactor-rollingShutterProgress-1;
 
 #ifdef CAPTURE_FLOAT

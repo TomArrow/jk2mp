@@ -2,6 +2,7 @@
 
 #include "tr_mme.h"
 
+
 static void aviWrite16( void *pos, unsigned short val) {
 	unsigned char *data = (unsigned char *)pos;
 	data[0] = (val >> 0) & 0xff;
@@ -193,7 +194,10 @@ int aviFillHeader( mmeAviFile_t *aviFile ) {
 	return header_pos;
 }
 
+
 void aviClose( mmeAviFile_t *aviFile ) {
+
+
 	char avi_header[AVI_HEADER_SIZE];
 	char index[16];
 	int main_list, nmain, njunk;
