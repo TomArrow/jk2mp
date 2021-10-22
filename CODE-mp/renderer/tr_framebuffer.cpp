@@ -157,10 +157,10 @@ void R_DrawQuadPartial(GLuint tex, int width, int height,int offsetX, int offset
 	int y2 = offsetY + height; // use instead of height
 
 	qglBegin(GL_QUADS);
-	qglTexCoord2f(offsetX*singlePixelTexWidth, y2 * singlePixelTexHeight); qglVertex2f(offsetX, offsetY);
-	qglTexCoord2f(x2 * singlePixelTexWidth, y2 * singlePixelTexHeight); qglVertex2f(x2, offsetY);
-	qglTexCoord2f(x2 * singlePixelTexWidth, offsetY * singlePixelTexHeight); qglVertex2f(x2, y2);
-	qglTexCoord2f(offsetX * singlePixelTexWidth, offsetY * singlePixelTexHeight); qglVertex2f(offsetX, y2);
+	qglTexCoord2f(offsetX*singlePixelTexWidth, y2 * singlePixelTexHeight); qglVertex2f(offsetX, y2);
+	qglTexCoord2f(x2 * singlePixelTexWidth, y2 * singlePixelTexHeight); qglVertex2f(x2, y2);
+	qglTexCoord2f(x2 * singlePixelTexWidth, offsetY * singlePixelTexHeight); qglVertex2f(x2, offsetY);
+	qglTexCoord2f(offsetX * singlePixelTexWidth, offsetY * singlePixelTexHeight); qglVertex2f(offsetX, offsetY);
 	qglEnd();
 #endif
 }
