@@ -1295,6 +1295,8 @@ extern	cvar_t	*r_simpleMipMaps;
 extern	cvar_t	*r_showImages;
 extern	cvar_t	*r_debugSort;
 
+extern	cvar_t* r_drawAllAreas;
+
 extern	cvar_t	*r_printShaders;
 /*
 Ghoul2 Insert Start

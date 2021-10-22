@@ -189,6 +189,7 @@ int		max_polyverts;
 
 cvar_t	*r_modelpoolmegs;
 
+cvar_t* r_drawAllAreas;
 
 /*
 Ghoul2 Insert Start
@@ -1024,6 +1025,8 @@ extern qboolean Sys_LowPhysicalMemory();
 	if (Sys_LowPhysicalMemory() ) {
 		Cvar_Set("r_modelpoolmegs", "0");
 	}
+
+	r_drawAllAreas = ri.Cvar_Get("r_drawAllAreas", "0", CVAR_TEMP | CVAR_CHEAT);
 
 	// make sure all the commands added here are also
 	// removed in R_Shutdown
