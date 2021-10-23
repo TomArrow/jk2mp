@@ -383,10 +383,11 @@ void S_MMEWavClose(void) {
 				break;
 		}
 		const char* realPath = FS_GetSanePath(savePath);
+		const char* realPathCSV = FS_GetSanePath(savePathCSV);
 
 		try {
 
-			S_MMEADMMetaCreate(realPath, mmeSound.adm_bw64Handle.get(), savePathCSV);
+			S_MMEADMMetaCreate(realPath, mmeSound.adm_bw64Handle.get(), realPathCSV);
 			//FS_WriteFile(savePathCSV, ret.c_str(), ret.size());
 		}
 		catch (std::runtime_error e) {
