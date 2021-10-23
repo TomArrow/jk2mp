@@ -1248,6 +1248,12 @@ extern cvar_t	*r_DynamicGlowWidth;
 extern cvar_t	*r_DynamicGlowHeight;
 #endif
 
+extern cvar_t* r_gammaSrgbLightmaps;
+extern cvar_t* r_gammaSrgbTextures;
+extern cvar_t* r_gammaLegacy;
+extern cvar_t* r_gammaLegacyPrecision;
+extern cvar_t* r_gammaSrgbLightvalues;
+
 extern	cvar_t	*r_nobind;						// turns off binding to appropriate textures
 extern	cvar_t	*r_singleShader;				// make most world faces use default shader
 extern	cvar_t	*r_colorMipLevels;				// development aid to see texture mip usage

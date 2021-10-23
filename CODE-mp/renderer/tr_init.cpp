@@ -119,6 +119,14 @@ cvar_t	*r_DynamicGlowWidth;
 cvar_t	*r_DynamicGlowHeight;
 #endif
 
+// Gamma handling variables
+cvar_t* r_gammaSrgbLightmaps;
+cvar_t* r_gammaSrgbTextures;
+cvar_t* r_gammaLegacy;
+cvar_t* r_gammaLegacyPrecision;
+cvar_t* r_gammaSrgbLightvalues;
+
+
 cvar_t	*r_ignoreGLErrors;
 cvar_t	*r_logFile;
 
@@ -923,6 +931,13 @@ void R_Register( void )
 	r_lodCurveError = ri.Cvar_Get( "r_lodCurveError", "250", CVAR_ARCHIVE );
 	r_lodbias = ri.Cvar_Get( "r_lodbias", "0", CVAR_ARCHIVE );
 	r_autolodscalevalue = ri.Cvar_Get( "r_autolodscalevalue", "0", CVAR_ROM );
+
+	// Gamma handling/srgb stuff
+	r_gammaSrgbLightmaps = ri.Cvar_Get("r_gammaSrgbLightmaps", "0", CVAR_ARCHIVE);
+	r_gammaSrgbTextures = ri.Cvar_Get("r_gammaSrgbTextures", "1", CVAR_ARCHIVE);
+	r_gammaLegacy = ri.Cvar_Get("r_gammaLegacy", "0", CVAR_ARCHIVE);
+	r_gammaLegacyPrecision = ri.Cvar_Get("r_gammaLegacyPrecision", "2", CVAR_ARCHIVE);
+	r_gammaSrgbLightvalues = ri.Cvar_Get("r_gammaSrgbLightvalues", "1", CVAR_ARCHIVE);
 
 	r_flares = ri.Cvar_Get ("r_flares", "0", CVAR_ARCHIVE );
 	r_znear = ri.Cvar_Get( "r_znear", "1", CVAR_CHEAT );

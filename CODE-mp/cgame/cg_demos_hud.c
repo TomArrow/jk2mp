@@ -740,6 +740,7 @@ void hudInitTables(void) {
 	hudAddCvar(   0,  18, MASK_LINE_HUD, "MusicStart:", "mov_musicStart" );
 	hudAddCvar(   0,  19, MASK_LINE_HUD, "Rolling shutter pixels:", "mme_rollingShutterPixels" );
 	hudAddCvar(   0,  20, MASK_LINE_HUD, "Rolling shutter multiplier:", "mme_rollingShutterMultiplier" );
+	hudAddCvar(   0,  21, MASK_LINE_HUD, "Rolling shutter blur:", "mme_rollingShutterBlur" );
 	
 	// Depth of field Items
 	hudAddFloat(   0,  4, MASK_DOF_EDIT, "Focus:",  hudDofFocus );
