@@ -501,7 +501,8 @@ qboolean R_MME_TakeShot( void ) {
 				//		In short, we can write from the current block up to rsBlurFrameCount blocks to the future,
 				//		long as we don't shoot into the next picture.
 				int howManyBlocks = min(rsBlurFrameCount, rollingShutterFactor-rollingShutterProgress);
-				R_FrameBuffer_RollingShutterCapture(i, mme_rollingShutterPixels->integer* rollingShutterProgressReversed, mme_rollingShutterPixels->integer* howManyBlocks, true, false, intensityMultiplier);
+				int negativeOffset = mme_rollingShutterPixels->integer *(howManyBlocks - 1); // Opengl is from bottom up, so we gotta move things around...
+				R_FrameBuffer_RollingShutterCapture(i, mme_rollingShutterPixels->integer* rollingShutterProgressReversed- negativeOffset, mme_rollingShutterPixels->integer* howManyBlocks, true, false, intensityMultiplier);
 
 				// 2. Check lines we can write into the next frame
 				//		This applies basically only if our blur multiplier is bigger than  ceil(rollingshuttermultiplier)-rollingshuttermultiplier.
@@ -513,7 +514,8 @@ qboolean R_MME_TakeShot( void ) {
 						int blockOffset = preProgressOvershootFrames - framesLeftToWrite;
 						int blockOffsetReversed = rollingShutterFactor - blockOffset - 1;
 						int howManyBlocks = min(rsBlurFrameCount, rollingShutterFactor - blockOffset);
-						R_FrameBuffer_RollingShutterCapture(i, mme_rollingShutterPixels->integer* blockOffsetReversed, mme_rollingShutterPixels->integer* howManyBlocks, true, true, intensityMultiplier);
+						int negativeOffset = mme_rollingShutterPixels->integer * (howManyBlocks - 1); // Opengl is from bottom up, so we gotta move things around...
+						R_FrameBuffer_RollingShutterCapture(i, mme_rollingShutterPixels->integer* blockOffsetReversed- negativeOffset, mme_rollingShutterPixels->integer* howManyBlocks, true, true, intensityMultiplier);
 					}
 				}
 
