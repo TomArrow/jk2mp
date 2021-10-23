@@ -479,19 +479,35 @@ void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent ) {
 		&& tr.world->lightGridData ) {
 		R_SetupEntityLightingGrid( ent );
 	} else {
-		ent->ambientLight[0] = ent->ambientLight[1] = 
-			ent->ambientLight[2] = tr.identityLight * 150;
-		ent->directedLight[0] = ent->directedLight[1] = 
-			ent->directedLight[2] = tr.identityLight * 150;
+		if (!r_gammaSrgbLightvalues->integer) {
+			ent->ambientLight[0] = ent->ambientLight[1] =
+				ent->ambientLight[2] = tr.identityLight * 150;
+			ent->directedLight[0] = ent->directedLight[1] =
+				ent->directedLight[2] = tr.identityLight * 150;
+		}
+		else {
+			ent->ambientLight[0] = ent->ambientLight[1] =
+				ent->ambientLight[2] = tr.identityLight * 77.77f;
+			ent->directedLight[0] = ent->directedLight[1] =
+				ent->directedLight[2] = tr.identityLight * 77.77f;
+		}
 		VectorCopy( tr.sunDirection, ent->lightDir );
 	}
 
 	// bonus items and view weapons have a fixed minimum add
 	if ( 1 /* ent->e.renderfx & RF_MINLIGHT */ ) {
 		// give everything a minimum light add
-		ent->ambientLight[0] += tr.identityLight * 32;
-		ent->ambientLight[1] += tr.identityLight * 32;
-		ent->ambientLight[2] += tr.identityLight * 32;
+		if (!r_gammaSrgbLightvalues->integer) {
+
+			ent->ambientLight[0] += tr.identityLight * 32;
+			ent->ambientLight[1] += tr.identityLight * 32;
+			ent->ambientLight[2] += tr.identityLight * 32;
+		}
+		else {
+			ent->ambientLight[0] += tr.identityLight * 3.68f; //32/255 = 
+			ent->ambientLight[1] += tr.identityLight * 3.68f;
+			ent->ambientLight[2] += tr.identityLight * 3.68f;
+		}
 	}
 
 	if (ent->e.renderfx & RF_MINLIGHT)
@@ -506,9 +522,16 @@ void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent ) {
 		}
 		else
 		{
-			ent->ambientLight[0] += tr.identityLight * 16;
-			ent->ambientLight[1] += tr.identityLight * 96;
-			ent->ambientLight[2] += tr.identityLight * 150;
+			if (!r_gammaSrgbLightvalues->integer) {
+				ent->ambientLight[0] += tr.identityLight * 16;
+				ent->ambientLight[1] += tr.identityLight * 96;
+				ent->ambientLight[2] += tr.identityLight * 150;
+			}
+			else {
+				ent->ambientLight[0] += tr.identityLight * 1.32f;
+				ent->ambientLight[1] += tr.identityLight * 29.83f;
+				ent->ambientLight[2] += tr.identityLight * 77.77f;
+			}
 		}
 	}
 
