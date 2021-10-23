@@ -84,6 +84,12 @@ cvar_t *r_fboHeight;
 #define GL_UNSIGNED_INT_24_8_EXT GL_UNSIGNED_INT_24_8_NV
 #endif
 
+//typedef frameBufferData_t* doubleFrameBufferData_t[2];
+typedef struct {
+	frameBufferData_t* current;
+	frameBufferData_t* next;
+} doubleFrameBufferData_t;
+
 static struct {
 	frameBufferData_t *multiSample;
 	frameBufferData_t *main;
@@ -91,7 +97,7 @@ static struct {
 	frameBufferData_t *dof;
 	frameBufferData_t *colorSpaceConv;
 	frameBufferData_t *colorSpaceConvResult;
-	std::vector<frameBufferData_t*> rollingShutterBuffers;
+	std::vector<doubleFrameBufferData_t> rollingShutterBuffers;
 	int screenWidth, screenHeight;
 } fbo;
 
@@ -458,7 +464,9 @@ void R_FrameBuffer_CreateRollingShutterBuffers(int width, int height, int flags)
 	}
 
 	for (int i = 0; i < fbo.rollingShutterBuffers.size(); i++) {
-		fbo.rollingShutterBuffers[i] = R_FrameBufferCreate(width, height, flags);
+		// Each rolling shutter buffer gets two buffers. That way we can make an ultra long motion blur (as long as the rolling shutter multiplier)
+		fbo.rollingShutterBuffers[i].current = R_FrameBufferCreate(width, height, flags);
+		fbo.rollingShutterBuffers[i].next = R_FrameBufferCreate(width, height, flags);
 
 		pboRollingShutterProgresses[i] = (int)(-(float)i * ((float)rollingShutterFactor / (float)bufferCountNeededForRollingshutter));
 	}
@@ -494,7 +502,7 @@ qboolean R_FrameBuffer_HDRConvert(HDRConvertSource source, int param) {
 	//TODO
 	return qfalse;
 #else
-	if (!hdrPqShader->IsWorking() || (source==HDRCONVSOURCE_FBO &&  !fbo.rollingShutterBuffers[param]))
+	if (!hdrPqShader->IsWorking() || (source==HDRCONVSOURCE_FBO &&  !fbo.rollingShutterBuffers[param].current))
 		return qfalse;
 	
 	if (source == HDRCONVSOURCE_FBO) {
@@ -507,7 +515,7 @@ qboolean R_FrameBuffer_HDRConvert(HDRConvertSource source, int param) {
 		GL_State(GLS_DEPTHTEST_DISABLE);
 		R_SetGL2DSize(glConfig.vidWidth, glConfig.vidHeight);
 		qglUseProgram(hdrPqShader->ShaderId());
-		R_DrawQuad(fbo.rollingShutterBuffers[param]->color, glConfig.vidWidth, glConfig.vidHeight);
+		R_DrawQuad(fbo.rollingShutterBuffers[param].current->color, glConfig.vidWidth, glConfig.vidHeight);
 		qglUseProgram(0);
 
 		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.main->fbo);
@@ -605,23 +613,42 @@ qboolean R_FrameBuffer_EndHDRRead() {
 #endif
 }
 
+// We use a double buffer for the rolling shutter so that we can do ultra long motion blur by writing to the current AND next frame.
+// When one frame is finished, we flip.
+void R_FrameBuffer_RollingShutterFlipDoubleBuffer(int bufferIndex) {
+	frameBufferData_t* tmp = fbo.rollingShutterBuffers[bufferIndex].next;
+	fbo.rollingShutterBuffers[bufferIndex].next = fbo.rollingShutterBuffers[bufferIndex].current;
+	fbo.rollingShutterBuffers[bufferIndex].current = tmp;
 
-qboolean R_FrameBuffer_RollingShutterCapture(int bufferIndex, int offset, int height) {
+	// Clear the buffer for the next image so we can always use ADD blending.
+	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.rollingShutterBuffers[bufferIndex].next->fbo);
+	qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+	qglClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	qglClear(GL_COLOR_BUFFER_BIT);
+	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.main->fbo);
+	qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+}
+
+
+qboolean R_FrameBuffer_RollingShutterCapture(int bufferIndex, int offset, int height,bool additive,bool toNextFrame,float weight) {
 
 #ifdef HAVE_GLES
 	//TODO
 	return qfalse;
 #else
+	frameBufferData_t* selectedFrameBufferData = toNextFrame ? fbo.rollingShutterBuffers[bufferIndex].next : fbo.rollingShutterBuffers[bufferIndex].current;
+	
 	float c;
-	if (!fbo.rollingShutterBuffers[bufferIndex])
+	if (!selectedFrameBufferData)
 		return qfalse;
-	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.rollingShutterBuffers[bufferIndex]->fbo);
+	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, selectedFrameBufferData->fbo);
 	qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 	//The color used to blur add this frame
-	c = 1.0f;//1.0f/(float)mme_rollingShutterBlur->integer;
+	//c = 1.0f;
+	//c = 1.0f/(float)mme_rollingShutterBlur->integer;
+	c = weight;
 	qglColor4f(c, c, c, 1);
-	int frame = 0;
-	if (frame == 0) {
+	if (!additive) {
 		GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_DEPTHTEST_DISABLE);
 	}
 	else {
@@ -712,7 +739,8 @@ void R_FrameBuffer_Shutdown( void ) {
 	R_FrameBufferDelete( fbo.colorSpaceConvResult );
 
 	for (int i = 0; i < fbo.rollingShutterBuffers.size(); i++) {
-		R_FrameBufferDelete(fbo.rollingShutterBuffers[i]);
+		R_FrameBufferDelete(fbo.rollingShutterBuffers[i].current);
+		R_FrameBufferDelete(fbo.rollingShutterBuffers[i].next);
 
 	}
 }

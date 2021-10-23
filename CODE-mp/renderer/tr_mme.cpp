@@ -488,16 +488,43 @@ qboolean R_MME_TakeShot( void ) {
 
 			int& rollingShutterProgress = pboRollingShutterProgresses[i];
 
-			if(rollingShutterProgress >= 0){ // the later pbos have negative offsets because they start capturing later
+			int rsBlurFrameCount = (int)(mme_rollingShutterBlur->value*(float)rollingShutterFactor/mme_rollingShutterMultiplier->value);
+			float intensityMultiplier = 1.0f / (float)rsBlurFrameCount;
+
+			//if(rollingShutterProgress >= 0){ // the later pbos have negative offsets because they start capturing later
+			if(rollingShutterProgress >= -rsBlurFrameCount){ // the later pbos have negative offsets because they start capturing later. We also make use of this for blur as far as possible.
 				
-				if (rollingShutterProgress == rollingShutterFactor - 1) {
-					R_MME_FlushMultiThreading();
+
+				int rollingShutterProgressReversed = rollingShutterFactor - rollingShutterProgress - 1;
+
+				// 1. Check lines we can write into the current frame.
+				//		In short, we can write from the current block up to rsBlurFrameCount blocks to the future,
+				//		long as we don't shoot into the next picture.
+				int howManyBlocks = min(rsBlurFrameCount, rollingShutterFactor-rollingShutterProgress);
+				R_FrameBuffer_RollingShutterCapture(i, mme_rollingShutterPixels->integer* rollingShutterProgressReversed, mme_rollingShutterPixels->integer* howManyBlocks, true, false, intensityMultiplier);
+
+				// 2. Check lines we can write into the next frame
+				//		This applies basically only if our blur multiplier is bigger than  ceil(rollingshuttermultiplier)-rollingshuttermultiplier.
+				int preProgressOvershootFrames = rsBlurFrameCount -progressOvershoot;
+				if (preProgressOvershootFrames > 0) {
+					// Possible that we write some.
+					int framesLeftToWrite = rollingShutterFactor - rollingShutterProgress;
+					if (framesLeftToWrite <= preProgressOvershootFrames) { // Otherwise too early.
+						int blockOffset = preProgressOvershootFrames - framesLeftToWrite;
+						int blockOffsetReversed = rollingShutterFactor - blockOffset - 1;
+						int howManyBlocks = min(rsBlurFrameCount, rollingShutterFactor - blockOffset);
+						R_FrameBuffer_RollingShutterCapture(i, mme_rollingShutterPixels->integer* blockOffsetReversed, mme_rollingShutterPixels->integer* howManyBlocks, true, true, intensityMultiplier);
+					}
 				}
 
-				R_MME_MultiShot(shotBufPerm, rollingShutterFactor,rollingShutterProgress,mme_rollingShutterPixels->integer,i );
-				
-			
+
+				//R_FrameBuffer_RollingShutterCapture(i, mme_rollingShutterPixels->integer* rollingShutterProgressReversed, mme_rollingShutterPixels->integer,true,false);
+				 
+
 				if (rollingShutterProgress == rollingShutterFactor-1){
+
+					R_MME_FlushMultiThreading();
+					R_MME_MultiShot(shotBufPerm, rollingShutterFactor, rollingShutterProgress, mme_rollingShutterPixels->integer, i);
 
 					bool dither = true;
 
@@ -563,6 +590,7 @@ qboolean R_MME_TakeShot( void ) {
 			}
 			rollingShutterProgress++;
 			if (rollingShutterProgress == rollingShutterFactor) {
+				R_FrameBuffer_RollingShutterFlipDoubleBuffer(i);
 				//rollingShutterProgress = 0;
 				rollingShutterProgress = -progressOvershoot; // Since the rolling shutter multiplier can be a non-integer, sometimes we have to pause rendering frames for a little. Imagine if the rolling shutter is half the shutter speed. Then half the time we're not actually recording anything.
 			}
@@ -727,7 +755,7 @@ void R_MME_Init(void) {
 	mme_saveShot = ri.Cvar_Get ( "mme_saveShot", "1", CVAR_ARCHIVE );
 	mme_workMegs = ri.Cvar_Get ( "mme_workMegs", "128", CVAR_LATCH | CVAR_ARCHIVE );
 
-	mme_rollingShutterBlur = ri.Cvar_Get ( "mme_rollingShutterBlur", "50", CVAR_ARCHIVE );
+	mme_rollingShutterBlur = ri.Cvar_Get ( "mme_rollingShutterBlur", "0.5", CVAR_ARCHIVE ); // float. like rollingshuttermultiplier.
 	mme_rollingShutterPixels = ri.Cvar_Get ( "mme_rollingShutterPixels", "1", CVAR_ARCHIVE );
 	mme_rollingShutterMultiplier = ri.Cvar_Get ( "mme_rollingShutterMultiplier", "1", CVAR_ARCHIVE );
 
