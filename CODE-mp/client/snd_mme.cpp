@@ -188,7 +188,7 @@ inline std::string getPrintedString(T something) {
 // Since the absoluteDistance one seems to be ignored for the most part, we use absolute distances in the file, in meters. so divide by 32
 #define POSITION_UNITS_RATIO 32.0f
 
-std::string S_MMEADMMetaCreate(std::string filename,bw64::Bw64Writer* writer) {
+void S_MMEADMMetaCreate(std::string filename,bw64::Bw64Writer* writer, std::string csvFilename) {
 
 	auto admProgramme = adm::AudioProgramme::create(adm::AudioProgrammeName("JK2 JOMME ADM EXPORT"));
 
@@ -321,41 +321,44 @@ std::string S_MMEADMMetaCreate(std::string filename,bw64::Bw64Writer* writer) {
 	auto admChunk = std::make_shared<ADMChunk>(admDocument);
 	writer->writeChunk(admChunk);
 
-	
+	std::ofstream myfile;
+	myfile.open(csvFilename, std::ios::out | std::ios::app);
+	//myfile << "Dims: " << width << "x" << height;
 	std::string retVal;
-	retVal.append("channel;object;block;objectName;gain;starttime;duration;position");
+	myfile<<"channel;object;block;objectName;gain;starttime;duration;position";
 	for (int i = 0; i < (MME_SNDCHANNELS + MME_LOOPCHANNELS); i++) {
 		int o = 0;
 		for (auto object = mmeSound.adm_channelInfo[i].objects.begin(); object != mmeSound.adm_channelInfo[i].objects.end(); object++,o++) {
 			
 			int b = 0;
 			for (auto block = object->blocks.begin(); block != object->blocks.end(); block++,b++) {
-				retVal.append(std::to_string(i));
-				retVal.append(";");
-				retVal.append(std::to_string(o));
-				retVal.append(";");
-				retVal.append(std::to_string(b));
-				retVal.append(";");
+				myfile << std::to_string(i);
+				myfile << ";";
+				myfile << std::to_string(o);
+				myfile << ";";
+				myfile << std::to_string(b);
+				myfile << ";";
 				//retVal.append(object->soundName);
-				retVal.append((sfxEntries+ object->sfxHandle)->name);
-				retVal.append(";");
-				retVal.append(std::to_string(block->gain));
-				retVal.append(";");
-				retVal.append(std::to_string(block->starttime));
-				retVal.append(";");
-				retVal.append(std::to_string(block->duration));
-				retVal.append(";");
-				retVal.append(std::to_string(block->position[0]));
-				retVal.append(",");
-				retVal.append(std::to_string(block->position[1]));
-				retVal.append(",");
-				retVal.append(std::to_string(block->position[2]));
-				retVal.append("\n");
+				myfile << (sfxEntries+ object->sfxHandle)->name;
+				myfile << ";";
+				myfile << std::to_string(block->gain);
+				myfile << ";";
+				myfile << std::to_string(block->starttime);
+				myfile << ";";
+				myfile << std::to_string(block->duration);
+				myfile << ";";
+				myfile << std::to_string(block->position[0]);
+				myfile << ",";
+				myfile << std::to_string(block->position[1]);
+				myfile << ",";
+				myfile << std::to_string(block->position[2]);
+				myfile << "\n";
 
 			}
 		}
 	}
-	return retVal;
+
+	myfile.close();
 }
 
 void S_MMEWavClose(void) {
@@ -383,8 +386,8 @@ void S_MMEWavClose(void) {
 
 		try {
 
-			std::string ret = S_MMEADMMetaCreate(realPath, mmeSound.adm_bw64Handle.get());
-			FS_WriteFile(savePathCSV, ret.c_str(), ret.size());
+			S_MMEADMMetaCreate(realPath, mmeSound.adm_bw64Handle.get(), savePathCSV);
+			//FS_WriteFile(savePathCSV, ret.c_str(), ret.size());
 		}
 		catch (std::runtime_error e) {
 			ri.Printf(PRINT_WARNING, "ADM xml Error: %s. Possible cause: %s\n", e.what(), strerror(errno));
