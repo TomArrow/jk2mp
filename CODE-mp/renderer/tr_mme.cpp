@@ -511,7 +511,7 @@ qboolean R_MME_TakeShot( void ) {
 					// Possible that we write some.
 					int framesLeftToWrite = rollingShutterFactor - rollingShutterProgress;
 					if (framesLeftToWrite <= preProgressOvershootFrames) { // Otherwise too early.
-						int blockOffset = preProgressOvershootFrames - framesLeftToWrite;
+						int blockOffset = preProgressOvershootFrames - framesLeftToWrite - rsBlurFrameCount;
 						int blockOffsetReversed = rollingShutterFactor - blockOffset - 1;
 						int howManyBlocks = min(rsBlurFrameCount, rollingShutterFactor - blockOffset);
 						int negativeOffset = mme_rollingShutterPixels->integer * (howManyBlocks - 1); // Opengl is from bottom up, so we gotta move things around...
