@@ -92,7 +92,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\build\</OutDir>
-    <IntDir>.build\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <IntDir>.build\rs\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
     <IncludePath>.;..;$(ProjectDir)\libs\win32\include;$(WindowsSdk_71A_IncludePath);</IncludePath>
     <LibraryPath>$(ProjectDir)\libs\win32\lib;$(WindowsSdk_71A_LibraryPath_x86);</LibraryPath>
   </PropertyGroup>

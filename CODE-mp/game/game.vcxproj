@@ -83,7 +83,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\..\build\mme\</OutDir>
-    <IntDir>..\.build\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <IntDir>..\.build\rs\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
     <TargetName>jk2mp$(ProjectName)$(PlatformShortName)</TargetName>
     <IncludePath>$(WindowsSDK_IncludePath);$(VC_IncludePath);</IncludePath>
     <LibraryPath>$(WindowsSDK_LibraryPath_x86);$(VC_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
