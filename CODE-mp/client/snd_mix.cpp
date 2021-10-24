@@ -2,8 +2,11 @@
 
 #include "snd_local.h"
 #include "snd_mix.h"
+#include <renderer\tr_mme.h>
 
 static	mixSound_t		*mixSounds[SFX_SOUNDS];
+
+extern shotData_t shotData;
 
 #define DEF_COMSOUNDMEGS "32"
 static  mixSound_t		*mixAllocSounds = 0;
@@ -280,6 +283,15 @@ void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *o
 	const channelQueue_t *q = s_channelQueue;
 
 	bool* isNew = new bool[channels] {false}; // For ADM 
+	long long minBlockDurationSamples = 0; // We set this according to fps so as not to bloat the ADM metadata in slow capturing modes like rolling shutter
+	if (shotData.fps) { // I hope it's (still?) set here
+		double timeInSeconds = 1.0 / shotData.fps;
+		minBlockDurationSamples = (long long)(0.5 + timeInSeconds * (float)MME_SAMPLERATE);
+		// In short, we don't necessarily want more than one position update per frame. What's the point after all? There's interpolation anyway.
+		// We do this in the final ADM generation too but with too short frametimes during capture, we get a memory overflow in the end if we don't thin out.
+		minBlockDurationSamples /= 4; // We will actually allow 4*fps here in the initial data gathering so that there's no lack of precision later. Think Nyquist etc, source data should be at least 2x final sampling.
+		// Maybe im misunderstanding Nyquist, but I think it can't hurt.
+	}
 
 	/* Go through the sound queue and add new channels */
 	for (queueLeft = s_channelQueueCount; queueLeft > 0; queueLeft--, q++) {
@@ -347,14 +359,35 @@ skip_alloc:;
 			if (!isNew[channelIndex] && displacedAdmChannelInfoArray->objects.size() >0) { // Means it's still the same sound as before
 					// We only let it stay the same object if both parent and sound are the same
 				mmeADMObject_t* lastObject = &displacedAdmChannelInfoArray->objects.back();
-				//mmeADMBlock_t* lastBlock = &lastObject->blocks.back();
-				mmeADMBlock_t newBlock;
-				newBlock.starttime = admAbsoluteTime;
-				newBlock.duration = count;
-				newBlock.gain = 0.5;
-				//newBlock.gain = ((float)mixLoops[i].queueItem->volume) / 255.0f; // Not sure if the division is exactly correct. But as long as everything is right relative to each other it should be ok.
-				// TODO Figure out gain AND make a special note in object for voices! To mark it for that thingie.
-				lastObject->blocks.push_back(newBlock);
+				mmeADMBlock_t* lastBlock = &lastObject->blocks.back();
+				if (lastBlock->duration >= minBlockDurationSamples) {
+
+					mmeADMBlock_t newBlock;
+					newBlock.starttime = admAbsoluteTime;
+					newBlock.duration = count;
+					newBlock.gain = 0.5;
+					//newBlock.gain = ((float)mixLoops[i].queueItem->volume) / 255.0f; // Not sure if the division is exactly correct. But as long as everything is right relative to each other it should be ok.
+					// TODO Figure out gain AND make a special note in object for voices! To mark it for that thingie.
+					lastObject->blocks.push_back(newBlock);
+				}
+				else {
+					// If time delta during capture is too small, we don't want a single block for each single capture
+					// because that will bloat memory usage and at x86 that's a serious problem.
+					// We will end up with hundreds of megabytes of metadata for just a few seconds of video
+					// Therefore we limit. It's a bit ugly because technically we're possibly missing the end position
+					// but maybe we can fix that someday somehow.
+
+					if ((lastBlock->starttime + lastBlock->duration) != admAbsoluteTime) {
+
+						Com_Printf("Channelmixer: ADM block misalignment. This should never happen.\n");
+						lastBlock->duration = admAbsoluteTime- lastBlock->starttime;
+					}
+					else {
+
+						lastBlock->duration += count;
+					}
+
+				}
 			}
 			else {
 				mmeADMObject_t newObject;
@@ -480,6 +513,15 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 	// For ADM:
 	bool* isOngoing = new bool[loopCount] {false}; // Need this pretty much only for the ADM metadata creation
 	bool* isSoundChanged = new bool[loopCount] {false}; // Need this pretty much only for the ADM metadata creation
+	long long minBlockDurationSamples = 0; // We set this according to fps so as not to bloat the ADM metadata in slow capturing modes like rolling shutter
+	if (shotData.fps) { // I hope it's (still?) set here
+		double timeInSeconds = 1.0 / shotData.fps;
+		minBlockDurationSamples = (long long)(0.5 + timeInSeconds * (float)MME_SAMPLERATE);
+		// In short, we don't necessarily want more than one position update per frame. What's the point after all? There's interpolation anyway.
+		// We do this in the final ADM generation too but with too short frametimes during capture, we get a memory overflow in the end if we don't thin out.
+		minBlockDurationSamples /= 4; // We will actually allow 4*fps here in the initial data gathering so that there's no lack of precision later. Think Nyquist etc, source data should be at least 2x final sampling.
+		// Maybe im misunderstanding Nyquist, but I think it can't hurt.
+	}
 
 	// Step 1: Decativate loops that arent in the queue anymore:
 	int freeLoopCount = 0;
@@ -562,15 +604,40 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 
 			if (!!mixLoops[i].parent) {
 				
+				
 				if (isOngoing[i] && !isSoundChanged[i] && displacedAdmChannelInfoArray->objects.size() > 0) { // Means it's still the same parent and same sound as before
 					// We only let it stay the same object if both parent and sound are the same
 					mmeADMObject_t* lastObject = &displacedAdmChannelInfoArray->objects.back();
-					//mmeADMBlock_t* lastBlock = &lastObject->blocks.back();
-					mmeADMBlock_t newBlock;
-					newBlock.starttime = admAbsoluteTime;
-					newBlock.duration = count;
-					newBlock.gain = ((float)mixLoops[i].queueItem->volume)/256.0f; // Not sure if the division is exactly correct. But as long as everything is right relative to each other it should be ok.
-					lastObject->blocks.push_back(newBlock);
+					mmeADMBlock_t* lastBlock = &lastObject->blocks.back();
+					if (lastBlock->duration >= minBlockDurationSamples) {
+
+						mmeADMBlock_t newBlock;
+						newBlock.starttime = admAbsoluteTime;
+						newBlock.duration = count;
+						newBlock.gain = ((float)mixLoops[i].queueItem->volume) / 256.0f; // Not sure if the division is exactly correct. But as long as everything is right relative to each other it should be ok.
+						lastObject->blocks.push_back(newBlock);
+					}
+					else {
+						// If time delta during capture is too small, we don't want a single block for each single capture
+						// because that will bloat memory usage and at x86 that's a serious problem.
+						// We will end up with hundreds of megabytes of metadata for just a few seconds of video
+						// Therefore we limit. It's a bit ugly because technically we're possibly missing the end position
+						// but maybe we can fix that someday somehow.
+
+						// Quick sanity check for the impossible case...
+						if ((lastBlock->starttime + lastBlock->duration) != admAbsoluteTime) {
+
+							Com_Printf("Loopmixer: ADM block misalignment. This should never happen.\n");
+							lastBlock->duration = admAbsoluteTime - lastBlock->starttime;
+						}
+						else {
+
+							lastBlock->duration += count;
+						}
+
+					}
+					
+					
 				}
 				else {
 					mmeADMObject_t newObject;

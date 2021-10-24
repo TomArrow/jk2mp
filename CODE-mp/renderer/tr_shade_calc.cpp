@@ -1172,7 +1172,7 @@ void RB_CalcDiffuseColor( unsigned char *colors ) {
 			continue;
 		} 
 		j = myftol( ambientLight[0] + incoming * directedLight[0] );
-		if ( j > 255 ) {
+		if ( j > 255 ) { // Todo: find way to not clamp this.
 			j = 255;
 		}
 		colors[i*4+0] = j;
