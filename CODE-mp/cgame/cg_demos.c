@@ -397,6 +397,7 @@ void demoProcessSnapShots(qboolean hadSkip) {
 			CG_SetNextNextSnap(snap);
 		}
 		if (cg.time + cg.timeFraction >= cg.snap->serverTime && cg.time + cg.timeFraction < cg.nextSnap->serverTime)
+			break;
 		//Todo our own transition checking if we wanna hear certain sounds
 		CG_TransitionSnapshot();
 	} while (1);
