@@ -699,6 +699,32 @@ typedef struct chatBoxItem_s
 	int		lines;
 } chatBoxItem_t;
 
+
+typedef struct timedEntityState_s {
+	int time;
+	int serverTime;
+	entityState_t es;
+} timedEntityState_t;
+
+typedef struct timedPlayerState_s {
+	int time;
+	int serverTime;
+	qboolean isTeleport;
+	playerState_t ps;
+} timedPlayerState_t;
+
+#define MAX_STATE_HISTORY 4
+typedef struct playerHistory_s {
+	int		nextSlot;
+	timedEntityState_t	states[MAX_STATE_HISTORY];
+} playerHistory_t;
+
+typedef struct psHistory_s {
+	int		nextSlot;
+	timedPlayerState_t	states[MAX_STATE_HISTORY];
+} psHistory_t;
+
+
 typedef struct {
 	int			clientFrame;		// incremented each frame
 
@@ -716,9 +742,11 @@ typedef struct {
 
 	snapshot_t	*snap;				// cg.snap->serverTime <= cg.time
 	snapshot_t	*nextSnap;			// cg.nextSnap->serverTime > cg.time, or NULL
+	snapshot_t* nextNextSnap; // cg.nextNextSnap->serverTime > cg.nextSnap->serverTime, or NULL
 //	snapshot_t	activeSnapshots[2];
 
 	float		frameInterpolation;	// (float)( cg.time - cg.frame->serverTime ) / (cg.nextFrame->serverTime - cg.frame->serverTime)
+	float		playerInterpolation;// (float)( cg.time - cg.frame->serverTime ) / (nexttps->time - tps-time)
 	float		predictedTimeFrac;	// frameInterpolation * (next->commandTime - prev->commandTime)
 
 	qboolean	mMapChange;
@@ -930,7 +958,9 @@ Ghoul2 Insert Start
 */
 	int				testModel;
 	// had to be moved so we wouldn't wipe these out with the memset - these have STL in them and shouldn't be cleared that way
-	snapshot_t		activeSnapshots[2];
+	snapshot_t		activeSnapshots[3];
+	playerHistory_t playerHistory[MAX_CLIENTS];
+	psHistory_t		psHistory;
 /*
 Ghoul2 Insert End
 */
@@ -1709,6 +1739,7 @@ extern	vmCvar_t		ui_myteam;
 //JA
 extern	vmCvar_t	cg_chatBox;
 extern	vmCvar_t	cg_chatBoxHeight;
+extern	vmCvar_t	cg_commandSmooth;
 
 //New MME cvars
 extern	vmCvar_t	mov_chatBeep;
