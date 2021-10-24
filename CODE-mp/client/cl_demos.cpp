@@ -669,7 +669,6 @@ static void demoPlaySynch( demoPlay_t *play, demoFrame_t *frame) {
 static void demoPlayForwardFrame( demoPlay_t *play ) {
 	int			blockSize;
 	msg_t		msg;
-	demoFrame_t *copyFrame;
 
 	if (play->filePos + 4 > play->fileSize) {
 		if (mme_demoAutoNext->integer && demoNextNum && !demoPrecaching) {
@@ -692,9 +691,8 @@ static void demoPlayForwardFrame( demoPlay_t *play ) {
 	MSG_Init( &msg, demoBuffer, sizeof(demoBuffer) );
 	MSG_BeginReading( &msg );
 	msg.cursize = blockSize;
-	copyFrame = play->frame;
-	play->frame = play->nextFrame;
-	play->nextFrame = copyFrame;
+	play->frame = &play->storageFrame[(play->frameNumber + 1 + FRAME_BUF_SIZE) % FRAME_BUF_SIZE];
+	play->nextFrame = &play->storageFrame[(play->frameNumber + 2 + FRAME_BUF_SIZE) % FRAME_BUF_SIZE];
 	demoFrameUnpack( &msg, play->frame, play->nextFrame );
 	play->frameNumber++;
 }
@@ -726,6 +724,8 @@ static void demoPlaySetIndex( demoPlay_t *play, int index ) {
 	play->filePos = wantPos;
 #endif
 
+	play->frameNumber = play->fileIndex[index].frame - 2;
+
 	demoPlayForwardFrame( play );
 	demoPlayForwardFrame( play );
 
@@ -750,7 +750,7 @@ static int demoPlaySeek( demoPlay_t *play, int seekTime ) {
 foundit:
 		demoPlaySetIndex( play, i);
 	}
-	while (!play->lastFrame && ( seekTime > play->nextFrame->serverTime)) {
+	while (!play->lastFrame && (seekTime >= play->frame->serverTime)) {
 		demoPlayForwardFrame( play  );
 	}
 	return seekTime;
@@ -920,14 +920,14 @@ qboolean demoGetSnapshot( int snapNumber, snapshot_t *snap ) {
 	demoFrame_t *frame;
 	int i;
 
-	if (snapNumber < play->frameNumber)
+	if (snapNumber < play->frameNumber - FRAME_BUF_SIZE + 2)
 		return qfalse;
 	if (snapNumber > play->frameNumber + 1)
 		return qfalse;
 	if (snapNumber == play->frameNumber + 1 && play->lastFrame)
 		return qfalse;
 
-	frame = snapNumber == play->frameNumber ? play->frame : play->nextFrame;
+	frame = &play->storageFrame[snapNumber % FRAME_BUF_SIZE];
 
 	demoPlaySynch( play, frame );
 	snap->serverCommandSequence = play->commandCount;
