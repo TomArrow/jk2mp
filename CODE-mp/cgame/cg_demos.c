@@ -178,6 +178,7 @@ static int demoSetupView( void) {
 
 	switch (demo.viewType) {
 	case viewChase:
+		// this is the case for normal third person view (i think)
 		if ( demo.chase.cent && demo.chase.distance < mov_chaseRange.value ) {
 			centity_t *cent = demo.chase.cent;
 			

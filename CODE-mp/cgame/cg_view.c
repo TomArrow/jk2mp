@@ -1360,7 +1360,7 @@ int CG_DemosCalcViewValues( void ) {
 
 	if ( cg.renderingThirdPerson && !cg.zoomMode) {
 		// back away from character
-		CG_OffsetThirdPersonView();
+		CG_OffsetThirdPersonView(); // commenting this out eradicates the command smoothing issue
 	} else {
 		// offset for local bobbing and kicks
 		CG_OffsetFirstPersonView();
