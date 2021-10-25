@@ -695,8 +695,8 @@ static void CG_OffsetThirdPersonView( void )
 	// ...and of course we should copy the new view location to the proper spot too.
 	VectorCopy(cameraCurLoc, cg.refdef.vieworg);
 
-	cameraLastTime = cg.predictedPlayerState.commandTime;
-	cameraLastTimeFrac = cg.predictedTimeFrac;
+	//cameraLastTime = cg.predictedPlayerState.commandTime;
+	//cameraLastTimeFrac = cg.predictedTimeFrac;
 }
 
 
