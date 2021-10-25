@@ -68,6 +68,9 @@ static void CG_TransitionEntity( centity_t *cent ) {
 
 void CG_AddToHistory(int serverTime, entityState_t* state, centity_t* cent) {
 	timedEntityState_t* tstate = &cent->stateHistory.states[cent->stateHistory.nextSlot % MAX_STATE_HISTORY], * prev = NULL;
+	if (state->number >= MAX_CLIENTS && state->eType != ET_MOVER) {
+		return;
+	}
 	if (cent->stateHistory.nextSlot > 0) {
 		prev = &cent->stateHistory.states[(cent->stateHistory.nextSlot - 1) % MAX_STATE_HISTORY];
 		if (prev->serverTime == serverTime) {
@@ -247,9 +250,7 @@ void CG_SetInitialSnapshot( snapshot_t *snap ) {
 		cent->interpolate = qfalse;
 		cent->currentValid = qtrue;
 
-		if (state->number < MAX_CLIENTS) {
-			CG_AddToHistory(snap->serverTime, state, cent);
-		}
+		CG_AddToHistory(snap->serverTime, state, cent);
 
 		CG_ResetEntity( cent );
 
@@ -319,9 +320,7 @@ void CG_SetNextSnap(snapshot_t* snap) {
 			cent->interpolate = qtrue;
 		}
 
-		if (es->number < MAX_CLIENTS) {
-			CG_AddToHistory(snap->serverTime, es, cent);
-		}
+		CG_AddToHistory(snap->serverTime, es, cent);
 	}
 
 	cg.nextFrameTeleport = CG_IsTeleport(cg.snap, snap);
@@ -356,9 +355,7 @@ void CG_SetNextNextSnap(snapshot_t* snap) {
 		es = &snap->entities[num];
 		cent = &cg_entities[es->number];
 
-		if (es->number < MAX_CLIENTS) {
-			CG_AddToHistory(snap->serverTime, es, cent);
-		}
+		CG_AddToHistory(snap->serverTime, es, cent);
 	}
 }
 

@@ -384,9 +384,7 @@ void demoProcessSnapShots(qboolean hadSkip) {
 			memcpy(&cent->currentState, state, sizeof(entityState_t));
 			cent->interpolate = qfalse;
 			cent->currentValid = qtrue;
-			if (state->number < MAX_CLIENTS) {
-				CG_AddToHistory(snap->serverTime, state, cent);
-			}
+			CG_AddToHistory(snap->serverTime, state, cent);
 			if (cent->currentState.eType > ET_EVENTS)
 				cent->previousEvent = 1;
 			else 
