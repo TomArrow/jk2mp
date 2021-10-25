@@ -183,11 +183,38 @@ typedef enum {
 	DISM_TOTAL
 } dismpart_t;
 
+typedef struct timedEntityState_s {
+	int time;
+	int serverTime;
+	qboolean isTeleport;
+	entityState_t es;
+} timedEntityState_t;
+
+typedef struct timedPlayerState_s {
+	int time;
+	int serverTime;
+	qboolean isTeleport;
+	playerState_t ps;
+} timedPlayerState_t;
+
+#define MAX_STATE_HISTORY 8
+typedef struct playerHistory_s {
+	int		nextSlot;
+	timedEntityState_t	states[MAX_STATE_HISTORY];
+} playerHistory_t;
+
+typedef struct psHistory_s {
+	int		nextSlot;
+	timedPlayerState_t	states[MAX_STATE_HISTORY];
+} psHistory_t;
+
 void demoNowTrajectory( const trajectory_t *tr, vec3_t result );
 // centity_t have a direct corespondence with gentity_t in the game, but
 // only the entityState_t is directly communicated to the cgame
 typedef struct centity_s {
 	entityState_t	currentState;	// from cg.frame
+	int				currentStateHistory;
+	playerHistory_t stateHistory;
 	entityState_t	nextState;		// from cg.nextFrame, if available
 	qboolean		interpolate;	// true if next is valid to interpolate to
 	qboolean		currentValid;	// true if cg.frame holds this entity
@@ -700,29 +727,7 @@ typedef struct chatBoxItem_s
 } chatBoxItem_t;
 
 
-typedef struct timedEntityState_s {
-	int time;
-	int serverTime;
-	entityState_t es;
-} timedEntityState_t;
 
-typedef struct timedPlayerState_s {
-	int time;
-	int serverTime;
-	qboolean isTeleport;
-	playerState_t ps;
-} timedPlayerState_t;
-
-#define MAX_STATE_HISTORY 4
-typedef struct playerHistory_s {
-	int		nextSlot;
-	timedEntityState_t	states[MAX_STATE_HISTORY];
-} playerHistory_t;
-
-typedef struct psHistory_s {
-	int		nextSlot;
-	timedPlayerState_t	states[MAX_STATE_HISTORY];
-} psHistory_t;
 
 
 typedef struct {
@@ -959,7 +964,7 @@ Ghoul2 Insert Start
 	int				testModel;
 	// had to be moved so we wouldn't wipe these out with the memset - these have STL in them and shouldn't be cleared that way
 	snapshot_t		activeSnapshots[3];
-	playerHistory_t playerHistory[MAX_CLIENTS];
+	int currentPsHistory;
 	psHistory_t		psHistory;
 /*
 Ghoul2 Insert End
