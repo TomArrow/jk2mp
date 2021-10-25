@@ -2161,21 +2161,25 @@ void CG_AdjustInterpolatedPositionForMover(const vec3_t in, int moverNum, int fr
 	}
 
 	for (i = cent->currentStateHistory; i < cent->stateHistory.nextSlot; i++) {
-		if (i + 1 < cent->stateHistory.nextSlot) {
-			timedEntityState_t* next = &cent->stateHistory.states[(i + 1) % MAX_STATE_HISTORY];
+		timedEntityState_t *next = NULL;
+		for (i = cent->currentStateHistory; i < cent->stateHistory.nextSlot; i++) {
+			timedEntityState_t* next = NULL;
+			if (i + 1 < cent->stateHistory.nextSlot) {
+				next = &cent->stateHistory.states[(i + 1) % MAX_STATE_HISTORY];
+			}
 			tes = &cent->stateHistory.states[i % MAX_STATE_HISTORY];
 			// use next es over cur es if mover started moving in next frame, since player interpolation will use both
-			if (tes->serverTime - fromTime <= fromTimeFraction && next->serverTime - fromTime > fromTimeFraction) {
+			if (tes->serverTime - fromTime <= fromTimeFraction && (next == NULL || next->serverTime - fromTime > fromTimeFraction)) {
 				entityState_t* es = &tes->es;
-				if (tes->es.pos.trType == TR_STATIONARY && next->es.pos.trType != TR_STATIONARY) {
+				if (next != NULL && tes->es.pos.trType == TR_STATIONARY && next->es.pos.trType != TR_STATIONARY) {
 					es = &next->es;
 				}
 				demoTrajectory(&es->pos, fromTime, fromTimeFraction, oldOrigin);
 				demoTrajectory(&es->apos, fromTime, fromTimeFraction, oldAngles);
 			}
-			if (tes->serverTime - toTime <= toTimeFraction && next->serverTime - toTime > toTimeFraction) {
+			if (tes->serverTime - toTime <= toTimeFraction && (next == NULL || next->serverTime - toTime > toTimeFraction)) {
 				entityState_t* es = &tes->es;
-				if (tes->es.pos.trType == TR_STATIONARY && next->es.pos.trType != TR_STATIONARY) {
+				if (next != NULL && tes->es.pos.trType == TR_STATIONARY && next->es.pos.trType != TR_STATIONARY) {
 					es = &next->es;
 				}
 				demoTrajectory(&es->pos, toTime, toTimeFraction, origin);
