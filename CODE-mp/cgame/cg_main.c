@@ -751,6 +751,7 @@ static cvarTable_t cvarTable[] = { // bk001129
 	// but we also reference them here
 	{ &cg_buildScript, "com_buildScript", "0", NULL, 0 },	// force loading of all possible data amd error on failures
 	{ &cg_paused, "cl_paused", "0", NULL, CVAR_ROM },
+	{ &cl_commandSmoothTolerance, "cl_commandSmoothTolerance", "100", NULL, CVAR_ARCHIVE },
 	{ &cg_blood, "com_blood", "1", NULL, CVAR_ARCHIVE },
 	{ &cg_synchronousClients, "g_synchronousClients", "0", NULL, 0 },	// communicated by systeminfo
 
