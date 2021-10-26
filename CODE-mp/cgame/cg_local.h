@@ -304,6 +304,8 @@ typedef struct centity_s {
 		int deathtime;    //timepoint of death
 		int lastkiller;	
 	} dism;
+
+	qboolean		isGibbing;
 } centity_t;
 
 

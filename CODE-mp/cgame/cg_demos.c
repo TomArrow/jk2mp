@@ -1167,12 +1167,29 @@ void CG_DemoDismembermentEvent( centity_t *cent, vec3_t position ) {
 					meansOfDeath == MOD_TIMED_MINE_SPLASH ||
 					meansOfDeath == MOD_DET_PACK_SPLASH) {
 
+					int target = es->otherEntityNum;
+					//int attacker = es->otherEntityNum2;
+					//int mod = es->eventParm;
+					centity_t* targetent = &cg_entities[target];
+
 					trap_S_StartSound(NULL, es->number, CHAN_BODY, cgs.media.gibSound);
 					CG_GibPlayer(cent->lerpOrigin);
-					es->eType = ET_INVISIBLE;
-					//self->takedamage = qfalse;
-					//self->s.eType = ET_INVISIBLE;
-					//self->r.contents = 0;
+					cent->isGibbing = qtrue;
+					// Make them all invisible. lol
+					// head,torso,l_arm,r_arm,l_hand,r_hand,l_leg,r_leg
+					//trap_G2API_SetSurfaceOnOff(cg_entities[es->number].ghoul2, "head", 0x00000100);
+					trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "hips", 0x00000100);
+					trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "head", 0x00000100);
+					trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "torso", 0x00000100);
+					trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "l_arm", 0x00000100);
+					trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "r_arm", 0x00000100);
+					trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "l_hand", 0x00000100);
+					trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "r_hand", 0x00000100);
+					trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "l_leg", 0x00000100);
+					trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "r_leg", 0x00000100);
+					cg_entities[targetent->currentState.number].torsoBolt = 1;
+					cg_entities[targetent->currentState.number].ghoul2weapon = NULL;
+					//trap_G2API_SetSurfaceOnOff(cent->ghoul2, stubCapName, 0);
 				}
 				else {
 
