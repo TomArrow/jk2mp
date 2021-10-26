@@ -439,6 +439,7 @@ vmCvar_t	cg_bobup;
 vmCvar_t	cg_bobpitch;
 vmCvar_t	cg_bobroll;
 //vmCvar_t	cg_swingSpeed;
+vmCvar_t	cg_gibs;
 vmCvar_t	cg_shadows;
 vmCvar_t	cg_drawTimer;
 vmCvar_t	cg_drawFPS;
@@ -654,6 +655,9 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cg_viewsize, "cg_viewsize", "100", NULL, CVAR_ARCHIVE },
 	{ &cg_stereoSeparation, "cg_stereoSeparation", "0.4", NULL, CVAR_ARCHIVE  },
 	{ &cg_shadows, "cg_shadows", "1", NULL, CVAR_ARCHIVE  },
+#ifdef GIB
+	{ &cg_gibs, "cg_gibs", "1", NULL, CVAR_ARCHIVE  },
+#endif
 	{ &cg_draw2D, "cg_draw2D", "1", NULL, CVAR_ARCHIVE  },
 	{ &cg_drawStatus, "cg_drawStatus", "1", NULL, CVAR_ARCHIVE  },
 	{ &cg_drawTimer, "cg_drawTimer", "0", NULL, CVAR_ARCHIVE  },
@@ -1233,6 +1237,13 @@ static void CG_RegisterSounds( void ) {
 	trap_S_RegisterSound("sound/weapons/force/jump.mp3"); //PDSOUND_FORCEJUMP
 	trap_S_RegisterSound("sound/weapons/force/grip.mp3"); //PDSOUND_FORCEGRIP
 
+#ifdef GIB
+	cgs.media.gibSound = trap_S_RegisterSound("sound/player/gibsplt1.wav"); //, qfalse);
+	cgs.media.gibBounce1Sound = trap_S_RegisterSound("sound/player/gibimp1.wav"); //, qfalse);
+	cgs.media.gibBounce2Sound = trap_S_RegisterSound("sound/player/gibimp2.wav"); //, qfalse);
+	cgs.media.gibBounce3Sound = trap_S_RegisterSound("sound/player/gibimp3.wav"); //, qfalse);
+#endif
+
 	if ( cgs.gametype >= GT_TEAM || cg_buildScript.integer ) {
 
 #ifdef JK2AWARDS
@@ -1500,6 +1511,19 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.viewBloodShader = trap_R_RegisterShader( "viewBloodBlend" );
 
 	cgs.media.deferShader = trap_R_RegisterShaderNoMip( "gfx/2d/defer.tga" );
+
+#ifdef GIB
+	cgs.media.gibAbdomen = trap_R_RegisterModel("models/gibs/abdomen.md3");
+	cgs.media.gibArm = trap_R_RegisterModel("models/gibs/arm.md3");
+	cgs.media.gibChest = trap_R_RegisterModel("models/gibs/chest.md3");
+	cgs.media.gibFist = trap_R_RegisterModel("models/gibs/fist.md3");
+	cgs.media.gibFoot = trap_R_RegisterModel("models/gibs/foot.md3");
+	cgs.media.gibForearm = trap_R_RegisterModel("models/gibs/forearm.md3");
+	cgs.media.gibIntestine = trap_R_RegisterModel("models/gibs/intestine.md3");
+	cgs.media.gibLeg = trap_R_RegisterModel("models/gibs/leg.md3");
+	cgs.media.gibSkull = trap_R_RegisterModel("models/gibs/skull.md3");
+	cgs.media.gibBrain = trap_R_RegisterModel("models/gibs/brain.md3");
+#endif
 
 	cgs.media.smokePuffShader = trap_R_RegisterShader( "smokePuff" );
 	cgs.media.bloodTrailShader = trap_R_RegisterShader( "bloodTrail" );

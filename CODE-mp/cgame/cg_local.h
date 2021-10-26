@@ -1070,6 +1070,21 @@ typedef struct {
 
 	qhandle_t	deferShader;
 
+#ifdef GIB
+	// gib explosions
+	qhandle_t	gibAbdomen;
+	qhandle_t	gibArm;
+	qhandle_t	gibChest;
+	qhandle_t	gibFist;
+	qhandle_t	gibFoot;
+	qhandle_t	gibForearm;
+	qhandle_t	gibIntestine;
+	qhandle_t	gibLeg;
+	qhandle_t	gibSkull;
+	qhandle_t	gibBrain;
+#endif
+
+
 	qhandle_t	lightningShader;
 
 	qhandle_t	redSaberGlowShader;
@@ -1233,6 +1248,13 @@ typedef struct {
 
 	sfxHandle_t	grenadeBounce1;
 	sfxHandle_t	grenadeBounce2;
+
+#ifdef GIB
+	sfxHandle_t	gibSound;
+	sfxHandle_t	gibBounce1Sound;
+	sfxHandle_t	gibBounce2Sound;
+	sfxHandle_t	gibBounce3Sound;
+#endif
 
 	sfxHandle_t teamHealSound;
 	sfxHandle_t teamRegenSound;
@@ -1612,6 +1634,7 @@ extern	vmCvar_t		cg_bobpitch;
 extern	vmCvar_t		cg_bobroll;
 //extern	vmCvar_t		cg_swingSpeed;
 extern	vmCvar_t		cg_shadows;
+extern	vmCvar_t		cg_gibs;
 extern	vmCvar_t		cg_drawTimer;
 extern	vmCvar_t		cg_drawFPS;
 extern	vmCvar_t		cg_drawSnapshot;

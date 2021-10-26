@@ -1175,7 +1175,22 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		if ( ci->hide || !ci->infoValid )
 			return;
 	}
-	
+
+#ifdef UGLYDEBUG
+	if (event == EV_OBITUARY) {
+		FILE* pFile;
+		char buffer[256];
+		pFile = fopen("C:\\tmp\\jk2obituarymod.txt", "a");
+		if (pFile == NULL) {
+			//perror("Error opening file.");
+		}
+		else {
+			fprintf(pFile, "%d\n", es->eventParm);
+		}
+		fclose(pFile);
+	}
+#endif
+
 	switch ( event ) {
 	//
 	// movement generated events
@@ -2471,8 +2486,10 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 
 	case EV_GIB_PLAYER:
 		DEBUGNAME("EV_GIB_PLAYER");
-		//trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.gibSound );
-		//CG_GibPlayer( cent->lerpOrigin );
+#ifdef GIB
+		trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.gibSound );
+		CG_GibPlayer( cent->lerpOrigin );
+#endif
 		break;
 
 	case EV_STARTLOOPINGSOUND:

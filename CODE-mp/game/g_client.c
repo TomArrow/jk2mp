@@ -727,7 +727,8 @@ void CopyToBodyQue( gentity_t *ent ) {
 
 	// don't take more damage if already gibbed
 	if ( ent->health <= GIB_HEALTH ) {
-		body->takedamage = qfalse;
+		//body->takedamage = qfalse;
+		body->takedamage = qtrue; // just a test. see if it is possible to fuck with bodies this way?
 	} else {
 		body->takedamage = qtrue;
 	}

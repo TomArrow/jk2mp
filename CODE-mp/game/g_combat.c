@@ -751,9 +751,11 @@ void body_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int d
 	// NOTENOTE No gibbing right now, this is star wars.
 	qboolean doDisint = qfalse;
 
+	GibEntity(self, 0);
+
 	if (self->health < (GIB_HEALTH+1))
 	{
-		self->health = GIB_HEALTH+1;
+		//self->health = GIB_HEALTH+1;
 
 		if (self->client && (level.time - self->client->respawnTime) < 2000)
 		{
@@ -792,6 +794,8 @@ void body_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int d
 		}
 		return;
 	}
+
+	
 }
 
 
@@ -2136,15 +2140,29 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	memset( self->client->ps.powerups, 0, sizeof(self->client->ps.powerups) );
 
 	// NOTENOTE No gib deaths right now, this is star wars.
-	/*
+	
 	// never gib in a nodrop
-	if ( (self->health <= GIB_HEALTH && !(contents & CONTENTS_NODROP) && g_blood.integer) || meansOfDeath == MOD_SUICIDE) 
+	//if ( (self->health <= GIB_HEALTH && !(contents & CONTENTS_NODROP) && g_blood.integer) || meansOfDeath == MOD_SUICIDE) 
+#ifdef GIB
+	if ( self->health <= GIB_HEALTH && !(contents & CONTENTS_NODROP) && g_blood.integer && 
+		(meansOfDeath == MOD_FLECHETTE ||
+			meansOfDeath == MOD_FLECHETTE_ALT_SPLASH ||
+			meansOfDeath == MOD_ROCKET ||
+			meansOfDeath == MOD_ROCKET_SPLASH ||
+			meansOfDeath == MOD_ROCKET_HOMING ||
+			meansOfDeath == MOD_ROCKET_HOMING_SPLASH ||
+			meansOfDeath == MOD_THERMAL ||
+			meansOfDeath == MOD_THERMAL_SPLASH ||
+			meansOfDeath == MOD_TRIP_MINE_SPLASH ||
+			meansOfDeath == MOD_TIMED_MINE_SPLASH ||
+			meansOfDeath == MOD_DET_PACK_SPLASH ) // Gib only for explosive death
+		) 
 	{
 		// gib death
 		GibEntity( self, killer );
 	} 
 	else 
-	*/
+#endif
 	{
 		// normal death
 		

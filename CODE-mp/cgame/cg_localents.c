@@ -202,7 +202,7 @@ void CG_FragmentBounceSound( localEntity_t *le, trace_t *trace ) {
 	if (!mov_dismember.integer) {
 		if ( le->leBounceSoundType == LEBS_BLOOD ) {
 			// half the gibs will make splat sounds
-			/*
+#ifdef GIB
 			if ( rand() & 1 ) {
 				int r = rand()&3;
 				sfxHandle_t	s;
@@ -217,7 +217,8 @@ void CG_FragmentBounceSound( localEntity_t *le, trace_t *trace ) {
 				trap_S_StartSound( trace->endpos, ENTITYNUM_WORLD, CHAN_AUTO, s );
 			
 			}
-			*/
+#endif
+			
 		} else if ( le->leBounceSoundType == LEBS_BRASS ) {
 
 		}

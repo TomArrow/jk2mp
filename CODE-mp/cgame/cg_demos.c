@@ -1153,21 +1153,46 @@ void CG_DemoDismembermentEvent( centity_t *cent, vec3_t position ) {
 	switch (es->event) {
 		case EV_OBITUARY:
 			{
-				vec3_t dir;
-				int target = es->otherEntityNum;
-				int attacker = es->otherEntityNum2;	
-				//int mod = es->eventParm;
-				centity_t *targetent = &cg_entities[target];
-				
-				cg_entities[target].dism.lastkiller = attacker;
-				cg_entities[target].dism.deathtime  = cg.time;
-						
-				VectorCopy(targetent->currentState.pos.trDelta,dir);
-			
-				dir[0] = dir[0]*(0.8 + random()*0.4);
-				dir[1] = dir[1]*(0.8 + random()*0.4);
-				dir[2] = dir[2]*(0.8 + random()*0.4);
-				demoSaberDismember(targetent,dir);		
+				int meansOfDeath = es->eventParm;
+				// Gib on explosive deaths
+				if (meansOfDeath == MOD_FLECHETTE ||
+					meansOfDeath == MOD_FLECHETTE_ALT_SPLASH ||
+					meansOfDeath == MOD_ROCKET ||
+					meansOfDeath == MOD_ROCKET_SPLASH ||
+					meansOfDeath == MOD_ROCKET_HOMING ||
+					meansOfDeath == MOD_ROCKET_HOMING_SPLASH ||
+					meansOfDeath == MOD_THERMAL ||
+					meansOfDeath == MOD_THERMAL_SPLASH ||
+					meansOfDeath == MOD_TRIP_MINE_SPLASH ||
+					meansOfDeath == MOD_TIMED_MINE_SPLASH ||
+					meansOfDeath == MOD_DET_PACK_SPLASH) {
+
+					trap_S_StartSound(NULL, es->number, CHAN_BODY, cgs.media.gibSound);
+					CG_GibPlayer(cent->lerpOrigin);
+					es->eType = ET_INVISIBLE;
+					//self->takedamage = qfalse;
+					//self->s.eType = ET_INVISIBLE;
+					//self->r.contents = 0;
+				}
+				else {
+
+					vec3_t dir;
+					int target = es->otherEntityNum;
+					int attacker = es->otherEntityNum2;
+					//int mod = es->eventParm;
+					centity_t* targetent = &cg_entities[target];
+
+					cg_entities[target].dism.lastkiller = attacker;
+					cg_entities[target].dism.deathtime = cg.time;
+
+					VectorCopy(targetent->currentState.pos.trDelta, dir);
+
+					dir[0] = dir[0] * (0.8 + random() * 0.4);
+					dir[1] = dir[1] * (0.8 + random() * 0.4);
+					dir[2] = dir[2] * (0.8 + random() * 0.4);
+					demoSaberDismember(targetent, dir);
+				}
+					
 			}
 			break;
 		case EV_SABER_HIT:
