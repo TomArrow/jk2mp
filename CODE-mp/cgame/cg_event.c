@@ -621,6 +621,7 @@ void CG_ReattachLimb(centity_t *source) {
 
 	if (mov_dismember.integer) {
 		int part;
+		trap_G2API_SetSurfaceOnOff(source->ghoul2, "hips", 0); // Makes no sense for dismemberment but needed to restore gibbing.
 		for (part = 0; part < 8; part++) {
 			if (cg_entities[source->currentState.number].dism.cut[part] == qtrue) {
 				switch (part) {

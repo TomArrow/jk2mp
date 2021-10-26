@@ -1154,6 +1154,23 @@ void CG_DemoDismembermentEvent( centity_t *cent, vec3_t position ) {
 		case EV_OBITUARY:
 			{
 				int meansOfDeath = es->eventParm;
+
+				vec3_t dir;
+				int target = es->otherEntityNum;
+				int attacker = es->otherEntityNum2;
+				//int mod = es->eventParm;
+				centity_t* targetent = &cg_entities[target];
+
+				cg_entities[target].dism.lastkiller = attacker;
+				cg_entities[target].dism.deathtime = cg.time;
+
+				VectorCopy(targetent->currentState.pos.trDelta, dir);
+
+				dir[0] = dir[0] * (0.8 + random() * 0.4);
+				dir[1] = dir[1] * (0.8 + random() * 0.4);
+				dir[2] = dir[2] * (0.8 + random() * 0.4);
+				demoSaberDismember(targetent, dir);
+
 				// Gib on explosive deaths
 				if (meansOfDeath == MOD_FLECHETTE ||
 					meansOfDeath == MOD_FLECHETTE_ALT_SPLASH ||
@@ -1183,31 +1200,23 @@ void CG_DemoDismembermentEvent( centity_t *cent, vec3_t position ) {
 					trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "torso", 0x00000100);
 					trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "l_arm", 0x00000100);
 					trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "r_arm", 0x00000100);
-					trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "l_hand", 0x00000100);
-					trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "r_hand", 0x00000100);
+					//trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "l_hand", 0x00000100);
+					//trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "r_hand", 0x00000100);
 					trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "l_leg", 0x00000100);
 					trap_G2API_SetSurfaceOnOff(targetent->ghoul2, "r_leg", 0x00000100);
+					cg_entities[targetent->currentState.number].dism.cut[DISM_HEAD] =
+						//cg_entities[targetent->currentState.number].dism.cut[DISM_LHAND] =
+						//cg_entities[targetent->currentState.number].dism.cut[DISM_RHAND] =
+						cg_entities[targetent->currentState.number].dism.cut[DISM_LARM] =
+						cg_entities[targetent->currentState.number].dism.cut[DISM_RARM] =
+						cg_entities[targetent->currentState.number].dism.cut[DISM_LLEG] =
+						cg_entities[targetent->currentState.number].dism.cut[DISM_RLEG] =
+						cg_entities[targetent->currentState.number].dism.cut[DISM_WAIST] =
+						//cg_entities[targetent->currentState.number].dism.cut[DISM_TOTAL] = 
+							qtrue;
 					cg_entities[targetent->currentState.number].torsoBolt = 1;
 					cg_entities[targetent->currentState.number].ghoul2weapon = NULL;
 					//trap_G2API_SetSurfaceOnOff(cent->ghoul2, stubCapName, 0);
-				}
-				else {
-
-					vec3_t dir;
-					int target = es->otherEntityNum;
-					int attacker = es->otherEntityNum2;
-					//int mod = es->eventParm;
-					centity_t* targetent = &cg_entities[target];
-
-					cg_entities[target].dism.lastkiller = attacker;
-					cg_entities[target].dism.deathtime = cg.time;
-
-					VectorCopy(targetent->currentState.pos.trDelta, dir);
-
-					dir[0] = dir[0] * (0.8 + random() * 0.4);
-					dir[1] = dir[1] * (0.8 + random() * 0.4);
-					dir[2] = dir[2] * (0.8 + random() * 0.4);
-					demoSaberDismember(targetent, dir);
 				}
 					
 			}
