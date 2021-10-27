@@ -328,12 +328,25 @@ void CG_DrawInformation( void ) {
 	valueNOFP = atoi( Info_ValueForKey( info, "g_forcePowerDisable" ) );
 
 	value = atoi( Info_ValueForKey( info, "g_maxForceRank" ) );
+
+
 	if ( value && !valueNOFP ) {
-		char fmStr[1024]; 
+		char tmp[9], fmStr[1024]; 
 
 		trap_SP_GetStringTextString("INGAMETEXT_MAXFORCERANK",fmStr, sizeof(fmStr));
 
-		UI_DrawProportionalString( 320, y, va( "%s %s", fmStr, CG_GetStripEdString("INGAMETEXT", forceMasteryLevels[value]) ),
+		char* forceMasteryLevelText; 
+
+		if (value > NUM_FORCE_MASTERY_LEVELS - 1) { // avoid char array overflow, just display the number as text.
+
+			sprintf_s(tmp, sizeof(tmp), "%d", value);
+			forceMasteryLevelText = tmp;
+		}
+		else {
+			forceMasteryLevelText = forceMasteryLevels[value];
+		}
+
+		UI_DrawProportionalString( 320, y, va( "%s %s", fmStr, CG_GetStripEdString("INGAMETEXT", forceMasteryLevelText) ),
 			UI_CENTER|UI_INFOFONT|UI_DROPSHADOW, colorWhite );
 		y += iPropHeight;
 	}
