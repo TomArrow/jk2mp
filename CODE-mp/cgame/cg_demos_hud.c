@@ -38,8 +38,10 @@ static int hudItemsUsed;
 
 typedef enum {
 	hudPlayTime,
+	//hudServerTime,
 	hudEditName,
 	hudViewName,
+	hudDemoName,
 
 	hudCamCheckPos,
 	hudCamCheckAngles,
@@ -269,6 +271,7 @@ static float *hudGetFloat( hudItem_t *item ) {
 }
 
 static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
+	char tmp[32];
 	buf[0] = 0;
 	if (item->handler >= hudLogBase && item->handler < hudLogBase + LOGLINES) {
 		const char *l = hud.logLines[item->handler - hudLogBase];
@@ -279,7 +282,11 @@ static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
     }
 	switch ( item->handler ) {
 	case hudPlayTime:
-		Com_sprintf( buf, bufSize, "%s", demoTimeString(demo.play.time ));
+		sprintf_s(tmp, sizeof(tmp), "%s", demoTimeString(cg.snap->serverTime));
+		Com_sprintf( buf, bufSize, "%s (%s)", demoTimeString(demo.play.time ), tmp);
+		return;
+	case hudDemoName:
+		Com_sprintf( buf, bufSize, "%s", mme_demoFileName.string);
 		return;
 	case hudEditName:
 		switch (demo.editType) {
@@ -687,9 +694,11 @@ void hudInitTables(void) {
 
 	/* Setup the hudItems */
 	hudAddHandler(   0,  0,  0, "Time:", hudPlayTime );
+	//hudAddHandler(   0,  0,  0, "Servertime:", hudServerTime );
 	hudAddValue(     0,  1,  0, "Speed:", &demo.play.speed );
 	hudAddHandler(   0,  2,  0, "View:", hudViewName );
 	hudAddHandler(   0,  3,  0, "Edit:", hudEditName );
+	hudAddHandler(   0,  22,  0, "Demoname:", hudDemoName );
 
 	for (i = 0; i < LOGLINES; i++) 
 		hudAddHandler(   0,  25+i, 0, 0, hudLogBase+i );

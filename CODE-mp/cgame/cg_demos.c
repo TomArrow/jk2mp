@@ -947,6 +947,28 @@ static void demoSeekTwoCommand_f(void) {
 	}
 }
 
+// seek by server time, not demotime
+static void demoSeekThreeCommand_f(void) {
+	const char *cmd = CG_Argv(1);
+	if (isdigit( cmd[0] )) {
+		//teh's parser for time MM:SS.MSEC, thanks *bow*
+		int i;
+		char *sec, *min;;
+		min = (char *)cmd;
+		for( i=0; min[i]!=':'&& min[i]!=0; i++ );
+		if(cmd[i]==0)
+			sec = 0;
+		else
+		{
+			min[i] = 0;
+			sec = min+i+1;
+		}
+		int quickDelta = cg.snap->serverTime - demo.play.time;
+		demo.play.time = ( atoi( min ) * 60000 + ( sec ? atof( sec ) : 0 ) * 1000 ) - quickDelta;
+		demo.play.fraction = 0;
+	}
+}
+
 static void demoSeekCommand_f(void) {
 	const char *cmd = CG_Argv(1);
 	if (cmd[0] == '+') {
@@ -1063,6 +1085,7 @@ void demoPlaybackInit(void) {
 	trap_AddCommand("speed");
 	trap_AddCommand("seek");
 	trap_AddCommand("demoSeek");
+	trap_AddCommand("demoSeekAbs");
 	trap_AddCommand("find");
 	trap_AddCommand("pause");
 	trap_AddCommand("capture");
@@ -1247,6 +1270,8 @@ qboolean CG_DemosConsoleCommand( void ) {
 		demoSeekCommand_f();
 	} else if (!Q_stricmp(cmd, "demoSeek")) {
 		demoSeekTwoCommand_f();
+	} else if (!Q_stricmp(cmd, "demoSeekAbs")) {
+		demoSeekThreeCommand_f();
 	} else if (!Q_stricmp(cmd, "find")) {
 		demoFindCommand_f();
 	} else if (!Q_stricmp(cmd, "speed")) {
