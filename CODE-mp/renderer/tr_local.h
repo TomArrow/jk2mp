@@ -1478,6 +1478,9 @@ void	R_ImageList_f( void );
 void	R_SkinList_f( void );
 const void *RB_ScreenShotCmd( const void *data );
 
+inline float R_sRGBToLinear(const float n) {
+	return (n > 0.04045f ? (float)pow((n + 0.055) / 1.055, 2.4) : n / 12.92f);
+}
 void	R_InitFogTable( void );
 float	R_FogFactor( float s, float t );
 void	R_InitImages( void );

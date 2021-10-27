@@ -379,7 +379,8 @@ skip_alloc:;
 
 					if ((lastBlock->starttime + lastBlock->duration) != admAbsoluteTime) {
 
-						Com_Printf("Channelmixer: ADM block misalignment. This should never happen.\n");
+						// This actually does happen a lot. investigate another time.
+						//Com_Printf("Channelmixer: ADM block misalignment. This should never happen.\n");
 						lastBlock->duration = admAbsoluteTime- lastBlock->starttime;
 					}
 					else {

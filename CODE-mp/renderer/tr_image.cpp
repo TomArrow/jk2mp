@@ -2177,6 +2177,9 @@ void R_InitFogTable( void ) {
 	}
 }
 
+
+
+
 /*
 ================
 R_FogFactor

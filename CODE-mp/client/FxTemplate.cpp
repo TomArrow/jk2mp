@@ -1,4 +1,5 @@
 #include "client.h"
+#include "../renderer/tr_local.h"
 
 #if !defined(FX_SCHEDULER_H_INC)
 	#include "FxScheduler.h"
@@ -979,9 +980,18 @@ bool CPrimitiveTemplate::ParseRGBStart( const char *val )
 
 	if ( ParseVector( val, min, max ) == true )
 	{
-		mRedStart.SetRange( min[0], max[0] );
-		mGreenStart.SetRange( min[1], max[1] );
-		mBlueStart.SetRange( min[2], max[2] );
+		if (!r_gammaSrgbLightvalues->integer) {
+
+			mRedStart.SetRange(min[0], max[0]);
+			mGreenStart.SetRange(min[1], max[1]);
+			mBlueStart.SetRange(min[2], max[2]);
+		}
+		else {
+
+			mRedStart.SetRange(R_sRGBToLinear(min[0]), R_sRGBToLinear(max[0]));
+			mGreenStart.SetRange(R_sRGBToLinear(min[1]), R_sRGBToLinear(max[1]));
+			mBlueStart.SetRange(R_sRGBToLinear(min[2]), R_sRGBToLinear(max[2]));
+		}
 		return true;
 	}
 
@@ -1004,9 +1014,16 @@ bool CPrimitiveTemplate::ParseRGBEnd( const char *val )
 
 	if ( ParseVector( val, min, max ) == true )
 	{
-		mRedEnd.SetRange( min[0], max[0] );
-		mGreenEnd.SetRange( min[1], max[1] );
-		mBlueEnd.SetRange( min[2], max[2] );
+		if (!r_gammaSrgbLightvalues->integer) {
+			mRedEnd.SetRange(min[0], max[0]);
+			mGreenEnd.SetRange(min[1], max[1]);
+			mBlueEnd.SetRange(min[2], max[2]);
+		}
+		else {
+			mRedEnd.SetRange(R_sRGBToLinear(min[0]), R_sRGBToLinear(max[0]));
+			mGreenEnd.SetRange(R_sRGBToLinear(min[1]), R_sRGBToLinear(max[1]));
+			mBlueEnd.SetRange(R_sRGBToLinear(min[2]), R_sRGBToLinear(max[2]));
+		}
 		return true;
 	}
 

@@ -1559,6 +1559,7 @@ static void CG_RegisterGraphics( void ) {
 	trap_FX_RegisterEffect("blaster/deflect.efx");
 	trap_FX_RegisterEffect("saber/saber_block.efx");
 	trap_FX_RegisterEffect("saber/blood_sparks.efx");
+	trap_FX_RegisterEffect("blood/explosion2.efx");
 	trap_FX_RegisterEffect("blaster/smoke_bolton");
 	cgs.effects.mForceConfustion = trap_FX_RegisterEffect("force/confusion.efx");
 

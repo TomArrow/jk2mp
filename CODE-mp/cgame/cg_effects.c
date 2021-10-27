@@ -1207,13 +1207,19 @@ Generated a bunch of gibs launching out from the bodies location
 #ifdef GIB
 #define	GIB_VELOCITY	250
 #define	GIB_JUMP		250
-#define GIB_BLOODFX "flechette/flesh_impact.efx"
+#define GIB_BLOODFX "blood/explosion2.efx"
+#define GIB_BLOODFX_DIRECTIONAL "blood/explosion2.efx"
 void CG_GibPlayer(vec3_t playerOrigin) {
-	vec3_t	origin, velocity;
+	vec3_t	origin, velocity, normalUp;
 
 	if (!cg_blood.integer) {
 		return;
 	}
+	normalUp[0] = 1;
+	normalUp[1] = 1;
+	normalUp[2] = 1;
+
+	trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), playerOrigin, normalUp);
 
 	VectorCopy(playerOrigin, origin);
 	velocity[0] = crandom() * GIB_VELOCITY;
@@ -1236,62 +1242,71 @@ void CG_GibPlayer(vec3_t playerOrigin) {
 	velocity[1] = crandom() * GIB_VELOCITY;
 	velocity[2] = GIB_JUMP + crandom() * GIB_VELOCITY;
 	CG_LaunchGib(origin, velocity, cgs.media.gibAbdomen);
-	trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
+	VectorNormalize(velocity);
+	//trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
 
 	VectorCopy(playerOrigin, origin);
 	velocity[0] = crandom() * GIB_VELOCITY;
 	velocity[1] = crandom() * GIB_VELOCITY;
 	velocity[2] = GIB_JUMP + crandom() * GIB_VELOCITY;
 	CG_LaunchGib(origin, velocity, cgs.media.gibArm);
-	trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
+	VectorNormalize(velocity);
+	//trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
 
 	VectorCopy(playerOrigin, origin);
 	velocity[0] = crandom() * GIB_VELOCITY;
 	velocity[1] = crandom() * GIB_VELOCITY;
 	velocity[2] = GIB_JUMP + crandom() * GIB_VELOCITY;
 	CG_LaunchGib(origin, velocity, cgs.media.gibChest);
-	trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
+	VectorNormalize(velocity);
+	//trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
 
 	VectorCopy(playerOrigin, origin);
 	velocity[0] = crandom() * GIB_VELOCITY;
 	velocity[1] = crandom() * GIB_VELOCITY;
 	velocity[2] = GIB_JUMP + crandom() * GIB_VELOCITY;
 	CG_LaunchGib(origin, velocity, cgs.media.gibFist);
-	trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
+	VectorNormalize(velocity);
+	//trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
 
 	VectorCopy(playerOrigin, origin);
 	velocity[0] = crandom() * GIB_VELOCITY;
 	velocity[1] = crandom() * GIB_VELOCITY;
 	velocity[2] = GIB_JUMP + crandom() * GIB_VELOCITY;
 	CG_LaunchGib(origin, velocity, cgs.media.gibFoot);
-	trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
+	VectorNormalize(velocity);
+	//trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
 
 	VectorCopy(playerOrigin, origin);
 	velocity[0] = crandom() * GIB_VELOCITY;
 	velocity[1] = crandom() * GIB_VELOCITY;
 	velocity[2] = GIB_JUMP + crandom() * GIB_VELOCITY;
 	CG_LaunchGib(origin, velocity, cgs.media.gibForearm);
-	trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
+	VectorNormalize(velocity);
+	//trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
 
 	VectorCopy(playerOrigin, origin);
 	velocity[0] = crandom() * GIB_VELOCITY;
 	velocity[1] = crandom() * GIB_VELOCITY;
 	velocity[2] = GIB_JUMP + crandom() * GIB_VELOCITY;
 	CG_LaunchGib(origin, velocity, cgs.media.gibIntestine);
-	trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
+	VectorNormalize(velocity);
+	//trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
 
 	VectorCopy(playerOrigin, origin);
 	velocity[0] = crandom() * GIB_VELOCITY;
 	velocity[1] = crandom() * GIB_VELOCITY;
 	velocity[2] = GIB_JUMP + crandom() * GIB_VELOCITY;
 	CG_LaunchGib(origin, velocity, cgs.media.gibLeg);
-	trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
+	VectorNormalize(velocity);
+	//trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
 
 	VectorCopy(playerOrigin, origin);
 	velocity[0] = crandom() * GIB_VELOCITY;
 	velocity[1] = crandom() * GIB_VELOCITY;
 	velocity[2] = GIB_JUMP + crandom() * GIB_VELOCITY;
 	CG_LaunchGib(origin, velocity, cgs.media.gibLeg);
-	trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
+	VectorNormalize(velocity);
+	//trap_FX_PlayEffectID(trap_FX_RegisterEffect(GIB_BLOODFX), origin, velocity);
 }
 #endif
