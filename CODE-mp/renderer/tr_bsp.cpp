@@ -165,6 +165,9 @@ static	void R_LoadLightmaps( lump_t *l, const char *psMapName ) {
 	byte		*buf, *buf_p;
 	int			len;
 	MAC_STATIC byte		image[LIGHTMAP_SIZE*LIGHTMAP_SIZE*4];
+	textureImage_t picWrap;
+	picWrap.bpc = BPC_8BIT;
+	picWrap.ptr = (byte*)image;
 	int			i, j;
 	float maxIntensity = 0;
 	double sumIntensity = 0;
@@ -228,7 +231,7 @@ static	void R_LoadLightmaps( lump_t *l, const char *psMapName ) {
 				image[j*4+3] = 255;
 			}
 		}
-		tr.lightmaps[i] = R_CreateImage( va("*%s/lightmap%d",sMapName,i), image, 
+		tr.lightmaps[i] = R_CreateImage( va("*%s/lightmap%d",sMapName,i), &picWrap, 
 			LIGHTMAP_SIZE, LIGHTMAP_SIZE, qfalse, qfalse, qtrue, GL_CLAMP );
 	}
 

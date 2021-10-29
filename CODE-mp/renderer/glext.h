@@ -337,6 +337,18 @@ extern "C" {
 #define GL_TEXTURE_TOO_LARGE_EXT          0x8065
 #endif
 
+// Add sRGB variables... accidentally added them to the windows files before. DERP
+// TODO this probably needs to be done correctly with some ifndefs and _EXT and whatnot. 
+#define GL_SRGB                           0x8C40
+#define GL_SRGB8                          0x8C41
+#define GL_SRGB8_ALPHA                    0x8C42
+#define GL_SRGB8_ALPHA8                   0x8C43
+#define GL_RGBA32F                        0x8814
+#define GL_RGB32F                         0x8815
+#define GL_RGBA16F                        0x881A
+#define GL_RGB16F                         0x881B
+
+
 #ifndef GL_EXT_texture3D
 #define GL_PACK_SKIP_IMAGES               0x806B
 #define GL_PACK_SKIP_IMAGES_EXT           0x806B

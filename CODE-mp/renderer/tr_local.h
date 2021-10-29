@@ -1463,11 +1463,24 @@ qboolean	R_GetEntityToken( char *buffer, int size );
 
 model_t		*R_AllocModel( void );
 
+enum TextureBitsPerChannel {
+	BPC_8BIT,
+	BPC_16BIT,
+	BPC_32BIT,
+	BPC_32FLOAT
+};
+
+typedef struct {
+	byte* ptr;
+	TextureBitsPerChannel bpc;
+} textureImage_t;
+
 void    	R_Init( void );
-void R_LoadImage( const char *name, byte **pic, int *width, int *height );
+//void		R_LoadImage( const char *name, byte **pic, int *width, int *height );
+void		R_LoadImage( const char *name, textureImage_t *picWrap, int *width, int *height );
 image_t		*R_FindImageFile( const char *name, qboolean mipmap, qboolean allowPicmip, qboolean allowTC, int glWrapClampMode );
 
-image_t		*R_CreateImage( const char *name, const byte *pic, int width, int height, qboolean mipmap
+image_t		*R_CreateImage( const char *name, const textureImage_t* picWrap, int width, int height, qboolean mipmap
 					, qboolean allowPicmip, qboolean allowTC, int wrapClampMode );
 qboolean	R_GetModeInfo( int *width, int *height, float *windowAspect, int mode );
 

@@ -354,7 +354,8 @@ private:
 	vec3_t		mWindTransform;
 
 	int				mWidth, mHeight;
-	unsigned char	*mData;
+	//unsigned char	*mData;
+	textureImage_t mDataWrap;
 
 	const	float	mSize;
 
@@ -371,7 +372,7 @@ public:
 
 			int				GetWidth(void) { return mWidth; }
 			int				GetHeight(void) { return mHeight; }
-			byte			*GetData(void) { return mData; }
+			textureImage_t	GetData(void) { return mDataWrap; }
 			GLfloat			GetTextureCoord(int s, int y) { return mTextureCoords[s][y]; }
 			float			GetAlpha(void) { return mAlpha; }
 			bool			GetRendering(void) { return mRendering; }
@@ -401,15 +402,15 @@ CMistyFog::CMistyFog(int index, CWorldEffect *owner, bool buddy) :
 		mRendering = false;
 
 //		mImage = ((CMistyFog *)owner)->GetImage();
-		mData = ((CMistyFog *)owner)->GetData();
+		mDataWrap = ((CMistyFog *)owner)->GetData();
 		mWidth = ((CMistyFog *)owner)->GetWidth();
 		mHeight = ((CMistyFog *)owner)->GetHeight();
 	}
 	else
 	{
 		Com_sprintf(name, MAX_QPATH, "gfx/world/fog%d", index);
-		R_LoadImage(name, &mData, &mWidth, &mHeight);
-		if (!mData)
+		R_LoadImage(name, &mDataWrap, &mWidth, &mHeight);
+		if (!mDataWrap.ptr)
 		{
 			ri.Error (ERR_DROP, "Could not load %s", name);
 		}
@@ -769,7 +770,8 @@ void CMistyFog2::UpdateTexture(CMistyFog *fog)
 	float			xSize, ySize;
 	float			xStep, yStep;
 	float			xPos, yPos;
-	byte			*data = fog->GetData();
+	textureImage_t  dataWrap = fog->GetData();
+	byte			*data = dataWrap.ptr;
 	int				width = fog->GetWidth();
 	int				height = fog->GetHeight();
 	int				andWidth, andHeight;

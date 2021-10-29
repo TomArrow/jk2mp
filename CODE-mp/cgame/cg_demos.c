@@ -1194,6 +1194,7 @@ void CG_DemoDismembermentEvent( centity_t *cent, vec3_t position ) {
 				dir[2] = dir[2] * (0.8 + random() * 0.4);
 				demoSaberDismember(targetent, dir);
 
+#ifdef GIB
 				// Gib on explosive deaths
 				if (meansOfDeath == MOD_FLECHETTE ||
 					meansOfDeath == MOD_FLECHETTE_ALT_SPLASH ||
@@ -1241,6 +1242,7 @@ void CG_DemoDismembermentEvent( centity_t *cent, vec3_t position ) {
 					cg_entities[targetent->currentState.number].ghoul2weapon = NULL;
 					//trap_G2API_SetSurfaceOnOff(cent->ghoul2, stubCapName, 0);
 				}
+#endif
 					
 			}
 			break;

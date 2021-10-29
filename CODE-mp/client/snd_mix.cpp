@@ -509,7 +509,7 @@ static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int co
 void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *output, short* outputADM, int admTotalChannelCount, mmeADMChannelInfo_t* admChannelInfoArray, long admAbsoluteTime) {
 	
 	
-	bool* isAlreadyInLoops = new bool[s_loopQueueCount] {false};
+	bool* isAlreadyInLoops = new bool[max(s_loopQueueCount,1)] {false}; // The max is if there are zero loops in queue, avoid memory corruption problems stuff
 
 	// For ADM:
 	bool* isOngoing = new bool[loopCount] {false}; // Need this pretty much only for the ADM metadata creation
@@ -526,7 +526,7 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 
 	// Step 1: Decativate loops that arent in the queue anymore:
 	int freeLoopCount = 0;
-	for (int i = 0; i < loopCount;i++) {
+	for (int i = 0; i < loopCount;i++) { 
 		
 		// This one has an empty parent, no need to search for a match
 		if (!mixLoops[i].parent) {

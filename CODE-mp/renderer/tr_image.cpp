@@ -14,6 +14,8 @@
 
 #include "tr_local.h"
 #include "glext.h"
+#include <limits>
+#include <algorithm>
 
 #pragma warning (push, 3)	//go back down to 3 for the stl include
 #include <map>
@@ -317,40 +319,75 @@ void R_ImageList_f( void ) {
 //=======================================================================
 
 
+
+
 /*
 ================
 R_LightScaleTexture
 
 Scale up the pixel values in a texture to increase the
 lighting range
+
+templatized now. Not very efficient for non-bytes bc it can't use the gamma table.
+But oh well.
 ================
 */
-void R_LightScaleTexture (unsigned *in, int inwidth, int inheight, qboolean only_gamma )
+template<class T >
+void R_LightScaleTexture (T *inNative, int inwidth, int inheight, qboolean only_gamma )
 {
+	//Important: in variable must be the all pixel type to preserve functionality
+	typedef T pixelType_t[4];
+	pixelType_t* in = (pixelType_t*)inNative;
+
+	// Just quickly save max possible value of this into variable
+#pragma push_macro("max") // I HATE HATE HATE HATE this. Why did they have to do a max macro...
+#undef max
+	constexpr float maxValue = std::numeric_limits<T>::max();
+#pragma pop_macro("max")
+
+	T overBrightBitsMultiplier = pow(2,tr.overbrightBits);
+
 	if ( only_gamma )
 	{
 		if ( !glConfig.deviceSupportsGamma )
 		{
 			int		i, c;
-			byte	*p;
+			T	*p;
 
-			p = (byte *)in;
+			p = (T *)in;
 
 			c = inwidth*inheight;
 			for (i=0 ; i<c ; i++, p+=4)
 			{
-				p[0] = s_gammatable[p[0]];
-				p[1] = s_gammatable[p[1]];
-				p[2] = s_gammatable[p[2]];
+				/// ... uh oh. not good for float! honestly we need to do away with this stuff at some point...
+				if constexpr (std::is_same<T,byte>::value) {
+					p[0] = s_gammatable[p[0]];
+					p[1] = s_gammatable[p[1]];
+					p[2] = s_gammatable[p[2]];
+				}
+				else if constexpr(std::is_floating_point<T>::value) {
+					// just straight up do the math...
+					// Someday we're just gonna straight up get rid of all this nonsense. We have a float FBO for god's sake!
+					// And we're using sRGB. Scaling that around would result in ridiculousness...
+					p[0] = overBrightBitsMultiplier* pow(p[0], 1.0f / r_gamma->value);
+					p[1] = overBrightBitsMultiplier* pow(p[1], 1.0f / r_gamma->value);
+					p[2] = overBrightBitsMultiplier* pow(p[2], 1.0f / r_gamma->value);
+				}
+				else {
+					// Integer type
+					p[0] = std::clamp<T>(overBrightBitsMultiplier * maxValue* pow(p[0]/ maxValue, 1.0f / r_gamma->value),0,maxValue);
+					p[1] = std::clamp<T>(overBrightBitsMultiplier * maxValue*pow(p[1]/ maxValue, 1.0f / r_gamma->value), 0, maxValue);
+					p[2] = std::clamp<T>(overBrightBitsMultiplier * maxValue*pow(p[2]/ maxValue, 1.0f / r_gamma->value), 0, maxValue);
+				}
 			}
 		}
 	}
 	else
 	{
 		int		i, c;
-		byte	*p;
+		T	*p;
 
-		p = (byte *)in;
+		p = (T *)in;
 
 		c = inwidth*inheight;
 
@@ -358,18 +395,50 @@ void R_LightScaleTexture (unsigned *in, int inwidth, int inheight, qboolean only
 		{
 			for (i=0 ; i<c ; i++, p+=4)
 			{
-				p[0] = s_intensitytable[p[0]];
-				p[1] = s_intensitytable[p[1]];
-				p[2] = s_intensitytable[p[2]];
+				if constexpr (std::is_same<T, byte>::value) {
+					p[0] = s_intensitytable[p[0]];
+					p[1] = s_intensitytable[p[1]];
+					p[2] = s_intensitytable[p[2]];
+				}
+				else if constexpr (std::is_floating_point<T>::value) {
+					// just straight up do the math...
+					// Someday we're just gonna straight up get rid of all this nonsense. We have a float FBO for god's sake!
+					// And we're using sRGB. Scaling that around would result in ridiculousness...
+					p[0] = p[0]*r_intensity->value;
+					p[1] = p[1]*r_intensity->value;
+					p[2] = p[2]*r_intensity->value;
+				}
+				else {
+					// Integer type
+					p[0] = std::clamp<T>(p[0] * r_intensity->value, 0, maxValue);
+					p[1] = std::clamp<T>(p[1] * r_intensity->value, 0, maxValue);
+					p[2] = std::clamp<T>(p[2] * r_intensity->value, 0, maxValue);
+				}
 			}
 		}
 		else
 		{
 			for (i=0 ; i<c ; i++, p+=4)
 			{
-				p[0] = s_gammatable[s_intensitytable[p[0]]];
-				p[1] = s_gammatable[s_intensitytable[p[1]]];
-				p[2] = s_gammatable[s_intensitytable[p[2]]];
+				if constexpr (std::is_same<T, byte>::value) {
+					p[0] = s_gammatable[s_intensitytable[p[0]]];
+					p[1] = s_gammatable[s_intensitytable[p[1]]];
+					p[2] = s_gammatable[s_intensitytable[p[2]]];
+				}
+				else if constexpr (std::is_floating_point<T>::value) {
+					// just straight up do the math...
+					// Someday we're just gonna straight up get rid of all this nonsense. We have a float FBO for god's sake!
+					// And we're using sRGB. Scaling that around would result in ridiculousness...
+					p[0] = overBrightBitsMultiplier * pow(p[0] * r_intensity->value, 1.0f / r_gamma->value);
+					p[1] = overBrightBitsMultiplier * pow(p[1] * r_intensity->value, 1.0f / r_gamma->value);
+					p[2] = overBrightBitsMultiplier * pow(p[2] * r_intensity->value, 1.0f / r_gamma->value);
+				}
+				else {
+					// Integer type
+					p[0] = std::clamp<T>(overBrightBitsMultiplier * maxValue * pow(p[0] / maxValue * r_intensity->value, 1.0f / r_gamma->value), 0, maxValue);
+					p[1] = std::clamp<T>(overBrightBitsMultiplier * maxValue * pow(p[1] / maxValue * r_intensity->value, 1.0f / r_gamma->value), 0, maxValue);
+					p[2] = std::clamp<T>(overBrightBitsMultiplier * maxValue * pow(p[2] / maxValue * r_intensity->value, 1.0f / r_gamma->value), 0, maxValue);
+				}
 			}
 		}
 	}
@@ -382,53 +451,58 @@ R_MipMap2
 
 Operates in place, quartering the size of the texture
 Proper linear filter
+
+Templatized now. A bit hacky but ought to work?
 ================
 */
-static void R_MipMap2( unsigned *in, int inWidth, int inHeight ) {
+template<class T>
+static void R_MipMap2( T *in, int inWidth, int inHeight ) {
 	int			i, j, k;
-	byte		*outpix;
+	T		*outpix;
 	int			inWidthMask, inHeightMask;
 	int			total;
 	int			outWidth, outHeight;
-	unsigned	*temp;
+
+	typedef T onePixel_t[4]; // lol. bc we wanna seek by pixels, not by individual channels.
+	onePixel_t* temp;
 
 	outWidth = inWidth >> 1;
 	outHeight = inHeight >> 1;
-	temp = (unsigned int *)ri.Hunk_AllocateTempMemory( outWidth * outHeight * 4 );
+	temp = (onePixel_t*)ri.Hunk_AllocateTempMemory( outWidth * outHeight * 4 *sizeof(T) );
 
 	inWidthMask = inWidth - 1;
 	inHeightMask = inHeight - 1;
 
 	for ( i = 0 ; i < outHeight ; i++ ) {
 		for ( j = 0 ; j < outWidth ; j++ ) {
-			outpix = (byte *) ( temp + i * outWidth + j );
+			outpix = (T *) ( temp + i * outWidth + j );
 			for ( k = 0 ; k < 4 ; k++ ) {
 				total = 
-					1 * ((byte *)&in[ ((i*2-1)&inHeightMask)*inWidth + ((j*2-1)&inWidthMask) ])[k] +
-					2 * ((byte *)&in[ ((i*2-1)&inHeightMask)*inWidth + ((j*2)&inWidthMask) ])[k] +
-					2 * ((byte *)&in[ ((i*2-1)&inHeightMask)*inWidth + ((j*2+1)&inWidthMask) ])[k] +
-					1 * ((byte *)&in[ ((i*2-1)&inHeightMask)*inWidth + ((j*2+2)&inWidthMask) ])[k] +
+					1 * ((T *)&in[ ((i*2-1)&inHeightMask)*inWidth + ((j*2-1)&inWidthMask) ])[k] +
+					2 * ((T *)&in[ ((i*2-1)&inHeightMask)*inWidth + ((j*2)&inWidthMask) ])[k] +
+					2 * ((T *)&in[ ((i*2-1)&inHeightMask)*inWidth + ((j*2+1)&inWidthMask) ])[k] +
+					1 * ((T *)&in[ ((i*2-1)&inHeightMask)*inWidth + ((j*2+2)&inWidthMask) ])[k] +
 
-					2 * ((byte *)&in[ ((i*2)&inHeightMask)*inWidth + ((j*2-1)&inWidthMask) ])[k] +
-					4 * ((byte *)&in[ ((i*2)&inHeightMask)*inWidth + ((j*2)&inWidthMask) ])[k] +
-					4 * ((byte *)&in[ ((i*2)&inHeightMask)*inWidth + ((j*2+1)&inWidthMask) ])[k] +
-					2 * ((byte *)&in[ ((i*2)&inHeightMask)*inWidth + ((j*2+2)&inWidthMask) ])[k] +
+					2 * ((T *)&in[ ((i*2)&inHeightMask)*inWidth + ((j*2-1)&inWidthMask) ])[k] +
+					4 * ((T *)&in[ ((i*2)&inHeightMask)*inWidth + ((j*2)&inWidthMask) ])[k] +
+					4 * ((T *)&in[ ((i*2)&inHeightMask)*inWidth + ((j*2+1)&inWidthMask) ])[k] +
+					2 * ((T *)&in[ ((i*2)&inHeightMask)*inWidth + ((j*2+2)&inWidthMask) ])[k] +
 
-					2 * ((byte *)&in[ ((i*2+1)&inHeightMask)*inWidth + ((j*2-1)&inWidthMask) ])[k] +
-					4 * ((byte *)&in[ ((i*2+1)&inHeightMask)*inWidth + ((j*2)&inWidthMask) ])[k] +
-					4 * ((byte *)&in[ ((i*2+1)&inHeightMask)*inWidth + ((j*2+1)&inWidthMask) ])[k] +
-					2 * ((byte *)&in[ ((i*2+1)&inHeightMask)*inWidth + ((j*2+2)&inWidthMask) ])[k] +
+					2 * ((T *)&in[ ((i*2+1)&inHeightMask)*inWidth + ((j*2-1)&inWidthMask) ])[k] +
+					4 * ((T *)&in[ ((i*2+1)&inHeightMask)*inWidth + ((j*2)&inWidthMask) ])[k] +
+					4 * ((T *)&in[ ((i*2+1)&inHeightMask)*inWidth + ((j*2+1)&inWidthMask) ])[k] +
+					2 * ((T *)&in[ ((i*2+1)&inHeightMask)*inWidth + ((j*2+2)&inWidthMask) ])[k] +
 
-					1 * ((byte *)&in[ ((i*2+2)&inHeightMask)*inWidth + ((j*2-1)&inWidthMask) ])[k] +
-					2 * ((byte *)&in[ ((i*2+2)&inHeightMask)*inWidth + ((j*2)&inWidthMask) ])[k] +
-					2 * ((byte *)&in[ ((i*2+2)&inHeightMask)*inWidth + ((j*2+1)&inWidthMask) ])[k] +
-					1 * ((byte *)&in[ ((i*2+2)&inHeightMask)*inWidth + ((j*2+2)&inWidthMask) ])[k];
+					1 * ((T *)&in[ ((i*2+2)&inHeightMask)*inWidth + ((j*2-1)&inWidthMask) ])[k] +
+					2 * ((T *)&in[ ((i*2+2)&inHeightMask)*inWidth + ((j*2)&inWidthMask) ])[k] +
+					2 * ((T *)&in[ ((i*2+2)&inHeightMask)*inWidth + ((j*2+1)&inWidthMask) ])[k] +
+					1 * ((T *)&in[ ((i*2+2)&inHeightMask)*inWidth + ((j*2+2)&inWidthMask) ])[k];
 				outpix[k] = total / 36;
 			}
 		}
 	}
 
-	Com_Memcpy( in, temp, outWidth * outHeight * 4 );
+	Com_Memcpy( in, temp, outWidth * outHeight * 4 *sizeof(T) );
 	ri.Hunk_FreeTempMemory( temp );
 }
 
@@ -437,11 +511,15 @@ static void R_MipMap2( unsigned *in, int inWidth, int inHeight ) {
 R_MipMap
 
 Operates in place, quartering the size of the texture
+
+Turned into template so it can for example to float mipmapping or 16 bit mipmapping or whatever.
+Makes a slight distinction between floating point and integer. (can't bitshift float)
 ================
 */
-static void R_MipMap (byte *in, int width, int height) {
+template<class T>
+static void R_MipMap (T *in, int width, int height) {
 	int		i, j;
-	byte	*out;
+	T	*out;
 	int		row;
 
 	if ( !r_simpleMipMaps->integer ) {
@@ -461,20 +539,35 @@ static void R_MipMap (byte *in, int width, int height) {
 	if ( width == 0 || height == 0 ) {
 		width += height;	// get largest
 		for (i=0 ; i<width ; i++, out+=4, in+=8 ) {
-			out[0] = ( in[0] + in[4] )>>1;
-			out[1] = ( in[1] + in[5] )>>1;
-			out[2] = ( in[2] + in[6] )>>1;
-			out[3] = ( in[3] + in[7] )>>1;
+			if constexpr (std::is_floating_point<T>::value) {
+				out[0] = (in[0] + in[4]) /2.0;
+				out[1] = (in[1] + in[5]) /2.0;
+				out[2] = (in[2] + in[6]) /2.0;
+				out[3] = (in[3] + in[7]) /2.0;
+			}
+			else {
+				out[0] = (in[0] + in[4]) >> 1;
+				out[1] = (in[1] + in[5]) >> 1;
+				out[2] = (in[2] + in[6]) >> 1;
+				out[3] = (in[3] + in[7]) >> 1;
+			}
 		}
 		return;
 	}
 
 	for (i=0 ; i<height ; i++, in+=row) {
 		for (j=0 ; j<width ; j++, out+=4, in+=8) {
-			out[0] = (in[0] + in[4] + in[row+0] + in[row+4])>>2;
-			out[1] = (in[1] + in[5] + in[row+1] + in[row+5])>>2;
-			out[2] = (in[2] + in[6] + in[row+2] + in[row+6])>>2;
-			out[3] = (in[3] + in[7] + in[row+3] + in[row+7])>>2;
+			if constexpr (std::is_floating_point<T>::value) {
+				out[0] = (in[0] + in[4] + in[row + 0] + in[row + 4]) / 4.0;
+				out[1] = (in[1] + in[5] + in[row + 1] + in[row + 5]) / 4.0;
+				out[2] = (in[2] + in[6] + in[row + 2] + in[row + 6]) / 4.0;
+				out[3] = (in[3] + in[7] + in[row + 3] + in[row + 7]) / 4.0;
+			} else {
+				out[0] = (in[0] + in[4] + in[row + 0] + in[row + 4]) >> 2;
+				out[1] = (in[1] + in[5] + in[row + 1] + in[row + 5]) >> 2;
+				out[2] = (in[2] + in[6] + in[row + 2] + in[row + 6]) >> 2;
+				out[3] = (in[3] + in[7] + in[row + 3] + in[row + 7]) >> 2;
+			}
 		}
 	}
 }
@@ -485,23 +578,76 @@ static void R_MipMap (byte *in, int width, int height) {
 R_BlendOverTexture
 
 Apply a color blend over a set of pixels
+
+Templatized.
 ==================
 */
-static void R_BlendOverTexture( byte *data, int pixelCount, byte blend[4] ) {
+template<class T>
+static void R_BlendOverTexture( T *data, int pixelCount, byte blend[4] ) {
 	int		i;
-	int		inverseAlpha;
-	int		premult[3];
+	/*
+	if constexpr (std::is_same<T,byte>::value) {
 
-	inverseAlpha = 255 - blend[3];
-	premult[0] = blend[0] * blend[3];
-	premult[1] = blend[1] * blend[3];
-	premult[2] = blend[2] * blend[3];
+		int		inverseAlpha;
+		int		premult[3];
 
-	for ( i = 0 ; i < pixelCount ; i++, data+=4 ) {
-		data[0] = ( data[0] * inverseAlpha + premult[0] ) >> 9;
-		data[1] = ( data[1] * inverseAlpha + premult[1] ) >> 9;
-		data[2] = ( data[2] * inverseAlpha + premult[2] ) >> 9;
+		inverseAlpha = 255 - blend[3];
+		premult[0] = blend[0] * blend[3];
+		premult[1] = blend[1] * blend[3];
+		premult[2] = blend[2] * blend[3];
+
+		for (i = 0; i < pixelCount; i++, data += 4) {
+			data[0] = (data[0] * inverseAlpha + premult[0]) >> 9;
+			data[1] = (data[1] * inverseAlpha + premult[1]) >> 9;
+			data[2] = (data[2] * inverseAlpha + premult[2]) >> 9;
+		}
 	}
+	else {*/
+
+
+		if constexpr (std::is_floating_point<T>::value) {
+
+			T blendScaled[4];
+			blendScaled[0] = blend[1] / 255.0;
+			blendScaled[1] = blend[2] / 255.0;
+			blendScaled[2] = blend[3] / 255.0;
+			blendScaled[3] = blend[4] / 255.0;
+
+			T inverseAlpha = 1.0 - blendScaled[3];
+			T premult[3];
+			premult[0] = blendScaled[0] * blendScaled[3];
+			premult[1] = blendScaled[1] * blendScaled[3];
+			premult[2] = blendScaled[2] * blendScaled[3];
+
+			for (i = 0; i < pixelCount; i++, data += 4) {
+				data[0] = (data[0] * inverseAlpha + premult[0])/2.0; // Not 100% sure this is correct...
+				data[1] = (data[1] * inverseAlpha + premult[1])/2.0;
+				data[2] = (data[2] * inverseAlpha + premult[2])/2.0;
+			}
+		}
+		else {
+			// Integer type
+			// Should end up being the old code basically if sizeof(T) == 1
+
+			constexpr int shiftPremult = 8 * (sizeof(T) - 1);
+			typedef std::conditional<sizeof(T) <= 2, int, int64_t>::type premultInt_t; // We need sizeof(T)+1 bytes here. because it's T multiplied by 255
+
+			int				inverseAlpha;
+			premultInt_t	premult[3];
+
+			inverseAlpha = 255 - blend[3];
+			premult[0] = ((premultInt_t) blend[3] << shiftPremult) * blend[0];
+			premult[1] = ((premultInt_t) blend[3] << shiftPremult) * blend[1];
+			premult[2] = ((premultInt_t) blend[3] << shiftPremult) * blend[2];
+
+			for (i = 0; i < pixelCount; i++, data += 4) {
+				data[0] = (data[0] * inverseAlpha + premult[0]) >> 9; // Stays at 9. 8 for 255 factor. 1 for averaging both values.
+				data[1] = (data[1] * inverseAlpha + premult[1]) >> 9;
+				data[2] = (data[2] * inverseAlpha + premult[2]) >> 9;
+			}
+		}
+	//}
+	
 }
 
 byte	mipBlendColors[16][4] = {
@@ -584,28 +730,49 @@ Upload32
 ===============
 */
 extern qboolean charSet;
-static void Upload32( unsigned *data, 
+//static void Upload32( unsigned *data, 
+template<class T>
+static void Upload32( T *picData, 
 						 int img_width, int img_height, 
 						 qboolean mipmap, 
 						 qboolean picmip, 
 						 qboolean isLightmap,
 						 qboolean allowTC,
 						 int *pformat, 
-						 int *pUploadWidth, int *pUploadHeight )
+						 int *pUploadWidth, int *pUploadHeight,TextureBitsPerChannel bpc )
 {
 	int			samples;
 	int			i, c;
-	byte		*scan;
+	T			*scan;
 	float		rMax = 0, gMax = 0, bMax = 0;
 	int			width = img_width;
 	int			height = img_height; 
+
+
+	int sourceDataFormat = GL_UNSIGNED_BYTE;
+	switch (bpc) {
+	case BPC_32FLOAT:
+		sourceDataFormat = GL_FLOAT;
+		break;
+	case BPC_32BIT:
+		sourceDataFormat = GL_UNSIGNED_INT;
+		break;
+	case BPC_16BIT:
+		sourceDataFormat = GL_UNSIGNED_SHORT;
+		break;
+	case BPC_8BIT:
+	default:
+		sourceDataFormat = GL_UNSIGNED_BYTE;
+		break;
+	}
 
 	//
 	// perform optional picmip operation
 	//
 	if ( picmip ) {
 		for(i = 0; i < r_picmip->integer; i++) {
-			R_MipMap( (byte *)data, width, height );
+
+			R_MipMap(picData, width, height);
 			width >>= 1;
 			height >>= 1;
 			if (width < 1) {
@@ -623,7 +790,8 @@ static void Upload32( unsigned *data,
 	// deal with a half mip resampling
 	//
 	while ( width > glConfig.maxTextureSize	|| height > glConfig.maxTextureSize ) {
-		R_MipMap( (byte *)data, width, height );
+		// Call templatized mipmap.
+		R_MipMap(picData, width, height);
 		width >>= 1;
 		height >>= 1;
 	}
@@ -633,7 +801,7 @@ static void Upload32( unsigned *data,
 	// and verify if the alpha channel is being used or not
 	//
 	c = width*height;
-	scan = ((byte *)data);
+	scan = ((T *)picData);
 	samples = 3;
 	for ( i = 0; i < c; i++ )
 	{
@@ -649,21 +817,36 @@ static void Upload32( unsigned *data,
 		{
 			bMax = scan[i*4+2];
 		}
-		if ( scan[i*4 + 3] != 255 ) 
-		{
-			samples = 4;
-			break;
+		if constexpr (std::is_floating_point<T>::value) {
+			if (scan[i * 4 + 3] != 1.0)
+			{
+				samples = 4;
+				break;
+			}
 		}
+		else {
+#pragma push_macro("max") // I HATE HATE HATE HATE this. Why did they have to do a max macro...
+#undef max
+			if (scan[i * 4 + 3] != std::numeric_limits<T>::max())
+			{
+				samples = 4;
+				break;
+			}
+#pragma pop_macro("max")
+		}
+		
 	}
+
+	bool isByte = std::is_same<T, byte>::value; // I don't think we should use texture compression for anything but byte
 
 	// select proper internal format
 	if ( samples == 3 )
 	{
-		if ( glConfig.textureCompression == TC_S3TC && allowTC )
+		if ( glConfig.textureCompression == TC_S3TC && allowTC && isByte)
 		{
 			*pformat = GL_RGB4_S3TC;
 		}
-		else if ( glConfig.textureCompression == TC_S3TC_DXT && allowTC )
+		else if ( glConfig.textureCompression == TC_S3TC_DXT && allowTC && isByte)
 		{	// Compress purely color - no alpha
 			if ( r_texturebits->integer == 16 ) {
 				*pformat = GL_COMPRESSED_RGB_S3TC_DXT1_EXT;	//this format cuts to 16 bit
@@ -672,47 +855,68 @@ static void Upload32( unsigned *data,
 				*pformat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 			}
 		}
-		else if ( isLightmap && r_texturebitslm->integer > 0 )
+		else if ( isLightmap && r_texturebitslm->integer > 0)
 		{
 			// Allow different bit depth when we are a lightmap
-			if ( r_texturebitslm->integer == 16 )
+			if ( r_texturebitslm->integer == 16 && isByte)
 			{
 				*pformat = GL_RGB5;
 			}
-			else if ( r_texturebitslm->integer == 32 )
+			else if ( r_texturebitslm->integer == 32 && isByte)
 			{
 				*pformat = GL_RGB8;
 			}
+			else if (bpc == BPC_32FLOAT) //floating point lightmap?  doubt its even possible but whatever.
+			{
+				*pformat = GL_RGB16F;
+			}
 		}
-		else if ( r_texturebits->integer == 16 )
+		else if ( r_texturebits->integer == 16 && isByte)
 		{
 			*pformat = GL_RGB5;
 		}
-		else if ( r_texturebits->integer == 32 )
+		else if ( r_texturebits->integer == 32 && isByte)
 		{
 			//*pformat = GL_RGB8;
 			*pformat = GL_SRGB8;
 		}
-		else
+		else if (bpc == BPC_32FLOAT) 
 		{
+			// TODO For legacy gamma mode, allow 16 bit textures too.
+			// Cant for the srgb stuff because opengl doesnt offer a 16 bit srgb internalformat... sadders.
+
+			// 32 bit float is already linear so no need to worry about sRGB
+			// Internally we will use 16 bit float to save memory. More isn't necessary anyway for a texture...
+			*pformat = GL_RGB16F;
+		}
+		else {
 			//*pformat = 3;
 			*pformat = GL_SRGB8;
 		}
 	}
 	else if ( samples == 4 )
 	{
-		if ( glConfig.textureCompression == TC_S3TC_DXT && allowTC)
+		if ( glConfig.textureCompression == TC_S3TC_DXT && allowTC && isByte)
 		{	// Compress both alpha and color
 			*pformat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 		}
-		else if ( r_texturebits->integer == 16 )
+		else if ( r_texturebits->integer == 16 && isByte)
 		{
 			*pformat = GL_RGBA4;
 		}
-		else if ( r_texturebits->integer == 32 )
+		else if ( r_texturebits->integer == 32 && isByte)
 		{
 			//*pformat = GL_RGBA8;
 			*pformat = GL_SRGB8_ALPHA8;
+		}
+		else if (bpc == BPC_32FLOAT)
+		{
+			// TODO For legacy gamma mode, allow 16 bit textures too.
+			// Cant for the srgb stuff because opengl doesnt offer a 16 bit srgb internalformat... sadders.
+
+			// 32 bit float is already linear so no need to worry about sRGB
+			// Internally we will use 16 bit float to save memory. More isn't necessary anyway for a texture...
+			*pformat = GL_RGBA16F;
 		}
 		else
 		{
@@ -727,13 +931,13 @@ static void Upload32( unsigned *data,
 	// copy or resample data as appropriate for first MIP level
 	if (!mipmap)
 	{
-		qglTexImage2D (GL_TEXTURE_2D, 0, *pformat, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		qglTexImage2D (GL_TEXTURE_2D, 0, *pformat, width, height, 0, GL_RGBA, sourceDataFormat, picData);
 		goto done;
 	}
 
-	R_LightScaleTexture (data, width, height, (qboolean)!mipmap );
+	R_LightScaleTexture (picData, width, height, (qboolean)!mipmap );
 
-	qglTexImage2D (GL_TEXTURE_2D, 0, *pformat, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
+	qglTexImage2D (GL_TEXTURE_2D, 0, *pformat, width, height, 0, GL_RGBA, sourceDataFormat, picData );
 
 	if (mipmap)
 	{
@@ -742,7 +946,7 @@ static void Upload32( unsigned *data,
 		miplevel = 0;
 		while (width > 1 || height > 1)
 		{
-			R_MipMap( (byte *)data, width, height );
+			R_MipMap( picData, width, height );
 			width >>= 1;
 			height >>= 1;
 			if (width < 1)
@@ -753,10 +957,10 @@ static void Upload32( unsigned *data,
 
 			if ( r_colorMipLevels->integer ) 
 			{
-				R_BlendOverTexture( (byte *)data, width * height, mipBlendColors[miplevel] );
+				R_BlendOverTexture( picData, width * height, mipBlendColors[miplevel] );
 			}
 
-			qglTexImage2D (GL_TEXTURE_2D, miplevel, *pformat, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
+			qglTexImage2D (GL_TEXTURE_2D, miplevel, *pformat, width, height, 0, GL_RGBA, sourceDataFormat, picData );
 		}
 	}
 done:
@@ -988,7 +1192,7 @@ R_CreateImage
 This is the only way any image_t are created
 ================
 */
-image_t *R_CreateImage( const char *name, const byte *pic, int width, int height, 
+image_t *R_CreateImage( const char *name, const textureImage_t *picWrap, int width, int height, 
 					   qboolean mipmap, qboolean allowPicmip, qboolean allowTC, int glWrapClampMode ) {
 	image_t		*image;
 	qboolean	isLightmap = qfalse;
@@ -1050,14 +1254,51 @@ image_t *R_CreateImage( const char *name, const byte *pic, int width, int height
 
 	GL_Bind(image);
 
-	Upload32( (unsigned *)pic, image->width, image->height, 
-								image->mipmap,
-								allowPicmip,
-								isLightmap,
-								allowTC,
-								&image->internalFormat,
-								&image->uploadWidth,
-								&image->uploadHeight );
+	// Call templatized mipmap.
+	switch (picWrap->bpc) {
+	case BPC_32FLOAT:
+		Upload32((float*)picWrap->ptr, image->width, image->height,
+			image->mipmap,
+			allowPicmip,
+			isLightmap,
+			allowTC,
+			&image->internalFormat,
+			&image->uploadWidth,
+			&image->uploadHeight,picWrap->bpc);
+		break;
+	case BPC_32BIT:
+		Upload32((unsigned int*)picWrap->ptr, image->width, image->height,
+			image->mipmap,
+			allowPicmip,
+			isLightmap,
+			allowTC,
+			&image->internalFormat,
+			&image->uploadWidth,
+			&image->uploadHeight, picWrap->bpc);
+		break;
+	case BPC_16BIT:
+		Upload32((unsigned short*)picWrap->ptr, image->width, image->height,
+			image->mipmap,
+			allowPicmip,
+			isLightmap,
+			allowTC,
+			&image->internalFormat,
+			&image->uploadWidth,
+			&image->uploadHeight, picWrap->bpc);
+		break;
+	case BPC_8BIT:
+	default:
+		Upload32((byte*)picWrap->ptr, image->width, image->height,
+			image->mipmap,
+			allowPicmip,
+			isLightmap,
+			allowTC,
+			&image->internalFormat,
+			&image->uploadWidth,
+			&image->uploadHeight, picWrap->bpc); // This is the classical approach.
+		break;
+
+	}
 
 	qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrapClampMode );
 	qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glWrapClampMode );
@@ -2029,32 +2270,35 @@ Loads any of the supported image types into a cannonical
 32 bit format.
 =================
 */
-void R_LoadImage( const char *shortname, byte **pic, int *width, int *height ) {
+void R_LoadImage( const char *shortname, textureImage_t* picWrap, int *width, int *height ) {
 	int		bytedepth;
 	char	name[MAX_QPATH];
 
-	*pic = NULL;
+	picWrap->ptr = NULL;
 	*width = 0;
 	*height = 0;
 
 	COM_StripExtension(shortname,name);
 	COM_DefaultExtension(name, sizeof(name), ".jpg");
-	LoadJPG( name, pic, width, height );
-	if (*pic) {
+	LoadJPG( name, &picWrap->ptr, width, height );
+	if (picWrap->ptr) {
+		picWrap->bpc = BPC_8BIT;
 		return;
 	}
 
 	COM_StripExtension(shortname,name);
 	COM_DefaultExtension(name, sizeof(name), ".png");	
-	LoadPNG32( name, pic, width, height, &bytedepth ); 			// try png first
-	if (*pic){
+	LoadPNG32( name, &picWrap->ptr, width, height, &bytedepth ); 			// try png first
+	if (picWrap->ptr){
+		picWrap->bpc = BPC_8BIT;
 		return;
 	}
 
 	COM_StripExtension(shortname,name);
 	COM_DefaultExtension(name, sizeof(name), ".tga");
-	LoadTGA( name, pic, width, height );            // try tga first
-	if (*pic){
+	LoadTGA( name, &picWrap->ptr, width, height );            // try tga first
+	if (picWrap->ptr){
+		picWrap->bpc = BPC_8BIT;
 		return;
 	}
 }
@@ -2071,7 +2315,8 @@ Returns NULL if it fails, not a default image.
 image_t	*R_FindImageFile( const char *name, qboolean mipmap, qboolean allowPicmip, qboolean allowTC, int glWrapClampMode ) {
 	image_t	*image;
 	int		width, height;
-	byte	*pic;
+	//byte	*pic;
+	textureImage_t	picWrap;
 
 	if (!name 
 		|| com_dedicated->integer	// stop ghoul2 horribleness as regards image loading from server
@@ -2095,8 +2340,8 @@ image_t	*R_FindImageFile( const char *name, qboolean mipmap, qboolean allowPicmi
 	//
 	// load the pic from disk
 	//
-	R_LoadImage( name, &pic, &width, &height );
-	if ( pic == NULL ) {                                    // if we dont get a successful load
+	R_LoadImage( name, &picWrap, &width, &height );
+	if ( picWrap.ptr == NULL ) {                                    // if we dont get a successful load
       return NULL;                                        // bail
 	}
 
@@ -2109,8 +2354,8 @@ image_t	*R_FindImageFile( const char *name, qboolean mipmap, qboolean allowPicmi
 		return NULL;
 	}
 
-	image = R_CreateImage( ( char * ) name, pic, width, height, mipmap, allowPicmip, allowTC, glWrapClampMode );
-	ri.Free( pic );
+	image = R_CreateImage( ( char * ) name, &picWrap, width, height, mipmap, allowPicmip, allowTC, glWrapClampMode );
+	ri.Free( picWrap.ptr );
 	return image;
 }
 
@@ -2123,12 +2368,13 @@ R_CreateDlightImage
 #define	DLIGHT_SIZE	16
 static void R_CreateDlightImage( void ) {
 	int		width, height;
-	byte	*pic;
+	//byte	*pic;
+	textureImage_t picWrap;
 
-	R_LoadImage("gfx/2d/dlight", &pic, &width, &height);
-	if (pic) {                                    
-		tr.dlightImage = R_CreateImage("*dlight", pic, width, height, qfalse, qfalse, qfalse, GL_CLAMP );
-		Z_Free(pic);
+	R_LoadImage("gfx/2d/dlight", &picWrap, &width, &height);
+	if (picWrap.ptr) {                                    
+		tr.dlightImage = R_CreateImage("*dlight", &picWrap, width, height, qfalse, qfalse, qfalse, GL_CLAMP );
+		Z_Free(picWrap.ptr);
 	} else { // if we dont get a successful load
 		int		x,y;
 		byte	data[DLIGHT_SIZE][DLIGHT_SIZE][4];
@@ -2153,7 +2399,9 @@ static void R_CreateDlightImage( void ) {
 				data[y][x][3] = 255;			
 			}
 		}
-		tr.dlightImage = R_CreateImage("*dlight", (byte *)data, DLIGHT_SIZE, DLIGHT_SIZE, qfalse, qfalse, qfalse, GL_CLAMP );
+		picWrap.ptr = (byte*)data;
+		picWrap.bpc = BPC_8BIT;
+		tr.dlightImage = R_CreateImage("*dlight", &picWrap, DLIGHT_SIZE, DLIGHT_SIZE, qfalse, qfalse, qfalse, GL_CLAMP );
 	}
 }
 
@@ -2224,12 +2472,14 @@ R_CreateFogImage
 #define	FOG_T	32
 static void R_CreateFogImage( void ) {
 	int		x,y;
-	byte	*data;
+	//byte	*data;
+	textureImage_t picWrap;
+	picWrap.bpc = BPC_8BIT;
 	float	g;
 	float	d;
 	float	borderColor[4];
 
-	data = (unsigned char *)ri.Hunk_AllocateTempMemory( FOG_S * FOG_T * 4 );
+	picWrap.ptr = (unsigned char *)ri.Hunk_AllocateTempMemory( FOG_S * FOG_T * 4 );
 
 	g = 2.0;
 
@@ -2238,17 +2488,17 @@ static void R_CreateFogImage( void ) {
 		for (y=0 ; y<FOG_T ; y++) {
 			d = R_FogFactor( ( x + 0.5f ) / FOG_S, ( y + 0.5f ) / FOG_T );
 
-			data[(y*FOG_S+x)*4+0] = 
-			data[(y*FOG_S+x)*4+1] = 
-			data[(y*FOG_S+x)*4+2] = 255;
-			data[(y*FOG_S+x)*4+3] = 255*d;
+			picWrap.ptr[(y*FOG_S+x)*4+0] =
+			picWrap.ptr[(y*FOG_S+x)*4+1] = 
+			picWrap.ptr[(y*FOG_S+x)*4+2] = 255;
+			picWrap.ptr[(y*FOG_S+x)*4+3] = 255*d;
 		}
 	}
 	// standard openGL clamping doesn't really do what we want -- it includes
 	// the border color at the edges.  OpenGL 1.2 has clamp-to-edge, which does
 	// what we want.
-	tr.fogImage = R_CreateImage("*fog", (byte *)data, FOG_S, FOG_T, qfalse, qfalse, qfalse, GL_CLAMP );
-	ri.Hunk_FreeTempMemory( data );
+	tr.fogImage = R_CreateImage("*fog", &picWrap, FOG_S, FOG_T, qfalse, qfalse, qfalse, GL_CLAMP );
+	ri.Hunk_FreeTempMemory(picWrap.ptr);
 
 	borderColor[0] = 1.0;
 	borderColor[1] = 1.0;
@@ -2267,6 +2517,9 @@ R_CreateDefaultImage
 static void R_CreateDefaultImage( void ) {
 	int		x;
 	byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
+	textureImage_t picWrap;
+	picWrap.bpc = BPC_8BIT;
+	picWrap.ptr = (byte*)data;
 
 	// the default image will be a box, to allow you to see the mapping coordinates
 	Com_Memset( data, 32, sizeof( data ) );
@@ -2291,7 +2544,7 @@ static void R_CreateDefaultImage( void ) {
 		data[x][DEFAULT_SIZE-1][2] =
 		data[x][DEFAULT_SIZE-1][3] = 255;
 	}
-	tr.defaultImage = R_CreateImage("*default", (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, qtrue, qfalse, qfalse, GL_REPEAT );
+	tr.defaultImage = R_CreateImage("*default", &picWrap, DEFAULT_SIZE, DEFAULT_SIZE, qtrue, qfalse, qfalse, GL_REPEAT );
 }
 
 /*
@@ -2302,12 +2555,15 @@ R_CreateBuiltinImages
 void R_CreateBuiltinImages( void ) {
 	int		x,y;
 	byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
+	textureImage_t picWrap;
+	picWrap.bpc = BPC_8BIT;
+	picWrap.ptr = (byte*)data;
 
 	R_CreateDefaultImage();
 
 	// we use a solid white image instead of disabling texturing
 	Com_Memset( data, 255, sizeof( data ) );
-	tr.whiteImage = R_CreateImage("*white", (byte *)data, 8, 8, qfalse, qfalse, qfalse, GL_REPEAT );
+	tr.whiteImage = R_CreateImage("*white", &picWrap, 8, 8, qfalse, qfalse, qfalse, GL_REPEAT );
 
 #ifdef JEDIACADEMY_GLOW
 	// Create the scene glow image. - AReis
@@ -2361,12 +2617,12 @@ void R_CreateBuiltinImages( void ) {
 		}
 	}
 
-	tr.identityLightImage = R_CreateImage("*identityLight", (byte *)data, 8, 8, qfalse, qfalse, qfalse, GL_REPEAT );
+	tr.identityLightImage = R_CreateImage("*identityLight", &picWrap, 8, 8, qfalse, qfalse, qfalse, GL_REPEAT );
 
 
 	for(x=0;x<32;x++) {
 		// scratchimage is usually used for cinematic drawing
-		tr.scratchImage[x] = R_CreateImage(va("*scratch%d",x), (byte *)data, DEFAULT_SIZE, DEFAULT_SIZE, qfalse, qtrue, qfalse, GL_CLAMP );
+		tr.scratchImage[x] = R_CreateImage(va("*scratch%d",x), &picWrap, DEFAULT_SIZE, DEFAULT_SIZE, qfalse, qtrue, qfalse, GL_CLAMP );
 	}
 
 	if (r_newDLights->integer) {

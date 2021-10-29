@@ -405,6 +405,9 @@ void R_MME_RegisterFont(const char *fontName, int pointSize, mmeFontInfo_t *font
 			scaledSize = 256*256;
 			newSize = scaledSize * 4;
 			imageBuff = (unsigned char *)Z_Malloc(newSize, TAG_FONT);
+			textureImage_t picWrap;
+			picWrap.bpc = BPC_8BIT;
+			picWrap.ptr = imageBuff;
 			left = 0;
 			max = 0;
 			satLevels = 255;
@@ -431,7 +434,7 @@ void R_MME_RegisterFont(const char *fontName, int pointSize, mmeFontInfo_t *font
 //			}
 
 			//Com_sprintf (name, sizeof(name), "fonts/fontImage_%i_%i", imageNumber++, pointSize);
-			image = R_CreateImage(name, imageBuff, 256, 256, qfalse, qfalse, qfalse, GL_CLAMP);
+			image = R_CreateImage(name, &picWrap, 256, 256, qfalse, qfalse, qfalse, GL_CLAMP);
 			h = RE_RegisterShaderFromImage(name, (int *)lightmaps2d, (byte *)stylesDefault, image, qfalse);
 			for (j = lastStart; j < i; j++) {
 				font->glyphs[j].glyph = h;
