@@ -75,6 +75,9 @@
     <Filter Include="boost">
       <UniqueIdentifier>{158da533-b956-4d40-8c98-89191ad55ca7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Renderer\stb">
+      <UniqueIdentifier>{4d818f6e-e73a-47a9-8fad-da88183ddc8e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="client\0_SH_Leak.cpp">
@@ -1197,6 +1200,9 @@
     </ClInclude>
     <ClInclude Include="jpeg-9a\transupp.h">
       <Filter>Renderer\jpeg files\JPG Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="stb\stb_image.h">
+      <Filter>Renderer\stb</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

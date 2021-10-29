@@ -11,6 +11,13 @@
 //#pragma comment (lib, "zlib.lib")
 #endif
 
+// TODO Use the Z_ alloc functions, but need to write a realloc for it...
+//#define STBI_MALLOC(sz)           Z_Malloc(sz,TAG_TEMP_WORKSPACE)
+//#define STBI_REALLOC(p,newsz)     realloc(p,newsz)
+//#define STBI_FREE(p)              Z_Free(p)
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb/stb_image.h"
+
 
 #include "tr_local.h"
 #include "glext.h"
@@ -1758,6 +1765,54 @@ TGADone:
 }
 
 
+static void LoadRadiance( const char *filename, unsigned char **pic, int *width, int *height ) {
+
+	/* More stuff */
+	unsigned char* out;
+	byte* fbuffer;
+
+	fileHandle_t		h;
+	const int len = FS_FOpenFileRead(filename, &h, qfalse);
+	if (!h)
+	{
+		return;
+	}
+
+	fbuffer = (byte*)Z_Malloc(len + 4096, TAG_TEMP_WORKSPACE);
+	FS_Read(fbuffer, len, h);
+	FS_FCloseFile(h);
+
+	int channelCount;
+
+	float* data = stbi_loadf_from_memory(fbuffer, len, width, height, &channelCount, 4);
+
+	if (!data) {
+		Com_Printf("Radiance picture failed to load, possible reason: %s.\n", stbi_failure_reason());
+		*pic = nullptr;
+		return;
+	}
+	/*
+	if (channelCount != 4) {
+		Com_Printf("Radiance returned %d channels, I asked for 4!\n", channelCount); 
+		stbi_image_free(data);
+		*pic = nullptr;
+		return;
+	}*/
+
+	Com_Printf("Loaded Radiance image with %d x %d pixels!\n", *width,*height);
+
+	int memoryAmount = (*width) * (*height) * 4 * 4;
+	out = (unsigned char*)ri.Malloc(memoryAmount, TAG_TEMP_WORKSPACE, qfalse);
+
+	*pic = out;
+	Com_Memcpy(out, data, memoryAmount);
+
+	stbi_image_free(data);
+
+	Z_Free(fbuffer);
+}
+
+
 static void LoadJPG( const char *filename, unsigned char **pic, int *width, int *height ) {
   /* This struct contains the JPEG decompression parameters and pointers to
    * working space (which is allocated as needed by the JPEG library).
@@ -2278,6 +2333,15 @@ void R_LoadImage( const char *shortname, textureImage_t* picWrap, int *width, in
 	*width = 0;
 	*height = 0;
 
+
+	COM_StripExtension(shortname, name);
+	COM_DefaultExtension(name, sizeof(name), ".hdr");
+	LoadRadiance(name, &picWrap->ptr, width, height);            // try radiance first
+	if (picWrap->ptr) {
+		picWrap->bpc = BPC_32FLOAT;
+		return;
+	}
+
 	COM_StripExtension(shortname,name);
 	COM_DefaultExtension(name, sizeof(name), ".jpg");
 	LoadJPG( name, &picWrap->ptr, width, height );
@@ -2301,6 +2365,7 @@ void R_LoadImage( const char *shortname, textureImage_t* picWrap, int *width, in
 		picWrap->bpc = BPC_8BIT;
 		return;
 	}
+
 }
 
 

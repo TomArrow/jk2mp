@@ -441,7 +441,7 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 	}
 
 	//TriForce: SP Fix
-	if (ent->model[0] == '*')
+	if (ent->model && ent->model[0] == '*')
 	{
 		int      j;
 		int      k;

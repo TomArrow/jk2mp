@@ -597,6 +597,7 @@
     <ClInclude Include="renderer\tr_quicksprite.h" />
     <ClInclude Include="renderer\tr_WorldEffects.h" />
     <ClInclude Include="server\server.h" />
+    <ClInclude Include="stb\stb_image.h" />
     <ClInclude Include="strings\con_text.h" />
     <ClInclude Include="strings\str_server.h" />
     <ClInclude Include="ui\keycodes.h" />
