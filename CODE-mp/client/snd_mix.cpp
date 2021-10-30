@@ -4,6 +4,14 @@
 #include "snd_mix.h"
 #include <renderer\tr_mme.h>
 
+
+
+#include "soxr/soxr.h"
+// Minimum amount of samples to resample on the side of each little block. Bc when we resample too small amounts, we may introduce problems.
+// At the same time we need to make sure that we are still sampling the sample at the right position.
+#define SOXR_MINIMUMHANDLES 128
+
+
 static	mixSound_t		*mixSounds[SFX_SOUNDS];
 
 extern shotData_t shotData;
