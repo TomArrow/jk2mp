@@ -441,6 +441,7 @@ vmCvar_t	cg_bobroll;
 //vmCvar_t	cg_swingSpeed;
 vmCvar_t	cg_gibs;
 vmCvar_t	cg_gibDirectional;
+vmCvar_t	cg_gibBounce;
 vmCvar_t	cg_shadows;
 vmCvar_t	cg_drawTimer;
 vmCvar_t	cg_drawFPS;
@@ -659,6 +660,7 @@ static cvarTable_t cvarTable[] = { // bk001129
 #ifdef GIB
 	{ &cg_gibs, "cg_gibs", "1", NULL, CVAR_ARCHIVE  },
 	{ &cg_gibDirectional, "cg_gibDirectional", "1.0", NULL, CVAR_ARCHIVE  }, // float. scales damage velocity added to gibs launched
+	{ &cg_gibBounce, "cg_gibBounce", "0.3", NULL, CVAR_ARCHIVE  }, // float. scales damage velocity added to gibs launched
 #endif
 	{ &cg_draw2D, "cg_draw2D", "1", NULL, CVAR_ARCHIVE  },
 	{ &cg_drawStatus, "cg_drawStatus", "1", NULL, CVAR_ARCHIVE  },

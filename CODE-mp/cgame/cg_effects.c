@@ -1192,7 +1192,7 @@ void CG_LaunchGib( vec3_t origin, vec3_t velocity, qhandle_t hModel ) {
 	le->pos.trTime = cg.time;
 
 	//le->bounceFactor = 0.6f;
-	le->bounceFactor = 0.3f;
+	le->bounceFactor = cg_gibBounce.value;
 
 	le->leBounceSoundType = LEBS_BLOOD;
 	le->leMarkType = LEMT_BLOOD;
