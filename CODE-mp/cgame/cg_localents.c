@@ -99,7 +99,7 @@ Leave expanding blood puffs behind gibs
 ================
 */
 void CG_BloodTrail( localEntity_t *le ) {
-	if (!mov_dismember.integer) {
+	if (1) { // I dont understand why this was set to !mov_dismebmer??!
 		int		t;
 		int		t2;
 		int		step;
@@ -126,7 +126,9 @@ void CG_BloodTrail( localEntity_t *le ) {
 			// drop a total of 40 units over its lifetime
 			blood->pos.trDelta[2] = 40;
 		}
-	} else {
+	} 
+	
+	if(mov_dismember.integer){
 		int newBolt;
 		char *limbTagName;
 	
@@ -199,7 +201,7 @@ CG_FragmentBounceSound
 ================
 */
 void CG_FragmentBounceSound( localEntity_t *le, trace_t *trace ) {
-	if (!mov_dismember.integer) {
+	if (cg_gibs.integer) {
 		if ( le->leBounceSoundType == LEBS_BLOOD ) {
 			// half the gibs will make splat sounds
 #ifdef GIB
@@ -226,7 +228,8 @@ void CG_FragmentBounceSound( localEntity_t *le, trace_t *trace ) {
 		// don't allow a fragment to make multiple bounce sounds,
 		// or it gets too noisy as they settle
 		le->leBounceSoundType = LEBS_NONE;
-	} else {
+	} 
+	if(mov_dismember.integer){
 		sfxHandle_t s = -1;
 	
 		if ( le->leFragmentType == LEFT_GIB) {
@@ -384,7 +387,7 @@ void CG_AddFragment( localEntity_t *le ) {
 		trap_R_AddRefEntityToScene( &le->refEntity );
 
 		// add a blood trail
-		if ( !mov_dismember.integer && le->leBounceSoundType == LEBS_BLOOD ) {
+		if ( le->leBounceSoundType == LEBS_BLOOD ) {
 			CG_BloodTrail( le );
 		}
 

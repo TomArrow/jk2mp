@@ -1214,7 +1214,10 @@ void CG_DemoDismembermentEvent( centity_t *cent, vec3_t position ) {
 					centity_t* targetent = &cg_entities[target];
 
 					trap_S_StartSound(NULL, es->number, CHAN_BODY, cgs.media.gibSound);
-					CG_GibPlayer(cent->lerpOrigin);
+					
+					VectorScale(dir, cg_gibDirectional.value, dir);
+					
+					CG_GibPlayer(cent->lerpOrigin, dir);
 					cent->isGibbing = qtrue;
 					// Make them all invisible. lol
 					// head,torso,l_arm,r_arm,l_hand,r_hand,l_leg,r_leg

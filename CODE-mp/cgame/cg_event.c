@@ -2489,7 +2489,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME("EV_GIB_PLAYER");
 #ifdef GIB
 		trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.gibSound );
-		CG_GibPlayer( cent->lerpOrigin );
+		//CG_GibPlayer( cent->lerpOrigin );
 #endif
 		break;
 
