@@ -295,7 +295,7 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, s
 		}
 		output[i*2+0] += sample * leftVol;
 		output[i*2+1] += sample * rightVol;
-		index += indexAdd;
+		//index += indexAdd;
 	}
 	delete[] resampleBuffer;
 
