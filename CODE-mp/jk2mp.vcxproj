@@ -75,7 +75,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\build\</OutDir>
-    <IntDir>.build\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <IntDir>.build\rs\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
     <TargetName>$(ProjectName)</TargetName>
     <ExtensionsToDeleteOnClean>$(ExtensionsToDeleteOnClean)</ExtensionsToDeleteOnClean>
     <IncludePath>.;..;$(ProjectDir)\libs\win32\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
@@ -526,6 +526,7 @@
     <ClInclude Include="client\snd_local.h" />
     <ClInclude Include="client\snd_mix.h" />
     <ClInclude Include="client\snd_public.h" />
+    <ClInclude Include="client\snd_resample.hpp" />
     <ClInclude Include="encryption\buffer.h" />
     <ClInclude Include="encryption\cpp_interface.h" />
     <ClInclude Include="encryption\encryption.h" />

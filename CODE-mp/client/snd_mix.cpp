@@ -5,11 +5,8 @@
 #include <renderer\tr_mme.h>
 
 
-
-#include "soxr/soxr.h"
-// Minimum amount of samples to resample on the side of each little block. Bc when we resample too small amounts, we may introduce problems.
-// At the same time we need to make sure that we are still sampling the sample at the right position.
-#define SOXR_MINIMUMHANDLES 128
+#include <memory>
+//#include "snd_resample.hpp"
 
 
 static	mixSound_t		*mixSounds[SFX_SOUNDS];
@@ -224,6 +221,10 @@ static void S_MixSpatialize(const vec3_t origin, float volume, int *left_vol, in
 		*left_vol = 0;
 }
 
+static double mixShiftMultiplier = pow(2.0, MIX_SHIFT);
+static double mixShiftDoubleMultiplier = mixShiftMultiplier* mixShiftMultiplier;
+static double mixShiftDoubleInverseMultiplier = 1/ mixShiftDoubleMultiplier;
+
 static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, short* outputADM = nullptr, int outputADMOffsetPerSample =0, vec3_t admPosition = nullptr) {
 	const mixSound_t *sound;
 	int i, leftVol, rightVol;
@@ -245,7 +246,9 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, s
 	sound = S_MixGetSound( ch->handle );
 
 	index = ch->index;
-	indexAdd = (sound->speed * speed) >> MIX_SHIFT;
+	double actualSpeed = (double)sound->speed * (double)speed * mixShiftDoubleInverseMultiplier;
+	//indexAdd = (sound->speed * speed) >> MIX_SHIFT;
+	indexAdd = 1;
 	indexLeft = sound->samples - index;
 	ch->wasMixed = (leftVol | rightVol) > 0;
 	/*if (!ch->wasMixed) {
@@ -260,27 +263,42 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, s
 	data = sound->data;
 	if (!indexAdd)
 		return;
-	indexLeft /= indexAdd;
-	if ( indexLeft <= count) {
-		count = indexLeft;
+
+	// This doesn't matter: The resampler class takes care of all this now.
+	//indexLeft /= indexAdd;
+	//if ( indexLeft <= count) {
+	//	count = indexLeft;
+	//	ch->handle = 0;
+	//}
+
+	short* resampleBuffer = new short[max(count, 1)] {0};
+	size_t inputAdvance = ch->resampler->getSamples(actualSpeed,resampleBuffer,count,(short*)sound->data,sound->samples>>MIX_SHIFT,ch->index >> MIX_SHIFT,false);
+
+	ch->index += inputAdvance << MIX_SHIFT; // Need to move away from this weirdness at some point...
+	if ( ch->index >= sound->samples) { // End of sound reached.
+
 		ch->handle = 0;
+		ch->resampler = nullptr;
 	}
 
 	short* outputADMDisplacedPointer = outputADM;
 	for (i = 0; i < count;i++) {
 		int sample;
-		sample = data[index >> MIX_SHIFT];
+
+		//sample = data[index >> MIX_SHIFT];
+		sample = resampleBuffer[i];
+		
 		if (!!outputADM) {
 
-			*outputADMDisplacedPointer = data[index >> MIX_SHIFT];
+			*outputADMDisplacedPointer = resampleBuffer[i];
 			outputADMDisplacedPointer += outputADMOffsetPerSample;
 		}
 		output[i*2+0] += sample * leftVol;
 		output[i*2+1] += sample * rightVol;
 		index += indexAdd;
 	}
+	delete[] resampleBuffer;
 
-	ch->index = index;
 }
 
 void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *output, short *outputADM, int admTotalChannelCount, mmeADMChannelInfo_t* admChannelInfoArray, long admAbsoluteTime) {
@@ -360,6 +378,11 @@ skip_alloc:;
 		if (ch->handle <= 0 )
 			continue;
 		activeCount++;
+
+		if (isNew[channelIndex] || !ch->resampler) { // for some reason sometimes an object can be NOT new and still not have resampler yet?
+			ch->resampler = std::make_unique<piecewiseResample>(1);
+		}
+
 		if (!!outputADM) {
 
 			admDisplacedPointer = outputADM+channelIndex;
@@ -485,33 +508,46 @@ static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int co
 	S_MixSpatialize( lq->origin, volume, &leftVol, &rightVol,admPosition );
 	sound = S_MixGetSound( loop->handle );
 
-	index = loop->index;
-	indexAdd = (sound->speed * speed) >> MIX_SHIFT;
-	indexTotal = sound->samples;
+	//index = loop->index;
+
+	//indexAdd = (sound->speed * speed) >> MIX_SHIFT;
+	double actualSpeed = (double)sound->speed * (double)speed * mixShiftDoubleInverseMultiplier;
+	//indexAdd = 1;
+	short* resampleBuffer = new short[max(count, 1)]{ 0 };
+	size_t inputAdvance = loop->resampler->getSamples(actualSpeed, resampleBuffer, count, (short*)sound->data, sound->samples >> MIX_SHIFT, loop->index >> MIX_SHIFT, true);
+
+	loop->index += inputAdvance << MIX_SHIFT; // Need to move away from this weirdness at some point...
+
+	while (loop->index >= sound->samples) {
+		loop->index -= sound->samples;
+	}
+	
+
+	//indexTotal = sound->samples;
 	data = sound->data;
-	if ( (leftVol | rightVol) <= 0 ) {
+	/*if ( (leftVol | rightVol) <= 0 ) {
 		index += count * indexAdd;
 		index %= indexTotal;
 	}
-	else {
+	else {*/
 
 		short* displacedADMOutput = outputADM;
 		for (i = 0; i < count; i++) {
 			int sample;
-			while (index >= indexTotal) {
-				index -= indexTotal;
-			}
-			sample = data[index >> MIX_SHIFT];
+			//sample = data[index >> MIX_SHIFT];
+			sample = resampleBuffer[i];
 			if (outputADM) {
-				*displacedADMOutput = data[index >> MIX_SHIFT];
+				*displacedADMOutput = resampleBuffer[i];
 				displacedADMOutput += outputADMOffsetPerSample;
 			}
 			output[i * 2 + 0] += sample * leftVol;
 			output[i * 2 + 1] += sample * rightVol;
-			index += indexAdd;
+			//index += indexAdd;
 		}
-	}
-	loop->index = index;
+	//}
+
+	delete[] resampleBuffer;
+	//loop->index = index;
 }
 
 void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *output, short* outputADM, int admTotalChannelCount, mmeADMChannelInfo_t* admChannelInfoArray, long admAbsoluteTime) {
@@ -608,6 +644,15 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 	short* displacedADMOutput = outputADM;
 	mmeADMChannelInfo_t* displacedAdmChannelInfoArray = admChannelInfoArray;
 	for (int i = 0; i < loopCount; i++) {
+
+		if (!!mixLoops[i].parent) {
+			if ((!(isOngoing[i] && !isSoundChanged[i]) || !mixLoops[i].resampler)) { // for some reason sometimes an object can be NOT new and still not have resampler yet?
+				mixLoops[i].resampler = std::make_unique<piecewiseResample>(1);
+			}
+		} else{
+			mixLoops[i].resampler = nullptr;
+		}
+		
 
 		if (outputADM) {
 

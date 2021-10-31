@@ -78,6 +78,9 @@
     <Filter Include="Renderer\stb">
       <UniqueIdentifier>{4d818f6e-e73a-47a9-8fad-da88183ddc8e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Sound\soxr">
+      <UniqueIdentifier>{cb44e4bd-9ffa-4592-8c11-1438c4f4fd26}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="client\0_SH_Leak.cpp">
@@ -1203,6 +1206,12 @@
     </ClInclude>
     <ClInclude Include="stb\stb_image.h">
       <Filter>Renderer\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="soxr\soxr.h">
+      <Filter>Sound\soxr</Filter>
+    </ClInclude>
+    <ClInclude Include="client\snd_resample.hpp">
+      <Filter>Sound</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

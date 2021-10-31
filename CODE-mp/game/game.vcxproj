@@ -73,7 +73,7 @@
     <LinkIncremental>true</LinkIncremental>
     <TargetName>jk2mp$(ProjectName)$(PlatformShortName)</TargetName>
     <OutDir>..\..\build\mme\</OutDir>
-    <IntDir>..\.build\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <IntDir>..\.build\rs\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IntDir>..\.build\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>

@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <string>
+#include <memory>
+#include "snd_resample.hpp"
 
 //All mixing speeds have this as 1.0
 #define		MIX_SPEED		44100//22050
@@ -46,6 +48,7 @@ typedef struct {
 	char			entChan;
 	char			hasOrigin;
 	char			wasMixed;
+	std::unique_ptr<piecewiseResample> resampler;
 } mixChannel_t;
 
 typedef struct {
@@ -53,6 +56,7 @@ typedef struct {
 	sfxHandle_t		handle;
 	int				index;
 	loopQueue_t*	queueItem;
+	std::unique_ptr<piecewiseResample> resampler;
 } mixLoop_t;
 
 typedef struct {
