@@ -16,12 +16,15 @@ class piecewiseResample {
 	int64_t oDoneTotal = 0;
 	soxr_t soxrRef;
 	soxr_error_t error;
-	const soxr_quality_spec_t q_spec = soxr_quality_spec(SOXR_HQ, SOXR_VR);
+	const soxr_quality_spec_t q_spec = soxr_quality_spec(SOXR_VHQ, SOXR_VR);
 	const soxr_io_spec_t io_spec = soxr_io_spec(SOXR_INT16_I, SOXR_INT16_I);
 
-	inline static short emptyBuffer[RESAMPLER_EMPTY_BUFFER_SIZE];
+	//inline static short emptyBuffer[RESAMPLER_EMPTY_BUFFER_SIZE];
+
+	bool isFinished = false;
 
 public:
+	bool IsFinished() { return isFinished; }
 	piecewiseResample(int channelCount = 1) {
 
 		soxrRef = soxr_create(1, 1, channelCount, &error, &io_spec, &q_spec, NULL);
@@ -30,15 +33,15 @@ public:
 		soxr_delete(soxrRef);
 	}
 	// Just zero out the emptyBuffer
-	static const bool init() {
+	/*static const bool init() { // no longer needed because we can simply flush instead, which also is better to give us an idea when we're done.
 		memset(emptyBuffer, 0, sizeof(emptyBuffer));
 		return true;
-	}
+	}*/
 	inline size_t getSamples(double speed, short* outputBuffer, size_t outSamples, short* inputBuffer, size_t inputBufferLength, size_t inputBufferOffset = 0, bool loop = false);
 };
 
 
-static bool blahblah4235327634 = piecewiseResample::init();
+//static bool blahblah4235327634 = piecewiseResample::init();
 
 
 // Returns input sample count used.
@@ -47,6 +50,7 @@ size_t piecewiseResample::getSamples(double speed, short* outputBuffer, size_t o
 	size_t inputDone = 0;
 	size_t odone=0,idone=0;
 	bool need_input = 1;
+	bool is_flushing = false;
 	do {
 		size_t len = inputBufferLength-inputBufferOffset;
 		if (!len) {
@@ -55,10 +59,18 @@ size_t piecewiseResample::getSamples(double speed, short* outputBuffer, size_t o
 				inputBufferOffset = 0;
 				len = inputBufferLength - inputBufferOffset;
 			}
-			// Fill with silence until we got enough output.
+			/*// Fill with silence until we got enough output.
 			else {
 				inputBuffer = (short*)&emptyBuffer;
-				len = sizeof(emptyBuffer);
+				inputBufferLength = len = sizeof(emptyBuffer);
+				inputBufferOffset = 0;
+			}*/
+			else {
+				// flush
+				len = 0;
+				inputBuffer = nullptr;
+				inputBufferOffset = 0;
+				is_flushing = true;
 			}
 		}
 		error = soxr_process(soxrRef, inputBuffer + inputBufferOffset, len, &idone, outputBuffer, outSamples, &odone);
@@ -73,8 +85,11 @@ size_t piecewiseResample::getSamples(double speed, short* outputBuffer, size_t o
 		 * again, supplying more input samples: */
 		need_input = outSamples != 0;
 
-	} while (need_input && !error);
+	} while ((need_input && !is_flushing) && !error);
 
+	if (is_flushing && need_input) {
+		isFinished = true;
+	}
 
 	return inputDone; // let calling code know by how much to advance input buffer index
 }

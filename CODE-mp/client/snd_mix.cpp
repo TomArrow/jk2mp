@@ -261,8 +261,8 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, s
 		return;
 	}*/ // We want ADM to get data even if JK deems it too quiet.
 	data = sound->data;
-	if (!indexAdd)
-		return;
+	//if (!indexAdd)
+	//	return;
 
 	// This doesn't matter: The resampler class takes care of all this now.
 	//indexLeft /= indexAdd;
@@ -275,7 +275,7 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, s
 	size_t inputAdvance = ch->resampler->getSamples(actualSpeed,resampleBuffer,count,(short*)sound->data,sound->samples>>MIX_SHIFT,ch->index >> MIX_SHIFT,false);
 
 	ch->index += inputAdvance << MIX_SHIFT; // Need to move away from this weirdness at some point...
-	if ( ch->index >= sound->samples) { // End of sound reached.
+	if ( /*ch->index >= sound->samples*/ ch->resampler->IsFinished()) { // End of sound reached.
 
 		ch->handle = 0;
 		ch->resampler = nullptr;
@@ -581,6 +581,10 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 		// Find match
 		bool parentIsStillInQueue = false;
 		for (int b = 0; b < s_loopQueueCount; b++) {
+
+			if (isAlreadyInLoops[b]) { // Shouldnt be necessary technically.
+				continue;
+			}
 
 			// Same parent. Match.
 			if (s_loopQueue[b].parent == mixLoops[i].parent) {
