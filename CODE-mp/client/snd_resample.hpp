@@ -16,7 +16,8 @@ class piecewiseResample {
 	int64_t oDoneTotal = 0;
 	soxr_t soxrRef;
 	soxr_error_t error;
-	const soxr_quality_spec_t q_spec = soxr_quality_spec(SOXR_VHQ, SOXR_VR);
+	const soxr_quality_spec_t q_spec = soxr_quality_spec(SOXR_HQ, SOXR_VR); // Apparentrly VR is only available in HQ
+	//const soxr_quality_spec_t q_spec = soxr_quality_spec(SOXR_VHQ | SOXR_STEEP_FILTER, SOXR_VR);
 	const soxr_io_spec_t io_spec = soxr_io_spec(SOXR_INT16_I, SOXR_INT16_I);
 
 	//inline static short emptyBuffer[RESAMPLER_EMPTY_BUFFER_SIZE];
