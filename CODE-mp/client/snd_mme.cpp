@@ -7,6 +7,7 @@
 #include "../renderer/tr_mme.h"
 #include "../renderer/tr_local.h"
 #include <vector>
+#include <string>
 #include <cgame\tr_types.h>
 #include <bw64/bw64.hpp>
 #include "adm/export.h"
@@ -382,8 +383,8 @@ void S_MMEWavClose(void) {
 			if (!FS_FileExists(savePathCSV))
 				break;
 		}
-		const char* realPath = FS_GetSanePath(savePath);
-		const char* realPathCSV = FS_GetSanePath(savePathCSV);
+		std::string realPath = FS_GetSanePath(savePath);
+		std::string realPathCSV = FS_GetSanePath(savePathCSV);
 
 		try {
 
@@ -525,10 +526,11 @@ void S_MMERecord( const char *baseName, float deltaTime ) {
 					if (!FS_FileExists(fileName))
 						break;
 				}
-				FS_CreatePath(FS_GetSanePath(fileName));
+				std::string sanePath = FS_GetSanePath(fileName);
+				FS_CreatePath((char*)sanePath.c_str());
 				try {
 					
-					mmeSound.adm_bw64Handle = bw64::writeFile(std::string(FS_GetSanePath(fileName)), MME_SNDCHANNELS + MME_LOOPCHANNELS, MME_SAMPLERATE, 16u);
+					mmeSound.adm_bw64Handle = bw64::writeFile(sanePath, MME_SNDCHANNELS + MME_LOOPCHANNELS, MME_SAMPLERATE, 16u);
 					
 				}
 				catch (std::runtime_error e) {

@@ -5,6 +5,8 @@
 #include "../qcommon/cm_public.h"
 #include "../game/q_shared.h"
 
+#include <string>
+
 //#define	PRE_RELEASE_DEMO
 
 //#define		USE_CD_KEY
@@ -510,7 +512,7 @@ char	**FS_ListFiles( const char *directory, const char *extension, int *numfiles
 
 void	FS_FreeFileList( char **list );
 qboolean FS_FileExists( const char *file );
-char* FS_GetSanePath( const char *file );
+std::string FS_GetSanePath( const char *file );
 int		FS_LoadStack();
 
 qboolean FS_FileErase( const char *file );

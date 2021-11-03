@@ -6,7 +6,12 @@
 
 
 #define AVI_MAX_FRAMES	2000000
+#ifdef SMALLAVIDEBUG
+// Need to debug error that occurs when writing new avi file. doesnt happen often especially in slow debug mode
+#define AVI_MAX_SIZE	1920*1080*4*5 
+#else
 #define AVI_MAX_SIZE	((2*1024-10)*1024*1024)
+#endif
 #define AVI_HEADER_SIZE	2048
 #define AVI_MAX_FILES	1000
 

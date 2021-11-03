@@ -17,6 +17,9 @@
 #include "qcommon.h"
 #include "unzip.h"
 
+#include <string>
+#include <mutex>
+
 #ifdef __linux__
 #include <unistd.h>
 #define _unlink unlink
@@ -276,6 +279,7 @@ typedef struct {
 	char		name[MAX_ZPATH];
 } fileHandleData_t;
 
+std::recursive_mutex fshMutex;
 static fileHandleData_t	fsh[MAX_FILE_HANDLES];
 
 // never load anything from pk3 files that are not present at the server when pure
@@ -380,10 +384,12 @@ static long FS_HashFileName( const char *fname, int hashSize ) {
 
 static fileHandle_t	FS_HandleForFile(void) {
 	int		i;
-
-	for ( i = 1 ; i < MAX_FILE_HANDLES ; i++ ) {
-		if ( fsh[i].handleFiles.file.o == NULL ) {
-			return i;
+	{
+		std::lock_guard lock(fshMutex); // So we don't accidentally use the same handle for multiple files with multithreading.
+		for (i = 1; i < MAX_FILE_HANDLES; i++) {
+			if (fsh[i].handleFiles.file.o == NULL) {
+				return i;
+			}
 		}
 	}
 	Com_Error( ERR_DROP, "FS_HandleForFile: none free" );
@@ -457,7 +463,7 @@ FS_BuildOSPath
 
 Qpath may have either forward or backwards slashes
 ===================
-*/
+*//*
 char *FS_BuildOSPath( const char *base, const char *game, const char *qpath ) {
 	char	temp[MAX_OSPATH];
 	static char ospath[2][MAX_OSPATH];
@@ -474,6 +480,28 @@ char *FS_BuildOSPath( const char *base, const char *game, const char *qpath ) {
 	Com_sprintf( ospath[toggle], sizeof( ospath[0] ), "%s%s", base, temp );
 	
 	return ospath[toggle];
+}*/
+
+/*
+===================
+FS_BuildOSPath
+
+Qpath may have either forward or backwards slashes
+===================
+*/
+std::string FS_BuildOSPath( const char *base, const char *game, const char *qpath ) {
+	char	temp[MAX_OSPATH];
+	char ospath[MAX_OSPATH];
+
+	if( !game || !game[0] ) {
+		game = fs_gamedir;
+	}
+
+	Com_sprintf( temp, sizeof(temp), "/%s/%s", game, qpath );
+	FS_ReplaceSeparators( temp );	
+	Com_sprintf( ospath, sizeof( ospath ), "%s%s", base, temp );
+	
+	return ospath;
 }
 
 
@@ -490,8 +518,12 @@ qboolean FS_CreatePath (char *OSPath) {
 	// make absolutely sure that it can't back up the path
 	// FIXME: is c: allowed???
 	if ( strstr( OSPath, ".." ) || strstr( OSPath, "::" ) ) {
-		Com_Printf( "WARNING: refusing to create relative path \"%s\"\n", OSPath );
+#ifdef ALLOWRELPATHSDEBUG
+		Com_Printf( "WARNING: creating relative path. Only allowed in Debug mode. \"%s\"\n", OSPath );
+#else
+		Com_Printf("WARNING: refusing to create relative path \"%s\"\n", OSPath);
 		return qtrue;
+#endif
 	}
 
 	for (ofs = OSPath+1 ; *ofs ; ofs++) {
@@ -543,7 +575,8 @@ qboolean FS_CopyFileAbsolute(char *fromOSPath, char *toOSPath) {
 		return qfalse;
 	}
 
-	f = fopen(FS_BuildOSPath(fs_homepath->string, fs_gamedir, toOSPath), "wb");
+	std::string osPath = FS_BuildOSPath(fs_homepath->string, fs_gamedir, toOSPath);
+	f = fopen(osPath.c_str(), "wb");
 	if (!f) {
 		return qfalse;
 	}
@@ -623,11 +656,11 @@ NOTE TTimo: this goes with FS_FOpenFileWrite for opening the file afterwards
 qboolean FS_FileExists( const char *file )
 {
 	FILE *f;
-	char *testpath;
+	std::string testpath;
 
 	testpath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, file );
 
-	f = fopen( testpath, "rb" );
+	f = fopen( testpath.c_str(), "rb" );
 	if (f) {
 		fclose( f );
 		return qtrue;
@@ -642,10 +675,10 @@ FS_GetSanePath
 Just get a path that can actually be used without the FS_ functions
 ================
 */
-char* FS_GetSanePath( const char *file )
+std::string FS_GetSanePath( const char *file )
 {
 
-	char *filepath;
+	std::string filepath;
 
 	filepath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, file );
 
@@ -654,11 +687,11 @@ char* FS_GetSanePath( const char *file )
 
 qboolean FS_FileErase( const char *file )
 {
-	char *testpath;
+	std::string testpath;
 
 	testpath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, file );
 
-	return (qboolean)(_unlink( testpath ) == 0);
+	return (qboolean)(_unlink( testpath.c_str() ) == 0);
 }
 
 /*
@@ -671,12 +704,12 @@ Tests if the file exists
 qboolean FS_SV_FileExists( const char *file )
 {
 	FILE *f;
-	char *testpath;
+	std::string testpath;
 
 	testpath = FS_BuildOSPath( fs_homepath->string, file, "");
-	testpath[strlen(testpath)-1] = '\0';
+	testpath.resize(testpath.size() - 1);
 
-	f = fopen( testpath, "rb" );
+	f = fopen( testpath.c_str(), "rb" );
 	if (f) {
 		fclose( f );
 		return qtrue;
@@ -692,7 +725,7 @@ FS_SV_FOpenFileWrite
 ===========
 */
 fileHandle_t FS_SV_FOpenFileWrite( const char *filename ) {
-	char *ospath;
+	std::string ospath;
 	fileHandle_t	f;
 
 	if ( !fs_searchpaths ) {
@@ -700,28 +733,30 @@ fileHandle_t FS_SV_FOpenFileWrite( const char *filename ) {
 	}
 
 	ospath = FS_BuildOSPath( fs_homepath->string, filename, "" );
-	ospath[strlen(ospath)-1] = '\0';
+	ospath.resize(ospath.size() - 1);
 
+	std::lock_guard lock(fshMutex);
 	f = FS_HandleForFile();
 	fsh[f].zipFile = qfalse;
 
-	if ( fs_debug->integer ) {
-		Com_Printf( "FS_SV_FOpenFileWrite: %s\n", ospath );
+	if (fs_debug->integer) {
+		Com_Printf("FS_SV_FOpenFileWrite: %s\n", ospath.c_str());
 	}
 
-	if( FS_CreatePath( ospath ) ) {
+	if (FS_CreatePath((char*)ospath.c_str())) {
 		return 0;
 	}
 
-	Com_DPrintf( "writing to: %s\n", ospath );
-	fsh[f].handleFiles.file.o = fopen( ospath, "wb" );
+	Com_DPrintf("writing to: %s\n", ospath.c_str());
+	fsh[f].handleFiles.file.o = fopen(ospath.c_str(), "wb");
 
-	Q_strncpyz( fsh[f].name, filename, sizeof( fsh[f].name ) );
+	Q_strncpyz(fsh[f].name, filename, sizeof(fsh[f].name));
 
 	fsh[f].handleSync = qfalse;
 	if (!fsh[f].handleFiles.file.o) {
 		f = 0;
 	}
+	
 	return f;
 }
 
@@ -733,13 +768,14 @@ we search in that order, matching FS_SV_FOpenFileRead order
 ===========
 */
 int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp ) {
-	char *ospath;
+	std::string ospath;
 	fileHandle_t	f = 0; // bk001129 - from cvs1.17
 
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
+	std::lock_guard lock(fshMutex);
 	f = FS_HandleForFile();
 	fsh[f].zipFile = qfalse;
 
@@ -751,13 +787,13 @@ int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp ) {
   // search homepath
 	ospath = FS_BuildOSPath( fs_homepath->string, filename, "" );
 	// remove trailing slash
-	ospath[strlen(ospath)-1] = '\0';
+	ospath.resize(ospath.size() - 1);
 
 	if ( fs_debug->integer ) {
-		Com_Printf( "FS_SV_FOpenFileRead (fs_homepath): %s\n", ospath );
+		Com_Printf( "FS_SV_FOpenFileRead (fs_homepath): %s\n", ospath.c_str());
 	}
 
-	fsh[f].handleFiles.file.o = fopen( ospath, "rb" );
+	fsh[f].handleFiles.file.o = fopen( ospath.c_str(), "rb" );
 	fsh[f].handleSync = qfalse;
   if (!fsh[f].handleFiles.file.o)
   {
@@ -766,14 +802,14 @@ int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp ) {
     {
       // search basepath
       ospath = FS_BuildOSPath( fs_basepath->string, filename, "" );
-      ospath[strlen(ospath)-1] = '\0';
+	  ospath.resize(ospath.size() - 1);
 
       if ( fs_debug->integer )
       {
-        Com_Printf( "FS_SV_FOpenFileRead (fs_basepath): %s\n", ospath );
+        Com_Printf( "FS_SV_FOpenFileRead (fs_basepath): %s\n", ospath.c_str());
       }
 
-      fsh[f].handleFiles.file.o = fopen( ospath, "rb" );
+      fsh[f].handleFiles.file.o = fopen( ospath.c_str(), "rb" );
       fsh[f].handleSync = qfalse;
 
       if ( !fsh[f].handleFiles.file.o )
@@ -786,14 +822,14 @@ int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp ) {
 	if (!fsh[f].handleFiles.file.o) {
     // search cd path
     ospath = FS_BuildOSPath( fs_cdpath->string, filename, "" );
-    ospath[strlen(ospath)-1] = '\0';
+	ospath.resize(ospath.size() - 1);
 
     if (fs_debug->integer)
     {
-      Com_Printf( "FS_SV_FOpenFileRead (fs_cdpath) : %s\n", ospath );
+      Com_Printf( "FS_SV_FOpenFileRead (fs_cdpath) : %s\n", ospath.c_str());
     }
 
-	  fsh[f].handleFiles.file.o = fopen( ospath, "rb" );
+	  fsh[f].handleFiles.file.o = fopen( ospath.c_str(), "rb" );
 	  fsh[f].handleSync = qfalse;
 
 	  if( !fsh[f].handleFiles.file.o ) {
@@ -816,7 +852,7 @@ FS_SV_Rename
 ===========
 */
 void FS_SV_Rename( const char *from, const char *to ) {
-	char			*from_ospath, *to_ospath;
+	std::string			from_ospath, to_ospath;
 
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
@@ -827,17 +863,17 @@ void FS_SV_Rename( const char *from, const char *to ) {
 
 	from_ospath = FS_BuildOSPath( fs_homepath->string, from, "" );
 	to_ospath = FS_BuildOSPath( fs_homepath->string, to, "" );
-	from_ospath[strlen(from_ospath)-1] = '\0';
-	to_ospath[strlen(to_ospath)-1] = '\0';
+	from_ospath.resize(from_ospath.size() - 1);
+	to_ospath.resize(to_ospath.size() - 1);
 
 	if ( fs_debug->integer ) {
-		Com_Printf( "FS_SV_Rename: %s --> %s\n", from_ospath, to_ospath );
+		Com_Printf( "FS_SV_Rename: %s --> %s\n", from_ospath.c_str(), to_ospath.c_str());
 	}
 
-	if (rename( from_ospath, to_ospath )) {
+	if (rename( from_ospath.c_str(), to_ospath.c_str())) {
 		// Failed, try copying it and deleting the original
-		FS_CopyFile ( from_ospath, to_ospath );
-		FS_Remove ( from_ospath );
+		FS_CopyFile ( (char*)from_ospath.c_str(), (char*)to_ospath.c_str());
+		FS_Remove ( from_ospath.c_str());
 	}
 }
 
@@ -850,7 +886,7 @@ FS_Rename
 ===========
 */
 void FS_Rename( const char *from, const char *to ) {
-	char			*from_ospath, *to_ospath;
+	std::string			from_ospath, to_ospath;
 
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
@@ -863,13 +899,13 @@ void FS_Rename( const char *from, const char *to ) {
 	to_ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, to );
 
 	if ( fs_debug->integer ) {
-		Com_Printf( "FS_Rename: %s --> %s\n", from_ospath, to_ospath );
+		Com_Printf( "FS_Rename: %s --> %s\n", from_ospath.c_str(), to_ospath.c_str());
 	}
 
-	if (rename( from_ospath, to_ospath )) {
+	if (rename( from_ospath.c_str(), to_ospath.c_str())) {
 		// Failed, try copying it and deleting the original
-		FS_CopyFile ( from_ospath, to_ospath );
-		FS_Remove ( from_ospath );
+		FS_CopyFile ( (char*)from_ospath.c_str(), (char*)to_ospath.c_str());
+		FS_Remove ( from_ospath.c_str());
 	}
 }
 
@@ -888,6 +924,7 @@ void FS_FCloseFile( fileHandle_t f ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
+	std::lock_guard lock(fshMutex); // just to be safe...
 	if (fsh[f].streamed) {
 		Sys_EndStreamedFile(f);
 	}
@@ -914,30 +951,31 @@ FS_FOpenFileWrite
 ===========
 */
 fileHandle_t FS_FOpenFileWrite( const char *filename ) {
-	char			*ospath;
+	std::string			ospath;
 	fileHandle_t	f;
 
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
+	std::lock_guard lock(fshMutex);
 	f = FS_HandleForFile();
 	fsh[f].zipFile = qfalse;
 
 	ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, filename );
 
 	if ( fs_debug->integer ) {
-		Com_Printf( "FS_FOpenFileWrite: %s\n", ospath );
+		Com_Printf( "FS_FOpenFileWrite: %s\n", ospath.c_str());
 	}
 
-	if( FS_CreatePath( ospath ) ) {
+	if( FS_CreatePath( (char*) ospath.c_str() ) ) {
 		return 0;
 	}
 
 	// enabling the following line causes a recursive function call loop
 	// when running with +set logfile 1 +set developer 1
 	//Com_DPrintf( "writing to: %s\n", ospath );
-	fsh[f].handleFiles.file.o = fopen( ospath, "wb" );
+	fsh[f].handleFiles.file.o = fopen( ospath.c_str(), "wb" );
 
 	Q_strncpyz( fsh[f].name, filename, sizeof( fsh[f].name ) );
 
@@ -949,30 +987,31 @@ fileHandle_t FS_FOpenFileWrite( const char *filename ) {
 }
 
 fileHandle_t FS_FOpenFileReadWrite( const char *filename ) {
-	char			*ospath;
+	std::string			ospath;
 	fileHandle_t	f;
 
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
+	std::lock_guard lock(fshMutex);
 	f = FS_HandleForFile();
 	fsh[f].zipFile = qfalse;
 
 	ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, filename );
 
 	if ( fs_debug->integer ) {
-		Com_Printf( "FS_FOpenFileReadWrite: %s\n", ospath );
+		Com_Printf( "FS_FOpenFileReadWrite: %s\n", ospath.c_str());
 	}
 
-	if( FS_CreatePath( ospath ) ) {
+	if( FS_CreatePath( (char*)ospath.c_str() ) ) {
 		return 0;
 	}
 
 	// enabling the following line causes a recursive function call loop
 	// when running with +set logfile 1 +set developer 1
 	//Com_DPrintf( "writing to: %s\n", ospath );
-	fsh[f].handleFiles.file.o = fopen( ospath, "r+b" );
+	fsh[f].handleFiles.file.o = fopen( ospath.c_str(), "r+b" );
 
 	Q_strncpyz( fsh[f].name, filename, sizeof( fsh[f].name ) );
 
@@ -984,30 +1023,31 @@ fileHandle_t FS_FOpenFileReadWrite( const char *filename ) {
 }
 
 fileHandle_t FS_FDirectOpenFileWrite( const char *filename, const char *mode ) {
-	char			*ospath;
+	std::string			ospath;
 	fileHandle_t	f;
 
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
+	std::lock_guard lock(fshMutex);
 	f = FS_HandleForFile();
 	fsh[f].zipFile = qfalse;
 
 	ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, filename );
 
 	if ( fs_debug->integer ) {
-		Com_Printf( "FS_FDirectOpenFileWrite: %s\n", ospath );
+		Com_Printf( "FS_FDirectOpenFileWrite: %s\n", ospath.c_str());
 	}
 
-	if( FS_CreatePath( ospath ) ) {
+	if( FS_CreatePath( (char*)ospath.c_str() ) ) {
 		return 0;
 	}
 
 	// enabling the following line causes a recursive function call loop
 	// when running with +set logfile 1 +set developer 1
 	//Com_DPrintf( "writing to: %s\n", ospath );
-	fsh[f].handleFiles.file.o = fopen( ospath, mode );
+	fsh[f].handleFiles.file.o = fopen( ospath.c_str(), mode );
 
 	Q_strncpyz( fsh[f].name, filename, sizeof( fsh[f].name ) );
 
@@ -1025,13 +1065,14 @@ FS_FOpenFileAppend
 ===========
 */
 fileHandle_t FS_FOpenFileAppend( const char *filename ) {
-	char			*ospath;
+	std::string			ospath;
 	fileHandle_t	f;
 
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
+	std::lock_guard lock(fshMutex);
 	f = FS_HandleForFile();
 	fsh[f].zipFile = qfalse;
 
@@ -1043,14 +1084,14 @@ fileHandle_t FS_FOpenFileAppend( const char *filename ) {
 	ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, filename );
 
 	if ( fs_debug->integer ) {
-		Com_Printf( "FS_FOpenFileAppend: %s\n", ospath );
+		Com_Printf( "FS_FOpenFileAppend: %s\n", ospath.c_str());
 	}
 
-	if( FS_CreatePath( ospath ) ) {
+	if( FS_CreatePath( (char*)ospath.c_str()) ) {
 		return 0;
 	}
 
-	fsh[f].handleFiles.file.o = fopen( ospath, "ab" );
+	fsh[f].handleFiles.file.o = fopen( ospath.c_str(), "ab" );
 	fsh[f].handleSync = qfalse;
 	if (!fsh[f].handleFiles.file.o) {
 		f = 0;
@@ -1124,7 +1165,7 @@ extern qboolean		com_fullyInitialized;
 
 int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueFILE ) {
 	searchpath_t	*search;
-	char			*netpath;
+	std::string		netpath;
 	pack_t			*pak;
 	fileInPack_t	*pakFile;
 	directory_t		*dir;
@@ -1173,6 +1214,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 	// search through the path, one element at a time
 	//
 
+	std::lock_guard lock(fshMutex);
 	*file = FS_HandleForFile();
 	fsh[*file].handleFiles.unique = uniqueFILE;
 
@@ -1298,7 +1340,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 			dir = search->dir;
 			
 			netpath = FS_BuildOSPath( dir->path, dir->gamedir, filename );
-			fsh[*file].handleFiles.file.o = fopen (netpath, "rb");
+			fsh[*file].handleFiles.file.o = fopen (netpath.c_str(), "rb");
 			if ( !fsh[*file].handleFiles.file.o ) {
 				continue;
 			}
@@ -1322,10 +1364,10 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 			// if we are getting it from the cdpath, optionally copy it
 			//  to the basepath
 			if ( fs_copyfiles->integer && !Q_stricmp( dir->path, fs_cdpath->string ) ) {
-				char	*copypath;
+				std::string copypath;
 
 				copypath = FS_BuildOSPath( fs_basepath->string, dir->gamedir, filename );
-				FS_CopyFile( netpath, copypath );
+				FS_CopyFile( (char*) netpath.c_str(), (char*)copypath.c_str());
 			}
 #ifndef DEDICATED
 #ifndef FINAL_BUILD
@@ -2072,7 +2114,7 @@ char **FS_ListFilteredFiles( const char *path, const char *extension, char *filt
 				}
 			}
 		} else if (search->dir) { // scan for files in the filesystem
-			char	*netpath;
+			std::string	netpath;
 			int		numSysFiles;
 			char	**sysFiles;
 			char	*name;
@@ -2087,7 +2129,7 @@ char **FS_ListFilteredFiles( const char *path, const char *extension, char *filt
 			else
 			{
 				netpath = FS_BuildOSPath( search->dir->path, search->dir->gamedir, path );
-				sysFiles = Sys_ListFiles( netpath, extension, filter, &numSysFiles, qfalse );
+				sysFiles = Sys_ListFiles( netpath.c_str(), extension, filter, &numSysFiles, qfalse );
 				for ( i = 0 ; i < numSysFiles ; i++ ) {
 					// unique the match
 					name = sysFiles[i];
@@ -2264,7 +2306,8 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
   int		nMods, i, j, nTotal, nLen, nPaks, nPotential, nDescLen;
   char **pFiles = NULL;
   char **pPaks = NULL;
-  char *name, *path;
+  char* name;
+  std::string path;
   char descPath[MAX_OSPATH];
   fileHandle_t descHandle;
 
@@ -2312,14 +2355,14 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
       //   we will try each three of them here (yes, it's a bit messy)
       path = FS_BuildOSPath( fs_basepath->string, name, "" );
       nPaks = 0;
-      pPaks = Sys_ListFiles(path, ".pk3", NULL, &nPaks, qfalse); 
+      pPaks = Sys_ListFiles(path.c_str(), ".pk3", NULL, &nPaks, qfalse);
       Sys_FreeFileList( pPaks ); // we only use Sys_ListFiles to check wether .pk3 files are present
 
       /* Try on cd path */
       if( nPaks <= 0 ) {
         path = FS_BuildOSPath( fs_cdpath->string, name, "" );
         nPaks = 0;
-        pPaks = Sys_ListFiles( path, ".pk3", NULL, &nPaks, qfalse );
+        pPaks = Sys_ListFiles( path.c_str(), ".pk3", NULL, &nPaks, qfalse );
         Sys_FreeFileList( pPaks );
       }
 
@@ -2328,7 +2371,7 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
       {
         path = FS_BuildOSPath( fs_homepath->string, name, "" );
         nPaks = 0;
-        pPaks = Sys_ListFiles( path, ".pk3", NULL, &nPaks, qfalse );
+        pPaks = Sys_ListFiles( path.c_str(), ".pk3", NULL, &nPaks, qfalse );
         Sys_FreeFileList( pPaks );
       }
 
@@ -2611,7 +2654,7 @@ static void FS_AddGameDirectory( const char *path, const char *dir ) {
 	int				i;
 	searchpath_t	*search;
 	pack_t			*pak;
-	char			*pakfile;
+	std::string		pakfile;
 	int				numfiles;
 	char			**pakfiles;
 	char			*sorted[MAX_PAKFILES];
@@ -2639,9 +2682,9 @@ static void FS_AddGameDirectory( const char *path, const char *dir ) {
 
 	// find all pak files in this directory
 	pakfile = FS_BuildOSPath( path, dir, "" );
-	pakfile[ strlen(pakfile) - 1 ] = 0;	// strip the trailing slash
+	pakfile.resize(pakfile.size() - 1);// strip the trailing slash
 
-	pakfiles = Sys_ListFiles( pakfile, ".pk3", NULL, &numfiles, qfalse );
+	pakfiles = Sys_ListFiles( pakfile.c_str(), ".pk3", NULL, &numfiles, qfalse );
 
 	// sort them so that later alphabetic matches override
 	// earlier ones.  This makes pak1.pk3 override pak0.pk3
@@ -2656,7 +2699,7 @@ static void FS_AddGameDirectory( const char *path, const char *dir ) {
 
 	for ( i = 0 ; i < numfiles ; i++ ) {
 		pakfile = FS_BuildOSPath( path, dir, sorted[i] );
-		if ( ( pak = FS_LoadZipFile( pakfile, sorted[i] ) ) == 0 )
+		if ( ( pak = FS_LoadZipFile( (char*)pakfile.c_str(), sorted[i] ) ) == 0 )
 			continue;
 		// store the game name for downloading
 		strcpy(pak->pakGamename, dir);

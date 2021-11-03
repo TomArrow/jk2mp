@@ -11,6 +11,7 @@
 #include <direct.h>
 #include <io.h>
 #include <conio.h>
+#include <string>
 #include "../qcommon/strip.h"
 
 #define	CD_BASEDIR	"gamedata\\gamedata"
@@ -400,7 +401,7 @@ Sys_LoadDll
 Used to load a development dll instead of a virtual machine
 =================
 */
-extern char		*FS_BuildOSPath( const char *base, const char *game, const char *qpath );
+extern std::string		FS_BuildOSPath( const char *base, const char *game, const char *qpath );
 
 void * QDECL Sys_LoadDll( const char *name, int (QDECL **entryPoint)(int, ...),
 				  int (QDECL *systemcalls)(int, ...) ) {
@@ -447,13 +448,15 @@ void * QDECL Sys_LoadDll( const char *name, int (QDECL **entryPoint)(int, ...),
 	basepath = Cvar_VariableString( "fs_basepath" );
 	cdpath = Cvar_VariableString( "fs_cdpath" );
 	gamedir = Cvar_VariableString( "fs_game" );
-
-	fn = FS_BuildOSPath( basepath, gamedir, filename );
+	
+	std::string fnstr = FS_BuildOSPath( basepath, gamedir, filename );
+	fn = (char*)fnstr.c_str();
 	libHandle = LoadLibrary( fn );
 
 	if ( !libHandle ) {
 		if( cdpath[0] ) {
-			fn = FS_BuildOSPath( cdpath, gamedir, filename );
+			fnstr = FS_BuildOSPath(cdpath, gamedir, filename);
+			fn = (char*)fnstr.c_str();
 			libHandle = LoadLibrary( fn );
 		}
 
