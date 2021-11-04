@@ -58,6 +58,7 @@ cvar_t	*mme_worldDeform;
 cvar_t	*mme_worldBlend;
 cvar_t* mme_worldNoCull;
 cvar_t	*mme_skyColor;
+cvar_t	* mme_cinNoClamp;
 cvar_t	*mme_pip;
 cvar_t	*mme_blurFrames;
 cvar_t	*mme_blurType;
@@ -741,6 +742,7 @@ void R_MME_Init(void) {
 	mme_worldBlend = ri.Cvar_Get( "mme_worldBlend", "0", CVAR_CHEAT );
 	mme_worldNoCull = ri.Cvar_Get( "mme_worldNoCull", "0", CVAR_CHEAT );
 	mme_skyColor = ri.Cvar_Get( "mme_skyColor", "0", CVAR_CHEAT );
+	mme_cinNoClamp = ri.Cvar_Get( "mme_cinNoClamp", "0", CVAR_ARCHIVE);
 	mme_renderWidth = ri.Cvar_Get( "mme_renderWidth", "0", CVAR_LATCH | CVAR_ARCHIVE );
 	mme_renderHeight = ri.Cvar_Get( "mme_renderHeight", "0", CVAR_LATCH | CVAR_ARCHIVE );
 

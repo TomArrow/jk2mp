@@ -1335,6 +1335,7 @@ extern cvar_t*	mme_worldDeform;
 extern cvar_t*	mme_worldBlend;
 extern cvar_t* mme_worldNoCull;
 extern cvar_t*	mme_skyColor;
+extern cvar_t*	mme_cinNoClamp;
 extern cvar_t	*mme_pip;
 extern cvar_t	*mme_renderWidth;
 extern cvar_t	*mme_renderHeight;
