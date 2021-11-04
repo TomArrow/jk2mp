@@ -297,6 +297,14 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits ) {
 		}
 		Com_Memcpy(&shader->deforms[deformToReplace],&tr.mmeWorldDeform,sizeof(deformStage_t));
 	}
+	if (tr.mmeWorldBlendIsSet) { // Replace blend modes of every shader stage.
+		for (int i = 0; i < MAX_SHADER_STAGES; i++) {
+			if (shader->stages[i]) {
+				shader->stages[i]->stateBits &= ~(GLS_DSTBLEND_BITS | GLS_SRCBLEND_BITS); // clear these bits first
+				shader->stages[i]->stateBits |= tr.mmeWorldBlend;
+			}
+		}
+	}
 
 	R_AddDrawSurf( surf->data, shader, surf->fogIndex, dlightBits );
 }

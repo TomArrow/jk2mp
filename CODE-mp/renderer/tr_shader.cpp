@@ -1915,6 +1915,50 @@ qboolean ParseDeformAlone(char** text, deformStage_t* output) {
 	return success;
 }
 
+qboolean ParseBlendAlone(char** text, int* output) {
+
+	char* token; 
+
+	int blendSrcBits = 0;
+	int blendDstBits = 0;
+
+	token = COM_ParseExt((const char**)text, qfalse);
+	if (token[0] == 0)
+	{
+		ri.Printf(PRINT_WARNING, "WARNING: missing parm for blendFunc in shader '%s'\n", shader.name);
+		return qfalse;
+	}
+	// check for "simple" blends first
+	if (!Q_stricmp(token, "add")) {
+		blendSrcBits = GLS_SRCBLEND_ONE;
+		blendDstBits = GLS_DSTBLEND_ONE;
+	}
+	else if (!Q_stricmp(token, "filter")) {
+		blendSrcBits = GLS_SRCBLEND_DST_COLOR;
+		blendDstBits = GLS_DSTBLEND_ZERO;
+	}
+	else if (!Q_stricmp(token, "blend")) {
+		blendSrcBits = GLS_SRCBLEND_SRC_ALPHA;
+		blendDstBits = GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+	}
+	else {
+		// complex double blends
+		blendSrcBits = NameToSrcBlendMode(token);
+
+		token = COM_ParseExt((const char**)text, qfalse);
+		if (token[0] == 0)
+		{
+			ri.Printf(PRINT_WARNING, "WARNING: missing parm for blendFunc in shader '%s'\n", shader.name);
+			return qfalse;
+		}
+		blendDstBits = NameToDstBlendMode(token);
+	}
+
+	*output |= blendSrcBits | blendDstBits;
+
+	return qtrue;
+}
+
 
 /*
 ===============

@@ -5,7 +5,7 @@ volatile renderCommandList_t	*renderCommandList;
 volatile qboolean	renderThreadActive;
 
 extern qboolean ParseDeformAlone(char** text, deformStage_t* output);
-
+extern qboolean ParseBlendAlone(char** text, int* output);
 /*
 =====================
 R_PerformanceCounters
@@ -438,11 +438,13 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 	}
 	if (mme_worldBlend->modified) {
 		tr.mmeWorldBlendIsSet = qfalse;
-		/*if (R_FindShaderText( mme_worldShader->string )) {
-			tr.mmeWorldShader = R_FindShader( mme_worldShader->string, lightmapsNone, stylesDefault, qtrue );
-		} else {
-			tr.mmeWorldShader = 0;
-		}*/
+
+		if (Q_stricmp(mme_worldBlend->string, "0")) {
+			char* blendTextPointer = mme_worldBlend->string;
+			if (ParseBlendAlone(&blendTextPointer, &tr.mmeWorldBlend)) {
+				tr.mmeWorldBlendIsSet = qtrue;
+			}
+		}
 		mme_worldBlend->modified = qfalse;
 	}
 	if (mme_skyColor->modified) {
