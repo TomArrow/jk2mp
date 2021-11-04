@@ -430,7 +430,7 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 		tr.mmeWorldDeformIsSet = qfalse;
 		if (Q_stricmp(mme_worldDeform->string,"0")) {
 			char* deformTextPointer = mme_worldDeform->string;
-c			if (ParseDeformAlone(&deformTextPointer, &tr.mmeWorldDeform)) {
+			if (ParseDeformAlone(&deformTextPointer, &tr.mmeWorldDeform)) {
 				tr.mmeWorldDeformIsSet = qtrue;
 			}
 		}
