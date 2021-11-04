@@ -1122,7 +1122,7 @@ typedef struct {
 	shader_t				*mmeWorldShader;
 	deformStage_t			mmeWorldDeform;
 	int						mmeWorldBlend;
-	byte					mmeSkyColor[4];
+	vec4_t					mmeSkyColor;
 	qboolean				mmeWorldDeformIsSet;
 	qboolean				mmeWorldBlendIsSet;
 	qboolean				mmeSkyColorIsSet;
@@ -1333,6 +1333,7 @@ extern cvar_t	*mme_skykey;
 extern cvar_t	*mme_worldShader;
 extern cvar_t*	mme_worldDeform;
 extern cvar_t*	mme_worldBlend;
+extern cvar_t* mme_worldNoCull;
 extern cvar_t*	mme_skyColor;
 extern cvar_t	*mme_pip;
 extern cvar_t	*mme_renderWidth;

@@ -449,11 +449,12 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 	}
 	if (mme_skyColor->modified) {
 		tr.mmeSkyColorIsSet = qfalse;
-		/*if (R_FindShaderText( mme_worldShader->string )) {
-			tr.mmeWorldShader = R_FindShader( mme_worldShader->string, lightmapsNone, stylesDefault, qtrue );
-		} else {
-			tr.mmeWorldShader = 0;
-		}*/
+		if (Q_stricmp(mme_skyColor->string, "0")) {
+			char* skyColorTextPointer = mme_skyColor->string;
+			if (!COM_ParseVec4((const char**)&skyColorTextPointer, &tr.mmeSkyColor)) {
+				tr.mmeSkyColorIsSet = qtrue;
+			}
+		}
 		mme_skyColor->modified = qfalse;
 	}
 

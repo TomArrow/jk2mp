@@ -558,7 +558,13 @@ void RB_BeginDrawingView (void) {
 #ifdef _DEBUG
 			qglClearColor( 0.8f, 0.7f, 0.4f, 1.0f );	// FIXME: get color of sky
 #else
-			qglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );	// FIXME: get color of sky
+			if (tr.mmeSkyColorIsSet) {
+				qglClearColor(tr.mmeSkyColor[0], tr.mmeSkyColor[1], tr.mmeSkyColor[2], tr.mmeSkyColor[3]);	// FIXME: get color of sky
+			}
+			else {
+				qglClearColor(0.0f, 0.0f, 0.0f, 1.0f);	// FIXME: get color of sky
+			}
+			
 #endif
 		}
 	}
