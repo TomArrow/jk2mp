@@ -285,6 +285,19 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits ) {
 	else
 		shader = surf->shader;
 
+	if (tr.mmeWorldDeformIsSet) {
+		int deformToReplace = 0;
+		if (shader->numDeforms >= MAX_SHADER_DEFORMS) {
+			// Replace last one
+			deformToReplace = MAX_SHADER_DEFORMS - 1;
+		}
+		else {
+			deformToReplace = shader->numDeforms;
+			shader->numDeforms++;
+		}
+		Com_Memcpy(&shader->deforms[deformToReplace],&tr.mmeWorldDeform,sizeof(deformStage_t));
+	}
+
 	R_AddDrawSurf( surf->data, shader, surf->fogIndex, dlightBits );
 }
 

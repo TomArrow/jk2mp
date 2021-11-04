@@ -1120,6 +1120,12 @@ typedef struct {
 	shader_t				*shaders[MAX_SHADERS];
 	shader_t				*sortedShaders[MAX_SHADERS];
 	shader_t				*mmeWorldShader;
+	deformStage_t			mmeWorldDeform;
+	int						mmeWorldBlend;
+	byte					mmeSkyColor[4];
+	qboolean				mmeWorldDeformIsSet;
+	qboolean				mmeWorldBlendIsSet;
+	qboolean				mmeSkyColorIsSet;
 
 	int						numSkins;
 	skin_t					*skins[MAX_SKINS];
@@ -1325,6 +1331,9 @@ extern cvar_t	*mme_tgaCompression;
 extern cvar_t	*mme_pngCompression;
 extern cvar_t	*mme_skykey;
 extern cvar_t	*mme_worldShader;
+extern cvar_t*	mme_worldDeform;
+extern cvar_t*	mme_worldBlend;
+extern cvar_t*	mme_skyColor;
 extern cvar_t	*mme_pip;
 extern cvar_t	*mme_renderWidth;
 extern cvar_t	*mme_renderHeight;

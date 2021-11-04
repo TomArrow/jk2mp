@@ -1743,6 +1743,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 	return qtrue;
 }
 
+
 /*
 ===============
 ParseDeform
@@ -1895,6 +1896,23 @@ static void ParseDeform( const char **text ) {
 	}
 
 	ri.Printf( PRINT_WARNING, "WARNING: unknown deformVertexes subtype '%s' found in shader '%s'\n", token, shader.name );
+}
+
+
+qboolean ParseDeformAlone(char** text, deformStage_t* output) {
+
+	qboolean success = qfalse;
+	Com_Memset(&shader, 0, sizeof(shader));
+
+	ParseDeform((const char**)text);
+
+	if (shader.numDeforms > 0) {
+		Com_Memcpy(output, &shader.deforms[0], sizeof(deformStage_t));
+		success = qtrue;
+	}
+
+	Com_Memset(&shader, 0, sizeof(shader));
+	return success;
 }
 
 

@@ -54,6 +54,9 @@ cvar_t	*mme_tgaCompression;
 cvar_t	*mme_pngCompression;
 cvar_t	*mme_skykey;
 cvar_t	*mme_worldShader;
+cvar_t	*mme_worldDeform;
+cvar_t	*mme_worldBlend;
+cvar_t	*mme_skyColor;
 cvar_t	*mme_pip;
 cvar_t	*mme_blurFrames;
 cvar_t	*mme_blurType;
@@ -733,6 +736,9 @@ void R_MME_Init(void) {
 	mme_skykey = ri.Cvar_Get( "mme_skykey", "0", CVAR_ARCHIVE );
 	mme_pip = ri.Cvar_Get( "mme_pip", "0", CVAR_CHEAT );	//-
 	mme_worldShader = ri.Cvar_Get( "mme_worldShader", "0", CVAR_CHEAT );
+	mme_worldDeform = ri.Cvar_Get( "mme_worldDeform", "0", CVAR_CHEAT );
+	mme_worldBlend = ri.Cvar_Get( "mme_worldBlend", "0", CVAR_CHEAT );
+	mme_skyColor = ri.Cvar_Get( "mme_skyColor", "0", CVAR_CHEAT );
 	mme_renderWidth = ri.Cvar_Get( "mme_renderWidth", "0", CVAR_LATCH | CVAR_ARCHIVE );
 	mme_renderHeight = ri.Cvar_Get( "mme_renderHeight", "0", CVAR_LATCH | CVAR_ARCHIVE );
 
@@ -762,6 +768,9 @@ void R_MME_Init(void) {
 	mme_rollingShutterMultiplier = ri.Cvar_Get ( "mme_rollingShutterMultiplier", "1", CVAR_ARCHIVE );
 
 	mme_worldShader->modified = qtrue;
+	mme_worldDeform->modified = qtrue;
+	mme_worldBlend->modified = qtrue;
+	mme_skyColor->modified = qtrue;
 
 	Com_Memset( &shotData, 0, sizeof(shotData));
 	//CANATODO, not exactly the best way to do this probably, but it works

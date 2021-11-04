@@ -4,6 +4,7 @@ volatile renderCommandList_t	*renderCommandList;
 
 volatile qboolean	renderThreadActive;
 
+extern qboolean ParseDeformAlone(char** text, deformStage_t* output);
 
 /*
 =====================
@@ -423,6 +424,35 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 			tr.mmeWorldShader = 0;
 		}
 		mme_worldShader->modified = qfalse;
+	}
+
+	if (mme_worldDeform->modified) {
+		tr.mmeWorldDeformIsSet = qfalse;
+		if (Q_stricmp(mme_worldDeform->string,"0")) {
+			char* deformTextPointer = mme_worldDeform->string;
+c			if (ParseDeformAlone(&deformTextPointer, &tr.mmeWorldDeform)) {
+				tr.mmeWorldDeformIsSet = qtrue;
+			}
+		}
+		mme_worldDeform->modified = qfalse;
+	}
+	if (mme_worldBlend->modified) {
+		tr.mmeWorldBlendIsSet = qfalse;
+		/*if (R_FindShaderText( mme_worldShader->string )) {
+			tr.mmeWorldShader = R_FindShader( mme_worldShader->string, lightmapsNone, stylesDefault, qtrue );
+		} else {
+			tr.mmeWorldShader = 0;
+		}*/
+		mme_worldBlend->modified = qfalse;
+	}
+	if (mme_skyColor->modified) {
+		tr.mmeSkyColorIsSet = qfalse;
+		/*if (R_FindShaderText( mme_worldShader->string )) {
+			tr.mmeWorldShader = R_FindShader( mme_worldShader->string, lightmapsNone, stylesDefault, qtrue );
+		} else {
+			tr.mmeWorldShader = 0;
+		}*/
+		mme_skyColor->modified = qfalse;
 	}
 
 	//
