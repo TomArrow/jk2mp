@@ -3921,119 +3921,236 @@ a single large text block that can be scanned for shader names
 #define	MAX_SHADER_FILES	4096
 static void ScanAndLoadShaderFiles( const char *path )
 {
-	char **shaderFiles;
-	char *buffers[MAX_SHADER_FILES];
-	char *p;
-	int numShaders;
-	int i;
-	char *oldp, *token, *hashMem;
-	int shaderTextHashTableSizes[MAX_SHADERTEXT_HASH], hash, size;
+	// Optionally allow to load shaders in jk2mv style order.
+	if (mme_mvShaderLoadOrder->integer) {
+		char** shaderFiles[2];
+		char* buffers[MAX_SHADER_FILES];
+		char* p;
+		char* pw;
+		int numShaderFiles; 
+		int numShaderFilesType[2];
+		int i, j, type;
+		char* oldp, * token;
+		char* hashMem;
+		int shaderTextHashTableSizes[MAX_SHADERTEXT_HASH], hash, size;
+		int sum;
 
-	long sum = 0;
-	// scan for shader files
-	shaderFiles = ri.FS_ListFiles( path, ".shader", &numShaders );
+		// scan for shader files
+		//shaderFiles[0] = ri.FS_ListFiles(path, ".shader_mv", &numShaderFilesType[0]); // Maybe implement someday.
+		shaderFiles[1] = ri.FS_ListFiles(path, ".shader", &numShaderFilesType[1]);
 
-	if ( !shaderFiles || !numShaders )
-	{
-		ri.Printf( PRINT_WARNING, "WARNING: no shader files found\n" );
-		return;
-	}
-
-	if ( numShaders > MAX_SHADER_FILES ) {
-		numShaders = MAX_SHADER_FILES;
-	}
-
-	// load and parse shader files
-	for ( i = 0; i < numShaders; i++ )
-	{
-		char filename[MAX_QPATH];
-
-		Com_sprintf( filename, sizeof( filename ), "%s/%s", path, shaderFiles[i] );
-		ri.Printf( PRINT_ALL, "...loading '%s'\n", filename );
-		sum += ri.FS_ReadFile( filename, (void **)&buffers[i] );
-		if ( !buffers[i] ) {
-			ri.Error( ERR_DROP, "Couldn't load %s", filename );
+		if (!shaderFiles[0])
+		{
+			numShaderFilesType[0] = 0;
 		}
-	}
+		if (!shaderFiles[1])
+		{
+			numShaderFilesType[1] = 0;
+		}
 
-	// build single large buffer
-	s_shaderText = (char *)ri.Hunk_Alloc( sum + numShaders*2, h_low );
+		if (numShaderFilesType[0] + numShaderFilesType[1] > MAX_SHADER_FILES) {
+			ri.Printf(PRINT_WARNING, "WARNING: too many shader files, truncating...\n");
+			numShaderFilesType[0] = min(numShaderFilesType[0], MAX_SHADER_FILES);
+			numShaderFilesType[1] = MAX_SHADER_FILES - numShaderFilesType[0];
+		}
 
-	// free in reverse order, so the temp files are all dumped
-	for ( i = numShaders - 1; i >= 0 ; i-- ) {
-		strcat( s_shaderText, "\n" );
-		p = &s_shaderText[strlen(s_shaderText)];
-		strcat( s_shaderText, buffers[i] );
-		ri.FS_FreeFile( (void*) buffers[i] );
-		buffers[i] = p;
-		COM_Compress(p);
-	}
+		numShaderFiles = numShaderFilesType[0] + numShaderFilesType[1];
 
-	// free up memory
-	ri.FS_FreeFileList( shaderFiles );
+		if (numShaderFiles == 0) {
+			ri.Error(ERR_FATAL, "ERROR: no shader files found");
+		}
 
-	Com_Memset(shaderTextHashTableSizes, 0, sizeof(shaderTextHashTableSizes));
-	size = 0;
-	//
-	for ( i = 0; i < numShaders; i++ ) {
-		// pointer to the first shader file
-		p = buffers[i];
-		// look for label
-		while ( 1 ) {
-			token = COM_ParseExt( (const char **)&p, qtrue );
-			if ( token[0] == 0 ) {
+		assert(numShaderFilesType[0] > 0 || numShaderFilesType[1] > 0);
+		sum = 0;
+		// load and parse shader files
+		for (type = 0, j = 0; type < 2; type++) {
+			for (i = 0; i < numShaderFilesType[type]; i++, j++)
+			{
+				char filename[MAX_QPATH];
+
+				Com_sprintf(filename, sizeof(filename), "%s/%s", path, shaderFiles[type][i]);
+				ri.Printf(PRINT_ALL, "...loading '%s'\n", filename);
+				ri.FS_ReadFile(filename, (void**)&buffers[j]);
+				if (!buffers[j]) {
+					ri.Error(ERR_DROP, "Couldn't load %s", filename);
+				}
+				sum += COM_Compress(buffers[j]);
+			}
+		}
+
+		// build single large buffer
+		s_shaderText = (char*)ri.Hunk_Alloc(sum + numShaderFiles + 1, h_low);
+		pw = s_shaderText;
+		for (i = 0; i < numShaderFiles; i++) {
+			strcat(pw, buffers[i]);
+			strcat(pw, "\n");
+			pw += strlen(pw);
+			ri.FS_FreeFile((void*)buffers[i]);
+		}
+		assert((int)strlen(s_shaderText) == sum + numShaderFiles);
+
+		// free up memory
+		ri.FS_FreeFileList(shaderFiles[0]);
+		ri.FS_FreeFileList(shaderFiles[1]);
+
+		Com_Memset(shaderTextHashTableSizes, 0, sizeof(shaderTextHashTableSizes));
+		size = 0;
+		p = s_shaderText;
+
+		while (1) {
+			// look for label
+			token = COM_ParseExt((const char**)&p, qtrue);
+			if (token[0] == 0) {
 				break;
 			}
 
 			hash = generateHashValue(token, MAX_SHADERTEXT_HASH);
 			shaderTextHashTableSizes[hash]++;
 			size++;
-			SkipBracedSection((const char **)&p);
-			// if we passed the pointer to the next shader file
-			if ( i < numShaders - 1 ) {
-				if ( p > buffers[i+1] ) {
-					break;
-				}
-			}
+			SkipBracedSection((const char**)&p);
 		}
-	}
 
-	size += MAX_SHADERTEXT_HASH;
+		size += MAX_SHADERTEXT_HASH;
 
-	hashMem = (char *)ri.Hunk_Alloc( size * sizeof(char *), h_low );
+		hashMem = (char*)ri.Hunk_Alloc(size * sizeof(char*), h_low);
 
-	for (i = 0; i < MAX_SHADERTEXT_HASH; i++) {
-		shaderTextHashTable[i] = (char **) hashMem;
-		hashMem = ((char *) hashMem) + ((shaderTextHashTableSizes[i] + 1) * sizeof(char *));
-	}
+		for (i = 0; i < MAX_SHADERTEXT_HASH; i++) {
+			shaderTextHashTable[i] = (char**)hashMem;
+			hashMem = ((char*)hashMem) + ((shaderTextHashTableSizes[i] + 1) * sizeof(char*));
+		}
 
-	Com_Memset(shaderTextHashTableSizes, 0, sizeof(shaderTextHashTableSizes));
-	//
-	for ( i = 0; i < numShaders; i++ ) {
-		// pointer to the first shader file
-		p = buffers[i];
+		Com_Memset(shaderTextHashTableSizes, 0, sizeof(shaderTextHashTableSizes));
+
 		// look for label
-		while ( 1 ) {
+		p = s_shaderText;
+		while (1) {
 			oldp = p;
-			token = COM_ParseExt( (const char **)&p, qtrue );
-			if ( token[0] == 0 ) {
+			token = COM_ParseExt((const char**)&p, qtrue);
+			if (token[0] == 0) {
 				break;
 			}
 
 			hash = generateHashValue(token, MAX_SHADERTEXT_HASH);
 			shaderTextHashTable[hash][shaderTextHashTableSizes[hash]++] = oldp;
 
-			SkipBracedSection((const char **)&p);
-			// if we passed the pointer to the next shader file
-			if ( i < numShaders - 1 ) {
-				if ( p > buffers[i+1] ) {
+			SkipBracedSection((const char**)&p);
+		}
+	}
+	else {
+		char** shaderFiles;
+		char* buffers[MAX_SHADER_FILES];
+		char* p;
+		int numShaders;
+		int i;
+		char* oldp, * token, * hashMem;
+		int shaderTextHashTableSizes[MAX_SHADERTEXT_HASH], hash, size;
+
+		long sum = 0;
+		// scan for shader files
+		shaderFiles = ri.FS_ListFiles(path, ".shader", &numShaders);
+
+		if (!shaderFiles || !numShaders)
+		{
+			ri.Printf(PRINT_WARNING, "WARNING: no shader files found\n");
+			return;
+		}
+
+		if (numShaders > MAX_SHADER_FILES) {
+			numShaders = MAX_SHADER_FILES;
+		}
+
+		// load and parse shader files
+		for (i = 0; i < numShaders; i++)
+		{
+			char filename[MAX_QPATH];
+
+			Com_sprintf(filename, sizeof(filename), "%s/%s", path, shaderFiles[i]);
+			ri.Printf(PRINT_ALL, "...loading '%s'\n", filename);
+			sum += ri.FS_ReadFile(filename, (void**)&buffers[i]);
+			if (!buffers[i]) {
+				ri.Error(ERR_DROP, "Couldn't load %s", filename);
+			}
+		}
+
+		// build single large buffer
+		s_shaderText = (char*)ri.Hunk_Alloc(sum + numShaders * 2, h_low);
+
+		// free in reverse order, so the temp files are all dumped
+		for (i = numShaders - 1; i >= 0; i--) {
+			strcat(s_shaderText, "\n");
+			p = &s_shaderText[strlen(s_shaderText)];
+			strcat(s_shaderText, buffers[i]);
+			ri.FS_FreeFile((void*)buffers[i]);
+			buffers[i] = p;
+			COM_Compress(p);
+		}
+
+		// free up memory
+		ri.FS_FreeFileList(shaderFiles);
+
+		Com_Memset(shaderTextHashTableSizes, 0, sizeof(shaderTextHashTableSizes));
+		size = 0;
+		//
+		for (i = 0; i < numShaders; i++) {
+			// pointer to the first shader file
+			p = buffers[i];
+			// look for label
+			while (1) {
+				token = COM_ParseExt((const char**)&p, qtrue);
+				if (token[0] == 0) {
 					break;
+				}
+
+				hash = generateHashValue(token, MAX_SHADERTEXT_HASH);
+				shaderTextHashTableSizes[hash]++;
+				size++;
+				SkipBracedSection((const char**)&p);
+				// if we passed the pointer to the next shader file
+				if (i < numShaders - 1) {
+					if (p > buffers[i + 1]) {
+						break;
+					}
 				}
 			}
 		}
-	}
 
-	return;
+		size += MAX_SHADERTEXT_HASH;
+
+		hashMem = (char*)ri.Hunk_Alloc(size * sizeof(char*), h_low);
+
+		for (i = 0; i < MAX_SHADERTEXT_HASH; i++) {
+			shaderTextHashTable[i] = (char**)hashMem;
+			hashMem = ((char*)hashMem) + ((shaderTextHashTableSizes[i] + 1) * sizeof(char*));
+		}
+
+		Com_Memset(shaderTextHashTableSizes, 0, sizeof(shaderTextHashTableSizes));
+		//
+		for (i = 0; i < numShaders; i++) {
+			// pointer to the first shader file
+			p = buffers[i];
+			// look for label
+			while (1) {
+				oldp = p;
+				token = COM_ParseExt((const char**)&p, qtrue);
+				if (token[0] == 0) {
+					break;
+				}
+
+				hash = generateHashValue(token, MAX_SHADERTEXT_HASH);
+				shaderTextHashTable[hash][shaderTextHashTableSizes[hash]++] = oldp;
+
+				SkipBracedSection((const char**)&p);
+				// if we passed the pointer to the next shader file
+				if (i < numShaders - 1) {
+					if (p > buffers[i + 1]) {
+						break;
+					}
+				}
+			}
+		}
+
+		return;
+	}
 
 }
 

@@ -216,6 +216,8 @@ cvar_t	*r_Ghoul2UnSqashAfterSmooth=0;
 Ghoul2 Insert End
 */
 
+cvar_t* r_fontSharpness;
+
 #ifndef DEDICATED
 
 void ( APIENTRY * qglMultiTexCoord2fARB )( GLenum texture, GLfloat s, GLfloat t );
@@ -1065,6 +1067,7 @@ extern qboolean Sys_LowPhysicalMemory();
 	ri.Cmd_AddCommand( "modelist", R_ModeList_f );
 	ri.Cmd_AddCommand( "modelcacheinfo", RE_RegisterModels_Info_f);
 
+	r_fontSharpness = ri.Cvar_Get("r_fontSharpness", "0", CVAR_ARCHIVE);
 }
 
 #ifdef G2_COLLISION_ENABLED

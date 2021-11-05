@@ -12,6 +12,8 @@
 #define GLYPH_MAX_JAPANESE_SHADERS 3
 #define GLYPH_MAX_ASIAN_SHADERS 4	// this MUST equal the larger of the above defines
 
+#define MAX_FONT_VARIANTS 8
+
 class CFontInfo
 {
 private:
@@ -38,12 +40,22 @@ private:
 	bool			m_bAsianLastPageHalfHeight;
 	int				m_iAsianLanguageLoaded;	// doesn't matter what this is, so long as it's comparable as being changed
 
+	CFontInfo* m_variants[MAX_FONT_VARIANTS];
+	int				m_numVariants;
+	int				m_handle;
+
 public:
 	bool			mbRoundCalcs;	// trying to make this !@#$%^ thing work with scaling
 
 	CFontInfo(const char *fontName);
 	CFontInfo(int fill) { memset(this, fill, sizeof(*this)); }
 	~CFontInfo(void) {}
+
+	int GetHandle();
+
+	void AddVariant(CFontInfo* variant);
+	int GetNumVariants();
+	CFontInfo* GetVariant(int index);
 
 	const int GetPointSize(void) const { return(mPointSize); }
 	const int GetHeight(void) const { return(mHeight); }

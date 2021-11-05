@@ -1317,6 +1317,9 @@ extern	cvar_t	*r_noServerGhoul2;
 /*
 Ghoul2 Insert End
 */
+
+extern	cvar_t* r_fontSharpness;
+
 //====================================================================
 
 
@@ -1356,6 +1359,7 @@ extern cvar_t	* mme_saveADM;
 extern cvar_t	*mme_rollingShutterBlur;
 extern cvar_t	*mme_rollingShutterPixels;
 extern cvar_t	*mme_rollingShutterMultiplier;
+extern cvar_t	*mme_mvShaderLoadOrder;
 
 
 float R_NoiseGet4f( float x, float y, float z, double t );

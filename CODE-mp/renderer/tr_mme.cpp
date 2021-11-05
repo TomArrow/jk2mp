@@ -85,6 +85,7 @@ cvar_t	* mme_saveADM;
 cvar_t  *mme_rollingShutterBlur;
 cvar_t  *mme_rollingShutterPixels;
 cvar_t  *mme_rollingShutterMultiplier;
+cvar_t  * mme_mvShaderLoadOrder;
 
 
 #ifdef JEDIACADEMY_GLOW
@@ -770,6 +771,7 @@ void R_MME_Init(void) {
 	mme_rollingShutterBlur = ri.Cvar_Get ( "mme_rollingShutterBlur", "0.5", CVAR_ARCHIVE ); // float. like rollingshuttermultiplier.
 	mme_rollingShutterPixels = ri.Cvar_Get ( "mme_rollingShutterPixels", "1", CVAR_ARCHIVE );
 	mme_rollingShutterMultiplier = ri.Cvar_Get ( "mme_rollingShutterMultiplier", "1", CVAR_ARCHIVE );
+	mme_mvShaderLoadOrder = ri.Cvar_Get ( "mme_mvShaderLoadOrder", "1", CVAR_ARCHIVE );
 
 	mme_worldShader->modified = qtrue;
 	mme_worldDeform->modified = qtrue;

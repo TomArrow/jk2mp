@@ -396,7 +396,26 @@ CFontInfo::CFontInfo(const char *fontName)
 
 	// finished...
 	fontArray.resize(fontIndex + 1);
+	m_handle = fontIndex;
 	fontArray[fontIndex++] = this;
+
+	m_numVariants = 0;
+}
+
+int CFontInfo::GetHandle() {
+	return m_handle;
+}
+
+void CFontInfo::AddVariant(CFontInfo* replacer) {
+	m_variants[m_numVariants++] = replacer;
+}
+
+int CFontInfo::GetNumVariants() {
+	return m_numVariants;
+}
+
+CFontInfo* CFontInfo::GetVariant(int index) {
+	return m_variants[index];
 }
 
 extern int Language_GetIntegerValue(void);
@@ -754,10 +773,37 @@ int RE_Font_HeightPixels(const int iFontHandle, const float fScale)
 	return(0);
 }
 
+CFontInfo* RE_Font_GetVariant(CFontInfo* font, float* scale, float xadjust, float yadjust) {
+	int variants = font->GetNumVariants();
+
+	if (variants > 0) {
+		CFontInfo* variant;
+		int requestedSize = font->GetPointSize() * *scale *
+			r_fontSharpness->value * glConfig.vidHeight *
+			(yadjust / SCREEN_HEIGHT);
+
+		if (requestedSize <= font->GetPointSize())
+			return font;
+
+		for (int i = 0; i < variants; i++) {
+			variant = font->GetVariant(i);
+
+			if (requestedSize <= variant->GetPointSize())
+				break;
+		}
+
+		*scale *= (float)font->GetPointSize() / variant->GetPointSize();
+		return variant;
+	}
+
+	return font;
+}
+
+
 // iCharLimit is -1 for "all of string", else MBCS char count...
 //
 qboolean gbInShadow = qfalse;	// MUST default to this
-void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgba, const int iFontHandle, int iCharLimit, const float fScale)
+void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgba, int iFontHandle, int iCharLimit, float fScale)
 {		
 	float				x, y, offset;
 	int					colour;
@@ -788,6 +834,12 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 	{
 		return;
 	}
+
+	float xadjust = (float)SCREEN_WIDTH / glConfig.vidWidth;
+	float yadjust = (float)SCREEN_HEIGHT / glConfig.vidHeight;
+
+	curfont = RE_Font_GetVariant(curfont, &fScale, xadjust, yadjust);
+	iFontHandle = curfont->GetHandle() | (iFontHandle & ~SET_MASK);
 
 	float fScaleA = fScale;
 	int iAsianYAdjust = 0;
@@ -923,14 +975,14 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 	//let it remember the old color //RE_SetColor(NULL);;
 }
 
-int RE_RegisterFont(const char *psName) 
+int RE_RegisterFont_Real(const char* psName)
 {
 	fontIndexMap_t::iterator it = fontIndexMap.find(psName);
-	if (it != fontIndexMap.end() )
+	if (it != fontIndexMap.end())
 	{
 		int iIndex = (*it).second;
 
-		CFontInfo *pFont = GetFont(iIndex);
+		CFontInfo* pFont = GetFont(iIndex);
 		if (pFont)
 		{
 			pFont->UpdateAsianIfNeeded();
@@ -948,7 +1000,7 @@ int RE_RegisterFont(const char *psName)
 	{
 		char		temp[MAX_QPATH];
 		Com_sprintf(temp, MAX_QPATH, "fonts/%s.fontdat", psName);
-		CFontInfo *pFont = new CFontInfo(temp);
+		CFontInfo* pFont = new CFontInfo(temp);
 		if (pFont->GetPointSize() > 0)
 		{
 			fontIndexMap[psName] = fontIndex - 1;
@@ -961,6 +1013,31 @@ int RE_RegisterFont(const char *psName)
 	}
 
 	return(0);
+}
+
+int RE_RegisterFont(const char* psName) {
+	int oriFontHandle = RE_RegisterFont_Real(psName);
+	if (oriFontHandle) {
+		CFontInfo* oriFont = GetFont(oriFontHandle);
+
+		if (oriFont->GetNumVariants() == 0) {
+			for (int i = 0; i < MAX_FONT_VARIANTS; i++) {
+				int replacerFontHandle = RE_RegisterFont_Real(va("%s_sharp%i", psName, i + 1));
+				if (replacerFontHandle) {
+					CFontInfo* replacerFont = GetFont(replacerFontHandle);
+					oriFont->AddVariant(replacerFont);
+				}
+				else {
+					break;
+				}
+			}
+		}
+	}
+	else {
+		ri.Printf(PRINT_WARNING, "RE_RegisterFont: Couldn't find font %s\n", psName);
+	}
+
+	return oriFontHandle;
 }
 
 

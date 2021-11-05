@@ -736,7 +736,7 @@ CG_DrawHealth
 void CG_DrawHealth(int x,int y)
 {
 	vec4_t calcColor;
-	float	healthPercent;
+	float	healthPercent, armorPercent;
 	playerState_t	*ps;
 	int healthAmt;
 	char num[16];
@@ -764,10 +764,44 @@ void CG_DrawHealth(int x,int y)
 	trap_R_SetColor( calcColor);					
 	CG_DrawPic(   x, y, 80*cgs.widthRatioCoef, 80, cgs.media.HUDHealth );
 
+	armorPercent = (float)(ps->stats[STAT_ARMOR] - (ps->stats[STAT_MAX_HEALTH] / 2)) / (ps->stats[STAT_MAX_HEALTH] / 2);
+
+	// Make tic flash if health is at 20% of full
+	if (healthPercent > .20)
+	{
+		cg.HUDHealthFlag = qtrue;
+	}
+	else
+	{
+		if (cg.HUDTickFlashTime < cg.time)			// Flip at the same time
+		{
+			cg.HUDTickFlashTime = cg.time + 100;
+
+			if ((armorPercent > 0) && (armorPercent < .5))		// Keep the tics in sync if flashing
+			{
+				cg.HUDHealthFlag = cg.HUDArmorFlag;
+			}
+			else
+			{
+				if (cg.HUDHealthFlag)
+				{
+					cg.HUDHealthFlag = qfalse;
+				}
+				else
+				{
+					cg.HUDHealthFlag = qtrue;
+				}
+			}
+		}
+	}
+
 	// Draw the ticks
 	if (cg.HUDHealthFlag)
 	{
-		trap_R_SetColor( colorTable[CT_HUD_RED] );					
+		if (ps->stats[STAT_HOLDABLE_ITEMS] & (1 << HI_MEDPAC))
+			trap_R_SetColor(colorTable[CT_BLUE]);
+		else
+			trap_R_SetColor(colorTable[CT_HUD_RED]);
 		CG_DrawPic(   x, y, 80*cgs.widthRatioCoef, 80, cgs.media.HUDHealthTic );
 	}
 

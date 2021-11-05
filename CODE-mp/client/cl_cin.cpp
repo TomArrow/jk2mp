@@ -1188,6 +1188,7 @@ e_status CIN_RunCinematic (int handle)
 		return cinTable[currentHandle].status;
 	}
 
+	// TODO fix bug: it doesnt like it when you go backwards!
 	thisTime = Sys_Milliseconds()*com_timescale->value;
 	thisTime = backEnd.refdef.floatTime*1000.0f *com_timescale->value;
 	if (cinTable[currentHandle].shader && (abs((long)(thisTime - cinTable[currentHandle].lastTime)))>100) {
