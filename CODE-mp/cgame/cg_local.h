@@ -51,7 +51,8 @@
 #define	MAX_STEP_CHANGE		32
 
 #define	MAX_VERTS_ON_POLY	10
-#define	MAX_MARK_POLYS		2048
+//#define	MAX_MARK_POLYS		2048
+#define	MAX_MARK_POLYS		32768 // It's ridiculous but we really need a lot at low video cap speeds...
 
 #define STAT_MINUS			10	// num frame for '-' stats digit
 
