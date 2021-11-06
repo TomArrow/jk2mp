@@ -2374,6 +2374,7 @@ void CFxScheduler::CreateEffect( CPrimitiveTemplate *fx, vec3_t origin, vec3_t a
 		data->mBlue = sRGB[2];
 		data->mAlphaStart = fx->mAlphaStart.GetVal();
 		data->mSizeStart = fx->mSizeStart.GetVal();
+		data->isSaberMark = qfalse;
 
 		VM_Call(cgvm, CG_IMPACT_MARK);
 		}

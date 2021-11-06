@@ -12,10 +12,10 @@ MARK POLYS
 ===================================================================
 */
 
-
-markPoly_t	cg_activeMarkPolys;			// double linked list
-markPoly_t	*cg_freeMarkPolys;			// single linked list
-markPoly_t	cg_markPolys[MAX_MARK_POLYS];
+// We have 2 arrays each. Second is reserved for saber marks. Why? They get spammed like hell at high fps capture and destroy all other marks, so we isolate them.
+markPoly_t	cg_activeMarkPolys[2];			// double linked list
+markPoly_t	*cg_freeMarkPolys[2];			// single linked list
+markPoly_t	cg_markPolys[2][MAX_MARK_POLYS];
 static		int	markTotal;
 
 /*
@@ -30,11 +30,13 @@ void	CG_InitMarkPolys( void ) {
 
 	memset( cg_markPolys, 0, sizeof(cg_markPolys) );
 
-	cg_activeMarkPolys.nextMark = &cg_activeMarkPolys;
-	cg_activeMarkPolys.prevMark = &cg_activeMarkPolys;
-	cg_freeMarkPolys = cg_markPolys;
-	for ( i = 0 ; i < MAX_MARK_POLYS - 1 ; i++ ) {
-		cg_markPolys[i].nextMark = &cg_markPolys[i+1];
+	for(int a=0;a<2;a++){ // 2 for each. Second is for saber marks exclusively.
+		cg_activeMarkPolys[a].nextMark = &cg_activeMarkPolys[a];
+		cg_activeMarkPolys[a].prevMark = &cg_activeMarkPolys[a];
+		cg_freeMarkPolys[a] = cg_markPolys[a];
+		for ( i = 0 ; i < MAX_MARK_POLYS - 1 ; i++ ) {
+			cg_markPolys[a][i].nextMark = &cg_markPolys[a][i+1];
+		}
 	}
 }
 
@@ -45,6 +47,9 @@ CG_FreeMarkPoly
 ==================
 */
 void CG_FreeMarkPoly( markPoly_t *le ) {
+
+	int subIndex = le->isSaberMark ? 1 : 0;
+
 	if ( !le->prevMark ) {
 		CG_Error( "CG_FreeLocalEntity: not active" );
 	}
@@ -54,8 +59,8 @@ void CG_FreeMarkPoly( markPoly_t *le ) {
 	le->nextMark->prevMark = le->prevMark;
 
 	// the free list is only singly linked
-	le->nextMark = cg_freeMarkPolys;
-	cg_freeMarkPolys = le;
+	le->nextMark = cg_freeMarkPolys[subIndex];
+	cg_freeMarkPolys[subIndex] = le;
 }
 
 /*
@@ -65,29 +70,31 @@ CG_AllocMark
 Will allways succeed, even if it requires freeing an old active mark
 ===================
 */
-markPoly_t	*CG_AllocMark( void ) {
+markPoly_t	*CG_AllocMark(qboolean isSaberMark) {
 	markPoly_t	*le;
 	int time;
+	int subIndex = isSaberMark ? 1 : 0;
 
-	if ( !cg_freeMarkPolys ) {
+	if ( !cg_freeMarkPolys[subIndex]) {
 		// no free entities, so free the one at the end of the chain
 		// remove the oldest active entity
-		time = cg_activeMarkPolys.prevMark->time;
-		while (cg_activeMarkPolys.prevMark && time == cg_activeMarkPolys.prevMark->time) {
-			CG_FreeMarkPoly( cg_activeMarkPolys.prevMark );
+		time = cg_activeMarkPolys[subIndex].prevMark->time;
+		while (cg_activeMarkPolys[subIndex].prevMark && time == cg_activeMarkPolys[subIndex].prevMark->time) {
+			CG_FreeMarkPoly( cg_activeMarkPolys[subIndex].prevMark );
 		}
 	}
 
-	le = cg_freeMarkPolys;
-	cg_freeMarkPolys = cg_freeMarkPolys->nextMark;
+	le = cg_freeMarkPolys[subIndex];
+	cg_freeMarkPolys[subIndex] = cg_freeMarkPolys[subIndex]->nextMark;
 
 	memset( le, 0, sizeof( *le ) );
 
 	// link into the active list
-	le->nextMark = cg_activeMarkPolys.nextMark;
-	le->prevMark = &cg_activeMarkPolys;
-	cg_activeMarkPolys.nextMark->prevMark = le;
-	cg_activeMarkPolys.nextMark = le;
+	le->nextMark = cg_activeMarkPolys[subIndex].nextMark;
+	le->prevMark = &cg_activeMarkPolys[subIndex];
+	le->isSaberMark = isSaberMark;
+	cg_activeMarkPolys[subIndex].nextMark->prevMark = le;
+	cg_activeMarkPolys[subIndex].nextMark = le;
 	return le;
 }
 
@@ -109,7 +116,7 @@ passed to the renderer.
 
 void CG_ImpactMark( qhandle_t markShader, const vec3_t origin, const vec3_t dir, 
 				   float orientation, float red, float green, float blue, float alpha,
-				   qboolean alphaFade, float radius, qboolean temporary ) {
+				   qboolean alphaFade, float radius, qboolean temporary,qboolean isSaberMark ) {
 	vec3_t			axis[3];
 	float			texCoordScale;
 	vec3_t			originalPoints[4];
@@ -187,7 +194,7 @@ void CG_ImpactMark( qhandle_t markShader, const vec3_t origin, const vec3_t dir,
 		}
 
 		// otherwise save it persistantly
-		mark = CG_AllocMark();
+		mark = CG_AllocMark(isSaberMark);
 		mark->time = cg.time;
 		mark->alphaFade = alphaFade;
 		mark->markShader = markShader;
@@ -220,65 +227,68 @@ void CG_AddMarks( void ) {
 		return;
 	}
 
-	mp = cg_activeMarkPolys.nextMark;
-	for ( ;mp && mp != &cg_activeMarkPolys ; mp = next ) {
-		// grab next now, so if the local entity is freed we
-		// still have it
-		next = mp->nextMark;
+	for(int a=0;a<2;a++){// 2 passes. One is reserved for saber marks.
 
-		// see if it is time to completely remove it
-		if ( cg.time > mp->time + MARK_TOTAL_TIME ) {
-			CG_FreeMarkPoly( mp );
-			continue;
-		}
+		mp = cg_activeMarkPolys[a].nextMark;
+		for ( ;mp && mp != &cg_activeMarkPolys[a]; mp = next ) {
+			// grab next now, so if the local entity is freed we
+			// still have it
+			next = mp->nextMark;
 
-		// fade out the energy bursts
-		if ( mp->markShader == cgs.media.energyMarkShader ) {
+			// see if it is time to completely remove it
+			if ( cg.time > mp->time + MARK_TOTAL_TIME ) {
+				CG_FreeMarkPoly( mp );
+				continue;
+			}
 
-			fade = 450 - 450.0f * (((cg.time - mp->time) + cg.timeFraction) / 3000.0f);
-			if ( fade < 255 ) {
-				if ( fade < 0 ) {
-					fade = 0;
-				}
-				if ( mp->verts[0].modulate[0] != 0 ) {
-					for ( j = 0 ; j < mp->poly.numVerts ; j++ ) {
-						mp->verts[j].modulate[0] = mp->color[0] * fade;
-						mp->verts[j].modulate[1] = mp->color[1] * fade;
-						mp->verts[j].modulate[2] = mp->color[2] * fade;
+			// fade out the energy bursts
+			if ( mp->markShader == cgs.media.energyMarkShader ) {
+
+				fade = 450 - 450.0f * (((cg.time - mp->time) + cg.timeFraction) / 3000.0f);
+				if ( fade < 255 ) {
+					if ( fade < 0 ) {
+						fade = 0;
+					}
+					if ( mp->verts[0].modulate[0] != 0 ) {
+						for ( j = 0 ; j < mp->poly.numVerts ; j++ ) {
+							mp->verts[j].modulate[0] = mp->color[0] * fade;
+							mp->verts[j].modulate[1] = mp->color[1] * fade;
+							mp->verts[j].modulate[2] = mp->color[2] * fade;
+						}
 					}
 				}
 			}
-		}
 
-		// fade all marks out with time
-		t = (mp->time + MARK_TOTAL_TIME - cg.time) - cg.timeFraction;
-		if ( t < MARK_FADE_TIME ) {
-			fade = 255 * t / MARK_FADE_TIME;
-			if ( mp->alphaFade ) {
-				for ( j = 0 ; j < mp->poly.numVerts ; j++ ) {
-					mp->verts[j].modulate[3] = fade;
+			// fade all marks out with time
+			t = (mp->time + MARK_TOTAL_TIME - cg.time) - cg.timeFraction;
+			if ( t < MARK_FADE_TIME ) {
+				fade = 255 * t / MARK_FADE_TIME;
+				if ( mp->alphaFade ) {
+					for ( j = 0 ; j < mp->poly.numVerts ; j++ ) {
+						mp->verts[j].modulate[3] = fade;
+					}
+				}
+				else 
+				{
+					float f = (float)t / MARK_FADE_TIME;
+					for ( j = 0 ; j < mp->poly.numVerts ; j++ ) {
+						mp->verts[j].modulate[0] = mp->color[0] * f;
+						mp->verts[j].modulate[1] = mp->color[1] * f;
+						mp->verts[j].modulate[2] = mp->color[2] * f;
+					}
 				}
 			}
-			else 
+			else
 			{
-				float f = (float)t / MARK_FADE_TIME;
 				for ( j = 0 ; j < mp->poly.numVerts ; j++ ) {
-					mp->verts[j].modulate[0] = mp->color[0] * f;
-					mp->verts[j].modulate[1] = mp->color[1] * f;
-					mp->verts[j].modulate[2] = mp->color[2] * f;
+					mp->verts[j].modulate[0] = mp->color[0];
+					mp->verts[j].modulate[1] = mp->color[1];
+					mp->verts[j].modulate[2] = mp->color[2];
 				}
 			}
-		}
-		else
-		{
-			for ( j = 0 ; j < mp->poly.numVerts ; j++ ) {
-				mp->verts[j].modulate[0] = mp->color[0];
-				mp->verts[j].modulate[1] = mp->color[1];
-				mp->verts[j].modulate[2] = mp->color[2];
-			}
-		}
 
-		trap_R_AddPolyToScene( mp->markShader, mp->poly.numVerts, mp->verts );
+			trap_R_AddPolyToScene( mp->markShader, mp->poly.numVerts, mp->verts );
+		}	
 	}
 }
 

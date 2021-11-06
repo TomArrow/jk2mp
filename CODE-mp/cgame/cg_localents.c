@@ -179,12 +179,12 @@ void CG_FragmentBounceMark( localEntity_t *le, trace_t *trace ) {
 
 		radius = 16 + (rand()&31);
 		CG_ImpactMark( cgs.media.bloodMarkShader, trace->endpos, trace->plane.normal, random()*360,
-			1,1,1,1, qtrue, radius, qfalse );
+			1,1,1,1, qtrue, radius, qfalse, qfalse );
 	} else if ( le->leMarkType == LEMT_BURN ) {
 
 		radius = 8 + (rand()&15);
 		CG_ImpactMark( cgs.media.burnMarkShader, trace->endpos, trace->plane.normal, random()*360,
-			1,1,1,1, qtrue, radius, qfalse );
+			1,1,1,1, qtrue, radius, qfalse, qfalse);
 	}
 
 

@@ -320,7 +320,7 @@ static void C_GetBoltPos(void)
 	}
 }
 
-static void C_ImpactMark(void)
+static void C_ImpactMark()
 {
 	TCGImpactMark	*data = (TCGImpactMark *)cg.sharedBuffer;
 
@@ -329,7 +329,7 @@ static void C_ImpactMark(void)
 		(float)arg4, (float)arg5, (float)arg6, (float)arg7, qtrue, (float)arg8, qfalse);
 	*/
 	CG_ImpactMark(data->mHandle, data->mPoint, data->mAngle, data->mRotation,
-		data->mRed, data->mGreen, data->mBlue, data->mAlphaStart, qtrue, data->mSizeStart, qfalse);
+		data->mRed, data->mGreen, data->mBlue, data->mAlphaStart, qtrue, data->mSizeStart, qfalse, data->isSaberMark);
 }
 
 extern void trap_MME_FontRatioFix( float ratio );

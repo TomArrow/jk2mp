@@ -323,6 +323,7 @@ typedef struct markPoly_s {
 	float		color[4];
 	poly_t		poly;
 	polyVert_t	verts[MAX_VERTS_ON_POLY];
+	qboolean	isSaberMark;
 } markPoly_t;
 
 
@@ -1627,7 +1628,7 @@ extern	cg_t			cg;
 extern	centity_t		cg_entities[MAX_GENTITIES];
 extern	weaponInfo_t	cg_weapons[MAX_WEAPONS];
 extern	itemInfo_t		cg_items[MAX_ITEMS];
-extern	markPoly_t		cg_markPolys[MAX_MARK_POLYS];
+extern	markPoly_t		cg_markPolys[2][MAX_MARK_POLYS]; // 2 sub arrays. one reserved for saber marks.
 
 extern	vmCvar_t		cg_centertime;
 extern	vmCvar_t		cg_runpitch;
@@ -2078,7 +2079,7 @@ void	CG_ImpactMark( qhandle_t markShader,
 					float orientation, 
 				    float r, float g, float b, float a, 
 					qboolean alphaFade, 
-					float radius, qboolean temporary );
+					float radius, qboolean temporary, qboolean isSaberMark );
 
 //
 // cg_localents.c

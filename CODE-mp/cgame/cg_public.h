@@ -377,6 +377,7 @@ typedef struct
 	float	mBlue;
 	float	mAlphaStart;
 	float	mSizeStart;
+	qboolean isSaberMark;
 } TCGImpactMark;
 
 // CG_GET_LERP_ORIGIN

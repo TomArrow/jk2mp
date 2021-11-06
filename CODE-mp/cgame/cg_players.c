@@ -3755,7 +3755,7 @@ static qboolean CG_PlayerShadow( centity_t *cent, float *shadowPlane ) {
 	// add the mark as a temporary, so it goes directly to the renderer
 	// without taking a spot in the cg_marks array
 	CG_ImpactMark( cgs.media.shadowMarkShader, trace.endpos, trace.plane.normal, 
-		cent->pe.legs.yawAngle, alpha,alpha,alpha,1, qfalse, 24, qtrue );
+		cent->pe.legs.yawAngle, alpha,alpha,alpha,1, qfalse, 24, qtrue, qfalse);
 
 	return qtrue;
 }
@@ -4409,7 +4409,7 @@ void CG_GetTagWorldPosition( refEntity_t *model, char *tag, vec3_t pos, vec3_t a
 
 #define	MAX_MARK_FRAGMENTS	128
 #define	MAX_MARK_POINTS		384
-extern markPoly_t *CG_AllocMark();
+extern markPoly_t *CG_AllocMark(qboolean isSaberMark);
 
 void CG_CreateSaberMarks( vec3_t start, vec3_t end, vec3_t normal )
 {
@@ -4558,7 +4558,7 @@ void CG_CreateSaberMarks( vec3_t start, vec3_t end, vec3_t normal )
 		else
 		{
 			// save it persistantly, do burn first
-			mark = CG_AllocMark();
+			mark = CG_AllocMark(qtrue);
 			mark->time = cg.time;
 			mark->alphaFade = qtrue;
 			mark->markShader = cgs.media.rivetMarkShader;
@@ -4568,7 +4568,7 @@ void CG_CreateSaberMarks( vec3_t start, vec3_t end, vec3_t normal )
 
 			// And now do a glow pass
 			// by moving the start time back, we can hack it to fade out way before the burn does
-			mark = CG_AllocMark();
+			mark = CG_AllocMark(qtrue);
 			mark->time = cg.time - 8500;
 			mark->alphaFade = qfalse;
 			mark->markShader = trap_R_RegisterShader("gfx/effects/saberDamageGlow");
