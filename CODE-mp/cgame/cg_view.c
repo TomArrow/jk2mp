@@ -1874,6 +1874,8 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, int demoPlayb
 	// actually issue the rendering calls
 	CG_DrawActive( stereoView );
 
+	Cam_Draw2d(); //2D
+
 	if ( cg_stats.integer ) {
 		CG_Printf( "cg.clientFrame:%i\n", cg.clientFrame );
 	}

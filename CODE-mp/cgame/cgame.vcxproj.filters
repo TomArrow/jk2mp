@@ -244,6 +244,12 @@
     <ClCompile Include="cg_demos_weather.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cam_local.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cam_main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="JK2_cgame.def">

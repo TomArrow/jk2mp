@@ -797,6 +797,8 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	if (cg.predictedPlayerState.pm_type != PM_INTERMISSION) {
 		intermission = qfalse;
 	}
+
+	Cam_Draw2d(); //2D
 		
 	if (captureFrame) {
 		char fileName[MAX_OSPATH];

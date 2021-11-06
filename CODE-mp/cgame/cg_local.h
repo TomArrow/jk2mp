@@ -4,6 +4,7 @@
 #include "tr_types.h"
 #include "../game/bg_public.h"
 #include "cg_public.h"
+#include "cam_local.h"
 
 
 // The entire cgame module is unloaded and reloaded on each level change,
@@ -1770,6 +1771,9 @@ extern  vmCvar_t		cg_recordSPDemoName;
 extern	vmCvar_t		cg_debugSaber;
 
 extern	vmCvar_t		ui_myteam;
+
+// From Nerevar Cam mod
+extern  vmCvar_t		cam_shownames;
 
 //JA
 extern	vmCvar_t	cg_chatBox;
