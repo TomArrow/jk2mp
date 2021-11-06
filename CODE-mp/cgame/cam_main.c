@@ -32,7 +32,7 @@ void Cam_DrawClientNames(void) //FIXME: draw entitynums
 
 				size = 200.0f / size;
 
-				org[2] += 32;
+				org[2] += 45;
 
 				if (size > 0.8f) size = 0.8f;
 				if (size < 0.3f) size = 0.3f;
