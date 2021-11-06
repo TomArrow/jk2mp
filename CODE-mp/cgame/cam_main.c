@@ -42,6 +42,8 @@ void Cam_DrawClientNames(void) //FIXME: draw entitynums
 				{
 					char* text = cgs.clientinfo[i].name;
 
+					x = (x - SCREEN_WIDTH/2)*cgs.widthRatioCoef + SCREEN_WIDTH / 2;
+
 					x -= CG_Text_Width(text, size, FONT_MEDIUM) / 2;
 					y -= CG_Text_Width(text, size, FONT_MEDIUM) / 2;
 					CG_Text_Paint(x, y, size, colorLtGrey, text, 0, 0, 0/*NORMAL*/, FONT_MEDIUM);
