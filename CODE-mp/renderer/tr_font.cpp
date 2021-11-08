@@ -872,7 +872,15 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 				if ( (i < 1 || psText[i-1] != '^') &&
 					(!psText[i+1] || psText[i+1] != '^') ) {
 					//If char before or after ^ is ^ then it prints ^ instead of accepting a colorcode
-					i += 2;
+					if (Q_IsColorStringHex(&psText[i+1])) {
+						int skipCount = 0;
+						Q_parseColorHex(&psText[i+1], 0, &skipCount);
+						i += 1 + skipCount;
+					}
+					else {
+
+						i += 2;
+					}
 				}
 			}
 
@@ -902,7 +910,16 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 		{
 		case '^':
 		{
-			if (Q_IsColorString(psText - 1) ||  Q_IsColorString_1_02(psText - 1) || Q_IsColorString_Extended(psText - 1))
+			if (Q_IsColorStringHex(psText))
+			{ 
+				vec4_t color;
+				int skipCount;
+				if (Q_parseColorHex(psText, color, &skipCount)) {
+					psText += skipCount;
+					RE_SetColor(color);
+				}
+			}
+			else if (Q_IsColorString(psText - 1) ||  Q_IsColorString_1_02(psText - 1) || Q_IsColorString_Extended(psText - 1))
 			{
 				colour = ColorIndex(*psText);
 				if (!gbInShadow)

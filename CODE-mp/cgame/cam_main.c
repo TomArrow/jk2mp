@@ -18,7 +18,8 @@ void Cam_DrawClientNames(void) //FIXME: draw entitynums
 		{
 			trace_t trace;
 
-			CG_Trace(&trace, cg.refdef.vieworg, NULL, NULL, cent->lerpOrigin, cg.snap->ps.clientNum, CONTENTS_SOLID | CONTENTS_PLAYERCLIP | CONTENTS_BODY | CONTENTS_CORPSE);
+			int skipNumber = cam_shownamesIncludePlayer.integer ? -1 : cg.snap->ps.clientNum;
+			CG_Trace(&trace, cg.refdef.vieworg, NULL, NULL, cent->lerpOrigin, skipNumber, CONTENTS_SOLID | CONTENTS_PLAYERCLIP | CONTENTS_BODY | CONTENTS_CORPSE);
 
 			if (trace.entityNum == i)
 			{
@@ -44,9 +45,13 @@ void Cam_DrawClientNames(void) //FIXME: draw entitynums
 
 					x = (x - SCREEN_WIDTH/2)*cgs.widthRatioCoef + SCREEN_WIDTH / 2;
 
+					int style = cam_shownamesStyle.integer;
+					style = style > 6 ? 6 : style; // There are no styles above 6
+					style = style < 0 ? 0 : style; // There are no styles below 0
+
 					x -= CG_Text_Width(text, size, FONT_MEDIUM) / 2;
-					y -= CG_Text_Width(text, size, FONT_MEDIUM) / 2;
-					CG_Text_Paint(x, y, size, colorLtGrey, text, 0, 0, 0/*NORMAL*/, FONT_MEDIUM);
+					//y -= CG_Text_Width(text, size, FONT_MEDIUM) / 2;
+					CG_Text_Paint(x, y, size, colorLtGrey, text, 0, 0, style/*NORMAL*/, FONT_MEDIUM);
 				}
 			}
 		}

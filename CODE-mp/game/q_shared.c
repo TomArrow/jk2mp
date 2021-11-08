@@ -1050,6 +1050,75 @@ int Q_parseColor( const char *p, const vec3_t numberColors[10], float *color ) {
 	return 0;
 }
 
+qboolean Q_parseColorHex( const char *p, float *color, int* skipCount ) {
+	char c = *p++;
+	int i;
+	int val;
+
+	qboolean doWrite = qtrue;
+	if (!color || !(color+3)) {
+		doWrite = qfalse;
+	}
+
+	*skipCount = 0; // We update it only if successful. If not successful, we want the string to be parsed normally.
+
+	int countToParse = 8;
+	qboolean halfPrecision = qfalse;
+	if (c == 'Y') {
+		countToParse = 8;
+	} else if (c == 'y') {
+		countToParse = 4;
+		halfPrecision = qtrue;
+	} else if (c == 'X') {
+		countToParse = 6;
+		if(doWrite) color[3] = 1.0f; // Z and z don't contain alpha.
+	} else if (c == 'x') {
+		countToParse = 3;
+		if (doWrite) color[3] = 1.0f;
+		halfPrecision = qtrue;
+	}
+
+	int presumableSkipCount = countToParse+1; // skip count will be set to this if successful.
+
+	for (i = 0;i< countToParse;i++) {
+        int readHex;
+		c = p[i];
+		if ( c >= '0' && c<= '9') {
+            readHex = c - '0';
+		} else if ( c >= 'a' && c<= 'f') {
+			readHex = 0xa + c - 'a';
+		} else if ( c >= 'A' && c<= 'F') {
+			readHex = 0xa + c - 'A';
+		} else {
+			if (color) {
+				color[0] = color[1] = color[2] = color[3] = 1.0f;
+			}
+			return qfalse;
+		}
+		if (doWrite) {
+
+			if (halfPrecision) { // Single digit per value.
+				val = readHex;
+				color[i] = val * (1 / 15.0f);
+			}
+			else {
+				if (i & 1) {
+					val |= readHex;
+					color[i >> 1] = val * (1 / 255.0f);
+				}
+				else {
+					val = readHex << 4;
+				}
+			}
+		}
+		
+	}
+
+	*skipCount = presumableSkipCount;
+	return qtrue;
+
+}
+
 /*
 * Find the first occurrence of find in s.
 */
@@ -1227,7 +1296,12 @@ void Q_StripColorNewNT(char *text) {
 
 	read = write = text;
 	while ( *read ) {
-		if ( Q_IsColorStringNT(read) ) {
+		if (Q_IsColorStringHex(read + 1)) {
+			int skipCount = 0;
+			Q_parseColorHex(read + 1, 0, &skipCount);
+			read += 1 + skipCount;
+		}
+		else if ( Q_IsColorStringNT(read) ) {
 			read += 2;
 		} else {
 			// Avoid writing the same data over itself
@@ -1249,7 +1323,12 @@ void Q_StripColorNew(char *text) {
 
 	read = write = text;
 	while ( *read ) {
-		if ( Q_IsColorStringExt(read) ) {
+		if (Q_IsColorStringHex(read+1)) {
+			int skipCount = 0;
+			Q_parseColorHex(read + 1, 0, &skipCount);
+			read += 1 + skipCount;
+		}
+		else if ( Q_IsColorStringExt(read) ) {
 			read += 2;
 		} else {
 			// Avoid writing the same data over itself

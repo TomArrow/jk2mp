@@ -1774,6 +1774,8 @@ extern	vmCvar_t		ui_myteam;
 
 // From Nerevar Cam mod
 extern  vmCvar_t		cam_shownames;
+extern  vmCvar_t		cam_shownamesStyle;
+extern  vmCvar_t		cam_shownamesIncludePlayer;
 
 //JA
 extern	vmCvar_t	cg_chatBox;

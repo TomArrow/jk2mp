@@ -583,6 +583,8 @@ vmCvar_t	ui_myteam;
 
 // From Nerevar
 vmCvar_t	cam_shownames;
+vmCvar_t	cam_shownamesStyle;
+vmCvar_t	cam_shownamesIncludePlayer;
 
 //JA
 vmCvar_t	cg_chatBox;
@@ -653,6 +655,8 @@ typedef struct {
 
 static cvarTable_t cvarTable[] = { // bk001129
 	{ &cam_shownames, "cam_shownames", "0", NULL, CVAR_ARCHIVE },
+	{ &cam_shownamesStyle, "cam_shownamesStyle", "5", NULL, CVAR_ARCHIVE },
+	{ &cam_shownamesIncludePlayer, "cam_shownamesIncludePlayer", "0", NULL, CVAR_ARCHIVE },
 	{ &cg_ignore, "cg_ignore", "0", NULL, 0 },	// used for debugging
 	{ &cg_autoswitch, "cg_autoswitch", "1", NULL, CVAR_ARCHIVE },
 	{ &cg_drawGun, "cg_drawGun", "1", NULL, CVAR_ARCHIVE },
