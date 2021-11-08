@@ -498,7 +498,7 @@ static void CG_AddToTeamChat( const char *str ) {
 			lastcolor = *str;
 			*p++ = *str++;
 			continue;
-		} else if ( Q_IsColorString( str ) ) {
+		} else if ( Q_IsColorString( str ) || Q_IsColorString_1_02(str) || Q_IsColorString_Extended(str)) {
 			*p++ = *str++;
 			lastcolor = *str;
 			*p++ = *str++;

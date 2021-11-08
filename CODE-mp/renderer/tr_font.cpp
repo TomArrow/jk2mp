@@ -902,7 +902,18 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 		{
 		case '^':
 		{
-			if (demo15detected && ntModDetected) {
+			if (Q_IsColorString(psText - 1) ||  Q_IsColorString_1_02(psText - 1) || Q_IsColorString_Extended(psText - 1))
+			{
+				colour = ColorIndex(*psText);
+				if (!gbInShadow)
+				{
+					RE_SetColor(g_color_table[colour]);
+				}
+				++psText;
+				break;
+			}
+			
+			/*if (demo15detected && ntModDetected) {
 				vec4_t color;
 				colour = ColorIndexNT(*psText++);
 				Com_Memcpy( color, g_color_table_nt[colour], sizeof( color ) );
@@ -916,7 +927,7 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 					color[3] = rgba[3];
 					RE_SetColor( color );
 				}
-			}
+			}*/
 		}
 		break;
 		case 10:						//linefeed

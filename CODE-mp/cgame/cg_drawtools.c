@@ -295,7 +295,7 @@ void CG_Text_Paint2(float x, float y, float scale, vec4_t color, const char *tex
 				trap_R_SetColor( newColor );
 				s += 2;
 				continue;
-			} else if ( Q_IsColorString( s ) ) {
+			} else if ( Q_IsColorString( s ) || Q_IsColorString_1_02(s) || Q_IsColorString_Extended(s)) {
 				memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
 				newColor[3] = color[3];
 				trap_R_SetColor( newColor );
@@ -398,7 +398,7 @@ void CG_DrawStringExt( int x, int y, const char *string, const float *setColor,
 				}
 				s += 2;
 				continue;
-			} else if ( Q_IsColorString( s ) ) {
+			} else if ( Q_IsColorString( s ) || Q_IsColorString_1_02(s) || Q_IsColorString_Extended(s)) {
 				if ( !forceColor ) {
 					memcpy( color, g_color_table[ColorIndex(*(s+1))], sizeof( color ) );
 					color[3] = setColor[3];
@@ -452,7 +452,7 @@ int CG_DrawStrlen( const char *str ) {
 
 	while ( *s ) {
 		if ( ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) )
-			|| Q_IsColorString( s ) ) {
+			|| Q_IsColorString( s ) || Q_IsColorString_1_02(s) || Q_IsColorString_Extended(s)) {
 			s += 2;
 		} else {
 			count++;

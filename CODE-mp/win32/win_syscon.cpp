@@ -532,7 +532,7 @@ void Conbuf_AppendText( const char *pMsg )
 			b += 2;
 		}
 		else if ( ( demo15detected && ntModDetected && Q_IsColorStringNT( &msg[i] ) )
-			|| Q_IsColorString( &msg[i] ) )
+			|| Q_IsColorString( &msg[i] ) || Q_IsColorString_1_02(&msg[i]) || Q_IsColorString_Extended(&msg[i]))
 		{
 			i++;
 		}

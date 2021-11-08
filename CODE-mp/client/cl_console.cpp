@@ -364,7 +364,7 @@ void CL_ConsolePrint( char *txt ) {
 			color = ColorIndexNT( *(txt+1) );
 			txt += 2;
 			continue;
-		} else if ( Q_IsColorString( (unsigned char*) txt ) ) {
+		} else if ( Q_IsColorString( (unsigned char*) txt ) || Q_IsColorString_1_02((unsigned char*)txt) || Q_IsColorString_Extended((unsigned char*)txt)) {
 			color = ColorIndex( *(txt+1) );
 			txt += 2;
 			continue;

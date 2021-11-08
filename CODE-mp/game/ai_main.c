@@ -652,7 +652,7 @@ void RemoveColorEscapeSequences( char *text ) {
 
 	l = 0;
 	for ( i = 0; text[i]; i++ ) {
-		if (Q_IsColorString(&text[i])) {
+		if (Q_IsColorString(&text[i]) || Q_IsColorString_1_02(&text[i]) || Q_IsColorString_Extended(&text[i])) {
 			i++;
 			continue;
 		}

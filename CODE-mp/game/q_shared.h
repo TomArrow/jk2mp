@@ -814,9 +814,14 @@ int Q_parseColor( const char *p, const vec3_t numberColors[10], float *color );
 
 #define Q_COLOR_ESCAPE	'^'
 // you MUST have the last bit on here about colour strings being less than 7 or taiwanese strings register as colour!!!!
-#define Q_IsColorString(p)	( p && *(p) == Q_COLOR_ESCAPE && *((p)+1) && *((p)+1) != Q_COLOR_ESCAPE && *((p)+1) <= '7' && *((p)+1) >= '0' )
+//#define Q_IsColorString(p)	( p && *(p) == Q_COLOR_ESCAPE && *((p)+1) && *((p)+1) != Q_COLOR_ESCAPE && *((p)+1) <= '7' && *((p)+1) >= '0' )
 // Correct version of the above for Q_StripColor
 #define Q_IsColorStringExt(p)	((p) && *(p) == Q_COLOR_ESCAPE && *((p)+1) && isdigit(*((p)+1))) // ^[0-9]
+
+// from eternaljk2mv:
+#define Q_IsColorString(p)	( p && *(p) == Q_COLOR_ESCAPE && *((p)+1) <= '7' && *((p)+1) >= '0' )
+#define Q_IsColorString_1_02(p)	( p && *(p) == Q_COLOR_ESCAPE && *((p)+1) && *((p)+1) != Q_COLOR_ESCAPE ) // 1.02 ColorStrings
+#define Q_IsColorString_Extended(p) Q_IsColorString_1_02(p)
 
 #define Q_IsColorStringNT(p)	( p && *(p) == Q_COLOR_ESCAPE && *((p)+1) && *((p)+1) != Q_COLOR_ESCAPE && *((p)+1) <= 0x7F && *((p)+1) >= 0x00 )
 #define ColorIndexNT(c)			( (c) & 127 )
@@ -830,7 +835,20 @@ int Q_parseColor( const char *p, const vec3_t numberColors[10], float *color );
 #define COLOR_CYAN		'5'
 #define COLOR_MAGENTA	'6'
 #define COLOR_WHITE		'7'
+
+#define COLOR_EXT_AMOUNT 16 // can be safely raised only to 32
 #define ColorIndex(c)	( ( (c) - '0' ) & 7 )
+#define ColorIndex_Extended(c) ( ( (c) - '0' ) & (COLOR_EXT_AMOUNT - 1) ) // compatible with 1.02, 'a' & 15 = 1
+
+// Extended Colors
+#define COLOR_ORANGE    '8'
+#define COLOR_MD_GREY   '9'
+#define COLOR_LT_GREY   'j'
+#define COLOR_DK_GREY   'k'
+#define COLOR_LT_BLUE   'l'
+#define COLOR_DK_BLUE   'm'
+#define COLOR_JK2MV     'n' // Different in Debug/Release
+#define COLOR_LT_TRANSPARENT 'o'
 
 #define S_COLOR_BLACK	"^0"
 #define S_COLOR_RED		"^1"
@@ -841,7 +859,18 @@ int Q_parseColor( const char *p, const vec3_t numberColors[10], float *color );
 #define S_COLOR_MAGENTA	"^6"
 #define S_COLOR_WHITE	"^7"
 
-extern vec4_t	g_color_table[8];
+// Extended Colors
+#define S_COLOR_ORANGE	"^8"
+#define S_COLOR_GREY	"^9"
+#define S_COLOR_LT_GREY "^j"
+#define S_COLOR_DK_GREY "^k"
+#define S_COLOR_LT_BLUE "^l"
+#define S_COLOR_DK_BLUE "^m"
+#define S_COLOR_JK2MV   "^n" // Different in Debug/Release
+#define S_COLOR_LT_TRANSPARENT "^o"
+
+//extern vec4_t	g_color_table[8];
+extern vec4_t	g_color_table[COLOR_EXT_AMOUNT];
 extern vec4_t	g_color_table_nt[128];
 
 #define	MAKERGB( v, r, g, b ) v[0]=r;v[1]=g;v[2]=b

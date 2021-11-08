@@ -1115,7 +1115,7 @@ int Q_PrintStrlen( const char *string ) {
 	len = 0;
 	p = string;
 	while( *p ) {
-		if( Q_IsColorString( p ) ) {
+		if( Q_IsColorString( p ) || Q_IsColorString_1_02(p) || Q_IsColorString_Extended(p)) {
 			p += 2;
 			continue;
 		}
@@ -1155,7 +1155,7 @@ char *Q_CleanStr( char *string ) {
 	s = string;
 	d = string;
 	while ((c = *s) != 0 ) {
-		if ( Q_IsColorString( s ) ) {
+		if ( Q_IsColorString( s ) || Q_IsColorString_1_02(s) || Q_IsColorString_Extended(s)) {
 			s++;
 		}		
 		else if ( c >= 0x20 && c <= 0x7E ) {
