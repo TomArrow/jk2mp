@@ -233,9 +233,9 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, s
 	const short *data;
 	float volume;
 
-	/*if (ch->entChan == CHAN_VOICE)
+	if (ch->entChan == CHAN_VOICE || ch->entChan == CHAN_ANNOUNCER) // Added announcer to voice
 		volume = s_volumeVoice->value * (1 << MIX_SHIFT) * 0.5;
-	else*/ // We don't do this because in real life, this isn't implemented consistently and a lot of sounds come from voice channel even though they shouldn't.
+	else//*/ // We don't do this because in real life, this isn't implemented consistently and a lot of sounds come from voice channel even though they shouldn't.
 		volume = s_volume->value * (1 << MIX_SHIFT) * 0.5;
 
 	origin = (!ch->hasOrigin) ? s_entitySounds[ch->entNum].origin : ch->origin;

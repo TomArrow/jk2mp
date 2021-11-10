@@ -2280,11 +2280,14 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		}
 		else
 		{
+
 			if ( cgs.gameSounds[ es->eventParm ] ) {
-				trap_S_StartSound (NULL, es->number, CHAN_VOICE, cgs.gameSounds[ es->eventParm ] );
+				//trap_S_StartSound (NULL, es->number, CHAN_VOICE, cgs.gameSounds[ es->eventParm ] ); // TODO Is this where some sounds in chan_voice come from where they shouldn't?
+				trap_S_StartSound (NULL, es->number, CHAN_AUTO, cgs.gameSounds[ es->eventParm ] ); // TODO Is this where some sounds in chan_voice come from where they shouldn't?
 			} else {
 				s = CG_ConfigString( CS_SOUNDS + es->eventParm );
-				trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, s ) );
+				//trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, s ) );
+				trap_S_StartSound (NULL, es->number, CHAN_AUTO, CG_CustomSound( es->number, s ) );
 			}
 		}
 		break;
