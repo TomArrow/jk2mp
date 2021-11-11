@@ -54,10 +54,14 @@ size_t piecewiseResample::getSamples(double speed, short* outputBuffer, size_t o
 	bool is_flushing = false;
 	do {
 		size_t len = inputBufferLength-inputBufferOffset;
-		if (!len) {
+		if (len <= 0) {	// Must check if <0 because in some cases that can apparently happen. Just a ! isn't enough because only 0 evaluates to 0
 			// If sound is looping just continue from start again.
 			if (loop && inputBufferLength > 0) {
-				inputBufferOffset = 0;
+				//inputBufferOffset = 0;
+				//len = inputBufferLength - inputBufferOffset;
+				while (inputBufferOffset >= inputBufferLength) {
+					inputBufferOffset -= inputBufferLength;
+				}
 				len = inputBufferLength - inputBufferOffset;
 			}
 			/*// Fill with silence until we got enough output.
