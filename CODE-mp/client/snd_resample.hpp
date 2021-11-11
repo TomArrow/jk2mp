@@ -53,7 +53,7 @@ size_t piecewiseResample::getSamples(double speed, short* outputBuffer, size_t o
 	bool need_input = 1;
 	bool is_flushing = false;
 	do {
-		size_t len = inputBufferLength-inputBufferOffset;
+		int64_t len = inputBufferLength-inputBufferOffset; // Need to write into int64_t instead of size_t because value might be negative
 		if (len <= 0) {	// Must check if <0 because in some cases that can apparently happen. Just a ! isn't enough because only 0 evaluates to 0
 			// If sound is looping just continue from start again.
 			if (loop && inputBufferLength > 0) {
@@ -78,7 +78,7 @@ size_t piecewiseResample::getSamples(double speed, short* outputBuffer, size_t o
 				is_flushing = true;
 			}
 		}
-		error = soxr_process(soxrRef, inputBuffer + inputBufferOffset, len, &idone, outputBuffer, outSamples, &odone);
+		error = soxr_process(soxrRef, inputBuffer + inputBufferOffset, (size_t)len, &idone, outputBuffer, outSamples, &odone);
 		
 		outSamples -= odone;
 		outputBuffer += odone;
