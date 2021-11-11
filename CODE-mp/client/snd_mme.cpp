@@ -475,6 +475,13 @@ void S_MMEUpdate(float scale) {
 			if (count > MAXUPDATE)
 				count = MAXUPDATE;
 
+			if (!s_speedAwareAudio->integer) {
+				scale = 1.0f;
+			}
+			else {
+				scale = min(max(scale, s_minSpeed->value), s_maxSpeed->value);
+			}
+
 			speed = (scale * (MIX_SPEED << MIX_SHIFT)) / MME_SAMPLERATE;
 			if (speed < 0 || (speed == 0 && scale))
 				speed = 1;

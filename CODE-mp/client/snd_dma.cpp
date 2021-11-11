@@ -1,5 +1,6 @@
 #include "snd_local.h"
 #include "snd_mix.h"
+#include <algorithm>
 
 #define		DMA_SNDCHANNELS		128
 #define		DMA_LOOPCHANNELS	128
@@ -109,6 +110,13 @@ void S_DMA_Update( float scale ) {
 	}
 	// mix to an even submission block size
 	count = (count + dma.submission_chunk-1) & ~(dma.submission_chunk-1);
+
+	if (!s_speedAwareAudio->integer) {
+		scale = 1.0f;
+	}
+	else {
+		scale = std::min(std::max(scale, s_minSpeed->value), s_maxSpeed->value);
+	}
 
 	// never mix more than the complete buffer
 	speed = (scale * (MIX_SPEED << MIX_SHIFT)) / dma.speed;

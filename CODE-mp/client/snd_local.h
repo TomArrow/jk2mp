@@ -118,6 +118,9 @@ extern	int				s_loopQueueCount;
 
 extern cvar_t	*s_volume;
 extern cvar_t	*s_volumeVoice;
+extern cvar_t	*s_speedAwareAudio;
+extern cvar_t	*s_maxSpeed;
+extern cvar_t	*s_minSpeed;
 extern cvar_t	*s_musicVolume;
 extern cvar_t	*s_khz;
 

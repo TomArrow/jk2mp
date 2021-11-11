@@ -222,6 +222,7 @@ static void S_MixSpatialize(const vec3_t origin, float volume, int *left_vol, in
 }
 
 static double mixShiftMultiplier = pow(2.0, MIX_SHIFT);
+static double mixShiftInverseMultiplier = 1/ mixShiftMultiplier;
 static double mixShiftDoubleMultiplier = mixShiftMultiplier* mixShiftMultiplier;
 static double mixShiftDoubleInverseMultiplier = 1/ mixShiftDoubleMultiplier;
 
@@ -246,7 +247,9 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, s
 	sound = S_MixGetSound( ch->handle );
 
 	index = ch->index;
+	
 	double actualSpeed = (double)sound->speed * (double)speed * mixShiftDoubleInverseMultiplier;
+
 	//indexAdd = (sound->speed * speed) >> MIX_SHIFT;
 	indexAdd = 1;
 	indexLeft = sound->samples - index;
@@ -512,6 +515,7 @@ static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int co
 
 	//indexAdd = (sound->speed * speed) >> MIX_SHIFT;
 	double actualSpeed = (double)sound->speed * (double)speed * mixShiftDoubleInverseMultiplier;
+
 	//indexAdd = 1;
 	short* resampleBuffer = new short[max(count, 1)]{ 0 };
 	size_t inputAdvance = loop->resampler->getSamples(actualSpeed, resampleBuffer, count, (short*)sound->data, sound->samples >> MIX_SHIFT, loop->index >> MIX_SHIFT, true);

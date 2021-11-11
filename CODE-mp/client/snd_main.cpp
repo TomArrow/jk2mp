@@ -58,6 +58,9 @@ qboolean	s_underWater;
 
 cvar_t		*s_volume;
 cvar_t		*s_volumeVoice;
+cvar_t		*s_speedAwareAudio;
+cvar_t		*s_maxSpeed; // maximum speed at which sounds can be played back when speed aware audio is on.
+cvar_t		*s_minSpeed; // minimum speed at which soudns can be played back when speed aware audio is on.
 cvar_t		*s_musicVolume;
 cvar_t		*s_language;
 
@@ -112,6 +115,9 @@ void S_Init( void ) {
 
 	s_volume = Cvar_Get ("s_volume", "0.8", CVAR_ARCHIVE);
 	s_volumeVoice= Cvar_Get ("s_volumeVoice", "0.8", CVAR_ARCHIVE);
+	s_speedAwareAudio = Cvar_Get ("s_speedAwareAudio", "1", CVAR_ARCHIVE);
+	s_maxSpeed = Cvar_Get ("s_maxSpeed", "inf", CVAR_ARCHIVE);
+	s_minSpeed = Cvar_Get ("s_minSpeed", "0", CVAR_ARCHIVE);
 	s_musicVolume = Cvar_Get ("s_musicvolume", "0.5", CVAR_ARCHIVE);
 
 	s_language = Cvar_Get("s_language","english",CVAR_ARCHIVE | CVAR_NORESTART);
