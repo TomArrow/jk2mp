@@ -1140,6 +1140,7 @@ typedef struct {
 	qboolean finishStereo;
 	qboolean capturingDofOrStereo;
 	qboolean latestDofOrStereoFrame;
+	qboolean captureIsActive; // Really just for the normal DMA sound to check if it should use a low quality resampler
 } trGlobals_t;
 
 

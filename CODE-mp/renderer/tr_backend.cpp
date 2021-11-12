@@ -1,5 +1,8 @@
 #include "tr_local.h"
 #include "glext.h"
+#include "tr_mme.h"
+
+extern shotData_t shotData;
 
 #ifndef DEDICATED
 #if !defined __TR_WORLDEFFECTS_H
@@ -1461,6 +1464,8 @@ const void	*RB_SwapBuffers( const void *data ) {
 	}
 
 	/* Allow MME to take a screenshot */
+	qboolean shotDataTakeTmp = shotData.take;
+	qboolean trFinishStereoTmp = tr.finishStereo;
 	if ( r_stereoSeparation->value < 0.0f && tr.finishStereo) {
 		tr.capturingDofOrStereo = qtrue;
 		tr.latestDofOrStereoFrame = qtrue;
@@ -1482,6 +1487,8 @@ const void	*RB_SwapBuffers( const void *data ) {
 			tr.finishStereo = qfalse;
 		}
 	}
+	tr.captureIsActive = (qboolean)(shotDataTakeTmp || trFinishStereoTmp || tr.capturingDofOrStereo); // Ent probably wouldn't like this, just my way of hacking things together.
+
 
     if ( !glState.finishCalled ) {
         qglFinish();

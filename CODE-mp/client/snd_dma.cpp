@@ -1,6 +1,9 @@
 #include "snd_local.h"
 #include "snd_mix.h"
+#include "../renderer/tr_local.h"
 #include <algorithm>
+
+extern trGlobals_t		tr;
 
 #define		DMA_SNDCHANNELS		128
 #define		DMA_LOOPCHANNELS	128
@@ -115,7 +118,7 @@ void S_DMA_Update( float scale ) {
 		scale = 1.0f;
 	}
 	else {
-		scale = std::min(std::max(scale, s_minSpeed->value), s_maxSpeed->value);
+		scale = min(max(scale, s_minSpeed->value), s_maxSpeed->value);
 	}
 
 	// never mix more than the complete buffer
@@ -125,12 +128,15 @@ void S_DMA_Update( float scale ) {
 	if ( speed == 0 && scale )
 		speed = 1;
 
+	
+	qboolean lowQuality = tr.captureIsActive; // If we are actively capturing, use low quality resampling for the preview sound (captured sound is still high quality). Otherwise too high CPU and RAM usage at high fps capture.
+
 	/* Mix sound or fill with silence depending on speed */
 	if ( speed > 0 ) {
 		/* mix the background track or init the buffer with silence */
 		S_MixBackground(&dmaBackground, speed, count, buf);
-		S_MixChannels(dmaChannels, DMA_SNDCHANNELS, speed, count, buf);
-		S_MixLoops(dmaLoops, DMA_LOOPCHANNELS, speed, count, buf);
+		S_MixChannels(dmaChannels, DMA_SNDCHANNELS, speed, count, buf,nullptr,0,nullptr,0, lowQuality);
+		S_MixLoops(dmaLoops, DMA_LOOPCHANNELS, speed, count, buf,nullptr,0,nullptr,0, lowQuality);
 		S_MixEffects(&dmaEffect, speed, count, buf);
 	} else {
 		Com_Memset(buf, 0, sizeof( buf[0] ) * count * 2);

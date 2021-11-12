@@ -34,7 +34,7 @@ typedef struct {
 	std::unique_ptr<bw64::Bw64Writer>	adm_bw64Handle;
 	char			adm_baseName[MAX_OSPATH];
 	mmeADMChannelInfo_t	adm_channelInfo[MME_LOOPCHANNELS+ MME_SNDCHANNELS];
-	long			admAbsoluteTime;
+	long			admAbsoluteTime; // Do not touch the ADM stuff! It has special handling in some memset functions.
 
 	char			baseName[MAX_OSPATH];
 	fileHandle_t	fileHandle;
@@ -485,7 +485,7 @@ void S_MMEUpdate(float scale) {
 			speed = (scale * (MIX_SPEED << MIX_SHIFT)) / MME_SAMPLERATE;
 			if (speed < 0 || (speed == 0 && scale))
 				speed = 1;
-
+			
 			Com_Memset(mixTemp, 0, sizeof(int) * count * 2);
 			Com_Memset(mixTempADM.get(), 0, sizeof(short) * count * ADMchannelcount);
 			if (speed > 0) {

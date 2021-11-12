@@ -226,7 +226,7 @@ static double mixShiftInverseMultiplier = 1/ mixShiftMultiplier;
 static double mixShiftDoubleMultiplier = mixShiftMultiplier* mixShiftMultiplier;
 static double mixShiftDoubleInverseMultiplier = 1/ mixShiftDoubleMultiplier;
 
-static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, short* outputADM = nullptr, int outputADMOffsetPerSample =0, vec3_t admPosition = nullptr) {
+static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, short* outputADM = nullptr, int outputADMOffsetPerSample =0, vec3_t admPosition = nullptr,qboolean lowQuality = qfalse) {
 	const mixSound_t *sound;
 	int i, leftVol, rightVol;
 	int64_t index, indexAdd, indexLeft;
@@ -275,14 +275,34 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, s
 	//}
 
 	short* resampleBuffer = new short[max(count, 1)] {0};
-	size_t inputAdvance = ch->resampler->getSamples(actualSpeed,resampleBuffer,count,(short*)sound->data,sound->samples>>MIX_SHIFT,ch->index >> MIX_SHIFT,false);
 
-	ch->index += inputAdvance << MIX_SHIFT; // Need to move away from this weirdness at some point...
-	if ( /*ch->index >= sound->samples*/ ch->resampler->IsFinished()) { // End of sound reached.
+	if (lowQuality) { // Low quality mode for the live playback during capture. It causes massive CPU and RAM usage due to the loops being endlessly cached in soxr in a slow capture
+		// Very cheap quick way to do it. We just want speed.
+		int inputSamplesPerOutputSample = (sound->speed * speed) >> MIX_SHIFT;
+		for (int i = 0; i < count; i++) {
+			int inputSample = (ch->index + inputSamplesPerOutputSample * i);
+			if (inputSample >= sound->samples) break;
+			resampleBuffer[i] = sound->data[inputSample >> MIX_SHIFT];
+		}
+		ch->index += inputSamplesPerOutputSample * count; // Need to move away from this weirdness at some point...
+		if (ch->index >= sound->samples) { // End of sound reached.
 
-		ch->handle = 0;
-		ch->resampler = nullptr;
+			ch->handle = 0;
+			ch->resampler = nullptr;
+		}
 	}
+	else {
+		size_t inputAdvance = ch->resampler->getSamples(actualSpeed, resampleBuffer, count, (short*)sound->data, sound->samples >> MIX_SHIFT, ch->index >> MIX_SHIFT, false);
+
+		ch->index += inputAdvance << MIX_SHIFT; // Need to move away from this weirdness at some point...
+		if ( /*ch->index >= sound->samples*/ ch->resampler->IsFinished()) { // End of sound reached.
+
+			ch->handle = 0;
+			ch->resampler = nullptr;
+		}
+	}
+
+	
 
 	short* outputADMDisplacedPointer = outputADM;
 	for (i = 0; i < count;i++) {
@@ -304,7 +324,7 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, s
 
 }
 
-void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *output, short *outputADM, int admTotalChannelCount, mmeADMChannelInfo_t* admChannelInfoArray, long admAbsoluteTime) {
+void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *output, short *outputADM, int admTotalChannelCount, mmeADMChannelInfo_t* admChannelInfoArray, long admAbsoluteTime,qboolean lowQuality) {
 	int queueLeft, freeLeft = channels;
 	int activeCount;
 	mixChannel_t *free = ch;
@@ -443,7 +463,7 @@ skip_alloc:;
 			
 
 			vec3_t admPosition;
-			S_MixChannel(ch, speed, count, output, admDisplacedPointer, admTotalChannelCount, admPosition);
+			S_MixChannel(ch, speed, count, output, admDisplacedPointer, admTotalChannelCount, admPosition,lowQuality);
 			mmeADMBlock_t* currentBlock = &displacedAdmChannelInfoArray->objects.back().blocks.back();
 			VectorCopy(admPosition, currentBlock->position);
 
@@ -451,7 +471,7 @@ skip_alloc:;
 			//displacedAdmChannelInfoArray++;
 		}
 		else {
-			S_MixChannel(ch, speed, count, output, admDisplacedPointer, admTotalChannelCount);
+			S_MixChannel(ch, speed, count, output, admDisplacedPointer, admTotalChannelCount,nullptr,lowQuality);
 		}
 	}
 
@@ -495,7 +515,7 @@ static int S_MixDopplerFull( int speed, const vec3_t origin, const vec3_t veloci
 	return speed * ratio;
 }
 
-static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int count, int *output, short* outputADM=nullptr, int outputADMOffsetPerSample = 0,vec3_t admPosition = nullptr) {
+static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int count, int *output, short* outputADM=nullptr, int outputADMOffsetPerSample = 0,vec3_t admPosition = nullptr,qboolean lowQuality=qfalse) {
 	const mixSound_t *sound;
 	int i, leftVol, rightVol;
 	int64_t index, indexAdd, indexTotal;
@@ -518,9 +538,23 @@ static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int co
 
 	//indexAdd = 1;
 	short* resampleBuffer = new short[max(count, 1)]{ 0 };
-	size_t inputAdvance = loop->resampler->getSamples(actualSpeed, resampleBuffer, count, (short*)sound->data, sound->samples >> MIX_SHIFT, loop->index >> MIX_SHIFT, true);
+	if (lowQuality) { // Low quality mode for the live playback during capture. It causes massive CPU and RAM usage due to the loops being endlessly cached in soxr in a slow capture
+		// Very cheap quick way to do it. We just want speed.
+		int inputSamplesPerOutputSample = (sound->speed * speed) >> MIX_SHIFT;
+		for (int i = 0; i < count; i++) {
+			int inputSample = (loop->index + inputSamplesPerOutputSample*i);
+			if (inputSample >= sound->samples)break;
+			resampleBuffer[i] = sound->data[inputSample >> MIX_SHIFT];
+		}
+		loop->index += inputSamplesPerOutputSample*count; // Need to move away from this weirdness at some point...
 
-	loop->index += inputAdvance << MIX_SHIFT; // Need to move away from this weirdness at some point...
+	}
+	else {
+		size_t inputAdvance = loop->resampler->getSamples(actualSpeed, resampleBuffer, count, (short*)sound->data, sound->samples >> MIX_SHIFT, loop->index >> MIX_SHIFT, true);
+		loop->index += inputAdvance << MIX_SHIFT; // Need to move away from this weirdness at some point...
+	}
+
+	
 
 	while (loop->index >= sound->samples) {
 		loop->index -= sound->samples;
@@ -554,7 +588,7 @@ static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int co
 	//loop->index = index;
 }
 
-void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *output, short* outputADM, int admTotalChannelCount, mmeADMChannelInfo_t* admChannelInfoArray, long admAbsoluteTime) {
+void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *output, short* outputADM, int admTotalChannelCount, mmeADMChannelInfo_t* admChannelInfoArray, long admAbsoluteTime,qboolean lowQuality) {
 	
 	
 	bool* isAlreadyInLoops = new bool[max(s_loopQueueCount,1)] {false}; // The max is if there are zero loops in queue, avoid memory corruption problems stuff
@@ -714,7 +748,7 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 				}
 
 				vec3_t admPosition;
-				S_MixLoop(&mixLoops[i], mixLoops[i].queueItem, speed, count, output, displacedADMOutput, admTotalChannelCount, admPosition);
+				S_MixLoop(&mixLoops[i], mixLoops[i].queueItem, speed, count, output, displacedADMOutput, admTotalChannelCount, admPosition, lowQuality);
 				mmeADMBlock_t* currentBlock = &displacedAdmChannelInfoArray->objects.back().blocks.back();
 				VectorCopy(admPosition, currentBlock->position);
 			}
@@ -724,7 +758,7 @@ void S_MixLoops( mixLoop_t *mixLoops, int loopCount, int speed, int count, int *
 		else {
 			if (!!mixLoops[i].parent) {
 
-				S_MixLoop(&mixLoops[i], mixLoops[i].queueItem, speed, count, output, displacedADMOutput, admTotalChannelCount);
+				S_MixLoop(&mixLoops[i], mixLoops[i].queueItem, speed, count, output, displacedADMOutput, admTotalChannelCount,nullptr, lowQuality);
 			}
 		}
 		
