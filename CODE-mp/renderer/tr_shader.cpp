@@ -3937,6 +3937,7 @@ static void ScanAndLoadShaderFiles( const char *path )
 
 		// scan for shader files
 		//shaderFiles[0] = ri.FS_ListFiles(path, ".shader_mv", &numShaderFilesType[0]); // Maybe implement someday.
+		shaderFiles[0] = 0;
 		shaderFiles[1] = ri.FS_ListFiles(path, ".shader", &numShaderFilesType[1]);
 
 		if (!shaderFiles[0])

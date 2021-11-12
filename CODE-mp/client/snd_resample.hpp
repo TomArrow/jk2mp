@@ -44,7 +44,9 @@ public:
 
 //static bool blahblah4235327634 = piecewiseResample::init();
 
-
+#ifdef RELDEBUG
+#pragma optimize("", off)
+#endif
 // Returns input sample count used.
 size_t piecewiseResample::getSamples(double speed, short* outputBuffer, size_t outSamples, short* inputBuffer, size_t inputBufferLength, size_t inputBufferOffset, bool loop ) {
 	soxr_set_io_ratio(soxrRef, speed, outSamples);
@@ -53,7 +55,7 @@ size_t piecewiseResample::getSamples(double speed, short* outputBuffer, size_t o
 	bool need_input = 1;
 	bool is_flushing = false;
 	do {
-		int64_t len = inputBufferLength-inputBufferOffset; // Need to write into int64_t instead of size_t because value might be negative
+		int64_t len = (int64_t)inputBufferLength-(int64_t)inputBufferOffset; // Need to write into int64_t instead of size_t because value might be negative
 		if (len <= 0) {	// Must check if <0 because in some cases that can apparently happen. Just a ! isn't enough because only 0 evaluates to 0
 			// If sound is looping just continue from start again.
 			if (loop && inputBufferLength > 0) {
@@ -78,8 +80,16 @@ size_t piecewiseResample::getSamples(double speed, short* outputBuffer, size_t o
 				is_flushing = true;
 			}
 		}
+
+		soxr_t arg1 = soxrRef;
+		soxr_in_t arg2 = inputBuffer + inputBufferOffset;
+		size_t arg3 = (size_t)len;
+		size_t* arg4 = &idone;
+		soxr_out_t arg5 = outputBuffer;
+		size_t arg6 = outSamples;
+		size_t* arg7 = &odone;
 		error = soxr_process(soxrRef, inputBuffer + inputBufferOffset, (size_t)len, &idone, outputBuffer, outSamples, &odone);
-		
+
 		outSamples -= odone;
 		outputBuffer += odone;
 		oDoneTotal += odone;
@@ -99,6 +109,9 @@ size_t piecewiseResample::getSamples(double speed, short* outputBuffer, size_t o
 	return inputDone; // let calling code know by how much to advance input buffer index
 }
 
+#ifdef RELDEBUG
+#pragma optimize("", on)
+#endif 
 
 
 #endif

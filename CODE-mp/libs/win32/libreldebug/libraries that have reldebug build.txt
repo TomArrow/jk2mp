@@ -1,0 +1,3 @@
+so far soxr.
+
+others must be done later. rest is copied from release folder.
