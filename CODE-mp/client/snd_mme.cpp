@@ -401,7 +401,7 @@ void S_MMEWavClose(void) {
 		memset(mmeSound.adm_baseName,0,sizeof(mmeSound.adm_baseName));
 		for (int i = 0; i < (MME_SNDCHANNELS + MME_LOOPCHANNELS); i++) {
 
-			mmeSound.adm_channelInfo->objects.clear();
+			mmeSound.adm_channelInfo[i].objects.clear();
 			
 		}
 	}
