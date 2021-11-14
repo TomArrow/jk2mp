@@ -81,19 +81,19 @@ static void lineClear( void ) {
 	}
 }
 
-static void lineInterpolate( int playTime, float playTimeFraction, int *demoTime, float *demoTimeFraction, float *demoSpeed ) {
+static void lineInterpolate(int playTime, float playTimeFraction, int* demoTime, float* demoTimeFraction, float* demoSpeed) {
 	vec3_t dx, dy;
-	demoLinePoint_t *point = linePointSynch( playTime );
-	if (!point || !point->next) {
+	demoLinePoint_t* point = linePointSynch(playTime);
+	if (!point || !point->next || point->time > playTime) {
 		int64_t calcTimeLow, calcTimeHigh;
 		int64_t speed = (1 << SPEED_SHIFT) * demo.line.speed;
-		if (point) 
+		if (point)
 			playTime -= point->time;
 		calcTimeHigh = (playTime >> 16) * speed;
 		calcTimeLow = (playTime & 0xffff) * speed;
 		calcTimeLow += playTimeFraction * speed;
-		*demoTime = (calcTimeHigh << (16-SPEED_SHIFT)) + (calcTimeLow >> SPEED_SHIFT);
-		*demoTimeFraction = (float)(calcTimeLow & ((1 << SPEED_SHIFT) -1)) / (1 << SPEED_SHIFT);
+		*demoTime = (calcTimeHigh << (16 - SPEED_SHIFT)) + (calcTimeLow >> SPEED_SHIFT);
+		*demoTimeFraction = (float)(calcTimeLow & ((1 << SPEED_SHIFT) - 1)) / (1 << SPEED_SHIFT);
 		if (point)
 			*demoTime += point->demoTime;
 		*demoTime += demo.line.offset;
@@ -105,18 +105,20 @@ static void lineInterpolate( int playTime, float playTimeFraction, int *demoTime
 	if (point->prev) {
 		dx[0] = point->time - point->prev->time;
 		dy[0] = point->demoTime - point->prev->demoTime;
-	} else {
+	}
+	else {
 		dx[0] = dx[1];
 		dy[0] = dy[1];
 	}
 	if (point->next->next) {
 		dx[2] = point->next->next->time - point->next->time;;
 		dy[2] = point->next->next->demoTime - point->next->demoTime;;
-	} else {
+	}
+	else {
 		dx[2] = dx[1];
 		dy[2] = dy[1];
 	}
-	*demoTimeFraction = dsplineCalc( (playTime - point->time) + playTimeFraction, dx, dy, demoSpeed );
+	*demoTimeFraction = dsplineCalc((playTime - point->time) + playTimeFraction, dx, dy, demoSpeed);
 	*demoTime = (int)*demoTimeFraction;
 	*demoTimeFraction -= *demoTime;
 	*demoTime += point->demoTime;
