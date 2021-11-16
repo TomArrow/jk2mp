@@ -585,6 +585,7 @@ vmCvar_t	ui_myteam;
 vmCvar_t	cam_shownames;
 vmCvar_t	cam_shownamesStyle;
 vmCvar_t	cam_shownamesIncludePlayer;
+vmCvar_t	cam_shownamesPositionBasedOnG2Head;
 
 //JA
 vmCvar_t	cg_chatBox;
@@ -609,7 +610,7 @@ vmCvar_t	mov_deltaYaw;
 vmCvar_t	mov_deltaPitch;
 vmCvar_t	mov_deltaRoll;
 
-vmCvar_t	mov_smoothQuat;
+vmCvar_t	mov_smoothQuat; // For proper rolling shutter at 1080p you need about a value of 100000 for this!
 vmCvar_t	mov_captureCvars;
 vmCvar_t	mov_ratioFix;
 vmCvar_t	mov_saberTeamColour;
@@ -657,6 +658,7 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cam_shownames, "cam_shownames", "0", NULL, CVAR_ARCHIVE },
 	{ &cam_shownamesStyle, "cam_shownamesStyle", "5", NULL, CVAR_ARCHIVE },
 	{ &cam_shownamesIncludePlayer, "cam_shownamesIncludePlayer", "0", NULL, CVAR_ARCHIVE },
+	{ &cam_shownamesPositionBasedOnG2Head, "cam_shownamesPositionBasedOnG2Head", "1", NULL, CVAR_ARCHIVE },
 	{ &cg_ignore, "cg_ignore", "0", NULL, 0 },	// used for debugging
 	{ &cg_autoswitch, "cg_autoswitch", "1", NULL, CVAR_ARCHIVE },
 	{ &cg_drawGun, "cg_drawGun", "1", NULL, CVAR_ARCHIVE },

@@ -28,6 +28,20 @@ void Cam_DrawClientNames(void) //FIXME: draw entitynums
 				float size;
 
 				VectorCopy(cent->lerpOrigin, org);
+				
+				// See if we can get a more precise location based on the player's head
+				if (cam_shownamesPositionBasedOnG2Head.integer) {
+					clientInfo_t* ci = cgs.clientinfo + i;
+					if (ci->bolt_head) {
+						mdxaBone_t boneMatrix;
+						if (trap_G2API_GetBoltMatrix(cent->ghoul2, 0, ci->bolt_head, &boneMatrix, cent->turAngles, cent->lerpOrigin, cg.time, cgs.gameModels, cent->modelScale)) {
+							vec3_t betterOrigin;
+							trap_G2API_GiveMeVectorFromMatrix(&boneMatrix, ORIGIN, betterOrigin);
+							VectorCopy(betterOrigin, org);
+						}
+					}
+				}
+
 				size = Distance(cg.refdef.vieworg, org);
 				if (!size) return;
 

@@ -1776,6 +1776,7 @@ extern	vmCvar_t		ui_myteam;
 extern  vmCvar_t		cam_shownames;
 extern  vmCvar_t		cam_shownamesStyle;
 extern  vmCvar_t		cam_shownamesIncludePlayer;
+extern  vmCvar_t		cam_shownamesPositionBasedOnG2Head;
 
 //JA
 extern	vmCvar_t	cg_chatBox;
