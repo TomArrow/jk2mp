@@ -611,6 +611,7 @@ vmCvar_t	mov_deltaPitch;
 vmCvar_t	mov_deltaRoll;
 
 vmCvar_t	mov_smoothQuat; // For proper rolling shutter at 1080p you need about a value of 100000 for this!
+vmCvar_t	mov_smoothQuatFast;
 vmCvar_t	mov_captureCvars;
 vmCvar_t	mov_ratioFix;
 vmCvar_t	mov_saberTeamColour;
@@ -834,6 +835,7 @@ Ghoul2 Insert End
 	{ &mov_fontName,		"mov_fontName",			"",				NULL,	CVAR_ARCHIVE	},
 	{ &mov_fontSize,		"mov_fontSize",			"20",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_smoothQuat,		"mov_smoothQuat",		"0",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_smoothQuatFast,	"mov_smoothQuatFast",	"-1",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_captureCvars,	"mov_captureCvars",		"",				NULL,	CVAR_TEMP		},
 	{ &mov_ratioFix,		"mov_ratioFix",			"1",   CG_Set2DRatio,	CVAR_ARCHIVE	},
 	{ &mov_saberTeamColour,	"mov_saberTeamColour",	"1",			NULL,	CVAR_ARCHIVE	},

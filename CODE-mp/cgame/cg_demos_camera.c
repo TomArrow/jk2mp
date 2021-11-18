@@ -252,8 +252,10 @@ static float cameraPointAnglesLength( demoCameraPoint_t *point ) {
 	point->anglesLen = len;
 	return point->anglesLen;
 }
-
-static qboolean cameraAnglesAt( int time, float timeFraction, vec3_t angles) {
+#ifdef RELDEBUG
+//#pragma optimize("", off)
+#endif
+static qboolean cameraAnglesAt( int time, float timeFraction, vec3_t angles, qboolean ignoreSmoothQuat) {
 	demoCameraPoint_t	*match[4];
 	float				lerp;
 	vec3_t				tempAngles;
@@ -300,7 +302,84 @@ static qboolean cameraAnglesAt( int time, float timeFraction, vec3_t angles) {
 		}
 
 		/* origin-like smooth step interpolation */
-		if (mov_smoothQuat.value >= 1) {
+		if (mov_smoothQuat.integer == -1) {
+			// Use quat timespline
+			Quat_t quats[4];
+			int times[4];
+			QuatCopy(q0, quats[0]);
+			QuatCopy(q1, quats[1]);
+			QuatCopy(q2, quats[2]);
+			QuatCopy(q3, quats[3]);
+			times[0] = match[0] ? match[0]->time : 0;
+			times[1] = match[1] ? match[1]->time : 0;
+			times[2] = match[2] ? match[2]->time : 0;
+			times[3] = match[3] ? match[3]->time : 0;
+			QuatTimeSpline(lerp, times,quats, qr);
+		}
+		else if (mov_smoothQuat.value >= 1 && !ignoreSmoothQuat) {
+
+			if(mov_smoothQuatFast.integer){ // Fast algorithm test by ent that remembers the last step
+
+				dx[1] = match[2]->time - match[1]->time;
+				dy[1] = cameraPointAnglesLength(match[1]);
+				match[2]->step = 0.0f;
+				match[2]->curLen = 0.0f;
+				if (match[0]) {
+					match[0]->step = 0.0f;
+					match[0]->curLen = 0.0f;
+					dx[0] = match[1]->time - match[0]->time;
+					dy[0] = cameraPointAnglesLength(match[0]);
+				}
+				else {
+					dx[0] = dx[1];
+					dy[0] = dy[1];
+				}
+				if (match[3]) {
+					match[3]->step = 0.0f;
+					match[3]->curLen = 0.0f;
+					dx[2] = match[3]->time - match[2]->time;
+					dy[2] = cameraPointAnglesLength(match[2]);
+				}
+				else {
+					dx[2] = dx[1];
+					dy[2] = dy[1];
+				}
+				searchLen = dsplineCalc((time - match[1]->time) + timeFraction, dx, dy, 0);
+
+				/* Rewinded, reset */
+				if (!cg.frametime) {
+					match[1]->step = 0;
+					match[1]->curLen = 0.0f;
+				}
+				if (match[1]->step >= 1) {
+					match[1]->step = 1;
+					QuatSquad(1, q0, q1, q2, q3, qr);
+				}
+				else {
+					QuatSquad(match[1]->step, q0, q1, q2, q3, qr);
+				}
+				while (match[1]->step < 1) {
+					addStep = 1 - match[1]->step;
+					if (addStep > 0.0001f)
+						addStep = 0.0001f;
+					for (i = 0; i < 10; i++) {
+						QuatSquad(match[1]->step + addStep, q0, q1, q2, q3, qNext);
+						distance = QuatDistanceSquared(qr, qNext);
+						if (distance <= 0.001f / mov_smoothQuat.value)
+							break;
+						addStep *= 0.7f;
+					}
+					distance = sqrt(distance);
+					if (match[1]->curLen + distance > searchLen)
+						break;
+					match[1]->curLen += distance;
+					match[1]->step += addStep;
+					QuatCopy(qNext, qr);
+				}		
+			}
+			else {
+			// Old slow algorithm
+
 			dx[1] = match[2]->time - match[1]->time;
 			dy[1] = cameraPointAnglesLength( match[1] );
 			if (match[0]) {
@@ -338,14 +417,20 @@ static qboolean cameraAnglesAt( int time, float timeFraction, vec3_t angles) {
 				step += addStep;
 				QuatCopy( qNext, qr );
 			}
-		/* linear step interpolation */
-		} else {
-			QuatSquad( lerp, q0, q1, q2, q3, qr );
+			}
+
+			/* linear step interpolation */
+		}
+		else {
+			QuatSquad(lerp, q0, q1, q2, q3, qr);
 		}
 		QuatToAngles( qr, angles );
 	}
 	return qtrue;
 }
+#ifdef RELDEBUG
+//#pragma optimize("", on)
+#endif
 
 static qboolean cameraFovAt( int time, float timeFraction, float *fov ) {
 	demoCameraPoint_t	*match[4];
@@ -577,7 +662,7 @@ void cameraUpdate( int time, float timeFraction ) {
 
 	} else {
 		cameraOriginAt( time, timeFraction, demo.camera.origin );
-		cameraAnglesAt( time, timeFraction, demo.camera.angles );
+		cameraAnglesAt( time, timeFraction, demo.camera.angles, qfalse );
 		if (!cameraFovAt( time, timeFraction, &demo.camera.fov ))
 			demo.camera.fov = 0;
 		targetCent = demoTargetEntity( demo.camera.target );
@@ -622,7 +707,7 @@ void cameraMove(void) {
 		point = cameraPointSynch( demo.play.time );
 		if (!point || point->time != demo.play.time || demo.play.fraction )
 			return;
-		if (!cameraAnglesAt( point->time, 0, moveAngles ))
+		if (!cameraAnglesAt( point->time, 0, moveAngles,qtrue ))
 			return;
 		angles = point->angles;
 		origin = point->origin;
@@ -726,7 +811,7 @@ void cameraDraw( int time, float timeFraction ) {
 		point = point->next;
 	}
 	/* Draw current line */
-	if ( cameraOriginAt( time, timeFraction, origin) && cameraAnglesAt( time, timeFraction, angles )) {
+	if ( cameraOriginAt( time, timeFraction, origin) && cameraAnglesAt( time, timeFraction, angles, qtrue )) {
 		AngleVectors( angles, forward, 0, 0);
 		VectorMA( origin, 80, forward, angles );
 		demoDrawLine( origin, angles, colorWhite );

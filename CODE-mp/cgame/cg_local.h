@@ -1800,6 +1800,7 @@ extern	vmCvar_t	mov_deltaPitch;
 extern	vmCvar_t	mov_deltaRoll;
 
 extern	vmCvar_t	mov_smoothQuat;
+extern	vmCvar_t	mov_smoothQuatFast;
 extern	vmCvar_t	mov_captureCvars;
 extern	vmCvar_t	mov_ratioFix;
 extern	vmCvar_t	mov_saberTeamColour;

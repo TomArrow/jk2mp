@@ -37,7 +37,7 @@ typedef struct demoCameraPoint_s {
 	vec3_t			origin, angles;
 	float			fov;
 	int				time, flags;
-	float			len, anglesLen;
+	float            len, anglesLen, step, curLen;
 } demoCameraPoint_t;
 
 typedef struct demoChasePoint_s {

@@ -370,7 +370,7 @@ void demoProcessSnapShots(qboolean hadSkip) {
 			return;
 		cg.snap = snap;
 		if ((cg_entities[snap->ps.clientNum].ghoul2 == NULL)
-			&& trap_G2_HaveWeGhoul2Models(cgs.clientinfo[snap->ps.clientNum].ghoul2Model)) {
+			&& snap->ps.clientNum > 0 && trap_G2_HaveWeGhoul2Models(cgs.clientinfo[snap->ps.clientNum].ghoul2Model)) { // snap->ps.clientNum>0 added because when ending a demo we sometimes get access violation here
 			trap_G2API_DuplicateGhoul2Instance(cgs.clientinfo[snap->ps.clientNum].ghoul2Model, &cg_entities[snap->ps.clientNum].ghoul2);
 			CG_CopyG2WeaponInstance(&cg_entities[snap->ps.clientNum], FIRST_WEAPON, cg_entities[snap->ps.clientNum].ghoul2);
 		}

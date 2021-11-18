@@ -45,7 +45,7 @@ public:
 //static bool blahblah4235327634 = piecewiseResample::init();
 
 #ifdef RELDEBUG
-#pragma optimize("", off)
+//#pragma optimize("", off)
 #endif
 // Returns input sample count used.
 size_t piecewiseResample::getSamples(double speed, short* outputBuffer, size_t outSamples, short* inputBuffer, size_t inputBufferLength, size_t inputBufferOffset, bool loop ) {
@@ -110,7 +110,7 @@ size_t piecewiseResample::getSamples(double speed, short* outputBuffer, size_t o
 }
 
 #ifdef RELDEBUG
-#pragma optimize("", on)
+//#pragma optimize("", on)
 #endif 
 
 
