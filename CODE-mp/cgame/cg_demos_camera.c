@@ -310,9 +310,10 @@ static qboolean cameraAnglesAt( int time, float timeFraction, vec3_t angles, qbo
 			QuatCopy(q1, quats[1]);
 			QuatCopy(q2, quats[2]);
 			QuatCopy(q3, quats[3]);
+			int smallestInt = 1 << 31;
 			int biggestInt = ~0 ^ (1 << 31);
-			times[0] = match[0] ? match[0]->time : 0;
-			times[1] = match[1] ? match[1]->time : 0;
+			times[0] = match[0] ? match[0]->time : smallestInt;
+			times[1] = match[1] ? match[1]->time : smallestInt;
 			times[2] = match[2] ? match[2]->time : biggestInt;
 			times[3] = match[3] ? match[3]->time : biggestInt; // forgive me, ent
 			QuatTimeSpline(lerp, times,quats, qr);
