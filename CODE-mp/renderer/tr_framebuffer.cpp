@@ -720,6 +720,7 @@ void R_FrameBuffer_EndFrame( void ) {
 	GL_State( GLS_DEPTHTEST_DISABLE );
 	qglColor4f( 1, 1, 1, 1 );
 	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
+	qglEnable(GL_FRAMEBUFFER_SRGB);
 	R_SetGL2DSize( fbo.screenWidth, fbo.screenHeight );
 	if ( usedFloat ) {
 		R_DrawQuad(	fbo.blur->color, fbo.screenWidth, fbo.screenHeight );

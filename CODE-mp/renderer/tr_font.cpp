@@ -851,8 +851,14 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 
 	
 	// Draw a dropshadow if required
+	vec4_t v4DKGREY2 = { 0.15f, 0.15f, 0.15f, rgba ? rgba[3] : 1.0f };
+	if (r_gammaSrgbLightvalues->integer) {
+		v4DKGREY2[0] = R_sRGBToLinear(v4DKGREY2[0]);
+		v4DKGREY2[1] = R_sRGBToLinear(v4DKGREY2[1]);
+		v4DKGREY2[2] = R_sRGBToLinear(v4DKGREY2[2]);
+		//v4DKGREY2[3] = R_sRGBToLinear(v4DKGREY2[3]);
+	}
 	if(!demo15detected && iFontHandle & STYLE_DROPSHADOW) {
-		const vec4_t v4DKGREY2 = {0.15f, 0.15f, 0.15f, rgba?rgba[3]:1.0f};
 
 		offset = curfont->GetPointSize() * fScale * 0.075f;
 		
@@ -862,7 +868,6 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 	} else if (demo15detected && iFontHandle & STYLE_DROPSHADOW) {
 		int i = 0, r = 0;
 		static char dropShadowText[1024];
-		const vec4_t v4DKGREY2 = {0.15f, 0.15f, 0.15f, rgba?rgba[3]:1.0f};
 
 		offset = curfont->GetPointSize() * fScale * 0.075f;
 
@@ -916,6 +921,12 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 				int skipCount;
 				if (Q_parseColorHex(psText, color, &skipCount)) {
 					psText += skipCount;
+					if (r_gammaSrgbLightvalues->integer) {
+						color[0] = R_sRGBToLinear(color[0]);
+						color[1] = R_sRGBToLinear(color[1]);
+						color[2] = R_sRGBToLinear(color[2]);
+						//color[3] = R_sRGBToLinear(color[3]);
+					}
 					RE_SetColor(color);
 				}
 			}
@@ -924,7 +935,15 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 				colour = ColorIndex(*psText);
 				if (!gbInShadow)
 				{
-					RE_SetColor(g_color_table[colour]);
+					vec4_t color;
+					Vector4Copy(g_color_table[colour], color);
+					if (r_gammaSrgbLightvalues->integer) {
+						color[0] = R_sRGBToLinear(color[0]);
+						color[1] = R_sRGBToLinear(color[1]);
+						color[2] = R_sRGBToLinear(color[2]);
+						//color[3] = R_sRGBToLinear(color[3]);
+					}
+					RE_SetColor(color);
 				}
 				++psText;
 				break;

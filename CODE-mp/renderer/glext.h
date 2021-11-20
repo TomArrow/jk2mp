@@ -347,6 +347,8 @@ extern "C" {
 #define GL_RGB32F                         0x8815
 #define GL_RGBA16F                        0x881A
 #define GL_RGB16F                         0x881B
+#define GL_FRAMEBUFFER_SRGB			      0x8DB9
+
 
 
 #ifndef GL_EXT_texture3D

@@ -1226,45 +1226,50 @@ void CG_DrawHUD(centity_t	*cent)
 		CG_DrawHUDLeftFrame2(0,SCREEN_HEIGHT-80);
 	}
 
-	//scoreStr = va("Score: %i", cgs.clientinfo[cg.snap->ps.clientNum].score);
-	if ( cgs.gametype == GT_TOURNAMENT )
-	{//A duel that requires more than one kill to knock the current enemy back to the queue
-		//show current kills out of how many needed
-		scoreStr = va("Score: %i/%i", cg.snap->ps.persistant[PERS_SCORE], cgs.fraglimit);
-	}
-	else if (0 && cgs.gametype < GT_TEAM )
-	{	// This is a teamless mode, draw the score bias.
-		scoreBias = cg.snap->ps.persistant[PERS_SCORE] - cgs.scores1;
-		if (scoreBias == 0)
-		{	// We are the leader!
-			if (cgs.scores2 <= 0)
-			{	// Nobody to be ahead of yet.
-				Com_sprintf(scoreBiasStr, sizeof(scoreBiasStr), "");
-			}
-			else
-			{
-				scoreBias = cg.snap->ps.persistant[PERS_SCORE] - cgs.scores2;
-				if (scoreBias == 0)
-				{
-					Com_sprintf(scoreBiasStr, sizeof(scoreBiasStr), " (Tie)");
+	if (cg_drawScore.integer) {
+		//scoreStr = va("Score: %i", cgs.clientinfo[cg.snap->ps.clientNum].score);
+		if (cgs.gametype == GT_TOURNAMENT)
+		{//A duel that requires more than one kill to knock the current enemy back to the queue
+			//show current kills out of how many needed
+			scoreStr = va("Score: %i/%i", cg.snap->ps.persistant[PERS_SCORE], cgs.fraglimit);
+		}
+		else if (0 && cgs.gametype < GT_TEAM)
+		{	// This is a teamless mode, draw the score bias.
+			scoreBias = cg.snap->ps.persistant[PERS_SCORE] - cgs.scores1;
+			if (scoreBias == 0)
+			{	// We are the leader!
+				if (cgs.scores2 <= 0)
+				{	// Nobody to be ahead of yet.
+					Com_sprintf(scoreBiasStr, sizeof(scoreBiasStr), "");
 				}
 				else
 				{
-					Com_sprintf(scoreBiasStr, sizeof(scoreBiasStr), " (+%d)", scoreBias);
+					scoreBias = cg.snap->ps.persistant[PERS_SCORE] - cgs.scores2;
+					if (scoreBias == 0)
+					{
+						Com_sprintf(scoreBiasStr, sizeof(scoreBiasStr), " (Tie)");
+					}
+					else
+					{
+						Com_sprintf(scoreBiasStr, sizeof(scoreBiasStr), " (+%d)", scoreBias);
+					}
 				}
 			}
+			else // if (scoreBias < 0)
+			{	// We are behind!
+				Com_sprintf(scoreBiasStr, sizeof(scoreBiasStr), " (%d)", scoreBias);
+			}
+			scoreStr = va("Score: %i%s", cg.snap->ps.persistant[PERS_SCORE], scoreBiasStr);
 		}
-		else // if (scoreBias < 0)
-		{	// We are behind!
-			Com_sprintf(scoreBiasStr, sizeof(scoreBiasStr), " (%d)", scoreBias);
+		else
+		{	// Don't draw a bias.
+			scoreStr = va("Score: %i", cg.snap->ps.persistant[PERS_SCORE]);
 		}
-		scoreStr = va("Score: %i%s", cg.snap->ps.persistant[PERS_SCORE], scoreBiasStr);
+		vec4_t scaledColor;
+		Vector4Copy(colorTable[CT_WHITE], scaledColor);
+		VectorScale(scaledColor, r_HUDBrightness, scaledColor);
+		UI_DrawScaledProportionalString(SCREEN_WIDTH - 124 * cgs.widthRatioCoef/*(strlen(scoreStr)*20.5)*/, SCREEN_HEIGHT - 23, scoreStr, UI_RIGHT | UI_DROPSHADOW, scaledColor, 0.7);
 	}
-	else
-	{	// Don't draw a bias.
-		scoreStr = va("Score: %i", cg.snap->ps.persistant[PERS_SCORE]);
-	}
-	UI_DrawScaledProportionalString(SCREEN_WIDTH-124*cgs.widthRatioCoef/*(strlen(scoreStr)*20.5)*/, SCREEN_HEIGHT-23, scoreStr, UI_RIGHT|UI_DROPSHADOW, colorTable[CT_WHITE], 0.7);
 
 	menuHUD = Menus_FindByName("righthud");
 	if (menuHUD)
