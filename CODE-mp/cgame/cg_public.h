@@ -261,7 +261,7 @@ Ghoul2 Insert End
 	CG_KEY_GETOVERSTRIKEMODE,
 	CG_KEY_SETOVERSTRIKEMODE,
 	CG_S_UPDATE_SCALE,
-
+	CG_R_REGISTERSHADERNOMIPHUD // For controlling HUD Brightness, special handler
 } cgameImport_t;
 
 

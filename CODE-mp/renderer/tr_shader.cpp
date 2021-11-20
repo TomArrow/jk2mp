@@ -3820,6 +3820,39 @@ qhandle_t RE_RegisterShaderNoMip( const char *name ) {
 	return sh->index;
 }
 
+/*
+====================
+RE_RegisterShaderNoMipHUD
+
+For menu graphics that should never be picmiped
+
+Special version that can be brightness scaled with r_HUDBrightness
+====================
+*/
+qhandle_t RE_RegisterShaderNoMipHUD( const char *name ) {
+	shader_t	*sh;
+
+	if ( strlen( name ) >= MAX_QPATH ) {
+		Com_Printf( "Shader name exceeds MAX_QPATH\n" );
+		return 0;
+	}
+
+	sh = R_FindShader( name, lightmaps2d, stylesDefault, qfalse );
+
+	sh->isHud = qtrue; // This is the one big difference to the normal RE_RegisterShaderNoMip function
+
+	// we want to return 0 if the shader failed to
+	// load for some reason, but R_FindShader should
+	// still keep a name allocated for it, so if
+	// something calls RE_RegisterShader again with
+	// the same name, we don't try looking for it again
+	if ( sh->defaultShader ) {
+		return 0;
+	}
+
+	return sh->index;
+}
+
 
 /*
 ====================

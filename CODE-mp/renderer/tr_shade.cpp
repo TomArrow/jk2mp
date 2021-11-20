@@ -1157,7 +1157,7 @@ static void RB_FogPass( void ) {
 ComputeColors
 ===============
 */
-static void ComputeColors( shaderStage_t *pStage, int forceRGBGen )
+static void ComputeColors( shaderStage_t *pStage, int forceRGBGen, qboolean isHUD )
 {
 	int			i;
 	color4ub_t	*colors = tess.svars.colors;
@@ -1317,6 +1317,15 @@ static void ComputeColors( shaderStage_t *pStage, int forceRGBGen )
 			}
 			break;
 
+	}
+
+	if (isHUD) { // Brightness scaling for HUD elements
+		for (i = 0; i < tess.numVertexes; i++)
+		{
+			tess.svars.colors[i][0] *= r_HUDBrightness->value;
+			tess.svars.colors[i][1] *= r_HUDBrightness->value;
+			tess.svars.colors[i][2] *= r_HUDBrightness->value;
+		}
 	}
 
 	//
@@ -1618,7 +1627,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			continue;
 		}
 
-		ComputeColors( pStage, forceRGBGen );
+		ComputeColors( pStage, forceRGBGen, input->shader->isHud);
 		ComputeTexCoords( pStage );
 
 		if ( !setArraysOnce )

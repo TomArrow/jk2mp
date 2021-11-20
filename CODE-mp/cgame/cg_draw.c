@@ -16,6 +16,7 @@ menuDef_t *menuScoreboard = NULL;
 vec4_t	bluehudtint = {0.5, 0.5, 1.0, 1.0};
 vec4_t	redhudtint = {1.0, 0.5, 0.5, 1.0};
 float	*hudTintColor;
+float r_HUDBrightness;
 
 int sortedTeamPlayers[TEAM_MAXOVERLAY];
 int	numSortedTeamPlayers;
@@ -805,7 +806,10 @@ void CG_DrawHealth(int x,int y)
 		CG_DrawPic(   x, y, 80*cgs.widthRatioCoef, 80, cgs.media.HUDHealthTic );
 	}
 
-	trap_R_SetColor( colorTable[CT_HUD_RED] );	
+	vec4_t scaledColor;
+	Vector4Copy(colorTable[CT_HUD_RED], scaledColor);
+	VectorScale(scaledColor, r_HUDBrightness, scaledColor);
+	trap_R_SetColor(scaledColor);
 	CG_DrawNumField ((float)x - (float)l + ((float)l + 16.0f)*cgs.widthRatioCoef, y + 40, 3, ps->stats[STAT_HEALTH], 6, 12, 
 		NUM_FONT_SMALL,qfalse);
 
@@ -904,7 +908,10 @@ void CG_DrawArmor(int x,int y)
 		CG_DrawPic(   x, y, 80*cgs.widthRatioCoef, 80, cgs.media.HUDArmorTic );		
 	}
 
-	trap_R_SetColor( colorTable[CT_HUD_GREEN] );	
+	vec4_t scaledColor;
+	Vector4Copy(colorTable[CT_HUD_GREEN], scaledColor);
+	VectorScale(scaledColor, r_HUDBrightness, scaledColor);
+	trap_R_SetColor(scaledColor);
 	CG_DrawNumField ((float)x - (float)l + ((float)l + 18.0f + 14.0f)*cgs.widthRatioCoef, y + 40 + 14, 3, ps->stats[STAT_ARMOR], 6, 12, 
 		NUM_FONT_SMALL,qfalse);
 
@@ -1024,7 +1031,10 @@ static void CG_DrawAmmo(centity_t	*cent,int x,int y)
 
 	numColor_i = CT_HUD_ORANGE;
 
-	trap_R_SetColor( colorTable[numColor_i] );	
+	vec4_t scaledColor;
+	Vector4Copy(colorTable[numColor_i], scaledColor);
+	VectorScale(scaledColor, r_HUDBrightness, scaledColor);
+	trap_R_SetColor(scaledColor);
 	CG_DrawNumField (640 - (640 - x - 30)*cgs.widthRatioCoef, y + 26, 3, value, 6, 12, NUM_FONT_SMALL,qfalse);
 
 
@@ -1122,6 +1132,8 @@ void CG_DrawHUD(centity_t	*cent)
 	int	scoreBias;
 	char scoreBiasStr[16];
 
+	r_HUDBrightness = CG_Cvar_Get("r_HUDBrightness");
+
 	if (cg_hudFiles.integer)
 	{
 		int x = 0;
@@ -1129,11 +1141,16 @@ void CG_DrawHUD(centity_t	*cent)
 		char ammoString[64];
 		int weapX = x;
 
+		vec4_t scaledColor;
+		Vector4Copy(colorTable[CT_HUD_RED], scaledColor);
+		VectorScale(scaledColor, r_HUDBrightness, scaledColor);
 		UI_DrawProportionalString( (x+16)*cgs.widthRatioCoef, y+40, va( "%i", cg.snap->ps.stats[STAT_HEALTH] ),
-			UI_SMALLFONT|UI_DROPSHADOW, colorTable[CT_HUD_RED] );
+			UI_SMALLFONT|UI_DROPSHADOW, scaledColor);
 
+		Vector4Copy(colorTable[CT_HUD_GREEN], scaledColor);
+		VectorScale(scaledColor, r_HUDBrightness, scaledColor);
 		UI_DrawProportionalString( (x+18+14)*cgs.widthRatioCoef, y+40+14, va( "%i", cg.snap->ps.stats[STAT_ARMOR] ),
-			UI_SMALLFONT|UI_DROPSHADOW, colorTable[CT_HUD_GREEN] );
+			UI_SMALLFONT|UI_DROPSHADOW, scaledColor);
 
 		if (cg.snap->ps.weapon == WP_SABER)
 		{
@@ -1158,11 +1175,15 @@ void CG_DrawHUD(centity_t	*cent)
 			Com_sprintf(ammoString, sizeof(ammoString), "%i", cg.snap->ps.ammo[weaponData[cent->currentState.weapon].ammoIndex]);
 		}
 		
+		Vector4Copy(colorTable[CT_HUD_ORANGE], scaledColor);
+		VectorScale(scaledColor, r_HUDBrightness, scaledColor);
 		UI_DrawProportionalString( SCREEN_WIDTH-(weapX+16+32)*cgs.widthRatioCoef, y+40, va( "%s", ammoString ),
-			UI_SMALLFONT|UI_DROPSHADOW, colorTable[CT_HUD_ORANGE] );
+			UI_SMALLFONT|UI_DROPSHADOW, scaledColor);
 
+		Vector4Copy(colorTable[CT_ICON_BLUE], scaledColor);
+		VectorScale(scaledColor, r_HUDBrightness, scaledColor);
 		UI_DrawProportionalString( SCREEN_WIDTH-(x+18+14+32)*cgs.widthRatioCoef, y+40+14, va( "%i", cg.snap->ps.fd.forcePower),
-			UI_SMALLFONT|UI_DROPSHADOW, colorTable[CT_ICON_BLUE] );
+			UI_SMALLFONT|UI_DROPSHADOW, scaledColor);
 
 		return;
 	}
@@ -1180,6 +1201,14 @@ void CG_DrawHUD(centity_t	*cent)
 	{	// tint the hud items white (dont' tint)
 		hudTintColor = colorTable[CT_WHITE];
 	}
+
+	
+	/*float hudTintColorScaled[4];
+	float* hudTintFormerSetting = hudTintColor;
+	VectorCopy( hudTintColor, hudTintColorScaled);
+	VectorScale(hudTintColorScaled, r_HUDBrightness, hudTintColorScaled);
+	hudTintColor = hudTintColorScaled;*/ // This was just an early attempt before I put it all into the shaders themselves as this wouldn't handle rgbgen const
+
 
 	menuHUD = Menus_FindByName("lefthud");
 	if (menuHUD)
@@ -1253,6 +1282,8 @@ void CG_DrawHUD(centity_t	*cent)
 		CG_DrawAmmo(cent,SCREEN_WIDTH-80,SCREEN_HEIGHT-80);
 		CG_DrawHUDRightFrame2(SCREEN_WIDTH-80,SCREEN_HEIGHT-80);
 	}
+
+	//hudTintColor  = hudTintFormerSetting;
 }
 
 #define MAX_SHOWPOWERS NUM_FORCE_POWERS

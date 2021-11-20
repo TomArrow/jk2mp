@@ -486,6 +486,8 @@ Ghoul2 Insert End
 	bool hasGlow;
 #endif
 
+	qboolean isHud; // If it's a HUD shader, we want to scale the brightness with r_HUDBrightness
+
   struct shader_s *remappedShader;                  // current shader this one is remapped too
 
   int shaderStates[MAX_STATES_PER_SHADER];          // index to valid shader states
@@ -1260,6 +1262,7 @@ extern cvar_t* r_gammaSrgbTextures;
 extern cvar_t* r_gammaLegacy;
 extern cvar_t* r_gammaLegacyPrecision;
 extern cvar_t* r_gammaSrgbLightvalues;
+extern cvar_t* r_HUDBrightness;
 
 extern	cvar_t	*r_nobind;						// turns off binding to appropriate textures
 extern	cvar_t	*r_singleShader;				// make most world faces use default shader
@@ -1531,6 +1534,7 @@ extern	const byte	stylesDefault[MAXLIGHTMAPS];
 qhandle_t RE_RegisterShaderLightMap( const char *name, const int *lightmapIndex, const byte *styles ) ;
 qhandle_t		 RE_RegisterShader( const char *name );
 qhandle_t		 RE_RegisterShaderNoMip( const char *name );
+qhandle_t		 RE_RegisterShaderNoMipHUD( const char *name );
 qhandle_t RE_RegisterShaderFromImage(const char *name, int *lightmapIndex, byte *styles, image_t *image, qboolean mipRawImage);
 
 shader_t	*R_FindShader( const char *name, const int *lightmapIndex, const byte *styles, qboolean mipRawImage );

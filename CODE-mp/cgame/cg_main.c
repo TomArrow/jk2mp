@@ -2754,28 +2754,28 @@ Ghoul2 Insert End
 	cgs.media.rageRecShader = trap_R_RegisterShaderNoMip("gfx/mp/f_icon_ragerec");
 
 	//rww - precache other HUD graphics
-	cgs.media.HUDLeftFrame		= trap_R_RegisterShaderNoMip( "gfx/hud/static_test" );
-	cgs.media.HUDInnerLeft		= trap_R_RegisterShaderNoMip( "gfx/hud/hudleft_innerframe" );
-	cgs.media.HUDArmor1			= trap_R_RegisterShaderNoMip( "gfx/hud/armor1" );
-	cgs.media.HUDArmor2			= trap_R_RegisterShaderNoMip( "gfx/hud/armor2" );
-	cgs.media.HUDHealth			= trap_R_RegisterShaderNoMip( "gfx/hud/health" );
-	cgs.media.HUDHealthTic		= trap_R_RegisterShaderNoMip( "gfx/hud/health_tic" );
-	cgs.media.HUDArmorTic		= trap_R_RegisterShaderNoMip( "gfx/hud/armor_tic" );
+	cgs.media.HUDLeftFrame		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/static_test" );
+	cgs.media.HUDInnerLeft		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/hudleft_innerframe" );
+	cgs.media.HUDArmor1			= trap_R_RegisterShaderNoMipHUD( "gfx/hud/armor1" );
+	cgs.media.HUDArmor2			= trap_R_RegisterShaderNoMipHUD( "gfx/hud/armor2" );
+	cgs.media.HUDHealth			= trap_R_RegisterShaderNoMipHUD( "gfx/hud/health" );
+	cgs.media.HUDHealthTic		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/health_tic" );
+	cgs.media.HUDArmorTic		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/armor_tic" );
 	
 	cgs.media.HUDLeftStatic		= cgs.media.HUDLeftFrame;//trap_R_RegisterShaderNoMip( "gfx/hud/static_test" );
 	cgs.media.HUDLeft			= cgs.media.HUDInnerLeft;//trap_R_RegisterShaderNoMip( "gfx/hud/hudleft" );
 
-	cgs.media.HUDSaberStyle1	= trap_R_RegisterShader( "gfx/hud/saber_stylesFast"   );
-	cgs.media.HUDSaberStyle2	= trap_R_RegisterShader( "gfx/hud/saber_stylesMed"	  );
-	cgs.media.HUDSaberStyle3	= trap_R_RegisterShader( "gfx/hud/saber_stylesStrong" );
+	cgs.media.HUDSaberStyle1	= trap_R_RegisterShaderNoMipHUD( "gfx/hud/saber_stylesFast"   );
+	cgs.media.HUDSaberStyle2	= trap_R_RegisterShaderNoMipHUD( "gfx/hud/saber_stylesMed"	  );
+	cgs.media.HUDSaberStyle3	= trap_R_RegisterShaderNoMipHUD( "gfx/hud/saber_stylesStrong" );
 
-	cgs.media.HUDRightFrame		= trap_R_RegisterShaderNoMip("gfx/hud/hudrightframe");
-	cgs.media.HUDInnerRight		= trap_R_RegisterShaderNoMip( "gfx/hud/hudright_innerframe" );
+	cgs.media.HUDRightFrame		= trap_R_RegisterShaderNoMipHUD("gfx/hud/hudrightframe");
+	cgs.media.HUDInnerRight		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/hudright_innerframe" );
 
 	// Load tics
 	for (i = 0; i < MAX_TICS; i++) {
-		forceTicPos[i].tic		= trap_R_RegisterShaderNoMip( forceTicPos[i].file );
-		ammoTicPos[i].tic		= trap_R_RegisterShaderNoMip( ammoTicPos[i].file );
+		forceTicPos[i].tic		= trap_R_RegisterShaderNoMipHUD( forceTicPos[i].file );
+		ammoTicPos[i].tic		= trap_R_RegisterShaderNoMipHUD( ammoTicPos[i].file );
 	}
 	
 	// get the rendering configuration from the client system
