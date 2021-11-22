@@ -303,6 +303,8 @@ typedef struct {
 	qhandle_t	recordingShader;
 
 	float		ratioFix;
+
+	float gameTime; // For notify message duration and such.
 } clientStatic_t;
 
 #define	CON_TEXTSIZE	32768
@@ -328,6 +330,7 @@ typedef struct {
 	int		vislines;		// in scanlines
 
 	float		times[NUM_CON_TIMES];	// cls.realtime time the line was generated
+	float		gameTimes[NUM_CON_TIMES];	// "cg.time" time the line was generated
 								// for transparent notify lines
 	vec4_t	color;
 } console_t;

@@ -186,6 +186,7 @@ void Con_ClearNotify( void ) {
 	
 	for ( i = 0 ; i < NUM_CON_TIMES ; i++ ) {
 		con.times[i] = 0;
+		con.gameTimes[i] = 0;
 	}
 }
 
@@ -307,10 +308,16 @@ static void Con_Linefeed (qboolean skipnotify) {
 
 	// mark time for transparent overlay
 	if (con.current >= 0) {
-		if (skipnotify)
-			  con.times[con.current % NUM_CON_TIMES] = 0;
-		else
-			  con.times[con.current % NUM_CON_TIMES] = cls.realtime;
+		if (skipnotify) {
+
+			con.times[con.current % NUM_CON_TIMES] = 0;
+			con.gameTimes[con.current % NUM_CON_TIMES] = 0;
+		}
+		else {
+
+			con.times[con.current % NUM_CON_TIMES] = cls.realtime;
+			con.gameTimes[con.current % NUM_CON_TIMES] = cls.gameTime;
+		}
 	}
 
 	con.x = 0;
@@ -415,10 +422,14 @@ void CL_ConsolePrint( char *txt ) {
 			if ( prev < 0 )
 				prev = NUM_CON_TIMES - 1;
 			con.times[prev] = 0;
+			con.gameTimes[prev] = 0;
 		}
-		else
-		// -NERVE - SMF
+		else {
+
+			// -NERVE - SMF
 			con.times[con.current % NUM_CON_TIMES] = cls.realtime;
+			con.gameTimes[con.current % NUM_CON_TIMES] = cls.gameTime;
+		}
 	}
 }
 
@@ -471,7 +482,7 @@ void Con_DrawNotify (void)
 	int		x, v;
 	short	*text;
 	int		i;
-	double		time;
+	double		time,gameTime;
 	int		skip;
 	int		currentColor;
 
@@ -484,10 +495,16 @@ void Con_DrawNotify (void)
 		if (i < 0)
 			continue;
 		time = con.times[i % NUM_CON_TIMES];
-		if (time == 0)
+		gameTime = con.gameTimes[i % NUM_CON_TIMES];
+		if (time == 0 || gameTime == 0)
 			continue;
 		time = cls.realtime - time;
-		if (time > con_notifytime->value*1000)
+		gameTime = cls.gameTime - gameTime;
+		if (gameTime < 0) { // if we scrolled backwards.
+			con.gameTimes[i % NUM_CON_TIMES] = 0;
+			continue;
+		}
+		if (time > con_notifytime->value*1000 && gameTime > con_notifytime->value * 1000)
 			continue;
 		text = con.text + (i % con.totallines)*con.linewidth;
 

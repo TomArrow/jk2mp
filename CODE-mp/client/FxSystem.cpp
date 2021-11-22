@@ -49,6 +49,9 @@ void SFxHelper::Print( const char *msg, ... )
 //------------------------------------------------------
 void SFxHelper::AdjustTime_Pos( int time, float frametime, float timeFraction, vec3_t refdef_vieworg, vec3_t refdef_viewaxis[3] )
 {
+
+	cls.gameTime = time + timeFraction; // don't show this to ent, he would get a stroke.
+
 	if ( fx_freeze.integer )
 	{
 		mFrameTime = 0;
