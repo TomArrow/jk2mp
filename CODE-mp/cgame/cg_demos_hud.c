@@ -42,6 +42,7 @@ typedef enum {
 	hudEditName,
 	hudViewName,
 	hudDemoName,
+	hudCGTime,
 
 	hudCamCheckPos,
 	hudCamCheckAngles,
@@ -287,6 +288,9 @@ static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
 		return;
 	case hudDemoName:
 		Com_sprintf( buf, bufSize, "%s", mme_demoFileName.string);
+		return;
+	case hudCGTime:
+		Com_sprintf( buf, bufSize, "%d", cg.time);
 		return;
 	case hudEditName:
 		switch (demo.editType) {
@@ -699,6 +703,7 @@ void hudInitTables(void) {
 	hudAddHandler(   0,  2,  0, "View:", hudViewName );
 	hudAddHandler(   0,  3,  0, "Edit:", hudEditName );
 	hudAddHandler(   0,  22,  0, "Demoname:", hudDemoName );
+	hudAddHandler(   0,  23,  0, "CG.Time:", hudCGTime);
 
 	for (i = 0; i < LOGLINES; i++) 
 		hudAddHandler(   0,  25+i, 0, 0, hudLogBase+i );
