@@ -185,12 +185,12 @@ static qboolean cameraOriginAt( int time, float timeFraction, vec3_t origin ) {
 	posGet( 0, demo.camera.smoothPos, control, origin );
 	while (step < 1) {
 		addStep = 1 - step;
-		if (addStep > 0.01f)
-			addStep = 0.01f;
+		if (addStep > 0.0001f)
+			addStep = 0.0001f;
 		for (i = 0; i < 10; i++) {
 			posGet( step+addStep, demo.camera.smoothPos, control, nextOrigin );
 			distance = VectorDistanceSquared( origin, nextOrigin);
-			if ( distance <= 0.01f)
+			if ( distance <= 0.0001f)
 				break;
 			addStep *= 0.7f;
 		}
