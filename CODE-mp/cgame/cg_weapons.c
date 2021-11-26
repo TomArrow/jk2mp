@@ -7,6 +7,7 @@
 extern vec4_t	bluehudtint;
 extern vec4_t	redhudtint;
 extern float	*hudTintColor;
+extern float	r_HUDBrightness;
 
 /*
 Ghoul2 Insert Start
@@ -1294,7 +1295,9 @@ void CG_DrawWeaponSelect( void ) {
 	{
 		vec4_t			textColor = { .875f, .718f, .121f, 1.0f };
 		char	text[1024];
-		
+
+		VectorScale(textColor, r_HUDBrightness, textColor);
+				
 		if ( trap_SP_GetStringTextString( va("INGAME_%s",cg_weapons[ cg.weaponSelect ].item->classname), text, sizeof( text )))
 		{
 			UI_DrawProportionalString(320, y+45, text, UI_CENTER|UI_SMALLFONT, textColor);

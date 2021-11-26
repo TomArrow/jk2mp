@@ -2678,53 +2678,53 @@ Ghoul2 Insert End
 
 	//rww - precache HUD weapon icons here
 	//actually, these should be stored in the icon field of each item def
-	cgs.media.weaponIcons[WP_STUN_BATON] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_stunbaton");
-	cgs.media.weaponIcons_NA[WP_STUN_BATON] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_stunbaton_na");
+	cgs.media.weaponIcons[WP_STUN_BATON] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_stunbaton");
+	cgs.media.weaponIcons_NA[WP_STUN_BATON] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_stunbaton_na");
 
-	cgs.media.weaponIcons[WP_SABER] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_lightsaber");
-	cgs.media.weaponIcons_NA[WP_SABER] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_lightsaber_na");
+	cgs.media.weaponIcons[WP_SABER] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_lightsaber");
+	cgs.media.weaponIcons_NA[WP_SABER] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_lightsaber_na");
 
-	cgs.media.weaponIcons[WP_BRYAR_PISTOL] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_briar");
-	cgs.media.weaponIcons_NA[WP_BRYAR_PISTOL] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_briar_na");
+	cgs.media.weaponIcons[WP_BRYAR_PISTOL] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_briar");
+	cgs.media.weaponIcons_NA[WP_BRYAR_PISTOL] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_briar_na");
 
-	cgs.media.weaponIcons[WP_BLASTER] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_blaster");
-	cgs.media.weaponIcons_NA[WP_BLASTER] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_blaster_na");
+	cgs.media.weaponIcons[WP_BLASTER] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_blaster");
+	cgs.media.weaponIcons_NA[WP_BLASTER] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_blaster_na");
 
-	cgs.media.weaponIcons[WP_DISRUPTOR] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_disruptor");
-	cgs.media.weaponIcons_NA[WP_DISRUPTOR] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_disruptor_na");
+	cgs.media.weaponIcons[WP_DISRUPTOR] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_disruptor");
+	cgs.media.weaponIcons_NA[WP_DISRUPTOR] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_disruptor_na");
 
-	cgs.media.weaponIcons[WP_BOWCASTER] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_bowcaster");
-	cgs.media.weaponIcons_NA[WP_BOWCASTER] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_bowcaster_na");
+	cgs.media.weaponIcons[WP_BOWCASTER] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_bowcaster");
+	cgs.media.weaponIcons_NA[WP_BOWCASTER] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_bowcaster_na");
 
-	cgs.media.weaponIcons[WP_REPEATER] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_repeater");
-	cgs.media.weaponIcons_NA[WP_REPEATER] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_repeater_na");
+	cgs.media.weaponIcons[WP_REPEATER] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_repeater");
+	cgs.media.weaponIcons_NA[WP_REPEATER] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_repeater_na");
 
-	cgs.media.weaponIcons[WP_DEMP2] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_demp2");
-	cgs.media.weaponIcons_NA[WP_DEMP2] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_demp2_na");
+	cgs.media.weaponIcons[WP_DEMP2] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_demp2");
+	cgs.media.weaponIcons_NA[WP_DEMP2] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_demp2_na");
 
-	cgs.media.weaponIcons[WP_FLECHETTE] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_flechette");
-	cgs.media.weaponIcons_NA[WP_FLECHETTE] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_flechette_na");
+	cgs.media.weaponIcons[WP_FLECHETTE] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_flechette");
+	cgs.media.weaponIcons_NA[WP_FLECHETTE] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_flechette_na");
 
-	cgs.media.weaponIcons[WP_ROCKET_LAUNCHER] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_merrsonn");
-	cgs.media.weaponIcons_NA[WP_ROCKET_LAUNCHER] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_merrsonn_na");
+	cgs.media.weaponIcons[WP_ROCKET_LAUNCHER] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_merrsonn");
+	cgs.media.weaponIcons_NA[WP_ROCKET_LAUNCHER] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_merrsonn_na");
 
-	cgs.media.weaponIcons[WP_THERMAL] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_thermal");
-	cgs.media.weaponIcons_NA[WP_THERMAL] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_thermal_na");
+	cgs.media.weaponIcons[WP_THERMAL] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_thermal");
+	cgs.media.weaponIcons_NA[WP_THERMAL] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_thermal_na");
 
-	cgs.media.weaponIcons[WP_TRIP_MINE] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_tripmine");
-	cgs.media.weaponIcons_NA[WP_TRIP_MINE] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_tripmine_na");
+	cgs.media.weaponIcons[WP_TRIP_MINE] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_tripmine");
+	cgs.media.weaponIcons_NA[WP_TRIP_MINE] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_tripmine_na");
 
-	cgs.media.weaponIcons[WP_DET_PACK] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_detpack");
-	cgs.media.weaponIcons_NA[WP_DET_PACK] = trap_R_RegisterShaderNoMip("gfx/hud/w_icon_detpack_na");
+	cgs.media.weaponIcons[WP_DET_PACK] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_detpack");
+	cgs.media.weaponIcons_NA[WP_DET_PACK] = trap_R_RegisterShaderNoMipHUD("gfx/hud/w_icon_detpack_na");
 
 	// HUD artwork for cycling inventory,weapons and force powers 
-	cgs.media.weaponIconBackground		= trap_R_RegisterShaderNoMip( "gfx/hud/background");
-	cgs.media.weaponProngsOn			= trap_R_RegisterShaderNoMip( "gfx/hud/prong_on_w");
-	cgs.media.weaponProngsOff			= trap_R_RegisterShaderNoMip( "gfx/hud/prong_off");
-	cgs.media.forceProngsOn				= trap_R_RegisterShaderNoMip( "gfx/hud/prong_on_f");
-	cgs.media.forceIconBackground		= trap_R_RegisterShaderNoMip( "gfx/hud/background_f");
-	cgs.media.inventoryIconBackground	= trap_R_RegisterShaderNoMip( "gfx/hud/background_i");
-	cgs.media.inventoryProngsOn			= trap_R_RegisterShaderNoMip( "gfx/hud/prong_on_i");
+	cgs.media.weaponIconBackground		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/background");
+	cgs.media.weaponProngsOn			= trap_R_RegisterShaderNoMipHUD( "gfx/hud/prong_on_w");
+	cgs.media.weaponProngsOff			= trap_R_RegisterShaderNoMipHUD( "gfx/hud/prong_off");
+	cgs.media.forceProngsOn				= trap_R_RegisterShaderNoMipHUD( "gfx/hud/prong_on_f");
+	cgs.media.forceIconBackground		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/background_f");
+	cgs.media.inventoryIconBackground	= trap_R_RegisterShaderNoMipHUD( "gfx/hud/background_i");
+	cgs.media.inventoryProngsOn			= trap_R_RegisterShaderNoMipHUD( "gfx/hud/prong_on_i");
 
 	//rww - precache holdable item icons here
 	while (i < bg_numItems)
@@ -2733,7 +2733,7 @@ Ghoul2 Insert End
 		{
 			if (bg_itemlist[i].icon)
 			{
-				cgs.media.invenIcons[bg_itemlist[i].giTag] = trap_R_RegisterShaderNoMip(bg_itemlist[i].icon);
+				cgs.media.invenIcons[bg_itemlist[i].giTag] = trap_R_RegisterShaderNoMipHUD(bg_itemlist[i].icon);
 			}
 			else
 			{
@@ -2749,11 +2749,11 @@ Ghoul2 Insert End
 
 	while (i < NUM_FORCE_POWERS)
 	{
-		cgs.media.forcePowerIcons[i] = trap_R_RegisterShaderNoMip(HolocronIcons[i]);
+		cgs.media.forcePowerIcons[i] = trap_R_RegisterShaderNoMipHUD(HolocronIcons[i]);
 
 		i++;
 	}
-	cgs.media.rageRecShader = trap_R_RegisterShaderNoMip("gfx/mp/f_icon_ragerec");
+	cgs.media.rageRecShader = trap_R_RegisterShaderNoMipHUD("gfx/mp/f_icon_ragerec");
 
 	//rww - precache other HUD graphics
 	cgs.media.HUDLeftFrame		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/static_test" );

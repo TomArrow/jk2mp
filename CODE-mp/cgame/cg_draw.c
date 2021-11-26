@@ -1463,7 +1463,11 @@ void CG_DrawForceSelect( void )
 
 	if ( showPowersName[cg.forceSelect] ) 
 	{
-		UI_DrawProportionalString(320, y + 30, CG_GetStripEdString("INGAME", showPowersName[cg.forceSelect]), UI_CENTER | UI_SMALLFONT, colorTable[CT_ICON_BLUE]);
+		vec4_t tmpColor;
+		Vector4Copy(colorTable[CT_ICON_BLUE], tmpColor);
+		VectorScale(tmpColor, r_HUDBrightness, tmpColor);
+
+		UI_DrawProportionalString(320, y + 30, CG_GetStripEdString("INGAME", showPowersName[cg.forceSelect]), UI_CENTER | UI_SMALLFONT, tmpColor);
 	}
 }
 
@@ -1520,7 +1524,12 @@ void CG_DrawInvenSelect( void )
 	if (!count)
 	{
 		y2 = 0; //err?
-		UI_DrawProportionalString(320, y2 + 22, "EMPTY INVENTORY", UI_CENTER | UI_SMALLFONT, colorTable[CT_ICON_BLUE]);
+
+		vec4_t tmpColor;
+		Vector4Copy(colorTable[CT_ICON_BLUE],tmpColor);
+		VectorScale(tmpColor, r_HUDBrightness, tmpColor);
+
+		UI_DrawProportionalString(320, y2 + 22, "EMPTY INVENTORY", UI_CENTER | UI_SMALLFONT, tmpColor);
 		return;
 	}
 
@@ -1607,7 +1616,9 @@ void CG_DrawInvenSelect( void )
 		if (bg_itemlist[itemNdex].classname)
 		{
 			vec4_t	textColor = { .312f, .75f, .621f, 1.0f };
-			char	text[1024];
+			char	text[1024]; 
+			
+			VectorScale(textColor, r_HUDBrightness, textColor);
 			
 			if ( trap_SP_GetStringTextString( va("INGAME_%s",bg_itemlist[itemNdex].classname), text, sizeof( text )))
 			{
@@ -4439,6 +4450,8 @@ void CG_Draw2D( void ) {
 	float			bestTime;
 	int				drawSelect = 0;
 	vec4_t			hcolor = {0, 0, 0, 0};
+
+	r_HUDBrightness = CG_Cvar_Get("r_HUDBrightness");
 	
 	CG_FillRect(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, hcolor);
 	
