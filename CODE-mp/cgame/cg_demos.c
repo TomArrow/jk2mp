@@ -776,6 +776,8 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 		trap_Cvar_Set("r_stereoSeparation", va("%f", -stereoSep));
 	CG_TileClear();
 	trap_MME_TimeFraction(cg.timeFraction);
+
+	VectorCopy(cg.refdefViewAngles,cg.refdef.viewAngles); // For MME so we can export AE cam paths
 	trap_R_RenderScene( &cg.refdef );
 
 	CG_FillRect(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, hcolor);

@@ -7,6 +7,9 @@ extern std::vector<GLuint> pboIds;
 #endif
 
 
+std::vector<AECamPosition> AECamPositions;
+
+
 void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterProgress,int rollingShutterPixels,int rollingShutterBufferIndex ) {
 #ifdef JEDIACADEMY_GLOW
 	//bool doSave = rollingShutterProgress == rollingShutterFactor - 1;
@@ -108,6 +111,15 @@ void R_MME_SaveShot( mmeShot_t *shot, int width, int height, float fps, byte *in
 	int outSize;
 	char fileName[MAX_OSPATH];
 
+	AECamPosition camPosition;
+	camPosition.fov = tr.refdef.fov_x;
+	VectorCopy(tr.refdef.vieworg, camPosition.viewOrg);
+	VectorCopy(tr.refdef.viewAngles, camPosition.viewAngles);
+	VectorCopy(tr.refdef.viewaxis[0], camPosition.viewAxis[0]);
+	VectorCopy(tr.refdef.viewaxis[1], camPosition.viewAxis[1]);
+	VectorCopy(tr.refdef.viewaxis[2], camPosition.viewAxis[2]);
+	AECamPositions.push_back(camPosition);
+	
 	format = shot->format;
 	switch (format) {
 	case mmeShotFormatJPG:

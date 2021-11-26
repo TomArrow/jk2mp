@@ -79,6 +79,7 @@ cvar_t	*mme_depthFocus;
 cvar_t	*mme_depthRange;
 cvar_t	*mme_saveOverwrite;
 cvar_t	*mme_saveShot;
+cvar_t	* mme_saveAEKeyframes;
 cvar_t	*mme_saveStencil;
 cvar_t	*mme_saveDepth;
 cvar_t	* mme_saveADM;
@@ -715,9 +716,141 @@ void R_MME_BlurInfo( int* total, int *index ) {
 		*index -= blurData.control.overlapFrames;
 }
 
+extern std::vector<AECamPosition> AECamPositions;
+void R_MME_WriteAECamPath() {
+	char fileName[MAX_OSPATH];
+	int i;
+	/* First see if the file already exist */
+	for (i = 0; i < AVI_MAX_FILES; i++) {
+		Com_sprintf(fileName, sizeof(fileName), "%s.AECamPath.%03d.txt", shotData.main.name, i);
+		if (!FS_FileExists(fileName))
+			break;
+	}
+
+	fileHandle_t file = FS_FOpenFileWrite(fileName);
+
+	std::string tmpString = "Adobe After Effects 8.0 Keyframe Data\r\n\r\n";
+	tmpString += "\tUnits Per Second\t";
+	tmpString += std::to_string(shotData.fps);
+	tmpString += "\r\n\tSource Width\t";
+	tmpString += std::to_string(glConfig.vidWidth);
+	tmpString += "\r\n\tSource Height\t";
+	tmpString += std::to_string(glConfig.vidHeight);
+	tmpString += "\r\n\tSource Pixel Aspect Ratio\t";
+	tmpString += std::to_string(1);
+	tmpString += "\r\n\tComp Pixel Aspect Ratio\t";
+	tmpString += std::to_string(1);
+	tmpString += "\r\n";
+
+	// Zoom first. (how to do this exactly?)
+	tmpString += "\r\nCamera Options\tZoom\r\n\tFrame\tpixels\t\r\n";
+	for (int i = 0; i < AECamPositions.size(); i++) {
+		tmpString += "\t";
+		tmpString += std::to_string(i);
+		tmpString += "\t";
+		// Convert fov to zoom
+		float zoom = glConfig.vidWidth / (2 * tan(AECamPositions[i].fov/2 * M_PI / 180));
+
+		tmpString += std::to_string(zoom);
+		tmpString += "\t\r\n";
+	}
+	/*
+	// X Rotation
+	tmpString += "\r\nTransform\tX Rotation\r\n\tFrame\tdegrees\t\r\n";
+	for (int i = 0; i < AECamPositions.size(); i++) {
+		tmpString += "\t";
+		tmpString += std::to_string(i);
+		tmpString += "\t";
+		float rot = AECamPositions[i].viewAngles[0];
+
+		tmpString += std::to_string(rot);
+		tmpString += "\t\r\n";
+	}
+	
+	// Y Rotation
+	tmpString += "\r\nTransform\tY Rotation\r\n\tFrame\tdegrees\t\r\n";
+	for (int i = 0; i < AECamPositions.size(); i++) {
+		tmpString += "\t";
+		tmpString += std::to_string(i);
+		tmpString += "\t";
+		float rot = AECamPositions[i].viewAngles[1];
+
+		tmpString += std::to_string(rot);
+		tmpString += "\t\r\n";
+	}*/
+
+	// Z Rotation
+	tmpString += "\r\nTransform\tRotation\r\n\tFrame\tdegrees\t\r\n";
+	for (int i = 0; i < AECamPositions.size(); i++) {
+		tmpString += "\t";
+		tmpString += std::to_string(i);
+		tmpString += "\t";
+		float rot = AECamPositions[i].viewAngles[2];
+
+		tmpString += std::to_string(rot);
+		tmpString += "\t\r\n";
+	}
+
+	// Orientation
+	/*tmpString += "\r\nTransform\tOrientation\r\n\tFrame\tX degrees\t\r\n";
+	for (int i = 0; i < AECamPositions.size(); i++) {
+		tmpString += "\t";
+		tmpString += std::to_string(i);
+		tmpString += "\t";
+
+		tmpString += std::to_string(AECamPositions[i].viewAngles[0]);
+		tmpString += "\t";
+		tmpString += std::to_string(AECamPositions[i].viewAngles[1]);
+		tmpString += "\t";
+		tmpString += std::to_string(AECamPositions[i].viewAngles[2]);
+		tmpString += "\t\r\n";
+	}*/
+
+	// Position
+	tmpString += "\r\nTransform\tPosition\r\n\tFrame\tX pixels\tY pixels\tZ pixels\t\r\n";
+	for (int i = 0; i < AECamPositions.size(); i++) {
+		tmpString += "\t";
+		tmpString += std::to_string(i);
+		tmpString += "\t";
+		tmpString += std::to_string(AECamPositions[i].viewOrg[0]);
+		tmpString += "\t";
+		tmpString += std::to_string(-AECamPositions[i].viewOrg[2]);// In AE x is right/left, y is height and z is depth. Also, needs inversion of height
+		tmpString += "\t";
+		tmpString += std::to_string(AECamPositions[i].viewOrg[1]);
+		tmpString += "\t\r\n";
+	}
+	
+	tmpString += "\r\nTransform\tPoint of Interest\r\n\tFrame\tX pixels\tY pixels\tZ pixels\t\r\n";
+	for (int i = 0; i < AECamPositions.size(); i++) {
+		tmpString += "\t";
+		tmpString += std::to_string(i);
+		tmpString += "\t";
+		vec3_t dir; 
+		vec3_t poi;
+		VectorScale(AECamPositions[i].viewAxis[0],100,dir); // just so its easier to see in AE
+		VectorAdd(AECamPositions[i].viewOrg, dir, poi);
+		tmpString += std::to_string(poi[0]);
+		tmpString += "\t";
+		tmpString += std::to_string(-poi[2]); // In AE x is right/left, y is height and z is depth. Also, needs inversion of height
+		tmpString += "\t";
+		tmpString += std::to_string(poi[1]);
+		tmpString += "\t\r\n";
+	}
+
+	tmpString += "\r\n\r\nEnd of Keyframe Data\r\n";
+
+
+	FS_Write(tmpString.c_str(),tmpString.size(),file);
+
+	FS_FCloseFile(file);
+
+	AECamPositions.clear();
+}
+
 void R_MME_Shutdown(void) {
 
 	R_MME_FlushMultiThreading();
+	R_MME_WriteAECamPath();
 	aviClose( &shotData.main.avi );
 	aviClose( &shotData.depth.avi );
 	aviClose( &shotData.stencil.avi );
@@ -766,6 +899,7 @@ void R_MME_Init(void) {
 	mme_saveADM = ri.Cvar_Get ( "mme_saveADM", "1", CVAR_ARCHIVE );
 	mme_saveDepth = ri.Cvar_Get ( "mme_saveDepth", "0", CVAR_ARCHIVE );
 	mme_saveShot = ri.Cvar_Get ( "mme_saveShot", "1", CVAR_ARCHIVE );
+	mme_saveAEKeyframes = ri.Cvar_Get ( "mme_saveAEKeyframes", "1", CVAR_ARCHIVE );
 	mme_workMegs = ri.Cvar_Get ( "mme_workMegs", "128", CVAR_LATCH | CVAR_ARCHIVE );
 
 	mme_rollingShutterBlur = ri.Cvar_Get ( "mme_rollingShutterBlur", "0.5", CVAR_ARCHIVE ); // float. like rollingshuttermultiplier.

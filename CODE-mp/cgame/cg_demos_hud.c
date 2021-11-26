@@ -273,6 +273,8 @@ static float *hudGetFloat( hudItem_t *item ) {
 
 static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
 	char tmp[32];
+	int i, highestSlashIndex;
+	char* onlyFilenameTmp;
 	buf[0] = 0;
 	if (item->handler >= hudLogBase && item->handler < hudLogBase + LOGLINES) {
 		const char *l = hud.logLines[item->handler - hudLogBase];
@@ -287,7 +289,19 @@ static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
 		Com_sprintf( buf, bufSize, "%s (%s)", demoTimeString(demo.play.time ), tmp);
 		return;
 	case hudDemoName:
-		Com_sprintf( buf, bufSize, "%s", mme_demoFileName.string);
+		onlyFilenameTmp = mme_demoFileName.string;
+		i = 0;
+		highestSlashIndex = 0;
+		while (onlyFilenameTmp[i] != '\0') {
+			if (onlyFilenameTmp[i] == '\\' || onlyFilenameTmp[i] == '/') {
+				highestSlashIndex = i;
+			}
+			i++;
+		}
+		if (highestSlashIndex > 0 && highestSlashIndex+1 < i) {
+			onlyFilenameTmp += highestSlashIndex+1;
+		}
+		Com_sprintf( buf, bufSize, "%s", onlyFilenameTmp);
 		return;
 	case hudCGTime:
 		Com_sprintf( buf, bufSize, "%d", cg.time);

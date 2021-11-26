@@ -257,6 +257,8 @@ typedef struct {
 
 	// text messages for deform text shaders
 	char		text[MAX_RENDER_STRINGS][MAX_RENDER_STRING_LENGTH];
+
+	vec3_t		viewAngles; // Copy of refdefViewAngles so we can save AE path. (purely for MME, this isn't the main view angles variable)
 } refdef_t;
 
 

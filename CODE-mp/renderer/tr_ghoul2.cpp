@@ -1734,6 +1734,11 @@ void R_AddGhoulSurfaces( trRefEntity_t *ent ) {
 		if (!(ghoul2[i].mFlags & GHOUL2_NOMODEL))
 		{
 			currentModel = R_GetModelByHandle(ghoul2[i].mModel);
+
+			if (!currentModel->mdxm) {
+				continue; // TODO I don't know why this happens. This might not be real fix, but sometimes mdxm is NULL and causes a game crash.
+			}
+
 			animModel =  R_GetModelByHandle(currentModel->mdxm->animIndex);
 			aHeader = animModel->mdxa;
  #ifndef DEDICATED 		

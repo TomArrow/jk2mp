@@ -4,6 +4,12 @@
 #include <xmmintrin.h>
 
 
+typedef struct {
+	float fov;
+	vec3_t viewAngles;
+	vec3_t viewOrg;
+	vec3_t viewAxis[3];
+} AECamPosition;
 
 #define AVI_MAX_FRAMES	2000000
 #ifdef SMALLAVIDEBUG

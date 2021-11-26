@@ -560,6 +560,8 @@ typedef struct {
 	
 	float		timeFraction;
 
+	vec3_t		viewAngles; // for MME so we can export AE cam paths
+
 } trRefdef_t;
 
 
@@ -1358,6 +1360,7 @@ extern cvar_t	*mme_depthFocus;
 extern cvar_t	*mme_saveOverwrite;
 extern cvar_t	*mme_saveStencil;
 extern cvar_t	*mme_saveShot;
+extern cvar_t	*mme_saveAEKeyframes;
 extern cvar_t	*mme_saveDepth;
 extern cvar_t	* mme_saveADM;
 extern cvar_t	*mme_rollingShutterBlur;
