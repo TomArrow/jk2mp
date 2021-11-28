@@ -12,6 +12,7 @@ console_t	con;
 
 cvar_t		*con_conspeed;
 cvar_t		*con_notifytime;
+cvar_t		*con_timestamps;
 
 #define	DEFAULT_CONSOLE_WIDTH	78
 
@@ -276,6 +277,7 @@ void Con_Init (void) {
 	int		i;
 
 	con_notifytime = Cvar_Get ("con_notifytime", "3", 0);
+	con_timestamps = Cvar_Get("con_timestamps", "0", CVAR_ARCHIVE);
 	con_conspeed = Cvar_Get ("scr_conspeed", "3", 0);
 
 	Field_Clear( &kg.g_consoleField );
@@ -337,6 +339,34 @@ All console printing must go through this in order to be logged to disk
 If no console is visible, the text will appear at the top of the game window
 ================
 */
+#ifdef RELDEBUG
+//#pragma optimize("", off)
+#endif
+static qboolean newString = qtrue;
+const char* CL_ConsolePrintTimeStamp(const char* txt) {
+	int c = (unsigned char)*txt;
+	if (c == 0)
+		return txt;
+	if (!con_timestamps)
+		return txt;
+	if (!con_timestamps->integer)
+		return txt;
+	if (newString) {
+		time_t rawtime;
+		char timeStr[32] = { 0 };
+		newString = qfalse;
+		if(con_timestamps->integer == 2){
+			rawtime = (time_t)(cls.gameTime/1000.0);
+			strftime(timeStr, sizeof(timeStr), "[%H:%M:%S]", localtime(&rawtime));
+		}
+		else {
+			time(&rawtime);
+			strftime(timeStr, sizeof(timeStr), "[%H:%M:%S]", localtime(&rawtime));
+		}
+		return va(S_COLOR_WHITE"%s %s", timeStr, txt);
+	}
+	return txt;
+}
 void CL_ConsolePrint( char *txt ) {
 	int		y;
 	int		c, l;
@@ -365,7 +395,7 @@ void CL_ConsolePrint( char *txt ) {
 	}
 
 	color = ColorIndex(COLOR_WHITE);
-
+	txt = (char*)CL_ConsolePrintTimeStamp(txt); // TODO: this doesn't work. Try and fix someday.
 	while ( (c = (unsigned char) *txt) != 0 ) {
 		if ( demo15detected && ntModDetected && Q_IsColorStringNT( (unsigned char*) txt ) ) {
 			color = ColorIndexNT( *(txt+1) );
@@ -396,9 +426,11 @@ void CL_ConsolePrint( char *txt ) {
 		switch (c) {
 		case '\n':
 			Con_Linefeed (skipnotify);
+			newString = qtrue;
 			break;
 		case '\r':
 			con.x = 0;
+			newString = qtrue;
 			break;
 		default:	// display character and advance
 			y = con.current % con.totallines;
@@ -410,6 +442,7 @@ void CL_ConsolePrint( char *txt ) {
 			}
 			break;
 		}
+		txt = (char*)CL_ConsolePrintTimeStamp(txt);
 	}
 
 
@@ -432,7 +465,9 @@ void CL_ConsolePrint( char *txt ) {
 		}
 	}
 }
-
+#ifdef RELDEBUG
+//#pragma optimize("", on)
+#endif
 
 /*
 ==============================================================================

@@ -591,6 +591,7 @@ vmCvar_t	cam_shownamesPositionBasedOnG2Head;
 //JA
 vmCvar_t	cg_chatBox;
 vmCvar_t	cg_chatBoxHeight;
+vmCvar_t	cg_chatBoxMaxItems;
 vmCvar_t    cg_commandSmooth;
 
 //mme
@@ -819,6 +820,7 @@ Ghoul2 Insert End
 	//JA
 	{ &cg_chatBox,			"cg_chatBox",			"0",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_chatBoxHeight,	"cg_chatBoxHeight",		"350",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_chatBoxMaxItems,	"cg_chatBoxMaxItems",	"5",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_commandSmooth,	"cg_commandSmooth",		"1",			NULL,	CVAR_ARCHIVE	},
 	//mme
 	{ &mme_demoFileName,	"mme_demoFileName",		"",				NULL,	0				},

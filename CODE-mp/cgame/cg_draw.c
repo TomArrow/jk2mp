@@ -4043,8 +4043,11 @@ static ID_INLINE void CG_ChatBox_DrawStrings(void) {
 
 	//we have the items we want to draw, just quickly loop through them now
 	i = 0;
+	int lowestToDraw = numToDraw - min(numToDraw, cg_chatBoxMaxItems.integer);
 	while (i < numToDraw) {
-		CG_Text_Paint(x, y, fontScale, colorWhite, drawThese[i]->string, 0, 0, ITEM_TEXTSTYLE_OUTLINED, FONT_SMALL );
+		if (i >= lowestToDraw) {
+			CG_Text_Paint(x, y, fontScale, colorWhite, drawThese[i]->string, 0, 0, ITEM_TEXTSTYLE_OUTLINED, FONT_SMALL );
+		}
 		y += ((CHATBOX_FONT_HEIGHT*fontScale)*drawThese[i]->lines);
 		i++;
 	}

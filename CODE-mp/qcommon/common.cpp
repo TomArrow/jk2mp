@@ -167,7 +167,7 @@ void QDECL Com_Printf( const char *fmt, ... ) {
 			time( &aclock );
 			newtime = localtime( &aclock );
 
-			logfile = FS_FOpenFileWrite( "qconsole.log" );
+			logfile = FS_FOpenFileWrite( "qconsole.log", qtrue ); // We do a quiet file write open bc otherwise possible endless recursion
 			Com_Printf( "logfile opened on %s\n", asctime( newtime ) );
 			if ( com_logfile->integer > 1 ) {
 				// force it to not buffer so we get valid

@@ -724,7 +724,7 @@ typedef struct {
 #define MAX_PREDICTED_EVENTS	16
 
 
-#define	MAX_CHATBOX_ITEMS		5
+#define	MAX_CHATBOX_ITEMS		100 // Just set a high number here so we can control the actual number via cvar
 typedef struct chatBoxItem_s
 {
 	char	string[MAX_SAY_TEXT];
@@ -1782,6 +1782,7 @@ extern  vmCvar_t		cam_shownamesPositionBasedOnG2Head;
 //JA
 extern	vmCvar_t	cg_chatBox;
 extern	vmCvar_t	cg_chatBoxHeight;
+extern	vmCvar_t	cg_chatBoxMaxItems;
 extern	vmCvar_t	cg_commandSmooth;
 
 //New MME cvars

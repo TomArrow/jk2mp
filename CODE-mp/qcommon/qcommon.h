@@ -520,14 +520,14 @@ qboolean FS_FileErase( const char *file );
 int		FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize );
 int		FS_GetModList(  char *listbuf, int bufsize );
 
-fileHandle_t	FS_FOpenFileWrite( const char *qpath );
+fileHandle_t	FS_FOpenFileWrite( const char *qpath, qboolean quiet = qfalse);
 fileHandle_t	FS_FOpenFileReadWrite( const char *filename );
 fileHandle_t	FS_FDirectOpenFileWrite( const char *filename, const char *mode );
 // will properly create any needed paths and deal with seperater character issues
 
 int		FS_filelength( fileHandle_t f );
 fileHandle_t FS_SV_FOpenFileWrite( const char *filename );
-qboolean FS_CreatePath(char* OSPath);
+qboolean FS_CreatePath(char* OSPath, qboolean quiet = qfalse);
 int		FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp );
 void	FS_SV_Rename( const char *from, const char *to );
 int		FS_FOpenFileRead( const char *qpath, fileHandle_t *file, qboolean uniqueFILE );

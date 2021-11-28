@@ -512,14 +512,16 @@ FS_CreatePath
 Creates any directories needed to store the given filename
 ============
 */
-qboolean FS_CreatePath (char *OSPath) {
+qboolean FS_CreatePath (char *OSPath, qboolean quiet) {
 	char	*ofs;
 	
 	// make absolutely sure that it can't back up the path
 	// FIXME: is c: allowed???
 	if ( strstr( OSPath, ".." ) || strstr( OSPath, "::" ) ) {
 #ifdef ALLOWRELPATHSDEBUG
-		Com_Printf( "WARNING: creating relative path. Only allowed in Debug mode. \"%s\"\n", OSPath );
+		if (!quiet) {
+			Com_Printf("WARNING: creating relative path. Only allowed in Debug mode. \"%s\"\n", OSPath);
+		}
 #else
 		Com_Printf("WARNING: refusing to create relative path \"%s\"\n", OSPath);
 		return qtrue;
@@ -950,7 +952,7 @@ FS_FOpenFileWrite
 
 ===========
 */
-fileHandle_t FS_FOpenFileWrite( const char *filename ) {
+fileHandle_t FS_FOpenFileWrite( const char *filename, qboolean quiet ) { // quiet parameter if we want to suppress messages. for example when creating a logfile (endless recursion otherwise)
 	std::string			ospath;
 	fileHandle_t	f;
 
@@ -964,11 +966,11 @@ fileHandle_t FS_FOpenFileWrite( const char *filename ) {
 
 	ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, filename );
 
-	if ( fs_debug->integer ) {
+	if ( fs_debug->integer && !quiet ) {
 		Com_Printf( "FS_FOpenFileWrite: %s\n", ospath.c_str());
 	}
 
-	if( FS_CreatePath( (char*) ospath.c_str() ) ) {
+	if( FS_CreatePath( (char*) ospath.c_str(),quiet ) ) {
 		return 0;
 	}
 
