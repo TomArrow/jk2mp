@@ -1048,3 +1048,6 @@ extern huffman_t clientHuffTables;
 #define CL_DECODE_START		4
 
 #endif // _QCOMMON_H_
+
+#define Q_min(x,y) ((x)<(y)?(x):(y))
+#define Q_max(x,y) ((x)>(y)?(x):(y))

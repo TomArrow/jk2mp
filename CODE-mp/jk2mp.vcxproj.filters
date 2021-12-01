@@ -761,6 +761,9 @@
     <ClCompile Include="jpeg-9a\wrtarga.c">
       <Filter>Renderer\jpeg files\JPG Source</Filter>
     </ClCompile>
+    <ClCompile Include="client\cl_demos_cut.cpp">
+      <Filter>Client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="client\client.h">

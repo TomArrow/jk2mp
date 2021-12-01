@@ -250,6 +250,9 @@
     <ClCompile Include="cam_main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cg_demos_cut.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="JK2_cgame.def">

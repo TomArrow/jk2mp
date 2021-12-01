@@ -1105,6 +1105,7 @@ void demoPlaybackInit(void) {
 	trap_AddCommand("stopLoop");
 	trap_AddCommand("sun");
 	trap_AddCommand("rain");
+	trap_AddCommand("cut");
 
 	demo.media.additiveWhiteShader = trap_R_RegisterShader( "mme_additiveWhite" );
 	demo.media.mouseCursor = trap_R_RegisterShaderNoMip( "cursor" );
@@ -1321,6 +1322,8 @@ qboolean CG_DemosConsoleCommand( void ) {
 		demoSunCommand_f();
 	} else if (!Q_stricmp(cmd, "rain")) {
 		demoRainCommand_f();
+	} else if (!Q_stricmp(cmd, "cut")) {
+		demoCutCommand_f();
 	} else {
 		return CG_ConsoleCommand();
 	}

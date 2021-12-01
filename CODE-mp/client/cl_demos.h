@@ -73,6 +73,7 @@ typedef struct {
 } demoPlay_t;
 
 typedef struct {
+	int						nextNum, currentNum;
 	struct {
 		demoPlay_t			*handle;
 		int					snapCount;
@@ -83,5 +84,10 @@ typedef struct {
 		int					serverTime;
 	} play;
 	qboolean				del;
+	struct {
+		clientConnection_t	Clc;
+		clientActive_t		Cl;
+	} cut;
 } demo_t;
 
+extern demo_t demo;

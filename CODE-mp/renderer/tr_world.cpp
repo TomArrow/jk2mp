@@ -298,6 +298,7 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits ) {
 		Com_Memcpy(&shader->deforms[deformToReplace],&tr.mmeWorldDeform,sizeof(deformStage_t));
 	}
 	if (tr.mmeWorldBlendIsSet) { // Replace blend modes of every shader stage.
+		shader->sort = SS_BLEND1; // I think it's too late to do that at this point. Need to do manual sorting?
 		for (int i = 0; i < MAX_SHADER_STAGES; i++) {
 			if (shader->stages[i]) {
 				shader->stages[i]->stateBits &= ~(GLS_DSTBLEND_BITS | GLS_SRCBLEND_BITS); // clear these bits first

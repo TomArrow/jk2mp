@@ -17,12 +17,12 @@ typedef struct {
 
 static demoListEntry_t	demoList[DEMOLISTSIZE];
 static int				demoListIndex, demoListCount;
-static demo_t			demo;
+demo_t			demo;
 static byte				demoBuffer[128*1024];
 static entityState_t	demoNullEntityState;
 static playerState_t	demoNullPlayerState;
 static qboolean			demoPrecaching = qfalse;
-static int				demoNextNum = 0;
+//static int				demoNextNum = 0;
 
 static const char *demoHeader = Q3_VERSION " Demo";
 
@@ -671,7 +671,7 @@ static void demoPlayForwardFrame( demoPlay_t *play ) {
 	msg_t		msg;
 
 	if (play->filePos + 4 > play->fileSize) {
-		if (mme_demoAutoNext->integer && demoNextNum && !demoPrecaching) {
+		if (mme_demoAutoNext->integer && demo.nextNum && !demoPrecaching) {
 			CL_Disconnect_f();
 		}
 		if (mme_demoAutoQuit->integer && !demoPrecaching) {
@@ -763,15 +763,16 @@ static int demoFindNext(const char *fileName) {
 	qboolean tryAgain = qtrue;
 	if (isdigit(fileName[len-1]) && ((fileName[len-2] == '.'))) {
 		Com_sprintf(seekName, len-1+1, fileName);
-		demoNextNum = fileName[len-1] - '0';
+		demo.currentNum = fileName[len-1] - '0';
 	} else if (isdigit(fileName[len-1]) && (isdigit(fileName[len-2]) && (fileName[len-3] == '.'))) {
 		Com_sprintf(seekName, len-2+1, fileName);
-		demoNextNum = (fileName[len-2] - '0')*10 + (fileName[len-1] - '0');
+		demo.currentNum = (fileName[len-2] - '0')*10 + (fileName[len-1] - '0');
 	} else {
 		Com_sprintf(seekName, MAX_OSPATH, fileName);
+		demo.currentNum = demo.nextNum;
 	}
 tryAgain:
-	for (i = demoNextNum + 1; i < 99; i++) {
+	for (i = demo.currentNum + 1; i < 99; i++) {
 		Com_sprintf(name, MAX_OSPATH, "mmedemos/%s.%d.mme", seekName, i);
 		if (FS_FileExists(name)) {
 			Com_Printf("Next demo file: %s\n", name);
@@ -855,7 +856,7 @@ static demoPlay_t *demoPlayOpen( const char* fileName ) {
 			play->clientNum = i;
 			break;
 		}
-	demoNextNum = demoFindNext(mme_demoFileName->string);
+	demo.nextNum = demoFindNext(mme_demoFileName->string);
 	return play;
 errorreturn:
 	Z_Free( play );
@@ -1202,16 +1203,16 @@ void CL_DemoListNext_f(void) {
 		if ( mme_demoListQuit->integer )
 			Cbuf_ExecuteText( EXEC_APPEND, "quit" );
 	}
-	if (mme_demoAutoNext->integer && demoNextNum) {
+	if (mme_demoAutoNext->integer && demo.nextNum) {
 		char demoName[MAX_OSPATH];
-		if (demoNextNum == 1) {
+		if (demo.nextNum == 1) {
 			Com_sprintf(demoName, MAX_OSPATH, "%s.1", mme_demoFileName->string);
-		} else if (demoNextNum < 10) {
+		} else if (demo.nextNum < 10) {
 			Com_sprintf(demoName, strlen(mme_demoFileName->string)-1, mme_demoFileName->string);
-			strcat(demoName, va(".%d", demoNextNum));
-		} else if (demoNextNum < 100) {
+			strcat(demoName, va(".%d", demo.nextNum));
+		} else if (demo.nextNum < 100) {
 			Com_sprintf(demoName, strlen(mme_demoFileName->string)-2, mme_demoFileName->string);
-			strcat(demoName, va(".%d", demoNextNum));
+			strcat(demoName, va(".%d", demo.nextNum));
 		}
 		Cmd_ExecuteString(va("mmeDemo \"%s\"\n", demoName));
 	}

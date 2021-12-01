@@ -411,6 +411,7 @@
     <ClCompile Include="client\cl_cin.cpp" />
     <ClCompile Include="client\cl_console.cpp" />
     <ClCompile Include="client\cl_demos.cpp" />
+    <ClCompile Include="client\cl_demos_cut.cpp" />
     <ClCompile Include="client\cl_input.cpp" />
     <ClCompile Include="client\cl_keys.cpp" />
     <ClCompile Include="client\cl_main.cpp" />

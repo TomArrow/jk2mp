@@ -490,6 +490,9 @@ demo <demoname>
 
 ====================
 */
+#ifdef RELDEBUG
+//#pragma optimize("", off)
+#endif
 void CL_PlayDemo_f( void ) {
 	char		name[MAX_OSPATH], *testName, testNameActual[MAX_OSPATH];
 	char		*ext = NULL;
@@ -564,7 +567,7 @@ void CL_PlayDemo_f( void ) {
 		if (FS_FileExists( name )) {
 			char empty1[MAX_OSPATH];
 			int empty2;
-			CL_WalkDemoExt( testName, empty1, &empty2 ); //do that to set demo15detected if needed
+			Cvar_Set("mme_demoExt", CL_WalkDemoExt( testName, empty1, &empty2 )); //do that to set demo15detected if needed
 			if (demoPlay( name, del))
 				return;
 		}
@@ -605,7 +608,9 @@ void CL_PlayDemo_f( void ) {
 	// time from the gamestate load from messing causing a time skip
 	clc.firstDemoFrameSkipped = qfalse;
 }
-
+#ifdef RELDEBUG
+//#pragma optimize("", on)
+#endif
 
 /*
 ====================
@@ -2656,6 +2661,7 @@ void CL_Init( void ) {
 	// MME commands
 	Cmd_AddCommand ("mmeDemo", CL_MMEDemo_f);
 	Cmd_AddCommand ("demoList", CL_DemoList_f);
+	Cmd_AddCommand ("demoCut", CL_DemoCut_f);
 	Cmd_AddCommand ("demoListNext", CL_DemoListNext_f );
 
 	CL_InitRef();
