@@ -1651,6 +1651,8 @@ extern	vmCvar_t		cg_drawAmmoWarning;
 extern	vmCvar_t		cg_drawCrosshair;
 extern	vmCvar_t		cg_drawCrosshairNames;
 extern	vmCvar_t		cg_drawScore;
+extern	vmCvar_t		cg_drawFollowing;
+extern	vmCvar_t		cg_drawScoreDefrag;
 extern	vmCvar_t		cg_drawScores;
 extern	vmCvar_t		cg_dynamicCrosshair;
 extern	vmCvar_t		cg_drawRewards;

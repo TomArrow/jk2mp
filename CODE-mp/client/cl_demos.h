@@ -2,7 +2,7 @@
 //
 // cl_demos.c -- Enhanced client-side demo player
 
-#define DEMO_MAX_INDEX	3600
+#define DEMO_MAX_INDEX	36000 // Controls how much of the demo positions get precached (after that performance is terrible). Default was 3600
 #define DEMO_PLAY_CMDS  256
 #define DEMO_SNAPS  32
 #define DEMOCONVERTFRAMES 16

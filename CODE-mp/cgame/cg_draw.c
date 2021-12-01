@@ -1228,7 +1228,12 @@ void CG_DrawHUD(centity_t	*cent)
 
 	if (cg_drawScore.integer) {
 		//scoreStr = va("Score: %i", cgs.clientinfo[cg.snap->ps.clientNum].score);
-		if (cgs.gametype == GT_TOURNAMENT)
+		if (cg_drawScoreDefrag.integer) {
+			// it's actually a time in seconds.
+			int seconds = cg.snap->ps.persistant[PERS_SCORE];
+			int minutes = seconds / 60;
+			scoreStr = va("Time: %d:%02d",minutes,seconds%60 );
+		} else if (cgs.gametype == GT_TOURNAMENT)
 		{//A duel that requires more than one kill to knock the current enemy back to the queue
 			//show current kills out of how many needed
 			scoreStr = va("Score: %i/%i", cg.snap->ps.persistant[PERS_SCORE], cgs.fraglimit);
@@ -4596,7 +4601,7 @@ void CG_Draw2D( void ) {
 		CG_DrawUpperRight();
 	}
 
-	if (!CG_DrawFollow()) {
+	if (cg_drawFollowing.integer && !CG_DrawFollow()) {
 		CG_DrawWarmup();
 	}
 
