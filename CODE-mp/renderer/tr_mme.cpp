@@ -847,6 +847,7 @@ void R_MME_WriteAECamPath() {
 	AECamPositions.clear();
 }
 
+extern void S_MMEWavClose(void);
 void R_MME_Shutdown(void) {
 
 	R_MME_FlushMultiThreading();
@@ -854,6 +855,7 @@ void R_MME_Shutdown(void) {
 	aviClose( &shotData.main.avi );
 	aviClose( &shotData.depth.avi );
 	aviClose( &shotData.stencil.avi );
+	S_MMEWavClose(); // If the game crashes at the end of a demo, at least save the damn audio stuff.
 }
 
 void R_MME_Init(void) {
