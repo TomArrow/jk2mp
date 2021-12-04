@@ -91,6 +91,9 @@ static qboolean cameraMatchOrigin( const demoCameraPoint_t *match[4], vec3_t ori
 	return qtrue;
 }
 
+#ifdef RELDEBUG
+//#pragma optimize("", off)
+#endif
 static float cameraPointLength( demoCameraPoint_t *point ) {
 	int i;
 	demoCameraPoint_t *match[4];
@@ -114,20 +117,20 @@ static float cameraPointLength( demoCameraPoint_t *point ) {
 	posGet( 0, demo.camera.smoothPos, control, lastOrigin );
 	while (step < 1) {
 		addStep = 1 - step;
-		if (addStep > 0.01f)
-			addStep = 0.01f;
+		if (addStep > 0.0001f)
+			addStep = 0.0001f;
 		for (i = 0; i < 10; i++) {
 			posGet( step+addStep, demo.camera.smoothPos, control, nextOrigin );
 			distance = VectorDistanceSquared( lastOrigin, nextOrigin);
-			if ( distance <= 0.01f)
+			if ( distance <= 0.0001f)
 				break;
 			addStep *= 0.7f;
 		}
 		step += addStep;
 		len += sqrt( distance );
 		VectorCopy( nextOrigin, lastOrigin );
-		if (!distance)
-			break;
+		//if (!distance && step > 0.5)
+		//	break;
 	}
 	point->len = len;
 	return point->len;
@@ -203,6 +206,9 @@ static qboolean cameraOriginAt( int time, float timeFraction, vec3_t origin ) {
 	}
 	return qtrue;
 }
+#ifdef RELDEBUG
+//#pragma optimize("", on)
+#endif
 
 static float cameraPointAnglesLength( demoCameraPoint_t *point ) {
 	int i;
