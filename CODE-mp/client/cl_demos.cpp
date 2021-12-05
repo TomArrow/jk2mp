@@ -65,6 +65,7 @@ static void demoFrameAddString( demoString_t *string, int num, const char *newSt
 	Com_Memcpy( string->data, cache, string->used );
 }
 
+// I think this function is a bit of a bottleneck based on some diagnostic session stuff
 static void demoFrameUnpack( msg_t *msg, demoFrame_t *oldFrame, demoFrame_t *newFrame ) {
 	int last;
 	qboolean isDelta = MSG_ReadBits( msg, 1 ) ? qfalse : qtrue;

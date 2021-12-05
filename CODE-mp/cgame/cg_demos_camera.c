@@ -129,8 +129,8 @@ static float cameraPointLength( demoCameraPoint_t *point ) {
 		step += addStep;
 		len += sqrt( distance );
 		VectorCopy( nextOrigin, lastOrigin );
-		//if (!distance && step > 0.5)
-		//	break;
+		if (!distance && step > 0.5)  // Added the second condition so that it doesn't break in the rare case of distance being 0 at start due to very slow movement (or whatever caused it) at high precision (0.0001f)
+			break;
 	}
 	point->len = len;
 	return point->len;
