@@ -90,6 +90,7 @@ static void CG_Obituary( entityState_t *ent ) {
 	char		attackerName[64];
 	gender_t	gender;
 	clientInfo_t	*ci, *cia;
+	int currentClient;
 
 	target = ent->otherEntityNum;
 	attacker = ent->otherEntityNum2;
@@ -226,7 +227,9 @@ static void CG_Obituary( entityState_t *ent ) {
 clientkilled:
 
 	// check for kill messages from the current clientNum
-	if ( cg.playerCent && attacker == cg.playerCent->currentState.clientNum ) {
+	currentClient = cam_specEnt.integer == -1 ? cg.playerCent->currentState.clientNum : cam_specEnt.integer;
+	//if ( cg.playerCent && attacker == cg.playerCent->currentState.clientNum ) {
+	if ( cg.playerCent && attacker == currentClient) {
 		char	*s;
 
 		if ( cgs.gametype < GT_TEAM && cgs.gametype != GT_TOURNAMENT && attacker == cg.snap->ps.clientNum ) {
@@ -261,13 +264,24 @@ clientkilled:
 			{
 				char sPlaceWith[256];
 				char sKilledStr[256];
+				int rank;
 				trap_SP_GetStringTextString("INGAMETEXT_PLACE_WITH",     sPlaceWith, sizeof(sPlaceWith));
 				trap_SP_GetStringTextString("INGAMETEXT_KILLED_MESSAGE", sKilledStr, sizeof(sKilledStr));
 
+				if (cam_specEnt.integer != -1 && cam_specEnt.integer != cg.snap->ps.clientNum)
+				{
+					for (rank = 0; rank < cg.numScores; rank++)
+						if (cg.scores[rank].client == cam_specEnt.integer)
+							break;
+				}
+				else {
+					rank = cg.snap->ps.persistant[PERS_RANK];
+				}
+
 				s = va("%s %s.\n%s %s %i.", sKilledStr, targetName, 
-					CG_PlaceString( cg.snap->ps.persistant[PERS_RANK] + 1 ), 
+					CG_PlaceString(rank + 1 ),
 					sPlaceWith,
-					cg.snap->ps.persistant[PERS_SCORE] );
+					cam_specEnt.integer == -1?  cg.snap->ps.persistant[PERS_SCORE] : cgs.clientinfo[cam_specEnt.integer].score);
 			}
 		} else {
 			char sKilledStr[256];
@@ -1462,8 +1476,17 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			}
 
 			// show icon and name on status bar
-			if (cg.playerCent == cent) {
-				CG_ItemPickup( index );
+			if (cam_specEnt.integer == -1) {
+
+				if (cg.playerCent == cent) {
+					CG_ItemPickup(index);
+				}
+			}
+			else {
+
+				if (es->number == cam_specEnt.integer) {
+					CG_ItemPickup(index);
+				}
 			}
 		}
 		break;

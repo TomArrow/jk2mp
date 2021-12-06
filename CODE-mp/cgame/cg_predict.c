@@ -391,6 +391,18 @@ void CG_InterpolatePlayerState( qboolean grabAngles ) {
 		cg.physicsTime = cg.snap->serverTime;
 	}
 
+	if (cam_specEnt.integer != -1 && cam_specEnt.integer != cg.snap->ps.clientNum) // Awkwardly ported from Nerevar's cammod
+	{
+		centity_t* cent = &cg_entities[cam_specEnt.integer];
+		for (i = 0; i < 3; i++) {
+			//cam.specOrg[i] = cent->currentState.pos.trBase[i] + f * (cent->nextState.pos.trBase[i] - cent->currentState.pos.trBase[i]);
+
+			//cam.specAng[i] = LerpAngle(cent->currentState.apos.trBase[i], cent->nextState.apos.trBase[i], f);
+
+			cam.specVel[i] = cent->currentState.pos.trDelta[i] + f * (cent->nextState.pos.trDelta[i] - cent->currentState.pos.trDelta[i]);
+		}
+	}
+
 
 	// TODO: What about this? not in jamme
 	cg.predictedTimeFrac = f * (next->ps.commandTime - prev->ps.commandTime);

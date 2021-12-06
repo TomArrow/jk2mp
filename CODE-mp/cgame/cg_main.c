@@ -589,6 +589,9 @@ vmCvar_t	cam_shownames;
 vmCvar_t	cam_shownamesStyle;
 vmCvar_t	cam_shownamesIncludePlayer;
 vmCvar_t	cam_shownamesPositionBasedOnG2Head;
+vmCvar_t	cam_specEnt; // my own simplification
+vmCvar_t	cam_specDrawHUDFrame;
+vmCvar_t	cam_specDrawScore;
 
 //JA
 vmCvar_t	cg_chatBox;
@@ -631,6 +634,7 @@ vmCvar_t	mov_protectColour;
 vmCvar_t	mov_rageColour;
 
 vmCvar_t	mme_demoFileName;
+vmCvar_t	mme_chaseViewHeightFix;
 
 vmCvar_t	fx_Vibrate;
 vmCvar_t	fx_vfps;
@@ -664,6 +668,9 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cam_shownamesStyle, "cam_shownamesStyle", "5", NULL, CVAR_ARCHIVE },
 	{ &cam_shownamesIncludePlayer, "cam_shownamesIncludePlayer", "0", NULL, CVAR_ARCHIVE },
 	{ &cam_shownamesPositionBasedOnG2Head, "cam_shownamesPositionBasedOnG2Head", "1", NULL, CVAR_ARCHIVE },
+	{ &cam_specEnt, "cam_specEnt", "-1", NULL, CVAR_CHEAT },
+	{ &cam_specDrawHUDFrame, "cam_specDrawHUDFrame", "1", NULL, CVAR_ARCHIVE },
+	{ &cam_specDrawScore, "cam_specDrawScore", "1", NULL, CVAR_ARCHIVE },
 	{ &cg_ignore, "cg_ignore", "0", NULL, 0 },	// used for debugging
 	{ &cg_autoswitch, "cg_autoswitch", "1", NULL, CVAR_ARCHIVE },
 	{ &cg_drawGun, "cg_drawGun", "1", NULL, CVAR_ARCHIVE },
@@ -828,6 +835,7 @@ Ghoul2 Insert End
 	{ &cg_commandSmooth,	"cg_commandSmooth",		"1",			NULL,	CVAR_ARCHIVE	},
 	//mme
 	{ &mme_demoFileName,	"mme_demoFileName",		"",				NULL,	0				},
+	{ &mme_chaseViewHeightFix,	"mme_chaseViewHeightFix",	"1",	NULL,	CVAR_ARCHIVE	},
 	{ &mov_chatBeep,		"mov_chatBeep",			"1",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_fragsOnly,		"mov_fragsOnly",		"0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_filterMask,		"mov_filterMask",		"0",			NULL,	CVAR_ARCHIVE	},

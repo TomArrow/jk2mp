@@ -269,10 +269,17 @@ static void CG_CalcIdealThirdPersonViewTarget(void)
 	}
 
 	// Add in the new viewheight
-	if (cg.playerPredicted) {
+	if (cam_specEnt.integer != -1 && cam_specEnt.integer != cg.snap->ps.clientNum) {
+		cameraFocusLoc[2] += cg_entities[cam_specEnt.integer].pe.viewHeight;
+		cameraFocusLoc[2] += DEFAULT_VIEWHEIGHT;
+	}
+	else if (cg.playerPredicted) {
 		cameraFocusLoc[2] += cg.snap->ps.viewheight;
 	} else {
 		cameraFocusLoc[2] += cg.playerCent->pe.viewHeight;
+		if (mme_chaseViewHeightFix.integer) {
+			cameraFocusLoc[2] += DEFAULT_VIEWHEIGHT; // No idea why this is necessary... don't ask me.
+		}
 	}
 
 	// Add in a vertical offset from the viewpoint, which puts the actual target above the head, regardless of angle.
@@ -435,7 +442,12 @@ static void CG_UpdateThirdPersonTargetDamp(void)
 	// Now we trace to see if the new location is cool or not.
 
 	// First thing we do is trace from the first person viewpoint out to the new target location.
-	CG_Trace(&trace, cameraFocusLoc, cameramins, cameramaxs, cameraCurTarget, cg.playerCent->currentState.number, MASK_CAMERACLIP);
+	if (cam_specEnt.integer != -1 && cam_specEnt.integer != cg.snap->ps.clientNum) {
+		CG_Trace(&trace, cameraFocusLoc, cameramins, cameramaxs, cameraCurTarget, cam_specEnt.integer, MASK_CAMERACLIP);
+	}
+	else {
+		CG_Trace(&trace, cameraFocusLoc, cameramins, cameramaxs, cameraCurTarget, cg.playerCent->currentState.number, MASK_CAMERACLIP);
+	}
 	if (trace.fraction < 1.0)
 	{
 		VectorCopy(trace.endpos, cameraCurTarget);
@@ -604,15 +616,30 @@ static void CG_OffsetThirdPersonView( void )
 	VectorCopy( cg.refdefViewAngles, cameraFocusAngles );
 
 	// if dead, look at killer
-	if ( cg.snap->ps.stats[STAT_HEALTH] <= 0 && cg.playerPredicted) {
-		cameraFocusAngles[YAW] = cg.snap->ps.stats[STAT_DEAD_YAW];
-	} else if ( cg.playerCent->currentState.eFlags & EF_DEAD ) {
-		cameraFocusAngles[YAW] = 0;
-		cameraFocusAngles[ROLL] = 0;
-	} else { // Add in the third Person Angle.
-		cameraFocusAngles[YAW] += cg_thirdPersonAngle.value;
-		cameraFocusAngles[PITCH] += cg_thirdPersonPitchOffset.value;
+	if (cam_specEnt.integer != -1 && cam_specEnt.integer != cg.snap->ps.clientNum) {
+		 if (cg_entities[cam_specEnt.integer].currentState.eFlags & EF_DEAD) {
+			cameraFocusAngles[YAW] = 0;
+			cameraFocusAngles[ROLL] = 0;
+		}
+		else { // Add in the third Person Angle.
+			cameraFocusAngles[YAW] += cg_thirdPersonAngle.value;
+			cameraFocusAngles[PITCH] += cg_thirdPersonPitchOffset.value;
+		}
 	}
+	else {
+		if (cg.snap->ps.stats[STAT_HEALTH] <= 0 && cg.playerPredicted) {
+			cameraFocusAngles[YAW] = cg.snap->ps.stats[STAT_DEAD_YAW];
+		}
+		else if (cg.playerCent->currentState.eFlags & EF_DEAD) {
+			cameraFocusAngles[YAW] = 0;
+			cameraFocusAngles[ROLL] = 0;
+		}
+		else { // Add in the third Person Angle.
+			cameraFocusAngles[YAW] += cg_thirdPersonAngle.value;
+			cameraFocusAngles[PITCH] += cg_thirdPersonPitchOffset.value;
+		}
+	}
+	
 
 	// The next thing to do is to see if we need to calculate a new camera target location.
 	dtime = cg.predictedPlayerState.commandTime - cameraLastTime;
@@ -813,6 +840,10 @@ static void CG_OffsetFirstPersonView( void ) {
 	centity_t		*cent = cg.playerCent;
 	playerEntity_t	*pe = &cent->pe;
 
+	if (cam_specEnt.integer != -1 && cam_specEnt.integer != cg.snap->ps.clientNum) {
+		cent = &cg_entities[cam_specEnt.integer];
+	}
+
 	if ( cg.snap->ps.pm_type == PM_INTERMISSION ) {
 		return;
 	}
@@ -824,29 +855,34 @@ static void CG_OffsetFirstPersonView( void ) {
 	angles = cg.refdefViewAngles;
 
 	// if dead, fix the angle and don't add any kick
-	if (cg.snap->ps.stats[STAT_HEALTH] <= 0 && cg.playerPredicted) {
-		angles[ROLL] = 40;
-		angles[PITCH] = -15;
-		angles[YAW] = cg.snap->ps.stats[STAT_DEAD_YAW];
-		origin[2] += cg.predictedPlayerState.viewheight;
-		return;
+	if (cam_specEnt.integer == -1 || cam_specEnt.integer == cg.snap->ps.clientNum) {
+		if (cg.snap->ps.stats[STAT_HEALTH] <= 0 && cg.playerPredicted) {
+			angles[ROLL] = 40;
+			angles[PITCH] = -15;
+			angles[YAW] = cg.snap->ps.stats[STAT_DEAD_YAW];
+			origin[2] += cg.predictedPlayerState.viewheight;
+			return;
+		}
 	}
 
 	// add angles based on weapon kick
 	VectorAdd (angles, cg.kick_angles, angles);
 
 	// add angles based on damage kick
-	if (cg.damageTime && cg.playerPredicted) {
-		float ratio = (cg.time - cg.damageTime) + cg.timeFraction;
-		if ( ratio < DAMAGE_DEFLECT_TIME ) {
-			ratio /= DAMAGE_DEFLECT_TIME;
-			angles[PITCH] += ratio * cg.v_dmg_pitch;
-			angles[ROLL] += ratio * cg.v_dmg_roll;
-		} else {
-			ratio = 1.0 - ( ratio - DAMAGE_DEFLECT_TIME ) / DAMAGE_RETURN_TIME;
-			if ( ratio > 0 ) {
+	if (cam_specEnt.integer == -1 || cam_specEnt.integer == cg.snap->ps.clientNum) {
+		if (cg.damageTime && cg.playerPredicted) {
+			float ratio = (cg.time - cg.damageTime) + cg.timeFraction;
+			if (ratio < DAMAGE_DEFLECT_TIME) {
+				ratio /= DAMAGE_DEFLECT_TIME;
 				angles[PITCH] += ratio * cg.v_dmg_pitch;
 				angles[ROLL] += ratio * cg.v_dmg_roll;
+			}
+			else {
+				ratio = 1.0 - (ratio - DAMAGE_DEFLECT_TIME) / DAMAGE_RETURN_TIME;
+				if (ratio > 0) {
+					angles[PITCH] += ratio * cg.v_dmg_pitch;
+					angles[ROLL] += ratio * cg.v_dmg_roll;
+				}
 			}
 		}
 	}
@@ -860,7 +896,9 @@ static void CG_OffsetFirstPersonView( void ) {
 #endif
 
 	// add angles based on velocity
-	if (cg.playerPredicted)
+	if (cam_specEnt.integer != -1 && cam_specEnt.integer != cg.snap->ps.clientNum) 
+		VectorCopy(cam.specVel, predictedVelocity);
+	else if (cg.playerPredicted)
 		VectorCopy( cg.predictedPlayerState.velocity, predictedVelocity );
 	else //mme
 		VectorCopy( cent->currentState.pos.trDelta, predictedVelocity );
@@ -876,19 +914,20 @@ static void CG_OffsetFirstPersonView( void ) {
 	// make sure the bob is visible even at low speeds
 	speed = cg.xyspeed > 200 ? cg.xyspeed : 200;
 
-	if (cg.playerPredicted) {
-		delta = cg.bobfracsin * cg_bobpitch.value * speed;
-		if (cg.predictedPlayerState.pm_flags & PMF_DUCKED)
-			delta *= 3;		// crouching
-		angles[PITCH] += delta;
-		delta = cg.bobfracsin * cg_bobroll.value * speed;
-		if (cg.predictedPlayerState.pm_flags & PMF_DUCKED)
-			delta *= 3;		// crouching accentuates roll
-		if (cg.bobcycle & 1)
-			delta = -delta;
-		angles[ROLL] += delta;
+	if (cam_specEnt.integer == -1 || cam_specEnt.integer == cg.snap->ps.clientNum) {
+		if (cg.playerPredicted) {
+			delta = cg.bobfracsin * cg_bobpitch.value * speed;
+			if (cg.predictedPlayerState.pm_flags & PMF_DUCKED)
+				delta *= 3;		// crouching
+			angles[PITCH] += delta;
+			delta = cg.bobfracsin * cg_bobroll.value * speed;
+			if (cg.predictedPlayerState.pm_flags & PMF_DUCKED)
+				delta *= 3;		// crouching accentuates roll
+			if (cg.bobcycle & 1)
+				delta = -delta;
+			angles[ROLL] += delta;
+		}
 	}
-
 //===================================
 
 	// add view height
@@ -908,9 +947,10 @@ static void CG_OffsetFirstPersonView( void ) {
 	if (bob > 6) {
 		bob = 6;
 	}
-
-	if (cg.playerPredicted)
-		origin[2] += bob;
+	if (cam_specEnt.integer == -1 || cam_specEnt.integer == cg.snap->ps.clientNum) {
+		if (cg.playerPredicted)
+			origin[2] += bob;
+	}
 
 	// add fall height
 	//mme
@@ -1321,23 +1361,42 @@ int CG_DemosCalcViewValues( void ) {
 		return CG_CalcFov();
 	}
 
-	if ( cg.playerPredicted ) {
-		cg.bobcycle = ( cg.predictedPlayerState.bobCycle & 128 ) >> 7;
-		cg.bobfracsin = fabs( sin( ( cg.predictedPlayerState.bobCycle & 127 ) / 127.0 * M_PI ) );
-	} else {
-		cg.bobcycle = 0;
-		cg.bobfracsin = 0;
-	}
-	cg.xyspeed = sqrt( es->pos.trDelta[0] * es->pos.trDelta[0] +
-		es->pos.trDelta[1] * es->pos.trDelta[1] );
-
-	if (cg.xyspeed > 270)
+	if (cam_specEnt.integer == -1 || cam_specEnt.integer == cg.snap->ps.clientNum)
 	{
-		cg.xyspeed = 270;
-	}
+		if (cg.playerPredicted) {
+			cg.bobcycle = (cg.predictedPlayerState.bobCycle & 128) >> 7;
+			cg.bobfracsin = fabs(sin((cg.predictedPlayerState.bobCycle & 127) / 127.0 * M_PI));
+		}
+		else {
+			cg.bobcycle = 0;
+			cg.bobfracsin = 0;
+		}
+		cg.xyspeed = sqrt(es->pos.trDelta[0] * es->pos.trDelta[0] +
+			es->pos.trDelta[1] * es->pos.trDelta[1]);
 
-	VectorCopy( cg.playerCent->lerpOrigin, cg.refdef.vieworg );
-	VectorCopy( cg.playerCent->lerpAngles, cg.refdefViewAngles );
+		if (cg.xyspeed > 270)
+		{
+			cg.xyspeed = 270;
+		}
+
+		VectorCopy(cg.playerCent->lerpOrigin, cg.refdef.vieworg);
+		VectorCopy(cg.playerCent->lerpAngles, cg.refdefViewAngles);
+	}
+	else { // Spectating different player
+
+
+		cg.xyspeed = sqrt(cam.specVel[0] * cam.specVel[0] + cam.specVel[1] * cam.specVel[1]);
+
+		if (cg.xyspeed > 270)
+		{
+			cg.xyspeed = 270;
+		}
+
+		//VectorCopy(cam.specOrg, cg.refdef.vieworg);
+		//VectorCopy(cam.specAng, cg.refdefViewAngles);
+		VectorCopy(cg_entities[cam_specEnt.integer].lerpOrigin, cg.refdef.vieworg);
+		VectorCopy(cg_entities[cam_specEnt.integer].lerpAngles, cg.refdefViewAngles);
+	}
 
 	if (cg_cameraOrbit.integer) {
 		if (cg.time > cg.nextOrbitTime) {
@@ -1420,18 +1479,36 @@ static int CG_CalcViewValues( void ) {
 		return CG_CalcFov();
 	}
 
-	cg.bobcycle = ( ps->bobCycle & 128 ) >> 7;
-	cg.bobfracsin = fabs( sin( ( ps->bobCycle & 127 ) / 127.0 * M_PI ) );
-	cg.xyspeed = sqrt( ps->velocity[0] * ps->velocity[0] +
-		ps->velocity[1] * ps->velocity[1] );
+	if(cam_specEnt.integer == -1 || cam_specEnt.integer == cg.snap->ps.clientNum)
+	{ 
+		cg.bobcycle = ( ps->bobCycle & 128 ) >> 7;
+		cg.bobfracsin = fabs( sin( ( ps->bobCycle & 127 ) / 127.0 * M_PI ) );
+		cg.xyspeed = sqrt( ps->velocity[0] * ps->velocity[0] +
+			ps->velocity[1] * ps->velocity[1] );
 
-	if (cg.xyspeed > 270)
-	{
-		cg.xyspeed = 270;
+		if (cg.xyspeed > 270)
+		{
+			cg.xyspeed = 270;
+		}
+
+		VectorCopy( ps->origin, cg.refdef.vieworg );
+		VectorCopy( ps->viewangles, cg.refdefViewAngles );
 	}
+	else { // Spectating different player
 
-	VectorCopy( ps->origin, cg.refdef.vieworg );
-	VectorCopy( ps->viewangles, cg.refdefViewAngles );
+
+		cg.xyspeed = sqrt(cam.specVel[0] * cam.specVel[0] + cam.specVel[1] * cam.specVel[1]);
+
+		if (cg.xyspeed > 270)
+		{
+			cg.xyspeed = 270;
+		}
+
+		//VectorCopy(cam.specOrg, cg.refdef.vieworg);
+		//VectorCopy(cam.specAng, cg.refdefViewAngles);
+		VectorCopy(cg_entities[cam_specEnt.integer].lerpOrigin, cg.refdef.vieworg);
+		VectorCopy(cg_entities[cam_specEnt.integer].lerpAngles, cg.refdefViewAngles);
+	}
 
 	if (cg_cameraOrbit.integer) {
 		if (cg.time > cg.nextOrbitTime) {

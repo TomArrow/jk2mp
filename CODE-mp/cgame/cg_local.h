@@ -7,6 +7,9 @@
 #include "cam_local.h"
 
 
+extern camera_t cam;
+
+
 // The entire cgame module is unloaded and reloaded on each level change,
 // so there is NO persistant data between levels on the client side.
 // If you absolutely need something stored, it can either be kept
@@ -1780,6 +1783,9 @@ extern  vmCvar_t		cam_shownames;
 extern  vmCvar_t		cam_shownamesStyle;
 extern  vmCvar_t		cam_shownamesIncludePlayer;
 extern  vmCvar_t		cam_shownamesPositionBasedOnG2Head;
+extern	vmCvar_t		cam_specEnt; // my own simplification
+extern	vmCvar_t		cam_specDrawHUDFrame;
+extern	vmCvar_t		cam_specDrawScore;
 
 //JA
 extern	vmCvar_t	cg_chatBox;
@@ -1820,6 +1826,7 @@ extern	vmCvar_t	mov_protectColour;
 extern	vmCvar_t	mov_rageColour;
 
 extern	vmCvar_t	mme_demoFileName;
+extern	vmCvar_t	mme_chaseViewHeightFix;
 
 extern	vmCvar_t	fx_Vibrate;
 extern	vmCvar_t	fx_vfps;

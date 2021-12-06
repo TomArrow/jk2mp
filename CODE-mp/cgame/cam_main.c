@@ -1,5 +1,7 @@
 #include "cg_local.h"
 
+camera_t cam;
+
 void Cam_Draw2d(void)
 {
 	if (cam_shownames.integer)
@@ -19,6 +21,9 @@ void Cam_DrawClientNames(void) //FIXME: draw entitynums
 			trace_t trace;
 
 			int skipNumber = cam_shownamesIncludePlayer.integer ? -1 : cg.snap->ps.clientNum;
+			if (cam_specEnt.integer != -1) {
+				skipNumber = cam_shownamesIncludePlayer.integer ? -1 : cam_specEnt.integer;
+			}
 			CG_Trace(&trace, cg.refdef.vieworg, NULL, NULL, cent->lerpOrigin, skipNumber, CONTENTS_SOLID | CONTENTS_PLAYERCLIP | CONTENTS_BODY | CONTENTS_CORPSE);
 
 			if (trace.entityNum == i)

@@ -1131,7 +1131,11 @@ void CG_DrawHUD(centity_t	*cent)
 	const char *scoreStr = NULL;
 	int	scoreBias;
 	char scoreBiasStr[16];
+	int team, score;
 
+	team = cam_specEnt.integer == -1 || cam_specEnt.integer == cg.snap->ps.clientNum ? cg.snap->ps.persistant[PERS_TEAM] : cgs.clientinfo[cam_specEnt.integer].team;
+	score = cam_specEnt.integer == -1 || cam_specEnt.integer == cg.snap->ps.clientNum ? cg.snap->ps.persistant[PERS_SCORE] : cgs.clientinfo[cam_specEnt.integer].score;
+	
 	r_HUDBrightness = CG_Cvar_Get("r_HUDBrightness");
 
 	if (cg_hudFiles.integer)
@@ -1140,6 +1144,11 @@ void CG_DrawHUD(centity_t	*cent)
 		int y = SCREEN_HEIGHT-80;
 		char ammoString[64];
 		int weapX = x;
+
+		if (cam_specEnt.integer != -1 && cam_specEnt.integer != cg.snap->ps.clientNum)
+		{
+			return;
+		}
 
 		vec4_t scaledColor;
 		Vector4Copy(colorTable[CT_HUD_RED], scaledColor);
@@ -1190,9 +1199,9 @@ void CG_DrawHUD(centity_t	*cent)
 
 	if (cgs.gametype >= GT_TEAM)
 	{	// tint the hud items based on team
-		if (cg.snap->ps.persistant[PERS_TEAM] == TEAM_RED )
+		if (team == TEAM_RED )
 			hudTintColor = redhudtint;
-		else if (cg.snap->ps.persistant[PERS_TEAM] == TEAM_BLUE )
+		else if (team == TEAM_BLUE )
 			hudTintColor = bluehudtint;
 		else // If we're not on a team for whatever reason, leave things as they are.
 			hudTintColor = colorTable[CT_WHITE];
@@ -1210,37 +1219,48 @@ void CG_DrawHUD(centity_t	*cent)
 	hudTintColor = hudTintColorScaled;*/ // This was just an early attempt before I put it all into the shaders themselves as this wouldn't handle rgbgen const
 
 
-	menuHUD = Menus_FindByName("lefthud");
-	if (menuHUD)
-	{
-		CG_DrawHUDLeftFrame1(menuHUD->window.rect.x,menuHUD->window.rect.y);
-		CG_DrawArmor(menuHUD->window.rect.x,menuHUD->window.rect.y);
-		CG_DrawHealth(menuHUD->window.rect.x,menuHUD->window.rect.y);
-		CG_DrawHUDLeftFrame2(menuHUD->window.rect.x,menuHUD->window.rect.y);
-	}
-	else
-	{ //Apparently we failed to get proper coordinates from the menu, so resort to manually inputting them.
-		CG_DrawHUDLeftFrame1(0,SCREEN_HEIGHT-80);
-		CG_DrawArmor(0,SCREEN_HEIGHT-80);
-		CG_DrawHealth(0,SCREEN_HEIGHT-80);
-		CG_DrawHUDLeftFrame2(0,SCREEN_HEIGHT-80);
+	if (cam_specDrawHUDFrame.integer || cam_specEnt.integer == -1 || cam_specEnt.integer == cg.snap->ps.clientNum) {
+
+		menuHUD = Menus_FindByName("lefthud");
+		if (menuHUD)
+		{
+			CG_DrawHUDLeftFrame1(menuHUD->window.rect.x, menuHUD->window.rect.y);
+			if (cam_specEnt.integer == -1 || cam_specEnt.integer == cg.snap->ps.clientNum)
+			{
+				CG_DrawArmor(menuHUD->window.rect.x, menuHUD->window.rect.y);
+				CG_DrawHealth(menuHUD->window.rect.x, menuHUD->window.rect.y);
+			}
+			CG_DrawHUDLeftFrame2(menuHUD->window.rect.x, menuHUD->window.rect.y);
+		}
+		else
+		{ //Apparently we failed to get proper coordinates from the menu, so resort to manually inputting them.
+			CG_DrawHUDLeftFrame1(0, SCREEN_HEIGHT - 80);
+			if (cam_specEnt.integer == -1 || cam_specEnt.integer == cg.snap->ps.clientNum)
+			{
+				CG_DrawArmor(0, SCREEN_HEIGHT - 80);
+				CG_DrawHealth(0, SCREEN_HEIGHT - 80);
+			}
+			CG_DrawHUDLeftFrame2(0, SCREEN_HEIGHT - 80);
+		}
 	}
 
-	if (cg_drawScore.integer) {
+	if (cg_drawScore.integer && (
+		cam_specDrawScore.integer || cam_specEnt.integer == -1 || cam_specEnt.integer == cg.snap->ps.clientNum
+		)) {
 		//scoreStr = va("Score: %i", cgs.clientinfo[cg.snap->ps.clientNum].score);
 		if (cg_drawScoreDefrag.integer) {
 			// it's actually a time in seconds.
-			int seconds = cg.snap->ps.persistant[PERS_SCORE];
+			int seconds = score;
 			int minutes = seconds / 60;
 			scoreStr = va("Time: %d:%02d",minutes,seconds%60 );
 		} else if (cgs.gametype == GT_TOURNAMENT)
 		{//A duel that requires more than one kill to knock the current enemy back to the queue
 			//show current kills out of how many needed
-			scoreStr = va("Score: %i/%i", cg.snap->ps.persistant[PERS_SCORE], cgs.fraglimit);
+			scoreStr = va("Score: %i/%i", score, cgs.fraglimit);
 		}
 		else if (0 && cgs.gametype < GT_TEAM)
 		{	// This is a teamless mode, draw the score bias.
-			scoreBias = cg.snap->ps.persistant[PERS_SCORE] - cgs.scores1;
+			scoreBias = score - cgs.scores1;
 			if (scoreBias == 0)
 			{	// We are the leader!
 				if (cgs.scores2 <= 0)
@@ -1249,7 +1269,7 @@ void CG_DrawHUD(centity_t	*cent)
 				}
 				else
 				{
-					scoreBias = cg.snap->ps.persistant[PERS_SCORE] - cgs.scores2;
+					scoreBias = score - cgs.scores2;
 					if (scoreBias == 0)
 					{
 						Com_sprintf(scoreBiasStr, sizeof(scoreBiasStr), " (Tie)");
@@ -1264,11 +1284,11 @@ void CG_DrawHUD(centity_t	*cent)
 			{	// We are behind!
 				Com_sprintf(scoreBiasStr, sizeof(scoreBiasStr), " (%d)", scoreBias);
 			}
-			scoreStr = va("Score: %i%s", cg.snap->ps.persistant[PERS_SCORE], scoreBiasStr);
+			scoreStr = va("Score: %i%s", score, scoreBiasStr);
 		}
 		else
 		{	// Don't draw a bias.
-			scoreStr = va("Score: %i", cg.snap->ps.persistant[PERS_SCORE]);
+			scoreStr = va("Score: %i", score);
 		}
 		vec4_t scaledColor;
 		Vector4Copy(colorTable[CT_WHITE], scaledColor);
@@ -1276,23 +1296,32 @@ void CG_DrawHUD(centity_t	*cent)
 		UI_DrawScaledProportionalString(SCREEN_WIDTH - 124 * cgs.widthRatioCoef/*(strlen(scoreStr)*20.5)*/, SCREEN_HEIGHT - 23, scoreStr, UI_RIGHT | UI_DROPSHADOW, scaledColor, 0.7);
 	}
 
-	menuHUD = Menus_FindByName("righthud");
-	if (menuHUD)
-	{
-		CG_DrawHUDRightFrame1(menuHUD->window.rect.x,menuHUD->window.rect.y);
-		CG_DrawForcePower(menuHUD->window.rect.x,menuHUD->window.rect.y);
-		CG_DrawAmmo(cent,menuHUD->window.rect.x,menuHUD->window.rect.y);
-		CG_DrawHUDRightFrame2(menuHUD->window.rect.x,menuHUD->window.rect.y);
+	if (cam_specDrawHUDFrame.integer || cam_specEnt.integer == -1 || cam_specEnt.integer == cg.snap->ps.clientNum) {
+
+		menuHUD = Menus_FindByName("righthud");
+		if (menuHUD)
+		{
+			CG_DrawHUDRightFrame1(menuHUD->window.rect.x,menuHUD->window.rect.y);
+			if (cam_specEnt.integer == -1 || cam_specEnt.integer == cg.snap->ps.clientNum)
+			{
+				CG_DrawForcePower(menuHUD->window.rect.x, menuHUD->window.rect.y);
+				CG_DrawAmmo(cent, menuHUD->window.rect.x, menuHUD->window.rect.y);
+			}
+			CG_DrawHUDRightFrame2(menuHUD->window.rect.x,menuHUD->window.rect.y);
+
+		}
+		else
+		{ //Apparently we failed to get proper coordinates from the menu, so resort to manually inputting them.
+			CG_DrawHUDRightFrame1(SCREEN_WIDTH-80,SCREEN_HEIGHT-80);
+			if (cam_specEnt.integer == -1 || cam_specEnt.integer == cg.snap->ps.clientNum)
+			{
+				CG_DrawForcePower(SCREEN_WIDTH - 80, SCREEN_HEIGHT - 80);
+				CG_DrawAmmo(cent, SCREEN_WIDTH - 80, SCREEN_HEIGHT - 80);
+			}
+			CG_DrawHUDRightFrame2(SCREEN_WIDTH-80,SCREEN_HEIGHT-80);
+		}
 
 	}
-	else
-	{ //Apparently we failed to get proper coordinates from the menu, so resort to manually inputting them.
-		CG_DrawHUDRightFrame1(SCREEN_WIDTH-80,SCREEN_HEIGHT-80);
-		CG_DrawForcePower(SCREEN_WIDTH-80,SCREEN_HEIGHT-80);
-		CG_DrawAmmo(cent,SCREEN_WIDTH-80,SCREEN_HEIGHT-80);
-		CG_DrawHUDRightFrame2(SCREEN_WIDTH-80,SCREEN_HEIGHT-80);
-	}
-
 	//hudTintColor  = hudTintFormerSetting;
 }
 
@@ -1691,7 +1720,8 @@ static void CG_DrawStats( void ) {
 		return;
 	}
 */
-	cent = &cg_entities[cg.snap->ps.clientNum];
+	cent = cam_specEnt.integer == -1 ? &cg_entities[cg.snap->ps.clientNum] : &cg_entities[cam_specEnt.integer];
+	//cent = &cg_entities[cg.snap->ps.clientNum];
 /*	ps = &cg.snap->ps;
 
 	VectorClear( angles );
@@ -1996,12 +2026,14 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 	clientInfo_t *ci;
 	gitem_t	*item;
 	int ret_y, count;
+	int team = cam_specEnt.integer == -1 ? cg.snap->ps.persistant[PERS_TEAM] : cgs.clientinfo[cam_specEnt.integer].team;
+
 
 	if ( !cg_drawTeamOverlay.integer ) {
 		return y;
 	}
 
-	if ( cg.snap->ps.persistant[PERS_TEAM] != TEAM_RED && cg.snap->ps.persistant[PERS_TEAM] != TEAM_BLUE ) {
+	if (team != TEAM_RED && team != TEAM_BLUE ) {
 		return y; // Not on any team
 	}
 
@@ -2012,7 +2044,7 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 	count = (numSortedTeamPlayers > 8) ? 8 : numSortedTeamPlayers;
 	for (i = 0; i < count; i++) {
 		ci = cgs.clientinfo + sortedTeamPlayers[i];
-		if ( ci->infoValid && ci->team == cg.snap->ps.persistant[PERS_TEAM]) {
+		if ( ci->infoValid && ci->team == team) {
 			plyrs++;
 			len = CG_DrawStrlen(ci->name);
 			if (len > pwidth)
@@ -2056,7 +2088,7 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 		ret_y = y;
 	}
 
-	if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_RED ) {
+	if (team == TEAM_RED ) {
 		hcolor[0] = 1.0f;
 		hcolor[1] = 0.0f;
 		hcolor[2] = 0.0f;
@@ -2073,7 +2105,7 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 
 	for (i = 0; i < count; i++) {
 		ci = cgs.clientinfo + sortedTeamPlayers[i];
-		if ( ci->infoValid && ci->team == cg.snap->ps.persistant[PERS_TEAM]) {
+		if ( ci->infoValid && ci->team == team) {
 
 			hcolor[0] = hcolor[1] = hcolor[2] = hcolor[3] = 1.0;
 
@@ -3126,7 +3158,13 @@ static void CG_ScanForCrosshairEntity( void ) {
 
 				if (cg.renderingThirdPerson)
 				{
-					VectorCopy(cg.predictedPlayerState.viewangles, pitchConstraint);
+					if (cam_specEnt.integer == -1)
+					{
+						VectorCopy(cg.predictedPlayerState.viewangles, pitchConstraint);
+					}
+					else {
+						VectorCopy(cg_entities[cam_specEnt.integer].lerpAngles, pitchConstraint);
+					}
 				}
 				else
 				{
@@ -3146,7 +3184,14 @@ static void CG_ScanForCrosshairEntity( void ) {
 
 				if (cg.renderingThirdPerson)
 				{
-					VectorCopy(cg.predictedPlayerState.viewangles, pitchConstraint);
+					if (cam_specEnt.integer == -1)
+					{
+						VectorCopy(cg.predictedPlayerState.viewangles, pitchConstraint);
+					}
+					else {
+						VectorCopy(cg_entities[cam_specEnt.integer].lerpAngles, pitchConstraint);
+					}
+					//VectorCopy(cg.predictedPlayerState.viewangles, pitchConstraint);
 				}
 				else
 				{
@@ -3155,7 +3200,7 @@ static void CG_ScanForCrosshairEntity( void ) {
 
 				AngleVectors( pitchConstraint, d_f, d_rt, d_up );
 			}
-			CG_CalcMuzzlePoint(cg.snap->ps.clientNum, start);
+			CG_CalcMuzzlePoint(cam_specEnt.integer == -1 ? cg.snap->ps.clientNum : cam_specEnt.integer, start);
 		}
 
 		//FIXME: increase this?  Increase when zoom in?
@@ -3173,7 +3218,14 @@ static void CG_ScanForCrosshairEntity( void ) {
 
 				if (cg.renderingThirdPerson)
 				{
-					VectorCopy(cg.playerCent->lerpAngles, pitchConstraint);
+					if (cam_specEnt.integer == -1)
+					{
+						VectorCopy(cg.playerCent->lerpAngles, pitchConstraint);
+					}
+					else {
+						VectorCopy(cg_entities[cam_specEnt.integer].lerpAngles, pitchConstraint);
+					}
+					//VectorCopy(cg.playerCent->lerpAngles, pitchConstraint);
 				}
 				else
 				{
@@ -3193,7 +3245,14 @@ static void CG_ScanForCrosshairEntity( void ) {
 
 				if (cg.renderingThirdPerson)
 				{
-					VectorCopy(cg.playerCent->lerpAngles, pitchConstraint);
+					if (cam_specEnt.integer == -1)
+					{
+						VectorCopy(cg.playerCent->lerpAngles, pitchConstraint);
+					}
+					else {
+						VectorCopy(cg_entities[cam_specEnt.integer].lerpAngles, pitchConstraint);
+					}
+					//VectorCopy(cg.playerCent->lerpAngles, pitchConstraint);
 				}
 				else
 				{
@@ -3202,7 +3261,8 @@ static void CG_ScanForCrosshairEntity( void ) {
 
 				AngleVectors( pitchConstraint, d_f, d_rt, d_up );
 			}
-			CG_CalcMuzzlePoint(cg.playerCent->currentState.number, start);
+			//CG_CalcMuzzlePoint(cg.playerCent->currentState.number, start);
+			CG_CalcMuzzlePoint(cam_specEnt.integer == -1 ? cg.playerCent->currentState.number : cam_specEnt.integer, start);
 		}
 
 		//FIXME: increase this?  Increase when zoom in?
@@ -3215,7 +3275,7 @@ static void CG_ScanForCrosshairEntity( void ) {
 	}
 
 	CG_Trace( &trace, start, vec3_origin, vec3_origin, end, 
-		cg.playerCent->currentState.number, CONTENTS_SOLID|CONTENTS_BODY );
+		cam_specEnt.integer == -1 ? cg.playerCent->currentState.number : cam_specEnt.integer, CONTENTS_SOLID|CONTENTS_BODY );
 
 	if (trace.entityNum < MAX_CLIENTS)
 	{
@@ -3223,7 +3283,7 @@ static void CG_ScanForCrosshairEntity( void ) {
 			cg_entities[trace.entityNum].currentState.trickedentindex2,
 			cg_entities[trace.entityNum].currentState.trickedentindex3,
 			cg_entities[trace.entityNum].currentState.trickedentindex4,
-			cg.playerCent->currentState.number))
+			cam_specEnt.integer == -1 ? cg.playerCent->currentState.number : cam_specEnt.integer))
 		{
 			if (cg.crosshairClientNum == trace.entityNum)
 			{
@@ -3293,7 +3353,7 @@ static void CG_DrawCrosshairNames( void ) {
 	CG_ScanForCrosshairEntity();
 
 	//rww - still do the trace, our dynamic crosshair depends on it
-	if (cg.crosshairClientNum >= MAX_CLIENTS) {
+	if (cg.crosshairClientNum >= MAX_CLIENTS || cg.crosshairClientNum == cam_specEnt.integer) {
 		if (magicFix)
 			return;
 		else
@@ -4537,7 +4597,8 @@ void CG_Draw2D( void ) {
 	// Draw this before the text so that any text won't get clipped off
 	CG_DrawZoomMask();
 
-	if (cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR) {
+	int team = cam_specEnt.integer == -1 ? cg.snap->ps.persistant[PERS_TEAM] : cgs.clientinfo[cam_specEnt.integer].team;
+	if (team == TEAM_SPECTATOR) { // actually not sure if i should do that here
 		if (!cg.demoPlayback)
 			CG_DrawSpectator();
 		CG_DrawCrosshair(NULL, 0);
@@ -4545,37 +4606,43 @@ void CG_Draw2D( void ) {
 		CG_SaberClashFlare();
 	} else {
 		// don't draw any status if dead or the scoreboard is being explicitly shown
-		if (!cg.showScores && cg.snap->ps.stats[STAT_HEALTH] > 0) {
+		qboolean isAlive = cam_specEnt.integer == -1 ? cg.snap->ps.stats[STAT_HEALTH] > 0 : !(cg_entities[cam_specEnt.integer].currentState.eFlags & EF_DEAD);
+		//if (!cg.showScores && cg.snap->ps.stats[STAT_HEALTH] > 0) {
+		if (!cg.showScores && isAlive) {
 			//CG_DrawTemporaryStats();
 			CG_DrawAmmoWarning();
 			CG_DrawCrosshairNames();
 
-			if (cg_drawStatus.integer)
-				CG_DrawIconBackground();
 
-			if (inTime > wpTime) {
-				drawSelect = 1;
-				bestTime = cg.invenSelectTime;
-			} else { //only draw the most recent since they're drawn in the same place
-				drawSelect = 2;
-				bestTime = cg.weaponSelectTime;
-			}
-			if (cg.forceSelectTime > bestTime) {
-				drawSelect = 3;
-			}
+			if (cam_specEnt.integer == -1 || cam_specEnt.integer == cg.snap->ps.clientNum) {
 
-			switch(drawSelect) {
-			case 1:
-				CG_DrawInvenSelect();
-				break;
-			case 2:
-				CG_DrawWeaponSelect();
-				break;
-			case 3:
-				CG_DrawForceSelect();
-				break;
-			default:
-				break;
+				if (cg_drawStatus.integer)
+					CG_DrawIconBackground();
+
+				if (inTime > wpTime) {
+					drawSelect = 1;
+					bestTime = cg.invenSelectTime;
+				} else { //only draw the most recent since they're drawn in the same place
+					drawSelect = 2;
+					bestTime = cg.weaponSelectTime;
+				}
+				if (cg.forceSelectTime > bestTime) {
+					drawSelect = 3;
+				}
+
+				switch(drawSelect) {
+				case 1:
+					CG_DrawInvenSelect();
+					break;
+				case 2:
+					CG_DrawWeaponSelect();
+					break;
+				case 3:
+					CG_DrawForceSelect();
+					break;
+				default:
+					break;
+				}
 			}
 
 			if (cg_drawStatus.integer)
@@ -4631,8 +4698,10 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 		return;
 	}
 
+	int team = cam_specEnt.integer == -1 ? cg.snap->ps.persistant[PERS_TEAM] : cgs.clientinfo[cam_specEnt.integer].team;
+
 	// optionally draw the tournement scoreboard instead
-	if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR &&
+	if (team == TEAM_SPECTATOR &&
 		( cg.snap->ps.pm_flags & PMF_SCOREBOARD ) ) {
 		return;
 	}

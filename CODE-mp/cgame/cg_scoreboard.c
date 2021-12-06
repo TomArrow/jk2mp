@@ -380,7 +380,8 @@ qboolean CG_DrawOldScoreboard( void ) {
 		return qfalse;
 	}
 
-	if ( cg.showScores || cg.predictedPlayerState.pm_type == PM_DEAD ||
+	qboolean isDead = cam_specEnt.integer == -1 ? cg.predictedPlayerState.pm_type == PM_DEAD : cg_entities[cam_specEnt.integer].currentState.eFlags & EF_DEAD;
+	if ( cg.showScores || isDead ||
 		 cg.predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		fade = 1.0;
 		fadeColor = colorWhite;
