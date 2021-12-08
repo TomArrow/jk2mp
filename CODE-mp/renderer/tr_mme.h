@@ -11,6 +11,10 @@ typedef struct {
 	vec3_t viewAxis[3];
 } AECamPosition;
 
+typedef struct {
+	vec3_t origin;
+} AEPlayerPosition;
+
 #define AVI_MAX_FRAMES	2000000
 #ifdef SMALLAVIDEBUG
 // Need to debug error that occurs when writing new avi file. doesnt happen often especially in slow debug mode

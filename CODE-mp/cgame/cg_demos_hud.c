@@ -273,8 +273,10 @@ static float *hudGetFloat( hudItem_t *item ) {
 
 static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
 	char tmp[32];
+	char tmp2[32];
 	int i, highestSlashIndex;
 	char* onlyFilenameTmp;
+
 	buf[0] = 0;
 	if (item->handler >= hudLogBase && item->handler < hudLogBase + LOGLINES) {
 		const char *l = hud.logLines[item->handler - hudLogBase];
@@ -285,8 +287,10 @@ static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
     }
 	switch ( item->handler ) {
 	case hudPlayTime:
+
 		sprintf_s(tmp, sizeof(tmp), "%s", demoTimeString(cg.snap->serverTime));
-		Com_sprintf( buf, bufSize, "%s (%s)", demoTimeString(demo.play.time ), tmp);
+		sprintf_s(tmp2, sizeof(tmp2), "%s", demoTimeString(cg.time - cgs.levelStartTime));
+		Com_sprintf( buf, bufSize, "%s (%s/%s)", demoTimeString(demo.play.time ), tmp,tmp2);
 		return;
 	case hudDemoName:
 		onlyFilenameTmp = mme_demoFileName.string;
@@ -304,7 +308,7 @@ static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
 		Com_sprintf( buf, bufSize, "%s", onlyFilenameTmp);
 		return;
 	case hudCGTime:
-		Com_sprintf( buf, bufSize, "%d", cg.time);
+		Com_sprintf( buf, bufSize, "%d (demotime %d)", cg.time, demo.play.time);
 		return;
 	case hudEditName:
 		switch (demo.editType) {

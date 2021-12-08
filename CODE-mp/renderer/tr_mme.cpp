@@ -717,6 +717,7 @@ void R_MME_BlurInfo( int* total, int *index ) {
 }
 
 extern std::vector<AECamPosition> AECamPositions;
+extern std::vector<std::vector<AEPlayerPosition>> AEPlayerPositions;
 void R_MME_WriteAECamPath() {
 	char fileName[MAX_OSPATH];
 	int i;
@@ -845,6 +846,64 @@ void R_MME_WriteAECamPath() {
 	FS_FCloseFile(file);
 
 	AECamPositions.clear();
+
+	///
+	// Now the player positions.
+	///
+	///
+	/// 
+	/* First see if the file already exist */
+	for (i = 0; i < AVI_MAX_FILES; i++) {
+		Com_sprintf(fileName, sizeof(fileName), "%s.AEPlayerPaths.%03d.txt", shotData.main.name, i);
+		if (!FS_FileExists(fileName))
+			break;
+	}
+
+	file = FS_FOpenFileWrite(fileName);
+
+	tmpString = "//\r\n// Player Positions\r\n// Copy each player you want individually\r\n//\r\n\r\n";
+
+	for(int a=0;a<AEPlayerPositions.size();a++){
+		tmpString += "//\r\n// Player #";
+		tmpString += std::to_string(a);
+		tmpString += ":\r\n//\r\n\r\n";
+
+		tmpString += "Adobe After Effects 8.0 Keyframe Data\r\n\r\n";
+		tmpString += "\tUnits Per Second\t";
+		tmpString += std::to_string(shotData.fps);
+		tmpString += "\r\n\tSource Width\t";
+		tmpString += std::to_string(glConfig.vidWidth);
+		tmpString += "\r\n\tSource Height\t";
+		tmpString += std::to_string(glConfig.vidHeight);
+		tmpString += "\r\n\tSource Pixel Aspect Ratio\t";
+		tmpString += std::to_string(1);
+		tmpString += "\r\n\tComp Pixel Aspect Ratio\t";
+		tmpString += std::to_string(1);
+		tmpString += "\r\n";
+		
+		// Position
+		tmpString += "\r\nTransform\tPosition\r\n\tFrame\tX pixels\tY pixels\tZ pixels\t\r\n";
+		for (i = 0; i < AEPlayerPositions[a].size(); i++) {
+			tmpString += "\t";
+			tmpString += std::to_string(i);
+			tmpString += "\t";
+			tmpString += std::to_string(AEPlayerPositions[a][i].origin[0]);
+			tmpString += "\t";
+			tmpString += std::to_string(-AEPlayerPositions[a][i].origin[2]);// In AE x is right/left, y is height and z is depth. Also, needs inversion of height
+			tmpString += "\t";
+			tmpString += std::to_string(AEPlayerPositions[a][i].origin[1]);
+			tmpString += "\t\r\n";
+		}
+
+		tmpString += "\r\n\r\nEnd of Keyframe Data\r\n";
+	}
+
+	FS_Write(tmpString.c_str(), tmpString.size(), file);
+	
+
+	FS_FCloseFile(file);
+
+	AEPlayerPositions.clear();
 }
 
 extern void S_MMEWavClose(void);

@@ -778,6 +778,18 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	trap_MME_TimeFraction(cg.timeFraction);
 
 	VectorCopy(cg.refdefViewAngles,cg.refdef.viewAngles); // For MME so we can export AE cam paths
+	for (int i = 0; i < MAX_CLIENTS; i++) { // For MME so we can export paths for all players
+		centity_t* cent = &cg_entities[i];
+		clientInfo_t* ci = cgs.clientinfo + i;
+		if (ci->bolt_head) {
+			mdxaBone_t boneMatrix;
+			if (trap_G2API_GetBoltMatrix(cent->ghoul2, 0, ci->bolt_head, &boneMatrix, cent->turAngles, cent->lerpOrigin, cg.time, cgs.gameModels, cent->modelScale)) {
+				vec3_t betterOrigin;
+				trap_G2API_GiveMeVectorFromMatrix(&boneMatrix, ORIGIN, betterOrigin);
+				VectorCopy(betterOrigin, cg.refdef.playerPositions[i]);
+			}
+		}
+	}
 	trap_R_RenderScene( &cg.refdef );
 
 	CG_FillRect(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, hcolor);
@@ -973,6 +985,29 @@ static void demoSeekThreeCommand_f(void) {
 	}
 }
 
+// seek by game time, not demotime
+static void demoSeekFourCommand_f(void) {
+	const char *cmd = CG_Argv(1);
+	if (isdigit( cmd[0] )) {
+		//teh's parser for time MM:SS.MSEC, thanks *bow*
+		int i;
+		char *sec, *min;;
+		min = (char *)cmd;
+		for( i=0; min[i]!=':'&& min[i]!=0; i++ );
+		if(cmd[i]==0)
+			sec = 0;
+		else
+		{
+			min[i] = 0;
+			sec = min+i+1;
+		}
+		int gameTime = cg.time - cgs.levelStartTime;
+		int quickDelta = gameTime - demo.play.time; // TODO make this handle timeline.
+		demo.play.time = ( atoi( min ) * 60000 + ( sec ? atof( sec ) : 0 ) * 1000 ) - quickDelta;
+		demo.play.fraction = 0;
+	}
+}
+
 static void demoSeekCommand_f(void) {
 	const char *cmd = CG_Argv(1);
 	if (cmd[0] == '+') {
@@ -1089,6 +1124,7 @@ void demoPlaybackInit(void) {
 	trap_AddCommand("speed");
 	trap_AddCommand("seek");
 	trap_AddCommand("demoSeek");
+	trap_AddCommand("demoSeekGame");
 	trap_AddCommand("demoSeekAbs");
 	trap_AddCommand("find");
 	trap_AddCommand("pause");
@@ -1282,6 +1318,8 @@ qboolean CG_DemosConsoleCommand( void ) {
 		demoSeekTwoCommand_f();
 	} else if (!Q_stricmp(cmd, "demoSeekAbs")) {
 		demoSeekThreeCommand_f();
+	} else if (!Q_stricmp(cmd, "demoSeekGame")) {
+		demoSeekFourCommand_f();
 	} else if (!Q_stricmp(cmd, "find")) {
 		demoFindCommand_f();
 	} else if (!Q_stricmp(cmd, "speed")) {

@@ -8,6 +8,7 @@ extern std::vector<GLuint> pboIds;
 
 
 std::vector<AECamPosition> AECamPositions;
+std::vector<std::vector<AEPlayerPosition>> AEPlayerPositions;
 
 
 void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterProgress,int rollingShutterPixels,int rollingShutterBufferIndex ) {
@@ -119,6 +120,15 @@ void R_MME_SaveShot( mmeShot_t *shot, int width, int height, float fps, byte *in
 	VectorCopy(tr.refdef.viewaxis[1], camPosition.viewAxis[1]);
 	VectorCopy(tr.refdef.viewaxis[2], camPosition.viewAxis[2]);
 	AECamPositions.push_back(camPosition);
+
+	for (int i = 0; i < MAX_CLIENTS; i++) {
+		if (AEPlayerPositions.size() <= i) {
+			AEPlayerPositions.push_back(std::vector<AEPlayerPosition>());
+		}
+		AEPlayerPosition playerPos;
+		VectorCopy(tr.refdef.playerPositions[i], playerPos.origin);
+		AEPlayerPositions[i].push_back(playerPos);
+	}
 	
 	format = shot->format;
 	switch (format) {

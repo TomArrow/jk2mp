@@ -2720,7 +2720,7 @@ void R_SetColorMappings( void ) {
 	// never overbright in windowed mode
 	if ( !glConfig.isFullscreen ) 
 	{
-		tr.overbrightBits = 0;
+		//tr.overbrightBits = 0; // No. We want overbrightbits in every case.
 	}
 #endif
 

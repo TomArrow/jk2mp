@@ -259,6 +259,7 @@ typedef struct {
 	char		text[MAX_RENDER_STRINGS][MAX_RENDER_STRING_LENGTH];
 
 	vec3_t		viewAngles; // Copy of refdefViewAngles so we can save AE path. (purely for MME, this isn't the main view angles variable)
+	vec3_t		playerPositions[MAX_CLIENTS]; // For AE path exports
 } refdef_t;
 
 
