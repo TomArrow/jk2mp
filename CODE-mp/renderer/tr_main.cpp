@@ -1530,7 +1530,9 @@ Ghoul2 Insert Start
   						break;
   					}
 
-					R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, false );
+					if(!r_hideMissingModels->integer){
+						R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, false );
+					}
 					break;
 /*
 Ghoul2 Insert End

@@ -1267,6 +1267,8 @@ extern cvar_t* r_gammaLegacyPrecision;
 extern cvar_t* r_gammaSrgbLightvalues;
 extern cvar_t* r_HUDBrightness;
 
+extern cvar_t* r_hideMissingModels; // don't draw the colorful RGB null axis
+
 extern	cvar_t	*r_nobind;						// turns off binding to appropriate textures
 extern	cvar_t	*r_singleShader;				// make most world faces use default shader
 extern	cvar_t	*r_colorMipLevels;				// development aid to see texture mip usage
