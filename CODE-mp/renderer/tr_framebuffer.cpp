@@ -64,10 +64,15 @@ void R_FrameBuffer_CreateRollingShutterBuffers(int width, int height, int flags)
 cvar_t *r_convertToHDR;
 cvar_t *r_floatBuffer;
 cvar_t *r_fbo;
+cvar_t *r_fboSuperSample;
 cvar_t *r_fboMultiSample;
 cvar_t *r_fboBlur;
 cvar_t *r_fboWidth;
 cvar_t *r_fboHeight;
+
+// This is a bit unstable/glitchy I think. But inside the game it seems to work. Consider experimental.
+int superSampleMultiplier =1; // outside of this file, only READ this. 
+
 
 #define GL_DEPTH_STENCIL_EXT 0x84F9
 #define GL_UNSIGNED_INT_24_8_EXT 0x84FA
@@ -118,7 +123,7 @@ void R_SetGL2DSize (int width, int height) {
 
 	// set 2D virtual screen size
 	qglViewport( 0, 0, width, height );
-	qglScissor( 0, 0, width, height );
+	qglScissor( 0, 0, width, height);
 	qglMatrixMode(GL_PROJECTION);
     qglLoadIdentity ();
 	qglOrtho (0, width, height, 0, 0, 1);
@@ -176,22 +181,22 @@ void R_DrawQuadPartial(GLuint tex, int width, int height,int offsetX, int offset
 #endif
 }
 
-static int CreateTextureBuffer( int width, int height, GLenum internalFormat, GLenum format, GLenum type ) {
+static int CreateTextureBuffer( int width, int height, GLenum internalFormat, GLenum format, GLenum type, int superSample ) {
 	int ret = 0;
 	int error = qglGetError();
 	qglGenTextures( 1, (GLuint *)&ret );
 	qglBindTexture(	GL_TEXTURE_2D, ret );
-	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, superSample == 1 ?  GL_NEAREST : GL_LINEAR );
+	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-	qglTexImage2D(	GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, 0 );
+	qglTexImage2D(	GL_TEXTURE_2D, 0, internalFormat, width* superSample, height* superSample, 0, format, type, 0 );
 	error = qglGetError();
 	return ret;
 }
 
-static int CreateRenderBuffer( int samples, int width, int height, GLenum bindType) {
+static int CreateRenderBuffer( int samples, int width, int height, GLenum bindType, int superSample) {
 	int ret = 0;
 #ifdef HAVE_GLES
 	//TODO
@@ -199,9 +204,9 @@ static int CreateRenderBuffer( int samples, int width, int height, GLenum bindTy
 	qglGenRenderbuffers( 1, (GLuint *)&ret );
 	qglBindRenderbuffer( GL_RENDERBUFFER_EXT, ret );
 	if ( samples ) {
-		qglRenderbufferStorageMultisampleEXT( GL_RENDERBUFFER_EXT, samples, bindType, width, height );
+		qglRenderbufferStorageMultisampleEXT( GL_RENDERBUFFER_EXT, samples, bindType, width* superSample, height * superSample);
 	} else {
-		qglRenderbufferStorage(	GL_RENDERBUFFER_EXT, bindType, width, height );
+		qglRenderbufferStorage(	GL_RENDERBUFFER_EXT, bindType, width * superSample, height * superSample);
 	}
 #endif
 	return ret;
@@ -246,7 +251,7 @@ void R_FrameBufferDelete( frameBufferData_t* buffer ) {
 #endif
 }
 
-frameBufferData_t* R_FrameBufferCreate( int width, int height, int flags ) {
+frameBufferData_t* R_FrameBufferCreate( int width, int height, int flags, int superSample=1 ) {
 #ifdef HAVE_GLES
 	//TODO
 	return NULL;
@@ -271,38 +276,38 @@ frameBufferData_t* R_FrameBufferCreate( int width, int height, int flags ) {
 
 	if ( flags & FB_PACKED ) {
 		if ( samples ) {
-			buffer->packed = CreateRenderBuffer( samples, width, height, GL_DEPTH24_STENCIL8_EXT );
+			buffer->packed = CreateRenderBuffer( samples, width, height, GL_DEPTH24_STENCIL8_EXT, superSample );
 			qglFramebufferRenderbuffer(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, buffer->packed );
 			qglFramebufferRenderbuffer(GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, buffer->packed );
 		} else {
 			// Setup depth_stencil texture (not mipmap)
-			buffer->packed = CreateTextureBuffer( width, height, GL_DEPTH24_STENCIL8_EXT, GL_DEPTH_STENCIL_EXT, GL_UNSIGNED_INT_24_8_EXT );
+			buffer->packed = CreateTextureBuffer( width, height, GL_DEPTH24_STENCIL8_EXT, GL_DEPTH_STENCIL_EXT, GL_UNSIGNED_INT_24_8_EXT,superSample );
 			qglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, buffer->packed, 0);
 			qglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT, GL_TEXTURE_2D, buffer->packed, 0);
 		}
 	} else {
 		if ( flags & FB_DEPTH ) {
-			buffer->depth = CreateRenderBuffer( samples, width, height, GL_DEPTH_COMPONENT );
+			buffer->depth = CreateRenderBuffer( samples, width, height, GL_DEPTH_COMPONENT, superSample);
 			qglFramebufferRenderbuffer(	GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, buffer->depth );
 		}
 		if ( flags & FB_STENCIL ) {
-			buffer->stencil = CreateRenderBuffer( samples, width, height, GL_STENCIL_INDEX8_EXT );
+			buffer->stencil = CreateRenderBuffer( samples, width, height, GL_STENCIL_INDEX8_EXT, superSample);
 			qglFramebufferRenderbuffer(	GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, buffer->stencil );
 		}
 	}
 	/* Attach the color buffer */
 	
 	if ( samples ) {
-		buffer->color = CreateRenderBuffer( samples, width, height, GL_RGBA );
+		buffer->color = CreateRenderBuffer( samples, width, height, GL_RGBA, superSample);
 		qglFramebufferRenderbuffer(	GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, buffer->color );
 	} else if ( flags & FB_FLOAT16 ) {
-		buffer->color = CreateTextureBuffer( width, height, RGBA16F_ARB, GL_RGBA, GL_FLOAT );
+		buffer->color = CreateTextureBuffer( width, height, RGBA16F_ARB, GL_RGBA, GL_FLOAT, superSample);
 		qglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, buffer->color, 0);
 	} else if ( flags & FB_FLOAT32 ) {
-		buffer->color = CreateTextureBuffer( width, height, RGBA32F_ARB, GL_RGBA, GL_FLOAT );
+		buffer->color = CreateTextureBuffer( width, height, RGBA32F_ARB, GL_RGBA, GL_FLOAT, superSample);
 		qglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, buffer->color, 0);
 	} else {
-		buffer->color = CreateTextureBuffer( width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE );
+		buffer->color = CreateTextureBuffer( width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, superSample);
 		qglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, buffer->color, 0);
 	}
 		
@@ -349,12 +354,15 @@ void R_FrameBuffer_Init( void ) {
 
 	memset( &fbo, 0, sizeof( fbo ) );
 	r_fbo = ri.Cvar_Get( "r_fbo", "0", CVAR_ARCHIVE | CVAR_LATCH);	
+	r_fboSuperSample = ri.Cvar_Get( "r_fboSuperSample", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_fboBlur = ri.Cvar_Get( "r_fboBlur", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_fboWidth = ri.Cvar_Get( "r_fboWidth", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_fboHeight = ri.Cvar_Get( "r_fboHeight", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_fboMultiSample = ri.Cvar_Get( "r_fboMultiSample", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_floatBuffer = ri.Cvar_Get( "r_floatBuffer", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_convertToHDR = ri.Cvar_Get( "r_convertToHDR", "1", CVAR_ARCHIVE | CVAR_LATCH);
+
+	superSampleMultiplier = pow(2, r_fboSuperSample->integer);
 
 	// make sure all the commands added here are also		
 
@@ -399,7 +407,7 @@ void R_FrameBuffer_Init( void ) {
 	}
 
 	//create our main frame buffer
-	fbo.main = R_FrameBufferCreate( width, height, flags );
+	fbo.main = R_FrameBufferCreate( width, height, flags,superSampleMultiplier );
 
 	if (!fbo.main) {
 		// if the main fbuffer failed then we should disable framebuffer 

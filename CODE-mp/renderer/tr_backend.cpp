@@ -3,6 +3,7 @@
 #include "tr_mme.h"
 
 extern shotData_t shotData;
+extern int superSampleMultiplier;
 
 #ifndef DEDICATED
 #if !defined __TR_WORLDEFFECTS_H
@@ -502,10 +503,10 @@ void SetViewportAndScissor( void ) {
 	qglMatrixMode(GL_MODELVIEW);
 
 	// set the window clipping
-	qglViewport( backEnd.viewParms.viewportX, backEnd.viewParms.viewportY, 
-		backEnd.viewParms.viewportWidth, backEnd.viewParms.viewportHeight );
-	qglScissor( backEnd.viewParms.viewportX, backEnd.viewParms.viewportY, 
-		backEnd.viewParms.viewportWidth, backEnd.viewParms.viewportHeight );
+	qglViewport( backEnd.viewParms.viewportX * superSampleMultiplier, backEnd.viewParms.viewportY * superSampleMultiplier,
+		backEnd.viewParms.viewportWidth* superSampleMultiplier, backEnd.viewParms.viewportHeight * superSampleMultiplier);
+	qglScissor( backEnd.viewParms.viewportX * superSampleMultiplier, backEnd.viewParms.viewportY * superSampleMultiplier,
+		backEnd.viewParms.viewportWidth * superSampleMultiplier, backEnd.viewParms.viewportHeight * superSampleMultiplier);
 }
 
 /*
@@ -871,8 +872,8 @@ void	RB_SetGL2D (void) {
 	backEnd.projection2D = qtrue;
 
 	// set 2D virtual screen size
-	qglViewport( 0, 0, glConfig.vidWidth, glConfig.vidHeight );
-	qglScissor( 0, 0, glConfig.vidWidth, glConfig.vidHeight );
+	qglViewport( 0, 0, glConfig.vidWidth* superSampleMultiplier, glConfig.vidHeight * superSampleMultiplier);
+	qglScissor( 0, 0, glConfig.vidWidth* superSampleMultiplier, glConfig.vidHeight * superSampleMultiplier);
 	qglMatrixMode(GL_PROJECTION);
     qglLoadIdentity ();
 	qglOrtho (0, 640, 480, 0, 0, 1);
