@@ -227,7 +227,9 @@ static void CG_Obituary( entityState_t *ent ) {
 clientkilled:
 
 	// check for kill messages from the current clientNum
-	currentClient = cam_specEnt.integer == -1 ? cg.playerCent->currentState.clientNum : cam_specEnt.integer;
+	if (cg.playerCent) {
+		currentClient = cam_specEnt.integer == -1 ? cg.playerCent->currentState.clientNum : cam_specEnt.integer;
+	}
 	//if ( cg.playerCent && attacker == cg.playerCent->currentState.clientNum ) {
 	if ( cg.playerCent && attacker == currentClient) {
 		char	*s;

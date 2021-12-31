@@ -71,6 +71,8 @@ cvar_t *r_fboWidth;
 cvar_t *r_fboHeight;
 
 // This is a bit unstable/glitchy I think. But inside the game it seems to work. Consider experimental.
+// Maybe also needs stepwise downscaling for values over 2? because GL_LINEAR takes only closest 4 pixels into account?
+// Or figure how that mipmap stuff works?
 int superSampleMultiplier =1; // outside of this file, only READ this. 
 
 
