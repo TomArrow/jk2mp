@@ -1102,7 +1102,9 @@ Can go from either a baseline or a previous packet_entity
 ==================
 */
 extern	cvar_t	*cl_shownet;
-
+#ifdef RELDEBUG
+//#pragma optimize("", off)
+#endif
 void MSG_ReadDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to, 
 						 int number) {
 	int			i, lc;
@@ -1162,6 +1164,9 @@ void MSG_ReadDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to,
 #endif
 
 	for ( i = 0, field = demo15detected ? entityStateFields15 : entityStateFields ; i < lc ; i++, field++ ) {
+		//if (i >= numFields) {
+		//	continue; // hardening against corrupted demos. likely won't recover anyway but oh well. Actualy, strike that, didnt help anyway
+		//}
 		fromF = (int *)( (byte *)from + field->offset );
 		toF = (int *)( (byte *)to + field->offset );
 
@@ -1213,10 +1218,12 @@ void MSG_ReadDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to,
 #endif
 	}
 	for ( i = lc, field = demo15detected ? &entityStateFields15[lc] : &entityStateFields[lc] ; i < numFields ; i++, field++ ) {
-		fromF = (int *)( (byte *)from + field->offset );
-		toF = (int *)( (byte *)to + field->offset );
-		// no change
-		*toF = *fromF;
+		if (i >= 0) { // some corrupted (?) messages have negative lc
+			fromF = (int*)((byte*)from + field->offset);
+			toF = (int*)((byte*)to + field->offset);
+			// no change
+			*toF = *fromF;
+		}
 	}
 
 	if ( print ) {
@@ -1228,6 +1235,9 @@ void MSG_ReadDeltaEntity( msg_t *msg, entityState_t *from, entityState_t *to,
 		Com_Printf( " (%i bits)\n", endBit - startBit  );
 	}
 }
+#ifdef RELDEBUG
+//#pragma optimize("", on)
+#endif
 
 /*
 ============================================================================
