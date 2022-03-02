@@ -457,6 +457,16 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 		}
 		mme_skyColor->modified = qfalse;
 	}
+	if (mme_skyTint->modified) {
+		tr.mmeSkyTintIsSet = qfalse;
+		if (Q_stricmp(mme_skyTint->string, "0")) {
+			char* skyTintTextPointer = mme_skyTint->string;
+			if (!COM_ParseVec4((const char**)&skyTintTextPointer, &tr.mmeSkyTint)) {
+				tr.mmeSkyTintIsSet = qtrue;
+			}
+		}
+		mme_skyTint->modified = qfalse;
+	}
 
 	//
 	// draw buffer stuff
