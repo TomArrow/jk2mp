@@ -69,6 +69,8 @@ cvar_t	*r_drawSun;
 cvar_t	*r_dynamiclight;
 cvar_t	*r_dlightBacks;
 
+cvar_t* r_skyboxRotate;			// Degrees on height axis to rotate skybox (to align landscapes etc)
+
 cvar_t	*r_lodbias;
 cvar_t	*r_lodscale;
 cvar_t	*r_autolodscalevalue;
@@ -958,6 +960,7 @@ void R_Register( void )
 	r_drawSun = ri.Cvar_Get( "r_drawSun", "0", CVAR_ARCHIVE );
 	r_dynamiclight = ri.Cvar_Get( "r_dynamiclight", "1", CVAR_ARCHIVE );
 	r_dlightBacks = ri.Cvar_Get( "r_dlightBacks", "1", CVAR_ARCHIVE );
+	r_skyboxRotate = ri.Cvar_Get( "r_skyboxRotate", "0", CVAR_ARCHIVE );
 	r_finish = ri.Cvar_Get ("r_finish", "0", CVAR_ARCHIVE);
 	r_textureMode = ri.Cvar_Get( "r_textureMode", "GL_LINEAR_MIPMAP_NEAREST", CVAR_ARCHIVE );
 	r_swapInterval = ri.Cvar_Get( "r_swapInterval", "0", CVAR_ARCHIVE );

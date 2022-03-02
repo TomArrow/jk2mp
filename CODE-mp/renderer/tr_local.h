@@ -304,7 +304,7 @@ typedef struct {
 } texModInfo_t;
 
 
-#define	MAX_IMAGE_ANIMATIONS	8
+#define	MAX_IMAGE_ANIMATIONS	64
 
 #define SURFSPRITE_NONE			0
 #define SURFSPRITE_VERTICAL		1
@@ -1206,6 +1206,8 @@ extern cvar_t	*r_fastsky;				// controls whether sky should be cleared or drawn
 extern cvar_t	*r_drawSun;				// controls drawing of sun quad
 extern cvar_t	*r_dynamiclight;		// dynamic lights enabled/disabled
 extern cvar_t	*r_dlightBacks;			// dlight non-facing surfaces for continuity
+
+extern cvar_t* r_skyboxRotate;			// Degrees on height axis to rotate skybox (to align landscapes etc)
 
 extern	cvar_t	*r_newDLights;
 

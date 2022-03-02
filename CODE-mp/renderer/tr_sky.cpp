@@ -355,11 +355,27 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 
 		for ( s = mins[0]+HALF_SKY_SUBDIVISIONS; s <= maxs[0]+HALF_SKY_SUBDIVISIONS; s++ )
 		{
-			qglTexCoord2fv( s_skyTexCoords[t][s] );
-			qglVertex3fv( s_skyPoints[t][s] );
+			if (r_skyboxRotate->integer) {
 
-			qglTexCoord2fv( s_skyTexCoords[t+1][s] );
-			qglVertex3fv( s_skyPoints[t+1][s] );
+				static vec3_t tmpCoord;
+				static const vec3_t rotDir{0,0,1};
+
+				RotatePointAroundVector(tmpCoord, rotDir, s_skyPoints[t][s], r_skyboxRotate->integer);
+				qglTexCoord2fv(s_skyTexCoords[t][s]);
+				qglVertex3fv(tmpCoord);
+
+				RotatePointAroundVector(tmpCoord, rotDir, s_skyPoints[t + 1][s], r_skyboxRotate->integer);
+				qglTexCoord2fv(s_skyTexCoords[t + 1][s]);
+				qglVertex3fv(tmpCoord);
+			}
+			else {
+
+				qglTexCoord2fv(s_skyTexCoords[t][s]);
+				qglVertex3fv(s_skyPoints[t][s]);
+
+				qglTexCoord2fv(s_skyTexCoords[t + 1][s]);
+				qglVertex3fv(s_skyPoints[t + 1][s]);
+			}
 		}
 
 		qglEnd();
