@@ -4063,7 +4063,7 @@ void CG_ChatBox_ArrayInsert(chatBoxItem_t **array, int insPoint, int maxNum, cha
 }
 
 //go through all the chat strings and draw them if they are not yet expired
-static ID_INLINE void CG_ChatBox_DrawStrings(void) {
+ID_INLINE void CG_ChatBox_DrawStrings(void) {
 	chatBoxItem_t *drawThese[MAX_CHATBOX_ITEMS];
 	int numToDraw = 0;
 	int linesToDraw = 0;
@@ -4557,8 +4557,9 @@ void CG_Draw2D( void ) {
 		return;
 	}
 
-	if (!cg.playerCent)
+	if (!cg.playerCent) {
 		return;
+	}
 	else if (!cg.playerPredicted) {
 		cg.scoreBoardShowing = qfalse;
 		CG_Draw2DScreenTints();

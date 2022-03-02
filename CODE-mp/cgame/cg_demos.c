@@ -799,6 +799,8 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 		CG_SaberClashFlare();
 		if (cg_drawFPS.integer)
 			CG_DrawFPS(0.0f);
+		if (mov_drawChatbox.integer)
+			CG_ChatBox_DrawStrings();
 	}
 	
 	//those looping sounds in intermission are annoying

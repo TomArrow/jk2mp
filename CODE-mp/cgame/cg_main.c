@@ -602,6 +602,7 @@ vmCvar_t    cg_commandSmooth;
 //mme
 vmCvar_t	mov_chatBeep;
 vmCvar_t	mov_fragsOnly;
+vmCvar_t	mov_drawChatbox;
 vmCvar_t	mov_captureName;
 vmCvar_t	mov_captureFPS;
 
@@ -838,6 +839,7 @@ Ghoul2 Insert End
 	{ &mme_chaseViewHeightFix,	"mme_chaseViewHeightFix",	"1",	NULL,	CVAR_ARCHIVE	},
 	{ &mov_chatBeep,		"mov_chatBeep",			"1",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_fragsOnly,		"mov_fragsOnly",		"0",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_drawChatbox,		"mov_drawChatbox",		"0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_filterMask,		"mov_filterMask",		"0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_seekInterval,	"mov_seekInterval",		"4",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_deltaYaw,		"mov_deltaYaw",			"0",			NULL,	CVAR_ARCHIVE	},

@@ -1796,6 +1796,7 @@ extern	vmCvar_t	cg_commandSmooth;
 //New MME cvars
 extern	vmCvar_t	mov_chatBeep;
 extern	vmCvar_t	mov_fragsOnly;
+extern	vmCvar_t	mov_drawChatbox;
 extern	vmCvar_t	mov_captureName;
 extern	vmCvar_t	mov_captureFPS;
 
