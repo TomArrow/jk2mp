@@ -254,6 +254,13 @@ void RB_ClipSkyPolygons( shaderCommands_t *input )
 			VectorSubtract( input->xyz[input->indexes[i+j]],
 							backEnd.viewParms.ori.origin, 
 							p[j] );
+
+			if (r_skyboxRotate->integer) {
+
+				static vec3_t tmpCoord;
+				static const vec3_t rotDir{ 0,0,1 };
+				RotatePointAroundVector(p[j], rotDir, p[j],-r_skyboxRotate->integer);
+			}
 		}
 		ClipSkyPolygon( 3, p[0], 0 );
 	}
@@ -346,6 +353,10 @@ static float	s_skyTexCoords[SKY_SUBDIVISIONS+1][SKY_SUBDIVISIONS+1][2];
 static void DrawSkySide( struct image_s *image, const int mins[2], const int maxs[2] )
 {
 	int s, t;
+
+	if (tr.mmeSkyTintIsSet) {
+		qglColor4f(tr.mmeSkyTint[0], tr.mmeSkyTint[1], tr.mmeSkyTint[2], tr.mmeSkyTint[3]);
+	}
 
 	GL_Bind( image );
 
