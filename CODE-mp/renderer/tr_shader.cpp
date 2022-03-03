@@ -3445,6 +3445,56 @@ inline qboolean IsShader(shader_t *sh, const char *name, const int *lightmapInde
 
 /*
 ===============
+R_FindLightmap - ydnar
+given a (potentially erroneous) lightmap index, attempts to load
+an external lightmap image and/or sets the index to a valid number
+===============
+*/
+
+#define EXTERNAL_LIGHTMAP   "lm_%04d.tga"    // THIS MUST BE IN SYNC WITH Q3MAP2
+
+void R_FindLightmap(int* lightmapIndex) {
+	image_t* image;
+	char fileName[MAX_QPATH];
+
+
+	// don't fool with bogus lightmap indexes
+	if (*lightmapIndex < 0) {
+		return;
+	}
+
+	// does this lightmap already exist?
+	if (*lightmapIndex < tr.numLightmaps && tr.lightmaps[*lightmapIndex] != NULL) {
+		return;
+	}
+
+	// bail if no world dir
+	if (tr.worldDir == NULL) {
+		*lightmapIndex = LIGHTMAP_BY_VERTEX;
+		return;
+	}
+
+	// sync up render thread, because we're going to have to load an image
+	R_SyncRenderThread();
+
+	// attempt to load an external lightmap
+	sprintf(fileName, "%s/" EXTERNAL_LIGHTMAP, tr.worldDir, *lightmapIndex);
+	image = R_FindImageFile(fileName, qfalse, qfalse, qtrue, GL_CLAMP);
+	if (image == NULL) {
+		*lightmapIndex = LIGHTMAP_BY_VERTEX;
+		return;
+	}
+
+	// add it to the lightmap list
+	if (*lightmapIndex >= tr.numLightmaps) {
+		tr.numLightmaps = *lightmapIndex + 1;
+	}
+	tr.lightmaps[*lightmapIndex] = image;
+}
+
+
+/*
+===============
 R_FindShader
 
 Will always return a valid shader, but it might be the
@@ -3482,6 +3532,11 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndex, const byte *
 
 	if ( name[0] == 0 ) {
 		return tr.defaultShader;
+	}
+
+	// ydnar: validate lightmap index
+	for (i = 0; i < MAXLIGHTMAPS; i++) {
+		R_FindLightmap((int*)lightmapIndex+i);
 	}
 
 	// use (fullbright) vertex lighting if the bsp file doesn't have

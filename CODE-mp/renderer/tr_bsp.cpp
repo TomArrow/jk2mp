@@ -1950,6 +1950,7 @@ static void RE_LoadWorldMap_Actual( const char *name ) {
 	VectorNormalize( tr.sunDirection );
 
 	tr.worldMapLoaded = qtrue;
+	tr.worldDir = NULL;
 
 	// check for cached disk file from the server first...
 	//
@@ -1967,6 +1968,10 @@ static void RE_LoadWorldMap_Actual( const char *name ) {
 			ri.Error (ERR_DROP, "RE_LoadWorldMap: %s not found", name);
 		}
 	}
+
+	// ydnar: set map meta dir
+	tr.worldDir = CopyString(name);
+	COM_StripExtension(tr.worldDir, tr.worldDir);
 
 	// clear tr.world so if the level fails to load, the next
 	// try will not look at the partially loaded version
