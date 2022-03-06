@@ -1726,6 +1726,8 @@ static void GLW_InitExtensions( void )
 		ri.Printf(PRINT_ALL, "...GL_EXT_texture_filter_anisotropic not found\n");
 	}
 
+	qglGenerateMipmap = (void (APIENTRY*)(GLenum)) qwglGetProcAddress("glGenerateMipmap");
+
 	glMMEConfig.framebufferObject = qfalse;
 	glMMEConfig.shaderSupport = qfalse;
 	if (strstr(glConfig.extensions_string, "GL_EXT_framebuffer_object") &&

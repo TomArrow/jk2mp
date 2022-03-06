@@ -2093,6 +2093,7 @@ qboolean R_FrameBuffer_RollingShutterCapture(int bufferIndex, int offset, int he
 void R_FrameBuffer_RollingShutterFlipDoubleBuffer(int bufferIndex);
 //Try to do an fbo blur
 qboolean R_FrameBuffer_Blur(float scale, int frame, int total);
+qboolean R_FrameBuffer_ApplyExposure();
 qboolean R_FrameBuffer_HDRConvert(HDRConvertSource source= HDRCONVSOURCE_MAINFBO, int param=0);
 qboolean R_FrameBuffer_StartHDRRead();
 qboolean R_FrameBuffer_EndHDRRead();

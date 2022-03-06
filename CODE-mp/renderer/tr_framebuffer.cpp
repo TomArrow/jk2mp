@@ -64,11 +64,15 @@ void R_FrameBuffer_CreateRollingShutterBuffers(int width, int height, int flags)
 cvar_t *r_convertToHDR;
 cvar_t *r_floatBuffer;
 cvar_t *r_fbo;
+cvar_t *r_fboExposure;
 cvar_t *r_fboSuperSample;
+cvar_t *r_fboSuperSampleMipMap;
 cvar_t *r_fboMultiSample;
 cvar_t *r_fboBlur;
 cvar_t *r_fboWidth;
 cvar_t *r_fboHeight;
+
+qboolean mipMapsAlreadyGeneratedThisFrame = qfalse;
 
 // This is a bit unstable/glitchy I think. But inside the game it seems to work. Consider experimental.
 // Maybe also needs stepwise downscaling for values over 2? because GL_LINEAR takes only closest 4 pixels into account?
@@ -100,6 +104,7 @@ typedef struct {
 static struct {
 	frameBufferData_t *multiSample;
 	frameBufferData_t *main;
+	frameBufferData_t *exposure;
 	frameBufferData_t *blur;
 	frameBufferData_t *dof;
 	frameBufferData_t *colorSpaceConv;
@@ -153,6 +158,28 @@ void R_DrawQuad( GLuint tex, int width, int height) {
 #endif
 }
 
+void R_FrameBuffer_GenerateMainMipMaps() {
+#ifdef HAVE_GLES
+	//TODO
+#else
+	if (mipMapsAlreadyGeneratedThisFrame) {
+		return;
+	}
+	// Create mipmaps if supersampling
+	if (superSampleMultiplier != 1 && r_fboSuperSampleMipMap->integer) {
+		qglEnable(GL_TEXTURE_2D);
+		if (glState.currenttextures[0] != fbo.main->color) {
+			GL_SelectTexture(0);
+			qglBindTexture(GL_TEXTURE_2D, fbo.main->color);
+			glState.currenttextures[0] = fbo.main->color;
+			qglGenerateMipmap(GL_TEXTURE_2D);
+			mipMapsAlreadyGeneratedThisFrame = qtrue;
+		};
+	}
+
+#endif
+}
+
 void R_DrawQuadPartial(GLuint tex, int width, int height,int offsetX, int offsetY) {
 #ifdef HAVE_GLES
 	//TODO
@@ -188,12 +215,15 @@ static int CreateTextureBuffer( int width, int height, GLenum internalFormat, GL
 	int error = qglGetError();
 	qglGenTextures( 1, (GLuint *)&ret );
 	qglBindTexture(	GL_TEXTURE_2D, ret );
-	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, superSample == 1 ?  GL_NEAREST : GL_LINEAR );
+	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, superSample == 1 ?  GL_NEAREST : (r_fboSuperSampleMipMap->integer ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR) );
 	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 	qglTexImage2D(	GL_TEXTURE_2D, 0, internalFormat, width* superSample, height* superSample, 0, format, type, 0 );
+	if (superSample != 1 && r_fboSuperSampleMipMap->integer) {
+		qglGenerateMipmap(GL_TEXTURE_2D); 
+	}
 	error = qglGetError();
 	return ret;
 }
@@ -355,8 +385,10 @@ void R_FrameBuffer_Init( void ) {
 	int flags, width, height;
 
 	memset( &fbo, 0, sizeof( fbo ) );
-	r_fbo = ri.Cvar_Get( "r_fbo", "0", CVAR_ARCHIVE | CVAR_LATCH);	
+	r_fbo = ri.Cvar_Get( "r_fbo", "0", CVAR_ARCHIVE | CVAR_LATCH);
+	r_fboExposure = ri.Cvar_Get("r_fboExposure", "1.0", CVAR_ARCHIVE);
 	r_fboSuperSample = ri.Cvar_Get( "r_fboSuperSample", "0", CVAR_ARCHIVE | CVAR_LATCH);	
+	r_fboSuperSampleMipMap = ri.Cvar_Get( "r_fboSuperSampleMipMap", "1", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_fboBlur = ri.Cvar_Get( "r_fboBlur", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_fboWidth = ri.Cvar_Get( "r_fboWidth", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_fboHeight = ri.Cvar_Get( "r_fboHeight", "0", CVAR_ARCHIVE | CVAR_LATCH);	
@@ -410,6 +442,7 @@ void R_FrameBuffer_Init( void ) {
 
 	//create our main frame buffer
 	fbo.main = R_FrameBufferCreate( width, height, flags,superSampleMultiplier );
+	fbo.exposure = R_FrameBufferCreate( width, height, flags,superSampleMultiplier );
 
 	if (!fbo.main) {
 		// if the main fbuffer failed then we should disable framebuffer 
@@ -440,7 +473,12 @@ void R_FrameBuffer_Init( void ) {
 		fbo.blur = R_FrameBufferCreate( width, height, flags );
 	}
 
-	flags = FB_FLOAT16;
+	if (r_floatBuffer->integer > 2) { // Rolling shutter buffers eat a lot of memory. Need r_floatBuffer of at least 3 to activate 32 bit floating points for rolling shutter.
+		flags = FB_FLOAT32;
+	}
+	else if (r_floatBuffer->integer) {
+		flags = FB_FLOAT16;
+	}
 	R_FrameBuffer_CreateRollingShutterBuffers(width, height,flags);
 
 	if (r_convertToHDR->integer) {
@@ -567,6 +605,9 @@ qboolean R_FrameBuffer_HDRConvert(HDRConvertSource source, int param) {
 		//qglFinish();
 	}
 	else if(source == HDRCONVSOURCE_MAINFBO) {
+		
+		R_FrameBuffer_GenerateMainMipMaps();
+
 		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.colorSpaceConv->fbo);
 		qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 		//The color used to blur add this frame
@@ -651,13 +692,17 @@ qboolean R_FrameBuffer_RollingShutterCapture(int bufferIndex, int offset, int he
 	float c;
 	if (!selectedFrameBufferData)
 		return qfalse;
+
+
+	R_FrameBuffer_GenerateMainMipMaps();
+
 	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, selectedFrameBufferData->fbo);
 	qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 	//The color used to blur add this frame
 	//c = 1.0f;
 	//c = 1.0f/(float)mme_rollingShutterBlur->integer;
 	c = weight;
-	qglColor4f(c, c, c, 1);
+	qglColor4f(c, c , c, 1);
 	if (!additive) {
 		GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_DEPTHTEST_DISABLE);
 	}
@@ -687,11 +732,15 @@ qboolean R_FrameBuffer_Blur( float scale, int frame, int total ) {
 	float c;
 	if ( !fbo.blur )
 		return qfalse;
+
+
+	R_FrameBuffer_GenerateMainMipMaps();
+
 	qglBindFramebuffer( GL_FRAMEBUFFER_EXT, fbo.blur->fbo );
 	qglDrawBuffer( GL_COLOR_ATTACHMENT0_EXT );
 	//The color used to blur add this frame
 	c = scale;
-	qglColor4f( c, c, c, 1 );
+	qglColor4f( c , c , c , 1 );
 	if ( frame == 0 ) {
 		GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_DEPTHTEST_DISABLE );
 	} else {
@@ -711,6 +760,49 @@ qboolean R_FrameBuffer_Blur( float scale, int frame, int total ) {
 	return qtrue;
 #endif
 }
+#ifdef RELDEBUG
+#pragma optimize("", off)
+#endif
+qboolean R_FrameBuffer_ApplyExposure( ) { // really kinda useless unless you want to reduce exposure sadly. Numbers are clamped.
+#ifdef HAVE_GLES
+	//TODO
+	return qfalse;
+#else
+	if ( !fbo.exposure )
+		return qfalse;
+
+	r_fboExposure = ri.Cvar_Get("r_fboExposure", "1.0", CVAR_ARCHIVE);
+
+	if (!Q_stricmp(r_fboExposure->string, "1.0")) { // Nothing to do.
+		return qtrue;
+	}
+
+	// First copy image into exposure FBO and apply exposure
+	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.exposure->fbo);
+	qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+	//The color used to blur add this frame 
+	float multiplier = r_fboExposure->value;
+	qglColor4f(multiplier, multiplier, multiplier, 1.0f);
+	GL_State(/*GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO |*/ GLS_DEPTHTEST_DISABLE);
+	R_SetGL2DSize(glConfig.vidWidth, glConfig.vidHeight);
+	R_DrawQuad(fbo.main->color, glConfig.vidWidth, glConfig.vidHeight);
+
+	// Now copy it back
+	qglBindFramebuffer( GL_FRAMEBUFFER_EXT, fbo.main->fbo );
+	qglDrawBuffer( GL_COLOR_ATTACHMENT0_EXT );
+	qglColor4f(1, 1, 1, 1);
+	GL_State(GLS_DEPTHTEST_DISABLE );
+	R_SetGL2DSize( glConfig.vidWidth, glConfig.vidHeight );
+	R_DrawQuad(	fbo.exposure->color, glConfig.vidWidth, glConfig.vidHeight );
+	mipMapsAlreadyGeneratedThisFrame = qfalse;
+	return qtrue;
+#endif
+}
+#ifdef RELDEBUG
+#pragma optimize("", on)
+#endif
+
+
 
 void R_FrameBuffer_EndFrame( void ) {
 #ifdef HAVE_GLES
@@ -719,6 +811,9 @@ void R_FrameBuffer_EndFrame( void ) {
 	if ( !fbo.main ) {
 		return;
 	}
+
+	R_FrameBuffer_GenerateMainMipMaps();
+
 	if ( fbo.multiSample ) {
 		const frameBufferData_t* src = fbo.multiSample;
 		const frameBufferData_t* dst = fbo.main;
@@ -727,8 +822,9 @@ void R_FrameBuffer_EndFrame( void ) {
 		qglBindFramebuffer( GL_DRAW_FRAMEBUFFER_EXT, dst->fbo );
 		qglBlitFramebufferEXT(0, 0, src->width, src->height, 0, 0, dst->width, dst->height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);
 	}
+
 	GL_State( GLS_DEPTHTEST_DISABLE );
-	qglColor4f( 1, 1, 1, 1 );
+	qglColor4f(1, 1, 1, 1 );
 	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
 	qglEnable(GL_FRAMEBUFFER_SRGB);
 	R_SetGL2DSize( fbo.screenWidth, fbo.screenHeight );
@@ -738,12 +834,14 @@ void R_FrameBuffer_EndFrame( void ) {
 		R_DrawQuad(	fbo.main->color, fbo.screenWidth, fbo.screenHeight );
 	}
 	usedFloat = qfalse;
+	mipMapsAlreadyGeneratedThisFrame = qfalse;
 #endif
 }
 
 void R_FrameBuffer_Shutdown( void ) {
 //	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
 	R_FrameBufferDelete( fbo.main );
+	R_FrameBufferDelete( fbo.exposure );
 	R_FrameBufferDelete( fbo.blur );
 	R_FrameBufferDelete( fbo.multiSample );
 	R_FrameBufferDelete( fbo.colorSpaceConv );

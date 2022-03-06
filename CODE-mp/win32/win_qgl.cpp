@@ -392,6 +392,9 @@ void ( APIENTRY * qglVertex4sv )(const GLshort *v);
 void ( APIENTRY * qglVertexPointer )(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 void ( APIENTRY * qglViewport )(GLint x, GLint y, GLsizei width, GLsizei height);
 
+
+void (APIENTRY* qglGenerateMipmap)(GLenum);
+
 //added framebuffer extensions
 void (APIENTRY* qglGenFramebuffers)(GLsizei, GLuint*);
 void (APIENTRY* qglBindFramebuffer)(GLenum, GLuint);

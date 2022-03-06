@@ -1436,6 +1436,8 @@ const void	*RB_SwapBuffers( const void *data ) {
 	tr.capturingDofOrStereo = qfalse;
 	tr.latestDofOrStereoFrame = qfalse;
 
+	R_FrameBuffer_ApplyExposure();
+
 	/* Take and merge DOF frames */
 	if ( r_stereoSeparation->value <= 0.0f && !tr.finishStereo) {
 		if ( R_MME_MultiPassNext() ) {
