@@ -447,6 +447,9 @@ qboolean G2_Set_Bone_Angles(const char *fileName, boneInfo_v &blist, const char 
 		mod_m = R_GetModelByHandle(RE_RegisterModel(fileName));
 	}
 
+	if (!mod_m->mdxm) { // Sometimes apparently it's a null pointer. dunno why.
+		return qfalse;
+	}
 	model_t		*mod_a = R_GetModelByHandle(mod_m->mdxm->animIndex); 
 	int			index = G2_Find_Bone(mod_a, blist, boneName);
  
