@@ -722,6 +722,11 @@ extern std::vector<std::vector<AEPlayerPosition>> AEPlayerPositions;
 void R_MME_WriteAECamPath() {
 	char fileName[MAX_OSPATH];
 	int i;
+
+	if (!AECamPositions.size()) {
+		return;
+	}
+
 	/* First see if the file already exist */
 	for (i = 0; i < AVI_MAX_FILES; i++) {
 		Com_sprintf(fileName, sizeof(fileName), "%s.AECamPath.%03d.txt", shotData.main.name, i);
@@ -846,7 +851,7 @@ void R_MME_WriteAECamPath() {
 
 	FS_FCloseFile(file);
 
-	AECamPositions.clear();
+	//AECamPositions.clear();
 
 	///
 	// Now the player positions.
@@ -904,7 +909,59 @@ void R_MME_WriteAECamPath() {
 
 	FS_FCloseFile(file);
 
-	AEPlayerPositions.clear();
+	//AEPlayerPositions.clear();
+}
+
+void R_MME_WriteRotationCSV() {
+	char fileName[MAX_OSPATH];
+	int i;
+
+	if (!AECamPositions.size()) {
+		return;
+	}
+
+	/* First see if the file already exist */
+	for (i = 0; i < AVI_MAX_FILES; i++) {
+		Com_sprintf(fileName, sizeof(fileName), "%s.CamOrientation.%03d.csv", shotData.main.name, i);
+		if (!FS_FileExists(fileName))
+			break;
+	}
+
+	fileHandle_t file = FS_FOpenFileWrite(fileName);
+
+	std::string tmpString = "viewAxis[0][0],viewAxis[0][1],viewAxis[0][2],viewAxis[1][0],viewAxis[1][1],viewAxis[1][2],viewAxis[2][0],viewAxis[2][1],viewAxis[2][2],viewAngles[0],viewAngles[1],viewAngles[2]\n";
+	
+	for (int i = 0; i < AECamPositions.size(); i++) {
+		tmpString += std::to_string(AECamPositions[i].viewAxis[0][0]);
+		tmpString += ",";
+		tmpString += std::to_string(AECamPositions[i].viewAxis[0][1]);
+		tmpString += ",";
+		tmpString += std::to_string(AECamPositions[i].viewAxis[0][2]);
+		tmpString += ",";
+		tmpString += std::to_string(AECamPositions[i].viewAxis[1][0]);
+		tmpString += ",";
+		tmpString += std::to_string(AECamPositions[i].viewAxis[1][1]);
+		tmpString += ",";
+		tmpString += std::to_string(AECamPositions[i].viewAxis[1][2]);
+		tmpString += ",";
+		tmpString += std::to_string(AECamPositions[i].viewAxis[2][0]);
+		tmpString += ",";
+		tmpString += std::to_string(AECamPositions[i].viewAxis[2][1]);
+		tmpString += ",";
+		tmpString += std::to_string(AECamPositions[i].viewAxis[2][2]);
+		tmpString += ",";
+		tmpString += std::to_string(AECamPositions[i].viewAngles[0]);
+		tmpString += ",";
+		tmpString += std::to_string(AECamPositions[i].viewAngles[1]);
+		tmpString += ",";
+		tmpString += std::to_string(AECamPositions[i].viewAngles[2]);
+		tmpString += "\n";
+	}
+
+	FS_Write(tmpString.c_str(),tmpString.size(),file);
+
+	FS_FCloseFile(file);
+
 }
 
 extern void S_MMEWavClose(void);
@@ -912,6 +969,9 @@ void R_MME_Shutdown(void) {
 
 	R_MME_FlushMultiThreading();
 	R_MME_WriteAECamPath();
+	R_MME_WriteRotationCSV();
+	AECamPositions.clear();
+	AEPlayerPositions.clear();
 	aviClose( &shotData.main.avi );
 	aviClose( &shotData.depth.avi );
 	aviClose( &shotData.stencil.avi );
