@@ -8,6 +8,7 @@
 
 void R_BindAnimatedImage( textureBundle_t *bundle );
 
+//extern color4f_t	tmpScaledColors[SHADER_MAX_VERTEXES];
 
 //////////////////////////////////////////////////////////////////////
 // Singleton System
@@ -66,7 +67,11 @@ void CQuickSpriteSystem::Flush(void)
 	qglEnableClientState( GL_TEXTURE_COORD_ARRAY);
 
 	qglEnableClientState( GL_COLOR_ARRAY);
-	qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, mColors );
+	for (int i = 0; i < SHADER_MAX_VERTEXES; i++) {
+		Vector4Scale(mColors[i], 1.0f / 255.0f, mColorsScaled[i]);
+	}
+	qglColorPointer(4, GL_FLOAT, 0, mColorsScaled);
+	//qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, mColors );
 
 	qglVertexPointer (3, GL_FLOAT, 16, mVerts);
 
@@ -151,11 +156,11 @@ void CQuickSpriteSystem::EndGroup(void)
 
 
 
-void CQuickSpriteSystem::Add(float *pointdata, color4ub_t color, vec2_t fog)
+void CQuickSpriteSystem::Add(float *pointdata, color4f_t color, vec2_t fog)
 {
 	float *curcoord;
 	float *curfogtexcoord;
-	unsigned long *curcolor;
+	color4f_t *curcolor;
 
 	if (mNextVert>SHADER_MAX_VERTEXES-4)
 	{
@@ -167,10 +172,14 @@ void CQuickSpriteSystem::Add(float *pointdata, color4ub_t color, vec2_t fog)
 
 	// Set up color
 	curcolor = &mColors[mNextVert];
-	*curcolor++ = *(unsigned long *)color;
-	*curcolor++ = *(unsigned long *)color;
-	*curcolor++ = *(unsigned long *)color;
-	*curcolor++ = *(unsigned long *)color;
+	Vector4Copy(color, *curcolor); curcolor++;
+	Vector4Copy(color, *curcolor); curcolor++;
+	Vector4Copy(color, *curcolor); curcolor++;
+	Vector4Copy(color, *curcolor); curcolor++;
+	//*curcolor++ = *(unsigned long *)color;
+	//*curcolor++ = *(unsigned long *)color;
+	//*curcolor++ = *(unsigned long *)color;
+	//*curcolor++ = *(unsigned long *)color;
 
 	if (fog)
 	{

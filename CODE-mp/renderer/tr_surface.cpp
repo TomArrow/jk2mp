@@ -54,7 +54,7 @@ void RB_CheckOverflow( int verts, int indexes ) {
 RB_AddQuadStampExt
 ==============
 */
-void RB_AddQuadStampExt( vec3_t origin, vec3_t left, vec3_t up, byte *color, float s1, float t1, float s2, float t2 ) {
+void RB_AddQuadStampExt( vec3_t origin, vec3_t left, vec3_t up, float *color, float s1, float t1, float s2, float t2 ) {
 	vec3_t		normal;
 	int			ndx;
 
@@ -110,11 +110,15 @@ void RB_AddQuadStampExt( vec3_t origin, vec3_t left, vec3_t up, byte *color, flo
 
 	// constant color all the way around
 	// should this be identity and let the shader specify from entity?
-	* ( unsigned int * ) &tess.vertexColors[ndx] = 
+	Com_Memcpy(tess.vertexColors[ndx], color,sizeof(color4f_t));
+	Com_Memcpy(tess.vertexColors[ndx+1], color,sizeof(color4f_t));
+	Com_Memcpy(tess.vertexColors[ndx+2], color,sizeof(color4f_t));
+	Com_Memcpy(tess.vertexColors[ndx+3], color,sizeof(color4f_t));
+	/** ( unsigned int * ) &tess.vertexColors[ndx] = 
 	* ( unsigned int * ) &tess.vertexColors[ndx+1] = 
 	* ( unsigned int * ) &tess.vertexColors[ndx+2] = 
 	* ( unsigned int * ) &tess.vertexColors[ndx+3] = 
-		* ( unsigned int * )color;
+		* ( unsigned int * )color;*/
 
 
 	tess.numVertexes += 4;
@@ -126,7 +130,7 @@ void RB_AddQuadStampExt( vec3_t origin, vec3_t left, vec3_t up, byte *color, flo
 RB_AddQuadStamp
 ==============
 */
-void RB_AddQuadStamp( vec3_t origin, vec3_t left, vec3_t up, byte *color ) {
+void RB_AddQuadStamp( vec3_t origin, vec3_t left, vec3_t up, float *color ) {
 	RB_AddQuadStampExt( origin, left, up, color, 0, 0, 1, 1 );
 }
 
@@ -231,7 +235,9 @@ void RB_SurfacePolychain( srfPoly_t *p ) {
 		VectorCopy( p->verts[i].xyz, tess.xyz[numv] );
 		tess.texCoords[numv][0][0] = p->verts[i].st[0];
 		tess.texCoords[numv][0][1] = p->verts[i].st[1];
-		*(int *)&tess.vertexColors[numv] = *(int *)p->verts[ i ].modulate;
+
+		Com_Memcpy(tess.vertexColors[numv], p->verts[i].modulate,sizeof(float)*4);
+		//*(int *)&tess.vertexColors[numv] = *(int *)p->verts[ i ].modulate;
 
 		numv++;
 	}
@@ -247,19 +253,32 @@ void RB_SurfacePolychain( srfPoly_t *p ) {
 	tess.numVertexes = numv;
 }
 
-inline ulong ComputeFinalVertexColor(const byte *colors)
+inline void ComputeFinalVertexColor(const byte *colors, float *result)
 {
 	int			k;
-	byte		result[4];
-	ulong		r, g, b;
+	//float		result[4];
+	float		r, g, b;
 
-	*(int *)result = *(int *)colors;
+	//Debug
+	/*result[0] = 255;
+	result[1] = 255;
+	result[2] = 255;
+	result[3] = 255; return;*/
+
+	//Com_Memcpy(result,colors,sizeof(color4f_t));
+	result[0] = colors[0];
+	result[1] = colors[1];
+	result[2] = colors[2];
+	result[3] = colors[3];
+	//*(int *)result = *(int *)colors;
 	if (tess.shader->lightmapIndex[0] != LIGHTMAP_BY_VERTEX || r_fullbright->integer)
 	{
 		result[0] = 255;
 		result[1] = 255;
 		result[2] = 255;
-		return *(ulong *)result;
+		//return *(ulong *)result;
+		//return result;
+		return;
 	}
 	// an optimization could be added here to compute the style[0] (which is always the world normal light)
 	r = g = b = 0;
@@ -267,11 +286,11 @@ inline ulong ComputeFinalVertexColor(const byte *colors)
 	{
 		if (tess.shader->styles[k] < LS_UNUSED)
 		{
-			byte	*styleColor = styleColors[tess.shader->styles[k]];
+			float	*styleColor = styleColors[tess.shader->styles[k]];
 
-			r += (ulong)(*colors++) * (ulong)(*styleColor++);
-			g += (ulong)(*colors++) * (ulong)(*styleColor++);
-			b += (ulong)(*colors++) * (ulong)(*styleColor);
+			r += (float)(*colors++) * (*styleColor++);
+			g += (float)(*colors++) * (*styleColor++);
+			b += (float)(*colors++) * (*styleColor);
 			colors++;
 		}
 		else
@@ -279,11 +298,14 @@ inline ulong ComputeFinalVertexColor(const byte *colors)
 			break;
 		}
 	}
-	result[0] = Com_Clamp(0, 255, r >> 8);
-	result[1] = Com_Clamp(0, 255, g >> 8);
-	result[2] = Com_Clamp(0, 255, b >> 8);
+	//result[0] = Com_Clamp(0, 255, r >> 8);
+	//result[1] = Com_Clamp(0, 255, g >> 8);
+	//result[2] = Com_Clamp(0, 255, b >> 8);
+	result[0] = r / 256.0f;
+	result[1] = g / 256.0f;
+	result[2] = b / 256.0f;
 
-	return *(ulong *)result;
+	//return *(ulong *)result;
 }
 
 
@@ -296,7 +318,7 @@ void RB_SurfaceTriangles( srfTriangles_t *srf ) {
 	int			i, k;
 	drawVert_t	*dv;
 	float		*xyz, *normal, *texCoords;
-	byte		*color;
+	float		*color;
 	int			dlightBits;
 	qboolean	needsNormal;
 
@@ -351,7 +373,8 @@ void RB_SurfaceTriangles( srfTriangles_t *srf ) {
 		}
 		texCoords += NUM_TEX_COORDS*2;
 
-		*(unsigned *)color = ComputeFinalVertexColor((byte *)dv->color);
+		//*(unsigned *)color = ComputeFinalVertexColor((byte *)dv->color);
+		ComputeFinalVertexColor((byte*)dv->color,color);
 		color += 4;
 	}
 
@@ -793,34 +816,34 @@ void RB_SurfaceCylinder( void ) {
  		VectorCopy( upper_points[i].xyz, verts[0].xyz );
 		verts[0].st[1] = 1.0f;
 		verts[0].st[0] = detail * i;
-		verts[0].modulate[0] = (byte)(e->shaderRGBA[0]);
-		verts[0].modulate[1] = (byte)(e->shaderRGBA[1]);
-		verts[0].modulate[2] = (byte)(e->shaderRGBA[2]);
-		verts[0].modulate[3] = (byte)(e->shaderRGBA[3]);
+		verts[0].modulate[0] = (e->shaderRGBA[0]);
+		verts[0].modulate[1] = (e->shaderRGBA[1]);
+		verts[0].modulate[2] = (e->shaderRGBA[2]);
+		verts[0].modulate[3] = (e->shaderRGBA[3]);
 
 		VectorCopy( lower_points[i].xyz, verts[1].xyz );
 		verts[1].st[1] = 0.0f;
 		verts[1].st[0] = detail * i;
-		verts[1].modulate[0] = (byte)(e->shaderRGBA[0]);
-		verts[1].modulate[1] = (byte)(e->shaderRGBA[1]);
-		verts[1].modulate[2] = (byte)(e->shaderRGBA[2]);
-		verts[1].modulate[3] = (byte)(e->shaderRGBA[3]);
+		verts[1].modulate[0] = (e->shaderRGBA[0]);
+		verts[1].modulate[1] = (e->shaderRGBA[1]);
+		verts[1].modulate[2] = (e->shaderRGBA[2]);
+		verts[1].modulate[3] = (e->shaderRGBA[3]);
 
 		VectorCopy( lower_points[nextSegment].xyz, verts[2].xyz );
 		verts[2].st[1] = 0.0f;
 		verts[2].st[0] = detail * ( i + 1 );
-		verts[2].modulate[0] = (byte)(e->shaderRGBA[0]);
-		verts[2].modulate[1] = (byte)(e->shaderRGBA[1]);
-		verts[2].modulate[2] = (byte)(e->shaderRGBA[2]);
-		verts[2].modulate[3] = (byte)(e->shaderRGBA[3]);
+		verts[2].modulate[0] = (e->shaderRGBA[0]);
+		verts[2].modulate[1] = (e->shaderRGBA[1]);
+		verts[2].modulate[2] = (e->shaderRGBA[2]);
+		verts[2].modulate[3] = (e->shaderRGBA[3]);
 
 		VectorCopy( upper_points[nextSegment].xyz, verts[3].xyz );
 		verts[3].st[1] = 1.0f;
 		verts[3].st[0] = detail * ( i + 1 );
-		verts[3].modulate[0] = (byte)(e->shaderRGBA[0]);
-		verts[3].modulate[1] = (byte)(e->shaderRGBA[1]);
-		verts[3].modulate[2] = (byte)(e->shaderRGBA[2]);
-		verts[3].modulate[3] = (byte)(e->shaderRGBA[3]);
+		verts[3].modulate[0] = (e->shaderRGBA[0]);
+		verts[3].modulate[1] = (e->shaderRGBA[1]);
+		verts[3].modulate[2] = (e->shaderRGBA[2]);
+		verts[3].modulate[3] = (e->shaderRGBA[3]);
 
 		DoCylinderPart(verts);
 	}
@@ -1327,7 +1350,8 @@ void RB_SurfaceFace( srfSurfaceFace_t *surf ) {
 				break;
 			}
 		}
-		*(unsigned *) &tess.vertexColors[ndx] = ComputeFinalVertexColor((byte *)&v[VERTEX_COLOR]);
+		//*(unsigned *) &tess.vertexColors[ndx] = ComputeFinalVertexColor((byte *)&v[VERTEX_COLOR]);
+		ComputeFinalVertexColor((byte *)&v[VERTEX_COLOR], (float*) &tess.vertexColors[ndx]);
 		tess.vertexDlightBits[ndx] = dlightBits;
 	}
 
@@ -1378,7 +1402,7 @@ void RB_SurfaceGrid( srfGridMesh_t *cv ) {
 	float	*xyz;
 	float	*texCoords;
 	float	*normal;
-	unsigned char *color;
+	float *color;
 	drawVert_t	*dv;
 	int		rows, irows, vrows;
 	int		used;
@@ -1455,7 +1479,7 @@ void RB_SurfaceGrid( srfGridMesh_t *cv ) {
 		xyz = tess.xyz[numVertexes];
 		normal = tess.normal[numVertexes];
 		texCoords = tess.texCoords[numVertexes][0];
-		color = ( unsigned char * ) &tess.vertexColors[numVertexes];
+		color = ( float * ) &tess.vertexColors[numVertexes];
 		vDlightBits = &tess.vertexDlightBits[numVertexes];
 		needsNormal = tess.shader->needsNormal;
 
@@ -1485,7 +1509,8 @@ void RB_SurfaceGrid( srfGridMesh_t *cv ) {
 				}
 				normal += 4;
 
-				*(unsigned *)color = ComputeFinalVertexColor((byte *)dv->color);
+				//*(unsigned *)color = ComputeFinalVertexColor((byte *)dv->color);
+				ComputeFinalVertexColor((byte *)dv->color, color);
 				color += 4;
 				*vDlightBits++ = dlightBits;
 			}

@@ -363,7 +363,7 @@ typedef struct {
 	waveForm_t		alphaWave;
 	alphaGen_t		alphaGen;
 
-	byte			constantColor[4];			// for CGEN_CONST and AGEN_CONST
+	float			constantColor[4];			// for CGEN_CONST and AGEN_CONST
 
 	unsigned		stateBits;					// GLS_xxxx mask
 
@@ -1017,7 +1017,7 @@ typedef struct {
 	qboolean	skyRenderedThisView;	// flag for drawing sun
 
 	qboolean	projection2D;	// if qtrue, drawstretchpic doesn't need to change modes
-	byte		color2D[4];
+	float		color2D[4];
 	qboolean	vertexes2D;		// shader needs to be finished
 	trRefEntity_t	entity2D;	// currentEntity will point at this when doing 2D rendering
 	//mme
@@ -1595,10 +1595,12 @@ TESSELATOR/SHADER DECLARATIONS
 ====================================================================
 */
 typedef byte color4ub_t[4];
+typedef float color4f_t[4];
 
 typedef struct stageVars
 {
-	color4ub_t	colors[SHADER_MAX_VERTEXES];
+	color4f_t	colors[SHADER_MAX_VERTEXES];
+	color4f_t	colorsScaled[SHADER_MAX_VERTEXES];
 	vec2_t		texcoords[NUM_TEXTURE_BUNDLES][SHADER_MAX_VERTEXES];
 } stageVars_t;
 
@@ -1610,13 +1612,14 @@ struct shaderCommands_s
 	vec4_t		xyz[SHADER_MAX_VERTEXES];
 	vec4_t		normal[SHADER_MAX_VERTEXES];
 	vec2_t		texCoords[SHADER_MAX_VERTEXES][NUM_TEX_COORDS];
-	color4ub_t	vertexColors[SHADER_MAX_VERTEXES];
+	color4f_t	vertexColors[SHADER_MAX_VERTEXES];
 //	byte		vertexAlphas[SHADER_MAX_VERTEXES][4];	// only used by SOF2 glass, go ahead and implement if you want
 	int			vertexDlightBits[SHADER_MAX_VERTEXES];
 
 	stageVars_t	svars;
 
-	color4ub_t	constantColor255[SHADER_MAX_VERTEXES];
+	color4f_t	constantColor255[SHADER_MAX_VERTEXES];
+	color4f_t	constantColor255Scaled[SHADER_MAX_VERTEXES];
 
 	shader_t	*shader;
   double   shaderTime;
@@ -1641,7 +1644,7 @@ typedef __declspec(align(16)) shaderCommands_s	shaderCommands_t;
 typedef __attribute__((aligned(16))) shaderCommands_s shaderCommands_t;
 #endif
 extern	shaderCommands_t	tess;
-extern	color4ub_t	styleColors[MAX_LIGHT_STYLES];
+extern	color4f_t	styleColors[MAX_LIGHT_STYLES];
 
 void RB_BeginSurface(shader_t *shader, int fogNum );
 void RB_EndSurface(void);
@@ -1653,8 +1656,8 @@ void RB_StageIteratorSky( void );
 void RB_StageIteratorVertexLitTexture( void );
 void RB_StageIteratorLightmappedMultitexture( void );
 
-void RB_AddQuadStamp( vec3_t origin, vec3_t left, vec3_t up, byte *color );
-void RB_AddQuadStampExt( vec3_t origin, vec3_t left, vec3_t up, byte *color, float s1, float t1, float s2, float t2 );
+void RB_AddQuadStamp( vec3_t origin, vec3_t left, vec3_t up, float *color );
+void RB_AddQuadStampExt( vec3_t origin, vec3_t left, vec3_t up, float*color, float s1, float t1, float s2, float t2 );
 
 void RB_ShowImages( void );
 
@@ -1830,19 +1833,19 @@ void	RB_CalcRotateTexCoords( float rotSpeed, float *dstTexCoords );
 void	RB_CalcScaleTexCoords( const float scale[2], float *dstTexCoords );
 void	RB_CalcTurbulentTexCoords( const waveForm_t *wf, float *dstTexCoords );
 void	RB_CalcTransformTexCoords( const texModInfo_t *tmi, float *dstTexCoords );
-void	RB_CalcModulateColorsByFog( unsigned char *dstColors );
-void	RB_CalcModulateAlphasByFog( unsigned char *dstColors );
-void	RB_CalcModulateRGBAsByFog( unsigned char *dstColors );
-void	RB_CalcWaveAlpha( const waveForm_t *wf, unsigned char *dstColors );
-void	RB_CalcWaveColor( const waveForm_t *wf, unsigned char *dstColors );
-void	RB_CalcAlphaFromEntity( unsigned char *dstColors );
-void	RB_CalcAlphaFromOneMinusEntity( unsigned char *dstColors );
+void	RB_CalcModulateColorsByFog(float*dstColors );
+void	RB_CalcModulateAlphasByFog(float*dstColors );
+void	RB_CalcModulateRGBAsByFog(float*dstColors );
+void	RB_CalcWaveAlpha( const waveForm_t *wf, float *dstColors );
+void	RB_CalcWaveColor( const waveForm_t *wf, float *dstColors );
+void	RB_CalcAlphaFromEntity(float *dstColors );
+void	RB_CalcAlphaFromOneMinusEntity(float *dstColors );
 void	RB_CalcStretchTexCoords( const waveForm_t *wf, float *texCoords );
-void	RB_CalcColorFromEntity( unsigned char *dstColors );
-void	RB_CalcColorFromOneMinusEntity( unsigned char *dstColors );
-void	RB_CalcSpecularAlpha( unsigned char *alphas );
-void	RB_CalcDiffuseColor( unsigned char *colors );
-void	RB_CalcDisintegrateColors( unsigned char *colors );
+void	RB_CalcColorFromEntity(float *dstColors );
+void	RB_CalcColorFromOneMinusEntity( float *dstColors );
+void	RB_CalcSpecularAlpha(float *alphas );
+void	RB_CalcDiffuseColor( float *colors );
+void	RB_CalcDisintegrateColors( float *colors );
 void	RB_CalcDisintegrateVertDeform( void );
 
 /*

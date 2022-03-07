@@ -337,7 +337,7 @@ void	trap_R_RemapShader( const char *oldShader, const char *newShader, const cha
 	syscall( CG_R_REMAP_SHADER, oldShader, newShader, timeOffset );
 }
 
-void	trap_R_GetLightStyle(int style, color4ub_t color)
+void	trap_R_GetLightStyle(int style, color4f_t color)
 {
 	syscall( CG_R_GET_LIGHT_STYLE, style, color );
 }

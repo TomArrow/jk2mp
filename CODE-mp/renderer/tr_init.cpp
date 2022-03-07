@@ -1143,7 +1143,10 @@ void R_Init( void ) {
 		Com_Printf( "WARNING: tess.xyz not 16 byte aligned (%x)\n",(int)tess.xyz & 15 );
 	}
 #endif
-	Com_Memset( tess.constantColor255, 255, sizeof( tess.constantColor255 ) );
+	//Com_Memset( tess.constantColor255, 255, sizeof( tess.constantColor255 ) );
+	for (i = 0; i < SHADER_MAX_VERTEXES; i++) {
+		tess.constantColor255[i][0] = tess.constantColor255[i][1] = tess.constantColor255[i][2] = tess.constantColor255[i][3] = 255;
+	}
 #endif
 	//
 	// init function tables
@@ -1374,7 +1377,7 @@ void RE_EndRegistration( void ) {
 	}
 }
 
-void RE_GetLightStyle(int style, color4ub_t color)
+void RE_GetLightStyle(int style, color4f_t color)
 {
 	if (style >= MAX_LIGHT_STYLES)
 	{
@@ -1382,7 +1385,8 @@ void RE_GetLightStyle(int style, color4ub_t color)
 		return;
 	}
 
-	*(int *)color = *(int *)styleColors[style];
+	Com_Memcpy(color, styleColors[style], sizeof(color4f_t));
+	//*(int *)color = *(int *)styleColors[style];
 }
 
 void RE_SetLightStyle(int style, int color)
@@ -1393,10 +1397,11 @@ void RE_SetLightStyle(int style, int color)
 		return;
 	}
 
-	if (*(int*)styleColors[style] != color)
+	Vector4Copy(*(color4ub_t*)&color, styleColors[style]);
+	/*if (*(int*)styleColors[style] != color)
 	{
 		*(int *)styleColors[style] = color;
-	}
+	}*/
 }
 
 #endif //!DEDICATED

@@ -1015,10 +1015,10 @@ const void	*RB_SetColor( const void *data ) {
 
 	cmd = (const setColorCommand_t *)data;
 
-	backEnd.color2D[0] = cmd->color[0] * 255;
-	backEnd.color2D[1] = cmd->color[1] * 255;
-	backEnd.color2D[2] = cmd->color[2] * 255;
-	backEnd.color2D[3] = cmd->color[3] * 255;
+	backEnd.color2D[0] = cmd->color[0] * 255.0f;
+	backEnd.color2D[1] = cmd->color[1] * 255.0f;
+	backEnd.color2D[2] = cmd->color[2] * 255.0f;
+	backEnd.color2D[3] = cmd->color[3] * 255.0f;
 
 	return (const void *)(cmd + 1);
 }
@@ -1062,10 +1062,21 @@ const void *RB_StretchPic ( const void *data ) {
 	tess.indexes[ numIndexes + 4 ] = numVerts + 0;
 	tess.indexes[ numIndexes + 5 ] = numVerts + 1;
 
-	*(int *)tess.vertexColors[ numVerts ] =
+	Vector4Copy(backEnd.color2D, tess.vertexColors[numVerts]);
+	Vector4Copy(backEnd.color2D, tess.vertexColors[numVerts+1]);
+	Vector4Copy(backEnd.color2D, tess.vertexColors[numVerts+2]);
+	Vector4Copy(backEnd.color2D, tess.vertexColors[numVerts+3]);
+
+	//Debug
+	/*static vec4_t tmp{255,255,255,255};
+	Vector4Copy(tmp, tess.vertexColors[numVerts]);
+	Vector4Copy(tmp, tess.vertexColors[numVerts + 1]);
+	Vector4Copy(tmp, tess.vertexColors[numVerts + 2]);
+	Vector4Copy(tmp, tess.vertexColors[numVerts + 3]);*/
+	/**(int *)tess.vertexColors[ numVerts ] =
 		*(int *)tess.vertexColors[ numVerts + 1 ] =
 		*(int *)tess.vertexColors[ numVerts + 2 ] =
-		*(int *)tess.vertexColors[ numVerts + 3 ] = *(int *)backEnd.color2D;
+		*(int *)tess.vertexColors[ numVerts + 3 ] = *(int *)backEnd.color2D;*/
 
 	tess.xyz[ numVerts ][0] = cmd->x;
 	tess.xyz[ numVerts ][1] = cmd->y;
@@ -1120,7 +1131,8 @@ const void *RB_RotatePic ( const void *data )
 			RB_SetGL2D();
 		}
 
-		qglColor4ubv( backEnd.color2D );
+		//qglColor4ubv( backEnd.color2D );
+		qglColor4f( backEnd.color2D[0]/255.0f, backEnd.color2D[1] / 255.0f, backEnd.color2D[2] / 255.0f, backEnd.color2D[3] / 255.0f);
 		qglPushMatrix();
 
 		qglTranslatef(cmd->x+cmd->w,cmd->y,0);
@@ -1172,7 +1184,8 @@ const void *RB_RotatePic2 ( const void *data )
 			// Get our current blend mode, etc.
 			GL_State( shader->stages[0]->stateBits );
 
-			qglColor4ubv( backEnd.color2D );
+			//qglColor4ubv( backEnd.color2D );
+			qglColor4f(backEnd.color2D[0] / 255.0f, backEnd.color2D[1] / 255.0f, backEnd.color2D[2] / 255.0f, backEnd.color2D[3] / 255.0f);
 			qglPushMatrix();
 
 			// rotation point is going to be around the center of the passed in coordinates

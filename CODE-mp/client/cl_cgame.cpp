@@ -831,7 +831,7 @@ int CL_CgameSystemCalls( int *args ) {
 		return 0;
 
 	case CG_R_GET_LIGHT_STYLE:
-		re.GetLightStyle(args[1], (unsigned char *)VMA(2));
+		re.GetLightStyle(args[1], (float *)VMA(2));
 		return 0;
 
 	case CG_R_SET_LIGHT_STYLE:

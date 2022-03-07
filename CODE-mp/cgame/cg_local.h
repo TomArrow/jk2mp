@@ -2329,7 +2329,7 @@ void	trap_R_DrawRotatePic2( float x, float y, float w, float h,
 			float s1, float t1, float s2, float t2,float a, qhandle_t hShader );
 void		trap_R_RemapShader( const char *oldShader, const char *newShader, const char *timeOffset );
 
-void		trap_R_GetLightStyle(int style, color4ub_t color);
+void		trap_R_GetLightStyle(int style, color4f_t color);
 void		trap_R_SetLightStyle(int style, int color);
 
 void		trap_R_GetBModelVerts(int bmodelIndex, vec3_t *verts, vec3_t normal );

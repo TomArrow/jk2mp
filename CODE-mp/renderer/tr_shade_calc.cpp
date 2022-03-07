@@ -102,10 +102,10 @@ static float EvalWaveForm( const waveForm_t *wf ) {
 
 static float EvalWaveFormClamped( const waveForm_t *wf ) {
 	float glow  = EvalWaveForm( wf );
-	if ( glow < 0 )
+	/*if ( glow < 0 )
 		return 0;
 	else if ( glow > 1 )
-		return 1;
+		return 1;*/
 	return glow;
 }
 
@@ -328,7 +328,7 @@ void DeformText( const char *text ) {
 	vec3_t	origin, width, height;
 	int		len;
 	int		ch;
-	byte	color[4];
+	float	color[4];
 	float	bottom, top;
 	vec3_t	mid;
 
@@ -656,49 +656,53 @@ COLORS
 /*
 ** RB_CalcColorFromEntity
 */
-void RB_CalcColorFromEntity( unsigned char *dstColors ) {
+void RB_CalcColorFromEntity( float *dstColors ) {
 	int	i;
-	int *pColors = ( int * ) dstColors;
-	int c;
+	//int *pColors = ( int * ) dstColors;
+	//int c;
 
 	if ( !backEnd.currentEntity )
 		return;
 
-	c = * ( int * ) backEnd.currentEntity->e.shaderRGBA;
+	//c = * ( int * ) backEnd.currentEntity->e.shaderRGBA;
 
-	for ( i = 0; i < tess.numVertexes; i++, pColors++ ) {
-		*pColors = c;
+	for ( i = 0; i < tess.numVertexes; i++, dstColors+=4 ) {
+		Vector4Copy(backEnd.currentEntity->e.shaderRGBA, dstColors);
+		//memcpy(dstColors, backEnd.currentEntity->e.shaderRGBA,sizeof(float)*4);
+		//*pColors = c;
 	}
 }
 
 /*
 ** RB_CalcColorFromOneMinusEntity
 */
-void RB_CalcColorFromOneMinusEntity( unsigned char *dstColors ) {
+void RB_CalcColorFromOneMinusEntity( float *dstColors ) {
 	int	i;
-	int *pColors = ( int * ) dstColors;
-	unsigned char invModulate[4];
-	int c;
+	//int *pColors = ( int * ) dstColors;
+	float invModulate[4];
+	//int c;
 
 	if ( !backEnd.currentEntity )
 		return;
 
-	invModulate[0] = 255 - backEnd.currentEntity->e.shaderRGBA[0];
-	invModulate[1] = 255 - backEnd.currentEntity->e.shaderRGBA[1];
-	invModulate[2] = 255 - backEnd.currentEntity->e.shaderRGBA[2];
-	invModulate[3] = 255 - backEnd.currentEntity->e.shaderRGBA[3];	// this trashes alpha, but the AGEN block fixes it
+	invModulate[0] = 255.0f - backEnd.currentEntity->e.shaderRGBA[0];
+	invModulate[1] = 255.0f - backEnd.currentEntity->e.shaderRGBA[1];
+	invModulate[2] = 255.0f - backEnd.currentEntity->e.shaderRGBA[2];
+	invModulate[3] = 255.0f - backEnd.currentEntity->e.shaderRGBA[3];	// this trashes alpha, but the AGEN block fixes it
 
-	c = * ( int * ) invModulate;
+	//c = * ( int * ) invModulate;
 
-	for ( i = 0; i < tess.numVertexes; i++, pColors++ ) {
-		*pColors = * ( int * ) invModulate;
+	for ( i = 0; i < tess.numVertexes; i++, dstColors+=4) {
+		Vector4Copy(invModulate,dstColors);
+		//memcpy(dstColors,invModulate,sizeof(float)*4);
+		//*pColors = * ( int * ) invModulate;
 	}
 }
 
 /*
 ** RB_CalcAlphaFromEntity
 */
-void RB_CalcAlphaFromEntity( unsigned char *dstColors ) {
+void RB_CalcAlphaFromEntity( float *dstColors ) {
 	int	i;
 
 	if ( !backEnd.currentEntity )
@@ -714,7 +718,7 @@ void RB_CalcAlphaFromEntity( unsigned char *dstColors ) {
 /*
 ** RB_CalcAlphaFromOneMinusEntity
 */
-void RB_CalcAlphaFromOneMinusEntity( unsigned char *dstColors ) {
+void RB_CalcAlphaFromOneMinusEntity( float *dstColors ) {
 	int	i;
 
 	if ( !backEnd.currentEntity )
@@ -730,12 +734,12 @@ void RB_CalcAlphaFromOneMinusEntity( unsigned char *dstColors ) {
 /*
 ** RB_CalcWaveColor
 */
-void RB_CalcWaveColor( const waveForm_t *wf, unsigned char *dstColors ) {
+void RB_CalcWaveColor( const waveForm_t *wf, float *dstColors ) {
 	int i;
-	int v;
+	float v;
 	float glow;
-	int *colors = ( int * ) dstColors;
-	byte	color[4];
+	//int *colors = ( int * ) dstColors;
+	float	color[4];
 
 
 	if ( wf->func == GF_NOISE ) {
@@ -744,27 +748,29 @@ void RB_CalcWaveColor( const waveForm_t *wf, unsigned char *dstColors ) {
 		glow = EvalWaveForm( wf ) * tr.identityLight;
 	}
 	
-	if ( glow < 0 ) {
+	/*if ( glow < 0 ) {
 		glow = 0;
 	}
 	else if ( glow > 1 ) {
 		glow = 1;
-	}
+	}*/
 
-	v = myftol( 255 * glow );
+	v = 255.0f * glow;
 	color[0] = color[1] = color[2] = v;
-	color[3] = 255;
-	v = *(int *)color;
+	color[3] = 255.0f;
+	//v = *(int *)color;
 	
-	for ( i = 0; i < tess.numVertexes; i++, colors++ ) {
-		*colors = v;
+	for ( i = 0; i < tess.numVertexes; i++, dstColors+=4 ) {
+		Vector4Copy(color, dstColors);
+		//memcpy(dstColors, color,sizeof(float)*4);
+		//*colors = v;
 	}
 }
 
 /*
 ** RB_CalcWaveAlpha
 */
-void RB_CalcWaveAlpha( const waveForm_t *wf, unsigned char *dstColors ) {
+void RB_CalcWaveAlpha( const waveForm_t *wf, float *dstColors ) {
 	int i;
 	int v;
 	float glow;
@@ -781,7 +787,7 @@ void RB_CalcWaveAlpha( const waveForm_t *wf, unsigned char *dstColors ) {
 /*
 ** RB_CalcModulateColorsByFog
 */
-void RB_CalcModulateColorsByFog( unsigned char *colors ) {
+void RB_CalcModulateColorsByFog( float *colors ) {
 	int		i;
 	float	texCoords[SHADER_MAX_VERTEXES][2];
 
@@ -801,7 +807,7 @@ void RB_CalcModulateColorsByFog( unsigned char *colors ) {
 /*
 ** RB_CalcModulateAlphasByFog
 */
-void RB_CalcModulateAlphasByFog( unsigned char *colors ) {
+void RB_CalcModulateAlphasByFog( float *colors ) {
 	int		i;
 	float	texCoords[SHADER_MAX_VERTEXES][2];
 
@@ -819,7 +825,7 @@ void RB_CalcModulateAlphasByFog( unsigned char *colors ) {
 /*
 ** RB_CalcModulateRGBAsByFog
 */
-void RB_CalcModulateRGBAsByFog( unsigned char *colors ) {
+void RB_CalcModulateRGBAsByFog( float *colors ) {
 	int		i;
 	float	texCoords[SHADER_MAX_VERTEXES][2];
 
@@ -1084,7 +1090,7 @@ long myftol( float f ) {
 */
 vec3_t lightOrigin = { -960, 1980, 96 };		// FIXME: track dynamically
 
-void RB_CalcSpecularAlpha( unsigned char *alphas ) {
+void RB_CalcSpecularAlpha( float *alphas ) {
 	int			i;
 	float		*v, *normal;
 	vec3_t		viewer,  reflected;
@@ -1125,13 +1131,13 @@ void RB_CalcSpecularAlpha( unsigned char *alphas ) {
 		l *= ilength;
 
 		if (l < 0) {
-			b = 0;
+			b = 0; // Maybe keep this since it's alpha?
 		} else {
 			l = l*l;
 			l = l*l;
 			b = l * 255;
 			if (b > 255) {
-				b = 255;
+				b = 255; // Maybe keep this since it's alpha?
 			}
 		}
 
@@ -1144,19 +1150,19 @@ void RB_CalcSpecularAlpha( unsigned char *alphas ) {
 **
 ** The basic vertex lighting calc
 */
-void RB_CalcDiffuseColor( unsigned char *colors ) {
-	int				i, j;
+void RB_CalcDiffuseColor( float *colors ) {
+	int				i;
 	float			*v, *normal;
-	float			incoming;
+	float			incoming, j;
 	trRefEntity_t	*ent;
-	int				ambientLightInt;
+	//int				ambientLightInt;
 	vec3_t			ambientLight;
 	vec3_t			lightDir;
 	vec3_t			directedLight;
 	int				numVertexes;
 
 	ent = backEnd.currentEntity;
-	ambientLightInt = ent->ambientLightInt;
+	//ambientLightInt = ent->ambientLightInt;
 	VectorCopy( ent->ambientLight, ambientLight );
 	VectorCopy( ent->directedLight, directedLight );
 	VectorCopy( ent->lightDir, lightDir );
@@ -1166,27 +1172,38 @@ void RB_CalcDiffuseColor( unsigned char *colors ) {
 
 	numVertexes = tess.numVertexes;
 	for (i = 0 ; i < numVertexes ; i++, v += 4, normal += 4) {
+		// Debug
+
+		/*colors[i * 4 + 0] = 255;
+		colors[i * 4 + 1] = 255;
+		colors[i * 4 + 2] = 255;
+		colors[i * 4 + 3] = 255;
+		continue;*/
+		
 		incoming = DotProduct (normal, lightDir);
 		if ( incoming <= 0 ) {
-			*(int *)&colors[i*4] = ambientLightInt;
+			//VectorCopy( ambientLight, &colors[i * 4]); // TODO Is this correct?!?
+			Com_Memcpy(colors+i * 4,ambientLight,sizeof(vec3_t)); 
+			colors[i * 4 + 3] = 255;
+			//*(int *)&colors[i*4] = ambientLightInt;
 			continue;
 		} 
-		j = myftol( ambientLight[0] + incoming * directedLight[0] );
-		if ( j > 255 ) { // Todo: find way to not clamp this.
+		j = ( ambientLight[0] + incoming * directedLight[0] );
+		/*if ( j > 255 ) { // Todo: find way to not clamp this.
 			j = 255;
-		}
+		}*/
 		colors[i*4+0] = j;
 
-		j = myftol( ambientLight[1] + incoming * directedLight[1] );
-		if ( j > 255 ) {
+		j = ( ambientLight[1] + incoming * directedLight[1] );
+		/*if ( j > 255 ) {
 			j = 255;
-		}
+		}*/
 		colors[i*4+1] = j;
 
-		j = myftol( ambientLight[2] + incoming * directedLight[2] );
-		if ( j > 255 ) {
+		j = ( ambientLight[2] + incoming * directedLight[2] );
+		/*if ( j > 255 ) {
 			j = 255;
-		}
+		}*/
 		colors[i*4+2] = j;
 
 		colors[i*4+3] = 255;
@@ -1194,7 +1211,7 @@ void RB_CalcDiffuseColor( unsigned char *colors ) {
 }
 
 //---------------------------------------------------------
-void RB_CalcDisintegrateColors( unsigned char *colors ) {
+void RB_CalcDisintegrateColors( float *colors ) {
 	int			i, numVertexes;
 	float		dis, threshold;
 	float		*v;

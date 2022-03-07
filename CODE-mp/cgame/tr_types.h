@@ -54,11 +54,12 @@
 #define RDF_HYPERSPACE		4		// teleportation effect
 
 typedef byte color4ub_t[4];
+typedef float color4f_t[4];
 
 typedef struct {
 	vec3_t		xyz;
 	float		st[2];
-	byte		modulate[4];
+	float		modulate[4];
 } polyVert_t;
 
 typedef struct poly_s {
@@ -138,7 +139,7 @@ typedef struct {
 	qhandle_t			customShader;		// use one image for the entire thing
 
 	// misc
-	byte				shaderRGBA[4];		// colors used by rgbgen entity shaders
+	float				shaderRGBA[4];		// colors used by rgbgen entity shaders
 	vec2_t				shaderTexCoord;		// texture coordinates used by tcMod entity modifiers
 
 	// extra sprite information

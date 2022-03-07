@@ -318,7 +318,7 @@ static void RB_VerticalSurfaceSprite(vec3_t loc, float width, float height, byte
 	float angle;
 	float windsway;
 	float points[16];
-	color4ub_t color;
+	color4f_t color;
 
 	angle = ((loc[0] + loc[1]) * 0.02f + (tr.refdef.time * 0.0015f) + (tr.refdef.timeFraction * 0.0015f));
 
@@ -422,7 +422,7 @@ static void RB_VerticalSurfaceSpriteWindPoint(vec3_t loc, float width, float hei
 	float angle;
 	float windsway;
 	float points[16];
-	color4ub_t color;
+	color4f_t color;
 
 	if (windforce > 1)
 		windforce = 1;
@@ -812,7 +812,7 @@ static void RB_OrientedSurfaceSprite(vec3_t loc, float width, float height, byte
 {
 	vec3_t loc2, right;
 	float points[16];
-	color4ub_t color;
+	color4f_t color;
 
 	color[0]=light;
 	color[1]=light;
@@ -1087,7 +1087,7 @@ static void RB_EffectSurfaceSprite(vec3_t loc, float width, float height, byte l
 {
 	vec3_t loc2, right;
 	float points[16];
-	color4ub_t color;
+	color4f_t color;
 
 	color[0]=light;	//light;
 	color[1]=light;	//light;

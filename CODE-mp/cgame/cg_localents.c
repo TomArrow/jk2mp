@@ -341,9 +341,9 @@ void CG_AddFragment( localEntity_t *le ) {
 			t_e = (int)((t_e)*255);
 
 			if (t_e > 255) {
-				t_e = 255;
+				//t_e = 255;
 			} else if (t_e < 1) {
-				t_e = 1;
+				//t_e = 1;
 			}
 
 			if (le->refEntity.shaderRGBA[3] && t_e > le->refEntity.shaderRGBA[3]) {

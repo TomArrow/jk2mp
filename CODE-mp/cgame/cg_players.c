@@ -3936,7 +3936,7 @@ void CG_ForceGripEffect( vec3_t org )
 	ex->color[0] = 200+((wv*255));
 	if (ex->color[0] > 255)
 	{
-		ex->color[0] = 255;
+		//ex->color[0] = 255;
 	}
 	ex->color[1] = 0;
 	ex->color[2] = 0;
@@ -4107,19 +4107,19 @@ int CG_LightVerts( vec3_t normal, int numVerts, polyVert_t *verts )
 		} 
 		j = ( ambientLight[0] + incoming * directedLight[0] );
 		if ( j > 255 ) {
-			j = 255;
+			//j = 255;
 		}
 		verts[i].modulate[0] = j;
 
 		j = ( ambientLight[1] + incoming * directedLight[1] );
 		if ( j > 255 ) {
-			j = 255;
+			//j = 255;
 		}
 		verts[i].modulate[1] = j;
 
 		j = ( ambientLight[2] + incoming * directedLight[2] );
 		if ( j > 255 ) {
-			j = 255;
+			//j = 255;
 		}
 		verts[i].modulate[2] = j;
 
@@ -8002,7 +8002,7 @@ doEssentialTwo:
 				}
 				if (cent->grip_arm.shaderRGBA[0] > 255)
 				{
-					cent->grip_arm.shaderRGBA[0] = 255;
+					//cent->grip_arm.shaderRGBA[0] = 255;
 				}
 				cent->grip_arm.shaderRGBA[1] = cent->grip_arm.shaderRGBA[2] = cent->grip_arm.shaderRGBA[0];
 				
@@ -8618,7 +8618,7 @@ stillDoSaber:
 				}
 				if (legs.shaderRGBA[2] > 255)
 				{
-					legs.shaderRGBA[2] = 255;
+					//legs.shaderRGBA[2] = 255;
 				}
 
 				if (subLen <= 1024)
