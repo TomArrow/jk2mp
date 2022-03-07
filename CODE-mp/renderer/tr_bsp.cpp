@@ -1739,7 +1739,7 @@ R_LoadLightGrid
 
 ================
 */
-void R_LoadLightGrid( lump_t *l ) {
+void R_LoadLightGrid(lump_t *l ) {
 	int		i, j;
 	vec3_t	maxs;
 	world_t	*w;
@@ -1799,6 +1799,41 @@ void R_LoadLightGrid( lump_t *l ) {
 				w->lightGridOffsets[i] += w->lightGridStep[2];
 			}
 		}
+	}
+	// load hdr lightgrid
+	if (r_hdr->integer)
+	{
+		char filename[MAX_QPATH];
+		float* hdrLightGrid;
+		int size;
+
+		Com_sprintf(filename, sizeof(filename), "maps/%s/lightgrid.raw", w->baseName);
+		//ri.Printf(PRINT_ALL, "looking for %s\n", filename);
+
+		size = ri.FS_ReadFile(filename, (void**)&hdrLightGrid);
+
+		if (hdrLightGrid)
+		{
+			if (size != sizeof(float) * 6 * w->lightGridBounds[0] * w->lightGridBounds[1] * w->lightGridBounds[2])
+			{
+				ri.Error(ERR_DROP, "Bad size for %s (%i, expected %i)!", filename, size, (int)(sizeof(float)) * 6 * w->lightGridBounds[0] * w->lightGridBounds[1] * w->lightGridBounds[2]);
+			}
+
+			w->hdrLightGrid = (float*)ri.Hunk_Alloc(size, h_low);
+
+			for (i = 0; i < w->lightGridBounds[0] * w->lightGridBounds[1] * w->lightGridBounds[2]; i++)
+			{
+				w->hdrLightGrid[i * 6] = hdrLightGrid[i * 6] / M_PI;
+				w->hdrLightGrid[i * 6 + 1] = hdrLightGrid[i * 6 + 1] / M_PI;
+				w->hdrLightGrid[i * 6 + 2] = hdrLightGrid[i * 6 + 2] / M_PI;
+				w->hdrLightGrid[i * 6 + 3] = hdrLightGrid[i * 6 + 3] / M_PI;
+				w->hdrLightGrid[i * 6 + 4] = hdrLightGrid[i * 6 + 4] / M_PI;
+				w->hdrLightGrid[i * 6 + 5] = hdrLightGrid[i * 6 + 5] / M_PI;
+			}
+		}
+
+		if (hdrLightGrid)
+			ri.FS_FreeFile(hdrLightGrid);
 	}
 }
 

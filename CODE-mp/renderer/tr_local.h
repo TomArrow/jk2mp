@@ -845,7 +845,7 @@ typedef struct {
 	vec3_t		lightGridSize;
 	vec3_t		lightGridInverseSize;
 	int			lightGridBounds[3];
-
+	float*		hdrLightGrid;
 	int			lightGridOffsets[8];
 
 	vec3_t		lightGridStep;
@@ -1264,6 +1264,8 @@ extern cvar_t	*r_DynamicGlowSoft;
 extern cvar_t	*r_DynamicGlowWidth;
 extern cvar_t	*r_DynamicGlowHeight;
 #endif
+
+extern cvar_t* r_hdr;
 
 extern cvar_t* r_gammaSrgbLightmaps;
 extern cvar_t* r_gammaSrgbTextures;
