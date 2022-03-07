@@ -842,6 +842,7 @@ extern BOOL ( WINAPI * qwglSwapIntervalEXT)( int interval );
 
 
 extern void (APIENTRY* qglGenerateMipmap)(GLenum);
+extern void (APIENTRY* qglClampColor)(GLenum, GLenum);
 
 //added framebuffer extensions
 extern void (APIENTRY* qglGenFramebuffers)(GLsizei, GLuint*);

@@ -349,6 +349,10 @@ extern "C" {
 #define GL_RGB16F                         0x881B
 #define GL_FRAMEBUFFER_SRGB			      0x8DB9
 
+// Add clamping stuff
+#define GL_CLAMP_VERTEX_COLOR_ARB         0x891A
+#define GL_CLAMP_FRAGMENT_COLOR_ARB       0x891B
+#define GL_CLAMP_READ_COLOR_ARB           0x891C
 
 
 #ifndef GL_EXT_texture3D

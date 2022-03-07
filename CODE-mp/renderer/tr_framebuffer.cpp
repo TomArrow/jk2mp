@@ -538,6 +538,9 @@ void R_FrameBuffer_StartFrame( void ) {
 		qglBindFramebuffer( GL_FRAMEBUFFER_EXT, fbo.main->fbo );
 	}
 	qglDrawBuffer( GL_COLOR_ATTACHMENT0_EXT );
+	qglClampColor(GL_CLAMP_VERTEX_COLOR_ARB,GL_FALSE);
+	qglClampColor(GL_CLAMP_FRAGMENT_COLOR_ARB,GL_FALSE);
+	qglClampColor(GL_CLAMP_READ_COLOR_ARB,GL_FALSE);
 	usedFloat = qfalse;
 #endif
 }

@@ -1727,6 +1727,7 @@ static void GLW_InitExtensions( void )
 	}
 
 	qglGenerateMipmap = (void (APIENTRY*)(GLenum)) qwglGetProcAddress("glGenerateMipmap");
+	qglClampColor = (void (APIENTRY*)(GLenum,GLenum)) qwglGetProcAddress("glClampColor");
 
 	glMMEConfig.framebufferObject = qfalse;
 	glMMEConfig.shaderSupport = qfalse;

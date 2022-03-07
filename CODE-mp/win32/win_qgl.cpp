@@ -394,6 +394,7 @@ void ( APIENTRY * qglViewport )(GLint x, GLint y, GLsizei width, GLsizei height)
 
 
 void (APIENTRY* qglGenerateMipmap)(GLenum);
+void (APIENTRY* qglClampColor)(GLenum,GLenum);
 
 //added framebuffer extensions
 void (APIENTRY* qglGenFramebuffers)(GLsizei, GLuint*);
