@@ -65,6 +65,7 @@ cvar_t *r_convertToHDR;
 cvar_t *r_floatBuffer;
 cvar_t *r_fbo;
 cvar_t *r_fboExposure;
+cvar_t *r_fboCompensateSkyTint;
 cvar_t *r_fboSuperSample;
 cvar_t *r_fboSuperSampleMipMap;
 cvar_t *r_fboMultiSample;
@@ -387,6 +388,7 @@ void R_FrameBuffer_Init( void ) {
 	memset( &fbo, 0, sizeof( fbo ) );
 	r_fbo = ri.Cvar_Get( "r_fbo", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboExposure = ri.Cvar_Get("r_fboExposure", "1.0", CVAR_ARCHIVE);
+	r_fboCompensateSkyTint = ri.Cvar_Get("r_fboCompensateSkyTint", "0", CVAR_ARCHIVE);
 	r_fboSuperSample = ri.Cvar_Get( "r_fboSuperSample", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_fboSuperSampleMipMap = ri.Cvar_Get( "r_fboSuperSampleMipMap", "1", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_fboBlur = ri.Cvar_Get( "r_fboBlur", "0", CVAR_ARCHIVE | CVAR_LATCH);	
@@ -775,9 +777,15 @@ qboolean R_FrameBuffer_ApplyExposure( ) { // really kinda useless unless you wan
 		return qfalse;
 
 	r_fboExposure = ri.Cvar_Get("r_fboExposure", "1.0", CVAR_ARCHIVE);
+	r_fboCompensateSkyTint = ri.Cvar_Get("r_fboCompensateSkyTint", "0", CVAR_ARCHIVE);
 
-	if (!Q_stricmp(r_fboExposure->string, "1.0")) { // Nothing to do.
-		return qtrue;
+	if (!Q_stricmp(r_fboExposure->string, "1.0") || !Q_stricmp(r_fboExposure->string, "1")) { // Nothing to do.
+		if (!r_fboCompensateSkyTint->integer) {
+			return qtrue;
+		}
+		else if(r_fboCompensateSkyTint->integer && !tr.mmeSkyTintIsSet) {
+			return qtrue;
+		}
 	}
 
 	// First copy image into exposure FBO and apply exposure
@@ -785,7 +793,16 @@ qboolean R_FrameBuffer_ApplyExposure( ) { // really kinda useless unless you wan
 	qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 	//The color used to blur add this frame 
 	float multiplier = r_fboExposure->value;
-	qglColor4f(multiplier, multiplier, multiplier, 1.0f);
+	if (r_fboCompensateSkyTint->integer && tr.mmeSkyTintIsSet) {
+
+		vec3_t invertedSkyTint;
+		VectorInvert(tr.mmeSkyTint, invertedSkyTint);
+		qglColor4f(multiplier * invertedSkyTint[0], multiplier * invertedSkyTint[1], multiplier * invertedSkyTint[2], 1.0f);
+	}
+	else {
+
+		qglColor4f(multiplier, multiplier, multiplier, 1.0f);
+	}
 	GL_State(/*GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO |*/ GLS_DEPTHTEST_DISABLE);
 	R_SetGL2DSize(glConfig.vidWidth, glConfig.vidHeight);
 	R_DrawQuad(fbo.main->color, glConfig.vidWidth, glConfig.vidHeight);
