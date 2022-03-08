@@ -337,7 +337,7 @@ static shader_t *ShaderForShaderNum( int shaderNum, const int *lightmapNum, cons
 ParseFace
 ===============
 */
-static void ParseFace( dsurface_t *ds, mapVert_t *verts, msurface_t *surf, int *indexes  ) {
+static void ParseFace( dsurface_t *ds, mapVert_t *verts, msurface_t *surf, int *indexes, float* hdrVertColors) {
 	int					i, j, k;
 	srfSurfaceFace_t	*cv;
 	int					numPoints, numIndexes;
@@ -418,7 +418,7 @@ static void ParseFace( dsurface_t *ds, mapVert_t *verts, msurface_t *surf, int *
 ParseMesh
 ===============
 */
-static void ParseMesh ( dsurface_t *ds, mapVert_t *verts, msurface_t *surf ) {
+static void ParseMesh ( dsurface_t *ds, mapVert_t *verts, msurface_t *surf, float* hdrVertColors) {
 	srfGridMesh_t			*grid;
 	int						i, j, k;
 	int						width, height, numPoints;
@@ -494,7 +494,7 @@ static void ParseMesh ( dsurface_t *ds, mapVert_t *verts, msurface_t *surf ) {
 ParseTriSurf
 ===============
 */
-static void ParseTriSurf( dsurface_t *ds, mapVert_t *verts, msurface_t *surf, int *indexes ) {
+static void ParseTriSurf( dsurface_t *ds, mapVert_t *verts, msurface_t *surf, int *indexes, float* hdrVertColors) {
 	srfTriangles_t	*tri;
 	int				i, j, k;
 	int				numVerts, numIndexes;
@@ -1310,6 +1310,7 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	int			count;
 	int			numFaces, numMeshes, numTriSurfs, numFlares;
 	int			i;
+	float* hdrVertColors = NULL;
 
 	numFaces = 0;
 	numMeshes = 0;
@@ -1334,18 +1335,37 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	s_worldData.surfaces = out;
 	s_worldData.numsurfaces = count;
 
+	// load hdr vertex colors
+	if (r_hdr->integer)
+	{
+		char filename[MAX_QPATH];
+		int size;
+
+		Com_sprintf(filename, sizeof(filename), "maps/%s/vertlight.raw", s_worldData.baseName);
+		//ri.Printf(PRINT_ALL, "looking for %s\n", filename);
+
+		size = ri.FS_ReadFile(filename, (void**)&hdrVertColors);
+
+		if (hdrVertColors)
+		{
+			//ri.Printf(PRINT_ALL, "Found!\n");
+			if (size != sizeof(float) * 3 * verts->filelen / sizeof(*dv))
+				ri.Error(ERR_DROP, "Bad size for %s (%i, expected %i)!", filename, size, (int)((sizeof(float)) * 3 * verts->filelen / sizeof(*dv)));
+		}
+	}
+
 	for ( i = 0 ; i < count ; i++, in++, out++ ) {
 		switch ( LittleLong( in->surfaceType ) ) {
 		case MST_PATCH:
-			ParseMesh ( in, dv, out );
+			ParseMesh ( in, dv, out, hdrVertColors);
 			numMeshes++;
 			break;
 		case MST_TRIANGLE_SOUP:
-			ParseTriSurf( in, dv, out, indexes );
+			ParseTriSurf( in, dv, out, indexes, hdrVertColors);
 			numTriSurfs++;
 			break;
 		case MST_PLANAR:
-			ParseFace( in, dv, out, indexes );
+			ParseFace( in, dv, out, indexes, hdrVertColors);
 			numFaces++;
 			break;
 		case MST_FLARE:
