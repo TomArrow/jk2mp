@@ -618,6 +618,7 @@ vmCvar_t	mov_deltaYaw;
 vmCvar_t	mov_deltaPitch;
 vmCvar_t	mov_deltaRoll;
 
+vmCvar_t	mov_smoothPosPrecision;
 vmCvar_t	mov_smoothQuat; // For proper rolling shutter at 1080p you need about a value of 100000 for this!
 vmCvar_t	mov_smoothQuatFast;
 vmCvar_t	mov_captureCvars;
@@ -852,6 +853,7 @@ Ghoul2 Insert End
 	{ &mov_chaseRange,		"mov_chaseRange",		"20",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_fontName,		"mov_fontName",			"",				NULL,	CVAR_ARCHIVE	},
 	{ &mov_fontSize,		"mov_fontSize",			"20",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_smoothPosPrecision,"mov_smoothPosPrecision",	"1.0",		NULL,	CVAR_ARCHIVE	},
 	{ &mov_smoothQuat,		"mov_smoothQuat",		"0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_smoothQuatFast,	"mov_smoothQuatFast",	"-1",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_captureCvars,	"mov_captureCvars",		"",				NULL,	CVAR_TEMP		},

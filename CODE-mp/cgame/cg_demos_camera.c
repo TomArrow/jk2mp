@@ -114,23 +114,24 @@ static float cameraPointLength( demoCameraPoint_t *point ) {
 		point->len = VectorDistance( control[1], control[2] );
 		return point->len;
 	}
+	float smoothness = 0.0001f/mov_smoothPosPrecision.value;
 	posGet( 0, demo.camera.smoothPos, control, lastOrigin );
 	while (step < 1) {
 		addStep = 1 - step;
-		if (addStep > 0.0001f)
-			addStep = 0.0001f;
+		if (addStep > smoothness)
+			addStep = smoothness;
 		for (i = 0; i < 10; i++) {
 			posGet( step+addStep, demo.camera.smoothPos, control, nextOrigin );
 			distance = VectorDistanceSquared( lastOrigin, nextOrigin);
-			if ( distance <= 0.0001f)
+			if ( distance <= smoothness)
 				break;
 			addStep *= 0.7f;
 		}
 		step += addStep;
 		len += sqrt( distance );
 		VectorCopy( nextOrigin, lastOrigin );
-		if (!distance && step > 0.5)  // Added the second condition so that it doesn't break in the rare case of distance being 0 at start due to very slow movement (or whatever caused it) at high precision (0.0001f)
-			break;
+		//if (!distance && step > 0.5)  // Added the second condition so that it doesn't break in the rare case of distance being 0 at start due to very slow movement (or whatever caused it) at high precision (0.0001f)
+			//break; // Commenthing this out once and for all. Just keeps causing issues.
 	}
 	point->len = len;
 	return point->len;
@@ -185,15 +186,16 @@ static qboolean cameraOriginAt( int time, float timeFraction, vec3_t origin ) {
 		posGet( t, demo.camera.smoothPos, control, origin );
 		return qtrue;
 	} 
+	float smoothness = 0.0001f / mov_smoothPosPrecision.value;
 	posGet( 0, demo.camera.smoothPos, control, origin );
 	while (step < 1) {
 		addStep = 1 - step;
-		if (addStep > 0.0001f)
-			addStep = 0.0001f;
+		if (addStep > smoothness)
+			addStep = smoothness;
 		for (i = 0; i < 10; i++) {
 			posGet( step+addStep, demo.camera.smoothPos, control, nextOrigin );
 			distance = VectorDistanceSquared( origin, nextOrigin);
-			if ( distance <= 0.0001f)
+			if ( distance <= smoothness)
 				break;
 			addStep *= 0.7f;
 		}
