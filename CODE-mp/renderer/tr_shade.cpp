@@ -1762,13 +1762,14 @@ void RB_StageIteratorGeneric( void )
 		//setArraysOnce = qtrue;
 
 		qglEnableClientState( GL_COLOR_ARRAY);
-		///qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, tess.svars.colors );
+		
 		//static vec4_t tmp;
 		//Vector4Scale((vec_t*)tess.svars.colors, 1.0f / 255.0f, tmp);
 		for (int i = 0; i < SHADER_MAX_VERTEXES; i++) {
 			Vector4Scale(tess.svars.colors[i], 1.0f / 255.0f, tess.svars.colorsScaled[i]);
 		}
 		qglColorPointer( 4, GL_FLOAT, 0, tess.svars.colorsScaled);
+		//qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, tess.svars.colors );
 
 		qglEnableClientState( GL_TEXTURE_COORD_ARRAY);
 		qglTexCoordPointer( 2, GL_FLOAT, 0, tess.svars.texcoords[0] );

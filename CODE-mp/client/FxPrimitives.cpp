@@ -795,14 +795,16 @@ void CParticle::UpdateAlpha()
 	if ( mFlags & FX_USE_ALPHA )
 	{
 		// should use this when using art that has an alpha channel
-		 ClampVec( mRefEnt.oldorigin, (byte*)(&mRefEnt.shaderRGBA) );
+		 //ClampVec( mRefEnt.oldorigin, (byte*)(&mRefEnt.shaderRGBA) );
+		VectorScale(mRefEnt.oldorigin,255.0f, mRefEnt.shaderRGBA);
 		 mRefEnt.shaderRGBA[3] = (byte)(perc1 * 0xff);
 	}
 	else
 	{
 		// Modulate the rgb fields by the alpha value to do the fade, works fine for additive blending
 		VectorScale( mRefEnt.oldorigin, perc1, mRefEnt.oldorigin );
-		ClampVec( mRefEnt.oldorigin, (byte*)(&mRefEnt.shaderRGBA) );
+		//ClampVec( mRefEnt.oldorigin, (byte*)(&mRefEnt.shaderRGBA) );
+		VectorScale(mRefEnt.oldorigin, 255.0f, mRefEnt.shaderRGBA);
 	}
 }
 
