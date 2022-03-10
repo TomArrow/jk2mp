@@ -13,6 +13,7 @@ typedef enum {
 	editLine,
 	editDof,
 	editLast,
+	editCommands
 } demoEditType_t;
 
 typedef enum {

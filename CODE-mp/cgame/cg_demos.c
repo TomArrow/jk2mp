@@ -22,6 +22,7 @@ extern void trap_FX_Reset ( void );
 extern void trap_MME_BlurInfo( int* total, int * index );
 extern void trap_MME_Capture( const char *baseName, float fps, float focus, float radius);
 extern int trap_MME_SeekTime( int seekTime );
+extern int trap_MME_FakeAdvanceFrame(int count);
 extern void trap_MME_Music( const char *musicName, float time, float length );
 extern void trap_MME_TimeFraction( float timeFraction );
 extern qboolean trap_MME_Demo15Detection( void );
@@ -462,6 +463,7 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	if ( captureFrame ) {
 		trap_MME_BlurInfo( &blurTotal, &blurIndex );
 		captureFPS = mov_captureFPS.value*(float)rollingShutterFactor/ mme_rollingShutterMultiplier;
+		//captureFPS = mov_captureFPS.value*(float)rollingShutterFactor/ (float)bufferCountNeededForRollingshutter; // Wrong. Must get frames at correct speed for rolling shutter.
 		if ( blurTotal > 0) {
 			captureFPS *= blurTotal;
 			blurFraction = blurIndex / (float)blurTotal;
@@ -927,6 +929,9 @@ static void demoEditCommand_f(void) {
 	} else if (!Q_stricmp(cmd, "line")) {
 		demo.editType = editLine;
 		CG_DemosAddLog("Editing timeline");
+	}  if (!Q_stricmp(cmd, "cmds")) {
+		demo.editType = editCommands;
+		CG_DemosAddLog("Editing commands");
 	} else {
 		switch ( demo.editType ) {
 		case editCamera:
@@ -964,6 +969,56 @@ static void demoSeekTwoCommand_f(void) {
 		demo.play.fraction = 0;
 	}
 }
+#ifdef RELDEBUG
+#pragma optimize("", off)
+#endif
+static void demoSeekSyncCommand_f(void) {
+	const char *cmd = CG_Argv(1);
+	if (isdigit( cmd[0] )  ) {
+		//teh's parser for time MM:SS.MSEC, thanks *bow*
+		int i;
+		char *sec, *min;;
+		min = (char *)cmd;
+		for( i=0; min[i]!=':'&& min[i]!=0; i++ );
+		if(cmd[i]==0)
+			sec = 0;
+		else
+		{
+			min[i] = 0;
+			sec = min+i+1;
+		}
+
+
+		float desiredTime = (atoi(min) * 60000 + (sec ? atof(sec) : 0) * 1000);
+
+		if (demo.play.time + demo.play.fraction >= desiredTime) {
+			return; // Makes no sense. This is for seeking in sync for recording. Can't record backwards.
+		}
+
+		const char* fpsString = CG_Argv(2);
+		float fps = (fpsString && isdigit(fpsString[0])) ? atof(fpsString) : mov_captureFPS.value;
+
+		// Simulate normal adding during capture.
+		int mme_rollingShutterPixels = CG_Cvar_GetInt("mme_rollingShutterPixels");
+		float mme_rollingShutterMultiplier = CG_Cvar_Get("mme_rollingShutterMultiplier");
+		int bufferCountNeededForRollingshutter = (int)(ceil(mme_rollingShutterMultiplier) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
+		int rollingShutterFactor = cgs.glconfig.vidHeight / mme_rollingShutterPixels;
+		float captureFPS = fps * (float)rollingShutterFactor / mme_rollingShutterMultiplier;
+
+		int frameAdvanceCount = 0;
+		while (((float)demo.play.time + demo.play.fraction) < desiredTime) {
+			float frameDelay = 1000.0f / captureFPS;
+			demo.play.fraction += frameDelay * demo.play.speed;
+			demo.play.time += (int)demo.play.fraction;
+			demo.play.fraction -= (int)demo.play.fraction;
+			frameAdvanceCount++;
+		}
+		trap_MME_FakeAdvanceFrame(frameAdvanceCount);
+	}
+}
+#ifdef RELDEBUG
+#pragma optimize("", on)
+#endif
 
 // seek by server time, not demotime
 static void demoSeekThreeCommand_f(void) {
@@ -1126,6 +1181,7 @@ void demoPlaybackInit(void) {
 	trap_AddCommand("speed");
 	trap_AddCommand("seek");
 	trap_AddCommand("demoSeek");
+	trap_AddCommand("demoSeekSync");
 	trap_AddCommand("demoSeekGame");
 	trap_AddCommand("demoSeekAbs");
 	trap_AddCommand("find");
@@ -1318,6 +1374,8 @@ qboolean CG_DemosConsoleCommand( void ) {
 		demoSeekCommand_f();
 	} else if (!Q_stricmp(cmd, "demoSeek")) {
 		demoSeekTwoCommand_f();
+	} else if (!Q_stricmp(cmd, "demoSeekSync")) {
+		demoSeekSyncCommand_f();
 	} else if (!Q_stricmp(cmd, "demoSeekAbs")) {
 		demoSeekThreeCommand_f();
 	} else if (!Q_stricmp(cmd, "demoSeekGame")) {

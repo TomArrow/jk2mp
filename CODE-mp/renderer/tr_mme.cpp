@@ -93,8 +93,10 @@ cvar_t  * mme_mvShaderLoadOrder;
 #ifdef JEDIACADEMY_GLOW
 extern std::vector<GLuint> pboIds;
 extern std::vector<int> pboRollingShutterProgresses;
+extern std::vector<float> pboRollingShutterDrifts;
 extern int rollingShutterBufferCount;
 extern int progressOvershoot;
+extern float drift;
 #endif
 
 static void R_MME_MakeBlurBlock( mmeBlurBlock_t *block, int size, mmeBlurControl_t* control ) {
@@ -116,6 +118,36 @@ static void R_MME_MakeBlurBlock( mmeBlurBlock_t *block, int size, mmeBlurControl
 		workUsed += control->overlapFrames * size;
 		if ( workUsed > workSize ) {
 			ri.Error( ERR_FATAL, "Failed to allocate %d bytes from the mme_workMegs buffer\n", workUsed );
+		}
+	}
+}
+
+// Used to start recording from another frame than the first but still keep perfect sync in terms of rolling shutter. 
+// Since I'm too dumb to abstract this down into a simple variable setting, we just repeat the code used during frame capturing
+// as many times as needed. Lame, but should work.
+void R_MME_FakeAdvanceFrames(int count) {
+
+	for (int c = 0; c < count; c++) {
+
+		int rollingShutterFactor = glConfig.vidHeight / mme_rollingShutterPixels->integer;
+
+		for (int i = 0; i < rollingShutterBufferCount; i++) {
+
+			int& rollingShutterProgress = pboRollingShutterProgresses[i];
+			float& hereDrift = pboRollingShutterDrifts[i];
+
+			rollingShutterProgress++;
+			if (rollingShutterProgress == rollingShutterFactor) {
+				//R_FrameBuffer_RollingShutterFlipDoubleBuffer(i);
+				//rollingShutterProgress = 0;
+				rollingShutterProgress = -progressOvershoot; // Since the rolling shutter multiplier can be a non-integer, sometimes we have to pause rendering frames for a little. Imagine if the rolling shutter is half the shutter speed. Then half the time we're not actually recording anything.
+				hereDrift += drift;
+				while (hereDrift > 1.0f) { // Drift has reached one frame (or rather one line) of duration. Adjust to keep sync with audio.
+					rollingShutterProgress -= 1;
+					hereDrift -= 1.0f;
+				}
+			}
+
 		}
 	}
 }
@@ -495,7 +527,9 @@ qboolean R_MME_TakeShot( void ) {
 		for (int i = 0; i < rollingShutterBufferCount; i++) {
 
 			int& rollingShutterProgress = pboRollingShutterProgresses[i];
+			float& hereDrift = pboRollingShutterDrifts[i];
 
+			// For example 1.0 * 1080/9.8 = 110.20408163265306122448979591837
 			int rsBlurFrameCount = (int)(mme_rollingShutterBlur->value*(float)rollingShutterFactor/mme_rollingShutterMultiplier->value);
 			float intensityMultiplier = 1.0f / (float)rsBlurFrameCount;
 
@@ -603,6 +637,11 @@ qboolean R_MME_TakeShot( void ) {
 				R_FrameBuffer_RollingShutterFlipDoubleBuffer(i);
 				//rollingShutterProgress = 0;
 				rollingShutterProgress = -progressOvershoot; // Since the rolling shutter multiplier can be a non-integer, sometimes we have to pause rendering frames for a little. Imagine if the rolling shutter is half the shutter speed. Then half the time we're not actually recording anything.
+				hereDrift += drift;
+				while (hereDrift > 1.0f) { // Drift has reached one frame (or rather one line) of duration. Adjust to keep sync with audio.
+					rollingShutterProgress -= 1;
+					hereDrift -= 1.0f;
+				}
 			}
 
 		}
@@ -1025,10 +1064,10 @@ void R_MME_Init(void) {
 	mme_saveAEKeyframes = ri.Cvar_Get ( "mme_saveAEKeyframes", "1", CVAR_ARCHIVE );
 	mme_workMegs = ri.Cvar_Get ( "mme_workMegs", "128", CVAR_LATCH | CVAR_ARCHIVE );
 
-	mme_rollingShutterBlur = ri.Cvar_Get ( "mme_rollingShutterBlur", "0.5", CVAR_ARCHIVE ); // float. like rollingshuttermultiplier.
-	mme_rollingShutterPixels = ri.Cvar_Get ( "mme_rollingShutterPixels", "1", CVAR_ARCHIVE );
-	mme_rollingShutterMultiplier = ri.Cvar_Get ( "mme_rollingShutterMultiplier", "1", CVAR_ARCHIVE );
-	mme_mvShaderLoadOrder = ri.Cvar_Get ( "mme_mvShaderLoadOrder", "1", CVAR_ARCHIVE );
+	mme_rollingShutterBlur = ri.Cvar_Get ( "mme_rollingShutterBlur", "0.5", CVAR_LATCH | CVAR_ARCHIVE ); // float. like rollingshuttermultiplier.
+	mme_rollingShutterPixels = ri.Cvar_Get ( "mme_rollingShutterPixels", "1", CVAR_LATCH | CVAR_ARCHIVE );
+	mme_rollingShutterMultiplier = ri.Cvar_Get ( "mme_rollingShutterMultiplier", "1", CVAR_LATCH | CVAR_ARCHIVE );
+	mme_mvShaderLoadOrder = ri.Cvar_Get ( "mme_mvShaderLoadOrder", "1", CVAR_LATCH | CVAR_ARCHIVE );
 
 	mme_worldShader->modified = qtrue;
 	mme_worldDeform->modified = qtrue;

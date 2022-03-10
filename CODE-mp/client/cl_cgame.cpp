@@ -1210,6 +1210,9 @@ Ghoul2 Insert End
 	case CG_MME_NTDETECTION:
         ntModDetected = (qboolean)args[1];
 		return 0;
+	case CG_MME_FAKEADVANCEFRAMES:
+		re.MMEFakeAdvanceFrames(args[1]);
+		return 0;
 	case CG_R_RANDOMSEED:
 		re.DemoRandomSeed( args[1], VMF(2) );
         return 0;

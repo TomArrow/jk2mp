@@ -926,3 +926,6 @@ void trap_FX_RandomSeed( int time, float timeFraction ) {
 void trap_S_UpdateScale( float scale ) {
 	syscall( CG_S_UPDATE_SCALE, PASSFLOAT(scale) );
 }
+void trap_MME_FakeAdvanceFrame(int count ) {
+	syscall(CG_MME_FAKEADVANCEFRAMES, count );
+}

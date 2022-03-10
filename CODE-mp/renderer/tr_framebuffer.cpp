@@ -115,8 +115,10 @@ static struct {
 } fbo;
 
 extern std::vector<int> pboRollingShutterProgresses;
+extern std::vector<float> pboRollingShutterDrifts;
 extern int rollingShutterBufferCount;
 extern int progressOvershoot;
+extern float drift;
 
 
 
@@ -503,14 +505,20 @@ void R_FrameBuffer_CreateRollingShutterBuffers(int width, int height, int flags)
 	int bufferCountNeededForRollingshutter = (int)(ceil(mme_rollingShutterMultiplier->value) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
 	rollingShutterBufferCount = bufferCountNeededForRollingshutter;
 
-	int rollingShutterFactor = glConfig.vidHeight / mme_rollingShutterPixels->integer;
+	int rollingShutterFactor = glConfig.vidHeight / mme_rollingShutterPixels->integer; // For example: 1080/1 = 1080
 
-	progressOvershoot = (int)((float)rollingShutterFactor / mme_rollingShutterMultiplier->value * (float)bufferCountNeededForRollingshutter) - rollingShutterFactor;
+	// For example: (1080/9.8*10)-1080 = 22.040816326530612244897959183673
+	// Or: (360/9.8*10)-360 = 7.3469387755102040816326530612245
+	float progressOvershootFloat = ((float)rollingShutterFactor / mme_rollingShutterMultiplier->value * (float)bufferCountNeededForRollingshutter) - (float)rollingShutterFactor;
+	progressOvershoot = (int)progressOvershootFloat;
+	// For example: 0.040816326530612244897959183673
+	drift = progressOvershootFloat - (float)progressOvershoot;
 
 	// create more pixel buffers if we need that for rolling shutter
 	if (rollingShutterBufferCount > fbo.rollingShutterBuffers.size()) {
 		fbo.rollingShutterBuffers.resize(rollingShutterBufferCount);
 		pboRollingShutterProgresses.resize(rollingShutterBufferCount);
+		pboRollingShutterDrifts.resize(rollingShutterBufferCount);
 	}
 
 	for (int i = 0; i < fbo.rollingShutterBuffers.size(); i++) {
@@ -518,7 +526,9 @@ void R_FrameBuffer_CreateRollingShutterBuffers(int width, int height, int flags)
 		fbo.rollingShutterBuffers[i].current = R_FrameBufferCreate(width, height, flags);
 		fbo.rollingShutterBuffers[i].next = R_FrameBufferCreate(width, height, flags);
 
+		// For example: -1 * (1080 / 10) = -108
 		pboRollingShutterProgresses[i] = (int)(-(float)i * ((float)rollingShutterFactor / (float)bufferCountNeededForRollingshutter));
+		pboRollingShutterDrifts[i] = 0.0f;
 	}
 
 }

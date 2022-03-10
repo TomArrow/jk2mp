@@ -2040,6 +2040,7 @@ void R_InitFreeType( void );
 void R_DoneFreeType( void );
 void R_MME_RegisterFont(const char *fontName, int pointSize, mmeFontInfo_t *font);
 
+void R_MME_FakeAdvanceFrames(int count);
 void R_MME_Init(void);
 void R_MME_InitStereo(void);
 void R_MME_Shutdown(void);

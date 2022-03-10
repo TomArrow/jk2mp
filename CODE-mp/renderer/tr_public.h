@@ -105,6 +105,7 @@ typedef struct {
 	void	(*MMERegisterFont)(const char *fontName, int pointSize, mmeFontInfo_t *font);
 	void	(*FontRatioFix)( float ratio );
 	void	(*DemoRandomSeed)( int time, float timeFraction );
+	void	(*MMEFakeAdvanceFrames)( int count );
 } refexport_t;
 
 //

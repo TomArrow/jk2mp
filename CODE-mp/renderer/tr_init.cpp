@@ -1107,8 +1107,10 @@ MessageCallback(GLenum source,
 //GLuint pboIds[2];
 vector<GLuint> pboIds(2);
 vector<int> pboRollingShutterProgresses(1);
+vector<float> pboRollingShutterDrifts(1);
 int rollingShutterBufferCount = 1;
 int progressOvershoot = 0;
+float drift = 0;
 #endif
 /*
 ===============
@@ -1494,6 +1496,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.TimeFraction = R_MME_TimeFraction;
 	
 	re.MMERegisterFont = R_MME_RegisterFont;
+	re.MMEFakeAdvanceFrames = R_MME_FakeAdvanceFrames;
 	re.FontRatioFix = RE_FontRatioFix;
 
 	re.DemoRandomSeed = R_DemoRandomSeed;
