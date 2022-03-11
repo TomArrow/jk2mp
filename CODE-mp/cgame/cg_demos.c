@@ -536,11 +536,16 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	}
 
 	// Demo project commands
-	demoCommandPoint_t* commandPointHere = commandPointSynch(demo.play.time);
-	if (demo.commands.lastPoint != commandPointHere) { // Don't execute a command twice
-		trap_SendConsoleCommand(commandPointHere->command);
+	if (demo.commands.locked) {
+		demoCommandPoint_t* commandPointHere = commandPointSynch(demo.play.time);
+		if (demo.commands.lastPoint != commandPointHere) { // Don't execute a command twice
+			trap_SendConsoleCommand(commandPointHere->command);
+		}
+		demo.commands.lastPoint = commandPointHere;
 	}
-	demo.commands.lastPoint = commandPointHere;
+	else {
+		demo.commands.lastPoint = 0;
+	}
 
 	demo.play.lastTime = demo.play.time;
 

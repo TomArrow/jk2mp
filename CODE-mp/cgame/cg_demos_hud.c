@@ -44,6 +44,8 @@ typedef enum {
 	hudDemoName,
 	hudCGTime,
 
+	hudCommandHere,
+
 	hudCamCheckPos,
 	hudCamCheckAngles,
 	hudCamCheckFov,
@@ -327,7 +329,7 @@ static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
 			Com_sprintf( buf, bufSize, "Dof%s", demo.dof.locked ? " locked" : "" );
 			break;
 		case editCommands:
-			Com_sprintf( buf, bufSize, "Commands%s", demo.dof.locked ? " locked" : "" );
+			Com_sprintf( buf, bufSize, "Commands%s", demo.commands.locked ? " locked" : "" );
 			break;
 		}
 		return;
@@ -345,6 +347,11 @@ static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
 		return;
 	case hudCamLength:
 		Com_sprintf( buf, bufSize, "%.01f", hud.cam.point->len );
+		return;
+	case hudCommandHere:
+		if (hud.commandPoint) {
+			Com_sprintf(buf, bufSize, "%s", hud.commandPoint->command);
+		}
 		return;
 	case hudCamSpeed:
 		if (!hud.cam.point->prev)
@@ -571,7 +578,19 @@ void hudDraw( void ) {
 		hud.showMask = MASK_LINE;
 		break;
 	case editCommands:
-		hud.showMask = MASK_CMDS;
+		hud.showMask = 0;
+		if (demo.commands.locked) {
+			hud.commandPoint = commandPointSynch(demo.play.time);
+			if (!hud.commandPoint || hud.commandPoint->time != demo.play.time || demo.play.fraction) {
+				hud.commandPoint = 0;
+			}
+			else {
+				hud.showMask |= MASK_CMDS;
+			}
+		}
+		else {
+			hud.commandPoint = 0;
+		}
 		break;
 	case editChase:
 		hud.showMask = MASK_CHASE;
@@ -733,6 +752,9 @@ void hudInitTables(void) {
 
 	for (i = 0; i < LOGLINES; i++) 
 		hudAddHandler(   0,  25+i, 0, 0, hudLogBase+i );
+
+	// Command items
+	hudAddHandler(0, 4, MASK_CMDS, "Command:", hudCommandHere);
 
 	// Camera Items
 	hudAddFloat(   0,  4, MASK_CAM_EDIT, "PosX:",  hudCamPosX );
