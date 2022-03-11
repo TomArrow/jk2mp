@@ -277,6 +277,7 @@ static BG_XMLParseBlock_t loadBlock[] = {
 	{	"camera",	cameraParse,	0	},
 	{	"chase",	chaseParse,		0,	},
 	{	"line",		lineParse,		0,	},
+	{	"commands",	commandsParse,	0,	},
 	{	"dof",		dofParse,		0	},
 	{	"weather",	weatherParse,	0	},
 	{	"capture",	captureParse,	0,	},
@@ -319,6 +320,7 @@ static qboolean demoProjectSave( const char *baseName ) {
 	lineSave( fileHandle );
 	dofSave( fileHandle );
 	weatherSave( fileHandle );
+	commandsSave(fileHandle);
 	trap_FS_FCloseFile( fileHandle );
 	return qtrue;
 }

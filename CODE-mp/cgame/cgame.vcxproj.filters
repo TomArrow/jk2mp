@@ -253,6 +253,9 @@
     <ClCompile Include="cg_demos_cut.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cg_demos_commands.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="JK2_cgame.def">

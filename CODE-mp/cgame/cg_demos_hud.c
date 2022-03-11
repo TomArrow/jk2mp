@@ -78,6 +78,7 @@ typedef enum {
 #define MASK_LINE				0x00020
 #define MASK_CHASE				0x00040
 #define MASK_DOF				0x00400
+#define MASK_CMDS				0x00800
 
 #define MASK_HUD				0x1
 #define MASK_POINT				0x2
@@ -119,6 +120,7 @@ static struct {
 		demoDofPoint_t *point;
 	} dof;
 	demoLinePoint_t *linePoint;
+	demoCommandPoint_t *commandPoint;
 	const char	*logLines[LOGLINES];
 } hud;
 
@@ -323,6 +325,9 @@ static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
 			break;
 		case editDof:
 			Com_sprintf( buf, bufSize, "Dof%s", demo.dof.locked ? " locked" : "" );
+			break;
+		case editCommands:
+			Com_sprintf( buf, bufSize, "Commands%s", demo.dof.locked ? " locked" : "" );
 			break;
 		}
 		return;
@@ -564,6 +569,9 @@ void hudDraw( void ) {
 		break;
 	case editLine:
 		hud.showMask = MASK_LINE;
+		break;
+	case editCommands:
+		hud.showMask = MASK_CMDS;
 		break;
 	case editChase:
 		hud.showMask = MASK_CHASE;

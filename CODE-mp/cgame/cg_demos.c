@@ -535,6 +535,13 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 		demo.play.fraction = delta - (int)delta;
 	}
 
+	// Demo project commands
+	demoCommandPoint_t* commandPointHere = commandPointSynch(demo.play.time);
+	if (demo.commands.lastPoint != commandPointHere) { // Don't execute a command twice
+		trap_SendConsoleCommand(commandPointHere->command);
+	}
+	demo.commands.lastPoint = commandPointHere;
+
 	demo.play.lastTime = demo.play.time;
 
 	if ( demo.loop.total && captureFrame && blurTotal ) {
@@ -929,7 +936,7 @@ static void demoEditCommand_f(void) {
 	} else if (!Q_stricmp(cmd, "line")) {
 		demo.editType = editLine;
 		CG_DemosAddLog("Editing timeline");
-	}  if (!Q_stricmp(cmd, "cmds")) {
+	}  if (!Q_stricmp(cmd, "commands")) {
 		demo.editType = editCommands;
 		CG_DemosAddLog("Editing commands");
 	} else {
@@ -942,6 +949,9 @@ static void demoEditCommand_f(void) {
 			break;
 		case editLine:
 			demoLineCommand_f();
+			break;
+		case editCommands:
+			demoCommandsCommand_f();
 			break;
 		case editDof:
 			demoDofCommand_f();
@@ -1190,6 +1200,7 @@ void demoPlaybackInit(void) {
 	trap_AddCommand("hudInit");
 	trap_AddCommand("hudToggle");
 	trap_AddCommand("line");
+	trap_AddCommand("commands");
 	trap_AddCommand("save");
 	trap_AddCommand("load");
 	trap_AddCommand("+seek");
@@ -1406,6 +1417,8 @@ qboolean CG_DemosConsoleCommand( void ) {
 		demo.seekEnabled = qfalse;
 	} else if (!Q_stricmp(cmd, "line")) {
 		demoLineCommand_f();
+	} else if (!Q_stricmp(cmd, "commands")) {
+		demoCommandsCommand_f();
 	} else if (!Q_stricmp(cmd, "load")) {
 		demoLoadCommand_f();
 	} else if (!Q_stricmp(cmd, "save")) {

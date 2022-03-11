@@ -5,6 +5,7 @@
 #include "cg_demos_math.h"
 
 #define LOGLINES 8
+#define MAX_DEMO_COMMAND_LENGTH 1024
 
 typedef enum {
 	editNone,
@@ -32,6 +33,13 @@ typedef struct demoLinePoint_s {
 	struct			demoLinePoint_s *next, *prev;
 	int				time, demoTime;
 } demoLinePoint_t;
+
+
+typedef struct demoCommandPoint_s {
+	char			command[MAX_DEMO_COMMAND_LENGTH];
+	struct			demoCommandPoint_s *next, *prev;
+	int				time;
+} demoCommandPoint_t;
 
 typedef struct demoCameraPoint_s {
 	struct			demoCameraPoint_s *next, *prev;
@@ -76,6 +84,14 @@ typedef struct demoMain_s {
 		int			time;
 		demoLinePoint_t *points;
 	} line;
+	struct {
+		int			start, end;
+		qboolean	locked;
+		float		timeShift;
+		int			shiftWarn;
+		demoCommandPoint_t *points;
+		demoCommandPoint_t *lastPoint;
+	} commands;
 	struct {
 		int			start;
 		float		range;
@@ -212,6 +228,12 @@ void lineAt(int playTime, float playFraction, int *demoTime, float *demoFraction
 void lineSave( fileHandle_t fileHandle );
 qboolean lineParse( BG_XMLParse_t *parse, const struct BG_XMLParseBlock_s *fromBlock, void *data);
 demoLinePoint_t *linePointSynch(int playTime);
+
+//COMMANDS
+void demoCommandsCommand_f(void);
+void commandsSave(fileHandle_t fileHandle);
+qboolean commandsParse(BG_XMLParse_t* parse, const struct BG_XMLParseBlock_s* fromBlock, void* data);
+demoCommandPoint_t* commandPointSynch(int playTime);
 
 //DOF
 demoDofPoint_t *dofPointSynch( int time );
