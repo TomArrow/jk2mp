@@ -1126,6 +1126,7 @@ typedef struct {
 	shader_t				*shaders[MAX_SHADERS];
 	shader_t				*sortedShaders[MAX_SHADERS];
 	shader_t				*mmeWorldShader;
+	shader_t				*mmeSkyShader;
 	deformStage_t			mmeWorldDeform;
 	int						mmeWorldBlend;
 	vec4_t					mmeSkyColor;
@@ -1350,6 +1351,7 @@ extern cvar_t	*mme_tgaCompression;
 extern cvar_t	*mme_pngCompression;
 extern cvar_t	*mme_skykey;
 extern cvar_t	*mme_worldShader;
+extern cvar_t	*mme_skyShader;
 extern cvar_t*	mme_worldDeform;
 extern cvar_t*	mme_worldBlend;
 extern cvar_t* mme_worldNoCull;

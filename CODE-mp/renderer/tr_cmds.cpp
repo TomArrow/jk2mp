@@ -426,6 +426,15 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 		mme_worldShader->modified = qfalse;
 	}
 
+	if ( mme_skyShader->modified) {
+		if (R_FindShaderText(mme_skyShader->string )) {
+			tr.mmeSkyShader = R_FindShader(mme_skyShader->string, lightmapsNone, stylesDefault, qtrue );
+		} else {
+			tr.mmeSkyShader = 0;
+		}
+		mme_skyShader->modified = qfalse;
+	}
+
 	if (mme_worldDeform->modified) {
 		tr.mmeWorldDeformIsSet = qfalse;
 		if (Q_stricmp(mme_worldDeform->string,"0")) {

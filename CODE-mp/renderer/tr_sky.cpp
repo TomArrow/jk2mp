@@ -836,7 +836,12 @@ void RB_StageIteratorSky( void ) {
 		GL_State( 0 );
 		qglTranslatef (backEnd.viewParms.ori.origin[0], backEnd.viewParms.ori.origin[1], backEnd.viewParms.ori.origin[2]);
 
-		DrawSkyBox( tess.shader );
+		if (tr.mmeSkyShader && tr.mmeSkyShader->sky.outerbox[0] && tr.mmeSkyShader->sky.outerbox[0] != tr.defaultImage) {
+			DrawSkyBox(tr.mmeSkyShader);
+		}
+		else {
+			DrawSkyBox(tess.shader);
+		}
 
 		qglPopMatrix();
 	}
