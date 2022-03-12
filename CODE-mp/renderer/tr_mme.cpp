@@ -60,6 +60,7 @@ cvar_t	*mme_worldBlend;
 cvar_t* mme_worldNoCull;
 cvar_t	*mme_skyColor;
 cvar_t	*mme_skyTint;
+cvar_t	*mme_fboImageTint;
 cvar_t	* mme_cinNoClamp;
 cvar_t	*mme_pip;
 cvar_t	*mme_blurFrames;
@@ -1040,6 +1041,7 @@ void R_MME_Init(void) {
 	mme_worldNoCull = ri.Cvar_Get( "mme_worldNoCull", "0", CVAR_CHEAT );
 	mme_skyColor = ri.Cvar_Get( "mme_skyColor", "0", CVAR_CHEAT );
 	mme_skyTint = ri.Cvar_Get( "mme_skyTint", "0", CVAR_CHEAT );
+	mme_fboImageTint = ri.Cvar_Get( "mme_fboImageTint", "0", CVAR_CHEAT );
 	mme_cinNoClamp = ri.Cvar_Get( "mme_cinNoClamp", "0", CVAR_ARCHIVE);
 	mme_renderWidth = ri.Cvar_Get( "mme_renderWidth", "0", CVAR_LATCH | CVAR_ARCHIVE );
 	mme_renderHeight = ri.Cvar_Get( "mme_renderHeight", "0", CVAR_LATCH | CVAR_ARCHIVE );
@@ -1077,6 +1079,7 @@ void R_MME_Init(void) {
 	mme_worldBlend->modified = qtrue;
 	mme_skyColor->modified = qtrue;
 	mme_skyTint->modified = qtrue;
+	mme_fboImageTint->modified = qtrue;
 
 	Com_Memset( &shotData, 0, sizeof(shotData));
 	//CANATODO, not exactly the best way to do this probably, but it works

@@ -476,6 +476,16 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 		}
 		mme_skyTint->modified = qfalse;
 	}
+	if (mme_fboImageTint->modified) {
+		tr.mmeFBOImageTintIsSet = qfalse;
+		if (Q_stricmp(mme_fboImageTint->string, "0")) {
+			char* imageTintTextPointer = mme_fboImageTint->string;
+			if (!COM_ParseVec4((const char**)&imageTintTextPointer, &tr.mmeFBOImageTint)) {
+				tr.mmeFBOImageTintIsSet = qtrue;
+			}
+		}
+		mme_fboImageTint->modified = qfalse;
+	}
 
 	//
 	// draw buffer stuff

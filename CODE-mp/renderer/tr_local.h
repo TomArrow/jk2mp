@@ -1112,10 +1112,12 @@ typedef struct {
 	int						mmeWorldBlend;
 	vec4_t					mmeSkyColor;
 	vec4_t					mmeSkyTint;
+	vec4_t					mmeFBOImageTint;
 	qboolean				mmeWorldDeformIsSet;
 	qboolean				mmeWorldBlendIsSet;
 	qboolean				mmeSkyColorIsSet;
 	qboolean				mmeSkyTintIsSet;
+	qboolean				mmeFBOImageTintIsSet;
 
 	int						numSkins;
 	skin_t					*skins[MAX_SKINS];
@@ -1338,6 +1340,7 @@ extern cvar_t*	mme_worldBlend;
 extern cvar_t* mme_worldNoCull;
 extern cvar_t*	mme_skyColor;
 extern cvar_t*	mme_skyTint;
+extern cvar_t*  mme_fboImageTint;
 extern cvar_t*	mme_cinNoClamp;
 extern cvar_t	*mme_pip;
 extern cvar_t	*mme_renderWidth;

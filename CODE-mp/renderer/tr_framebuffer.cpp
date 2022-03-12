@@ -789,12 +789,14 @@ qboolean R_FrameBuffer_ApplyExposure( ) { // really kinda useless unless you wan
 	r_fboExposure = ri.Cvar_Get("r_fboExposure", "1.0", CVAR_ARCHIVE);
 	r_fboCompensateSkyTint = ri.Cvar_Get("r_fboCompensateSkyTint", "0", CVAR_ARCHIVE);
 
-	if (!Q_stricmp(r_fboExposure->string, "1.0") || !Q_stricmp(r_fboExposure->string, "1")) { // Nothing to do.
-		if (!r_fboCompensateSkyTint->integer) {
-			return qtrue;
-		}
-		else if(r_fboCompensateSkyTint->integer && !tr.mmeSkyTintIsSet) {
-			return qtrue;
+	if (!Q_stricmp(r_fboExposure->string, "1.0") || !Q_stricmp(r_fboExposure->string, "1")) { // Determine if we need to do this at all.
+		if (!tr.mmeFBOImageTintIsSet) {
+			if (!r_fboCompensateSkyTint->integer) {
+				return qtrue;
+			}
+			else if (r_fboCompensateSkyTint->integer && !tr.mmeSkyTintIsSet) {
+				return qtrue;
+			}
 		}
 	}
 
@@ -803,16 +805,18 @@ qboolean R_FrameBuffer_ApplyExposure( ) { // really kinda useless unless you wan
 	qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 	//The color used to blur add this frame 
 	float multiplier = r_fboExposure->value;
-	if (r_fboCompensateSkyTint->integer && tr.mmeSkyTintIsSet) {
+	vec3_t tint{ 1.0f,1.0f,1.0f };
+	VectorScale(tint,multiplier,tint);
+	if (r_fboCompensateSkyTint->integer && tr.mmeSkyTintIsSet ) {
 
 		vec3_t invertedSkyTint;
 		VectorInvert(tr.mmeSkyTint, invertedSkyTint);
-		qglColor4f(multiplier * invertedSkyTint[0], multiplier * invertedSkyTint[1], multiplier * invertedSkyTint[2], 1.0f);
+		VectorMultiply(invertedSkyTint,tint,tint);
 	}
-	else {
-
-		qglColor4f(multiplier, multiplier, multiplier, 1.0f);
+	if (tr.mmeFBOImageTintIsSet ) {
+		VectorMultiply(tr.mmeFBOImageTint,tint,tint);
 	}
+	qglColor4f(tint[0], tint[1], tint[2], 1.0f);
 	GL_State(/*GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO |*/ GLS_DEPTHTEST_DISABLE);
 	R_SetGL2DSize(glConfig.vidWidth, glConfig.vidHeight);
 	R_DrawQuad(fbo.main->color, glConfig.vidWidth, glConfig.vidHeight);
