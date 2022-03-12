@@ -532,6 +532,10 @@ void RE_RenderScene( const refdef_t *fd ) {
 	tr.frontEndMsec += ri.Milliseconds() - startTime;
 }
 
+void R_MME_Time(int time) {
+	tr.refdef.time = time;
+	tr.refdef.floatTime = time * 0.001f;
+}
 void R_MME_TimeFraction(float timeFraction) {
 	tr.refdef.timeFraction = timeFraction;
 	timeFractionSet = qtrue;

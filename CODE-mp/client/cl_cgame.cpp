@@ -502,6 +502,8 @@ The cgame module is making a system call
 #define	VMF(x)	((float *)args)[x]
 extern bool RicksCrazyOnServer;
 int CL_CgameSystemCalls( int *args ) {
+	float evalValue;
+	char* text;
 	switch( args[0] ) {
 	case CG_PRINT:
 		Com_Printf( "%s", VMA(1) );
@@ -1196,6 +1198,9 @@ Ghoul2 Insert End
 	case CG_MME_MUSIC:
 		S_MMEMusic( (const char *)VMA(1), VMF(2), VMF(3) );
         return 0;
+	case CG_MME_TIME:
+		re.Time(args[1]);
+		return 0;
 	case CG_MME_TIMEFRACTION:
 		re.TimeFraction(VMF(1));
 		return 0;
@@ -1213,6 +1218,13 @@ Ghoul2 Insert End
 	case CG_MME_FAKEADVANCEFRAMES:
 		re.MMEFakeAdvanceFrames(args[1]);
 		return 0;
+	case CG_R_PARSEWAVEFORM:
+		text = (char*)VMA(1);
+		re.ParseWaveformAlone((char**)&text,(waveForm_t*)VMA(2));
+		return 0;
+	case CG_R_EVALWAVEFORM:
+		evalValue = re.EvalWaveForm((waveForm_t*)VMA(1));
+		return *(int*)&evalValue;
 	case CG_R_RANDOMSEED:
 		re.DemoRandomSeed( args[1], VMF(2) );
         return 0;

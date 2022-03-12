@@ -21,6 +21,9 @@
 #endif
 
 
+extern float EvalWaveForm(const waveForm_t* wf);
+extern void ParseWaveformAlone(char** text, waveForm_t* output);
+
 //#ifdef __USEA3D
 //// Defined in snd_a3dg_refcommon.c
 //void RE_A3D_RenderGeometry (void *pVoidA3D, void *pVoidGeom, void *pVoidMat, void *pVoidGeomStatus);
@@ -1493,6 +1496,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.CaptureStereo = R_MME_CaptureStereo;
 	re.BlurInfo = R_MME_BlurInfo;
 	
+	re.Time = R_MME_Time;
 	re.TimeFraction = R_MME_TimeFraction;
 	
 	re.MMERegisterFont = R_MME_RegisterFont;
@@ -1500,6 +1504,9 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.FontRatioFix = RE_FontRatioFix;
 
 	re.DemoRandomSeed = R_DemoRandomSeed;
+
+	re.ParseWaveformAlone = ParseWaveformAlone;
+	re.EvalWaveForm = EvalWaveForm;
 
 	return &re;
 }

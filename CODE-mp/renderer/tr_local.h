@@ -156,19 +156,7 @@ typedef enum {
 
 #define MAX_SHADER_STAGES 8
 
-typedef enum {
-	GF_NONE,
 
-	GF_SIN,
-	GF_SQUARE,
-	GF_TRIANGLE,
-	GF_SAWTOOTH, 
-	GF_INVERSE_SAWTOOTH, 
-
-	GF_NOISE,
-	GF_RAND
-
-} genFunc_t;
 
 
 typedef enum {
@@ -243,14 +231,7 @@ typedef enum {
 	ACFF_MODULATE_ALPHA
 } acff_t;
 
-typedef struct {
-	genFunc_t	func;
 
-	float base;
-	float amplitude;
-	float phase;
-	float frequency;
-} waveForm_t;
 
 #define TR_MAX_TEXMODS 4
 
@@ -2064,6 +2045,7 @@ int R_MME_MultiPassNextStereo( );
 
 void R_MME_DoNotTake( );
 
+void R_MME_Time(int time);
 void R_MME_TimeFraction(float timeFraction);
 
 extern bool g_bTextureRectangleHack;

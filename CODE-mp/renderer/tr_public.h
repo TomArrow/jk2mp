@@ -5,6 +5,8 @@
 
 #define	REF_API_VERSION		8
 
+
+
 //
 // these are the functions exported by the refresh module
 //
@@ -101,11 +103,14 @@ typedef struct {
 	void	(*Capture)( const char *baseName, float fps, float focus, float radius );
 	void	(*CaptureStereo)( const char *baseName, float fps, float focus, float radius );
 	void	(*BlurInfo)( int* total, int* index );
+	void	(*Time)( int time );
 	void	(*TimeFraction)( float timeFraction );
 	void	(*MMERegisterFont)(const char *fontName, int pointSize, mmeFontInfo_t *font);
 	void	(*FontRatioFix)( float ratio );
 	void	(*DemoRandomSeed)( int time, float timeFraction );
 	void	(*MMEFakeAdvanceFrames)( int count );
+	void	(*ParseWaveformAlone)(char** text, waveForm_t* output);
+	float	(*EvalWaveForm)(const waveForm_t* wf);
 } refexport_t;
 
 //

@@ -82,13 +82,15 @@ static float *TableForFunc( genFunc_t func ) {
 ** Evaluates a given waveForm_t, referencing backEnd.refdef.time directly
 */
 extern float GetNoiseTime( int t ); //from tr_noise, returns 0 to 2
-static float EvalWaveForm( const waveForm_t *wf ) {
+float EvalWaveForm( const waveForm_t *wf ) {
 	float	*table;
 
 	if ( wf->func == GF_NOISE ) {
-		return  ( wf->base + R_NoiseGet4f( 0, 0, 0, ( backEnd.refdef.floatTime + wf->phase + tr.refdef.timeFraction * 0.001 ) * wf->frequency ) * wf->amplitude );
+		//return  ( wf->base + R_NoiseGet4f( 0, 0, 0, ( backEnd.refdef.floatTime + wf->phase + tr.refdef.timeFraction * 0.001 ) * wf->frequency ) * wf->amplitude );
+		return  ( wf->base + R_NoiseGet4f( 0, 0, 0, ( tr.refdef.floatTime + wf->phase + tr.refdef.timeFraction * 0.001 ) * wf->frequency ) * wf->amplitude );
 	} else if (wf->func == GF_RAND) {
-		if( GetNoiseTime( backEnd.refdef.time + wf->phase ) <= wf->frequency ) {
+		//if( GetNoiseTime( backEnd.refdef.time + wf->phase ) <= wf->frequency ) {
+		if( GetNoiseTime( tr.refdef.time + wf->phase ) <= wf->frequency ) {
 			return (wf->base + wf->amplitude);
 		} else {
 			return wf->base;

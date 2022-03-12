@@ -2,6 +2,10 @@
 
 #include "cg_demos.h"
 
+#ifdef RELDEBUG
+#pragma optimize("", off)
+#endif
+
 static demoCommandPoint_t* commandPointAlloc(void) {
 	demoCommandPoint_t* point = (demoCommandPoint_t*)malloc(sizeof(demoCommandPoint_t));
 	if (!point)
@@ -28,9 +32,39 @@ demoCommandPoint_t* commandPointSynch(int playTime) {
 	return point;
 }
 
-static qboolean commandPointAdd(int time, const char* command) {
+
+extern void trap_R_ParseWaveform(const char* text, waveForm_t* wf);
+extern float trap_R_EvalWaveform(waveForm_t* wf);
+
+static void evaluateCommandVariable(demoCommandVariable_t* var) {
+	var->isValid = qfalse;
+	char* text = var->raw;
+	if (strlen(text)) {
+		if (text[0] == "$") { // Prepending any command variable with $ will make it a hard value that is not interpolated from the previous point that has a value for this variable.
+			var->interpolate = qfalse;
+			text++;
+		}
+		else {
+			var->interpolate = qtrue;
+		}
+		if (isdigit(text[0])) {
+			var->value = atof(text);
+			var->type = DEMO_COMMAND_VARIABLE_VALUE;
+			var->isValid = qtrue; // Yeah not very elegant. Would be better to verify somehow. Oh well.
+		}
+		else {
+			char* tmp = text;
+			trap_R_ParseWaveform(tmp, &var->waveForm);
+			var->type = DEMO_COMMAND_VARIABLE_WAVEFORM;
+			var->isValid = qtrue; // Yeah not very elegant. Would be better to verify somehow. Oh well.
+		}
+	}
+}
+
+static qboolean commandPointAdd(int time, const char* command, demoCommandVariableRawCollection_t* variableCollection) {
 	demoCommandPoint_t* point = commandPointSynch(time);
 	demoCommandPoint_t* newPoint;
+	int i;
 	if (!point || point->time > time) {
 		newPoint = commandPointAlloc();
 		newPoint->next = demo.commands.points;
@@ -51,7 +85,11 @@ static qboolean commandPointAdd(int time, const char* command) {
 		point->next = newPoint;
 	}
 	newPoint->time = time;
-	Com_sprintf(newPoint->command, sizeof(newPoint->command), command);
+	strcpy_s(newPoint->command, sizeof(newPoint->command), command);
+	for (int i = 0; i< MAX_DEMO_COMMAND_VARIABLES; i++) {
+		strcpy_s(newPoint->variables[i].raw, sizeof(demoCommandVariableRaw_t), (*variableCollection)[i]);
+		evaluateCommandVariable(&newPoint->variables[i]);
+	}
 	return qtrue;
 }
 
@@ -74,8 +112,16 @@ static void commandsClear(void) {
 }
 
 typedef struct {
+	int		variableNum;
+	char	raw[MAX_DEMO_COMMAND_VARIABLE_LENGTH];
+	qboolean hasVariableNum, hasRaw;
+} parseCommandPointVariable_t;
+
+typedef struct {
 	int time;
 	char command[MAX_DEMO_COMMAND_LENGTH];
+	demoCommandVariableRawCollection_t variables;
+	qboolean variableExists[MAX_DEMO_COMMAND_VARIABLES];
 	qboolean hasTime, hasCommand;
 } parseCommandPoint_t;
 
@@ -91,8 +137,45 @@ static qboolean commandParseCommand(BG_XMLParse_t* parse, const char* line, void
 	parseCommandPoint_t* point = (parseCommandPoint_t*)data;
 	if (!line[0])
 		return qfalse;
-	Com_sprintf(point->command, sizeof(point->command), line);
+	strcpy_s(point->command, sizeof(point->command), line);
 	point->hasCommand = qtrue;
+	return qtrue;
+}
+static qboolean commandParseRaw(BG_XMLParse_t* parse, const char* line, void* data) {
+	parseCommandPointVariable_t* point = (parseCommandPointVariable_t*)data;
+	if (!line[0])
+		return qfalse;
+	strcpy_s(point->raw, sizeof(point->raw), line);
+	point->hasRaw = qtrue;
+	return qtrue;
+}
+static qboolean commandParseVariableNum(BG_XMLParse_t* parse, const char* line, void* data) {
+	parseCommandPointVariable_t* point = (parseCommandPointVariable_t*)data;
+	if (!line[0])
+		return qfalse;
+	point->variableNum = atoi(line);
+	point->hasVariableNum = qtrue;
+	return qtrue;
+}
+static qboolean commandParseVariable(BG_XMLParse_t* parse, const struct BG_XMLParseBlock_s* fromBlock, void* data) {
+	parseCommandPoint_t* pointLoad = (parseCommandPoint_t*)data;
+	parseCommandPointVariable_t variableLoad;
+	static BG_XMLParseBlock_t commandParseBlock[] = {
+		{"variableNum", 0, commandParseVariableNum},
+		{"raw", 0, commandParseRaw},
+		{0, 0, 0}
+	};
+	memset(&variableLoad, 0, sizeof(variableLoad));
+	if (!BG_XMLParse(parse, fromBlock, commandParseBlock, &variableLoad)) {
+		return qfalse;
+	}
+	if (!variableLoad.hasRaw || !variableLoad.hasVariableNum)
+		return BG_XMLError(parse, "Missing section in command point variable");
+	if (variableLoad.variableNum >= MAX_DEMO_COMMAND_VARIABLES)
+		return BG_XMLError(parse, "variableNum in command point variable too high.");
+
+	strcpy_s(pointLoad->variables[variableLoad.variableNum],sizeof(demoCommandVariableRaw_t), variableLoad.raw);
+	 
 	return qtrue;
 }
 static qboolean commandParsePoint(BG_XMLParse_t* parse, const struct BG_XMLParseBlock_s* fromBlock, void* data) {
@@ -100,6 +183,7 @@ static qboolean commandParsePoint(BG_XMLParse_t* parse, const struct BG_XMLParse
 	static BG_XMLParseBlock_t commandParseBlock[] = {
 		{"time", 0, commandParseTime},
 		{"command", 0, commandParseCommand},
+		{"variable", commandParseVariable, 0},
 		{0, 0, 0}
 	};
 	memset(&pointLoad, 0, sizeof(pointLoad));
@@ -108,7 +192,7 @@ static qboolean commandParsePoint(BG_XMLParse_t* parse, const struct BG_XMLParse
 	}
 	if (!pointLoad.hasTime || !pointLoad.hasCommand)
 		return BG_XMLError(parse, "Missing section in command point");
-	commandPointAdd(pointLoad.time, pointLoad.command);
+	commandPointAdd(pointLoad.time, pointLoad.command,pointLoad.variables);
 	return qtrue;
 }
 static qboolean commandsParseLocked(BG_XMLParse_t* parse, const char* line, void* data) {
@@ -134,6 +218,8 @@ qboolean commandsParse(BG_XMLParse_t* parse, const struct BG_XMLParseBlock_s* fr
 
 void commandsSave(fileHandle_t fileHandle) {
 	demoCommandPoint_t* point;
+	int i;
+	qboolean hasAtLeastOneVariable = qfalse;
 
 	point = demo.commands.points;
 	demoSaveLine(fileHandle, "<commands>\n");
@@ -142,6 +228,24 @@ void commandsSave(fileHandle_t fileHandle) {
 		demoSaveLine(fileHandle, "\t<point>\n");
 		demoSaveLine(fileHandle, "\t\t<time>%10d</time>\n", point->time);
 		demoSaveLine(fileHandle, "\t\t<command>%s</command>\n", point->command);
+
+		for (i = 0; i < MAX_DEMO_COMMAND_VARIABLES; i++) {
+			if (!strlen(point->variables[i].raw)) {
+				hasAtLeastOneVariable = qtrue;
+			}
+		}
+		if (hasAtLeastOneVariable) {
+
+			for (i = 0; i < MAX_DEMO_COMMAND_VARIABLES; i++) {
+				if (strlen(point->variables[i].raw)) {
+					demoSaveLine(fileHandle, "\t\t<variable>\n");
+					demoSaveLine(fileHandle, "\t\t\t<variableNum>%d</variableNum>\n", i);
+					demoSaveLine(fileHandle, "\t\t\t<raw>%s</raw>\n", point->variables[i].raw);
+					demoSaveLine(fileHandle, "\t\t</variable>\n");
+				}
+			}
+		}
+
 		demoSaveLine(fileHandle, "\t</point>\n");
 		point = point->next;
 	}
@@ -158,20 +262,33 @@ void demoCommandsCommand_f(void) {
 			CG_DemosAddLog("Commands unlocked");
 	}
 	else if (!Q_stricmp(cmd, "add")) {
-		const char* commandToAdd = CG_Argv(2);
-		if (!strlen(commandToAdd)) {
+		int i;
+		qboolean hasAtLeastOneVariable = qfalse;
+		
+		demoCommandVariableRawCollection_t* varCollection = (demoCommandVariableRawCollection_t*)malloc(sizeof(demoCommandVariableRawCollection_t));
+		memset(varCollection, 0, sizeof(demoCommandVariableRawCollection_t));
 
-			CG_DemosAddLog("Failed to add command point. You must specify a command like this: commands add \"[command]\"");
+		for (int i = 0; i < MAX_DEMO_COMMAND_VARIABLES; i++) {
+			const char* variabletext = CG_Argv(3+i);
+			if (strlen(variabletext)) {
+				strcpy_s((*varCollection)[i],sizeof(demoCommandVariableRaw_t),variabletext);
+				hasAtLeastOneVariable = qtrue;
+			}
+		}
+		const char* commandToAdd = CG_Argv(2);
+		if (!strlen(commandToAdd) && !hasAtLeastOneVariable) { // We Will actually allow empty commands now so we can make keypoints solely for the variables
+
+			CG_DemosAddLog("Failed to add command point. Need at least a command or one variable. Syntax: commands add \"[command]\" \"[optional variable 0\"  \"[optional variable 1\"...");
 		}
 		else {
-			if (commandPointAdd(demo.play.time, commandToAdd)) {
+			if (commandPointAdd(demo.play.time, commandToAdd, varCollection)) {
 				CG_DemosAddLog("Added command point");
 			}
 			else {
 				CG_DemosAddLog("Failed to add command point");
 			}
 		}
-		
+		free(varCollection);
 	}
 	else if (!Q_stricmp(cmd, "del")) {
 		if (commandPointDel(demo.play.time)) {
@@ -236,3 +353,153 @@ void demoCommandsCommand_f(void) {
 		Com_Printf("commands start/end, set start/end parts of commands selection\n");
 	}
 }
+
+void evaluateDemoCommand() {
+	int i, srcLength;
+	qboolean isDynamic = qfalse;
+	char composedCommand[MAX_DEMO_COMMAND_LENGTH];
+
+	if (!demo.commands.locked) {
+		demo.commands.lastPoint = 0;
+		return;
+	}
+
+	memset(composedCommand,0,sizeof(composedCommand));
+
+	demoCommandPoint_t* cmdHere = commandPointSynch(demo.play.time);
+	
+	if (!cmdHere) {
+		return;
+	}
+
+	char* text = cmdHere->command;
+
+	srcLength = max(strlen(cmdHere->command),sizeof(cmdHere->command));
+	for (i = 0; i < srcLength;i++) {
+		if (text[i] == '%' && isdigit(text[i + 1]) && (i == 0 || text[i - 1] != '\\')) {
+			// This is a variable
+			char formattedNumber[100];
+
+			int variableNum = text[i + 1]-'0'; 
+			float result;
+			if (evaluateCommandVariableAt(variableNum,&result)) {
+				isDynamic = qtrue;
+			}
+
+			sprintf_s(formattedNumber, sizeof(formattedNumber), "%.5f", result);
+			strcat_s(composedCommand, sizeof(composedCommand), formattedNumber);
+
+			i++;
+		}
+		else {
+			strncat_s(composedCommand,sizeof(composedCommand),&text[i],1);
+		}
+	}
+
+	strncat_s(composedCommand, sizeof(composedCommand), "\n", 1);
+
+	if (demo.commands.lastPoint != cmdHere || isDynamic) { // Don't execute a command twice unless it is dynamic
+
+		trap_SendConsoleCommand(composedCommand);
+	}
+	demo.commands.lastPoint = cmdHere;
+
+	/*if (demo.commands.locked) {
+		demoCommandPoint_t* commandPointHere = commandPointSynch(demo.play.time);
+		if (demo.commands.lastPoint != commandPointHere) { // Don't execute a command twice
+
+			trap_SendConsoleCommand(commandPointHere->command);
+		}
+		demo.commands.lastPoint = commandPointHere;
+	}
+	else {
+		demo.commands.lastPoint = 0;
+	}*/
+
+	//lineAt(demo.play.time, demo.play.fraction, &demo.line.time, &cg.timeFraction, &frameSpeed);
+}
+
+qboolean evaluateCommandVariableAt(int variableNumber, float* result) {
+
+	qboolean isDynamic = qfalse;
+	demoCommandPoint_t* last, *next;
+	demoCommandPoint_t* cmdHere = commandPointSynch(demo.play.time);
+	if (!cmdHere) {
+		*result = 0.0f;
+		return;
+	}
+
+	// Find *from* keypoint.
+	if (cmdHere->time > demo.play.time) { 
+		// The keypoint lies in the future. So there's no previous keyframe.
+		last = 0;
+	}
+	else {
+		last = cmdHere;
+		while (last && !last->variables[variableNumber].isValid) {
+			// If the current keypoint doesn't have a value for this variable, keep going into the past.
+			last = last->prev;
+		}
+	}
+
+	if (last && last->time == demo.play.time && demo.play.fraction == 0.0f) {
+		// We're exactly on the keypoint right now. No need to interpolate.
+		next = 0;
+	}
+	else {
+		// Find *to* keypoint.
+		next = cmdHere->next;
+		while (next && !next->variables[variableNumber].isValid) {
+			next = next->next;
+		}
+	}
+	
+
+	if ((last && !next) || (last && next && next->variables[variableNumber].interpolate == qfalse)) {
+		// If there is no next, or if next has disabled interpolation, there is no transition. Use last value.
+		return evaluateCommandVariableValue(&last->variables[variableNumber],result);
+	}
+	else if (next && !last) {
+		// There is no transition. Use next value.
+		return evaluateCommandVariableValue(&next->variables[variableNumber], result);
+	}
+	else if (last && next) {
+		float lastValue, nextValue;
+		evaluateCommandVariableValue(&last->variables[variableNumber], &lastValue);
+		evaluateCommandVariableValue(&next->variables[variableNumber], &nextValue);
+		// Lerp.
+		*result = lastValue + (float)(nextValue - lastValue) * (((float)demo.play.time+demo.play.fraction - (float)last->time) / (float)(next->time - last->time));
+		return qtrue;
+	}
+	else {
+		// Bah nonsense
+		*result = 0.0f;
+		return qfalse; 
+	}
+
+
+	
+}
+
+qboolean evaluateCommandVariableValue(demoCommandVariable_t* variable, float* result) {
+
+	switch (variable->type) {
+	case DEMO_COMMAND_VARIABLE_VALUE:
+		*result = variable->value;
+		return qfalse;
+	case DEMO_COMMAND_VARIABLE_WAVEFORM:
+		*result = trap_R_EvalWaveform(&variable->waveForm);
+		return qtrue;
+		break;
+	default:
+		// Shouldn't really happen
+		*result = 0.0f;
+		return qfalse;
+	}
+}
+
+
+
+#ifdef RELDEBUG
+#pragma optimize("", on)
+#endif

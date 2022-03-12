@@ -2318,3 +2318,28 @@ typedef struct BG_XMLParseBlock_s {
 } BG_XMLParseBlock_t;
 
 extern int demo_protocols[];
+
+
+// Moved here from tr_local.h so we can use it in cgame.
+typedef enum {
+	GF_NONE,
+
+	GF_SIN,
+	GF_SQUARE,
+	GF_TRIANGLE,
+	GF_SAWTOOTH,
+	GF_INVERSE_SAWTOOTH,
+
+	GF_NOISE,
+	GF_RAND
+
+} genFunc_t;
+
+typedef struct {
+	genFunc_t	func;
+
+	float base;
+	float amplitude;
+	float phase;
+	float frequency;
+} waveForm_t;

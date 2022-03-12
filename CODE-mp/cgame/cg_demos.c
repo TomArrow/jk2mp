@@ -24,6 +24,7 @@ extern void trap_MME_Capture( const char *baseName, float fps, float focus, floa
 extern int trap_MME_SeekTime( int seekTime );
 extern int trap_MME_FakeAdvanceFrame(int count);
 extern void trap_MME_Music( const char *musicName, float time, float length );
+extern void trap_MME_Time( int time );
 extern void trap_MME_TimeFraction( float timeFraction );
 extern qboolean trap_MME_Demo15Detection( void );
 extern void trap_R_RandomSeed( int time, float timeFraction );
@@ -535,18 +536,6 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 		demo.play.fraction = delta - (int)delta;
 	}
 
-	// Demo project commands
-	if (demo.commands.locked) {
-		demoCommandPoint_t* commandPointHere = commandPointSynch(demo.play.time);
-		if (demo.commands.lastPoint != commandPointHere) { // Don't execute a command twice
-			trap_SendConsoleCommand(commandPointHere->command);
-		}
-		demo.commands.lastPoint = commandPointHere;
-	}
-	else {
-		demo.commands.lastPoint = 0;
-	}
-
 	demo.play.lastTime = demo.play.time;
 
 	if ( demo.loop.total && captureFrame && blurTotal ) {
@@ -583,6 +572,14 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	cg.time = trap_MME_SeekTime( demo.line.time );
 	/* cg.time is shifted ahead a bit to correct some issues.. */
 	frameSpeed *= demo.play.speed;
+
+	// Sending correct time over a bit earlier so the commands are evaluated correctly, especially waveforms
+	trap_MME_Time(cg.time);
+	trap_MME_TimeFraction(cg.timeFraction);
+
+	// Demo project commands
+	evaluateDemoCommand();
+
 
 	cg.frametime = (cg.time - cg.oldTime) + (cg.timeFraction - cg.oldTimeFraction);
 	if (cg.frametime < 0) {

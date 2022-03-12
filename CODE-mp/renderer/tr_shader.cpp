@@ -1915,6 +1915,15 @@ qboolean ParseDeformAlone(char** text, deformStage_t* output) {
 	return success;
 }
 
+void ParseWaveformAlone(char** text, waveForm_t* output) {
+
+	Com_Memset(&shader, 0, sizeof(shader));
+
+	ParseWaveForm((const char**)text,output);
+
+	Com_Memset(&shader, 0, sizeof(shader));
+}
+
 qboolean ParseBlendAlone(char** text, int* output) {
 
 	char* token; 

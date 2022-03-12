@@ -6,6 +6,8 @@
 
 #define LOGLINES 8
 #define MAX_DEMO_COMMAND_LENGTH 1024
+#define MAX_DEMO_COMMAND_VARIABLE_LENGTH 256
+#define MAX_DEMO_COMMAND_VARIABLES 10
 
 typedef enum {
 	editNone,
@@ -34,11 +36,28 @@ typedef struct demoLinePoint_s {
 	int				time, demoTime;
 } demoLinePoint_t;
 
+typedef enum {
+	DEMO_COMMAND_VARIABLE_VALUE,
+	DEMO_COMMAND_VARIABLE_WAVEFORM
+} demoCommandVariableType_t;
+
+typedef char demoCommandVariableRaw_t[MAX_DEMO_COMMAND_VARIABLE_LENGTH];
+typedef demoCommandVariableRaw_t demoCommandVariableRawCollection_t[MAX_DEMO_COMMAND_VARIABLES];
+
+typedef struct demoCommandVariable_s {
+	demoCommandVariableRaw_t	raw;
+	demoCommandVariableType_t	type;
+	qboolean					interpolate;
+	qboolean					isValid;
+	waveForm_t					waveForm;
+	float						value;
+} demoCommandVariable_t;
 
 typedef struct demoCommandPoint_s {
-	char			command[MAX_DEMO_COMMAND_LENGTH];
-	struct			demoCommandPoint_s *next, *prev;
-	int				time;
+	char					command[MAX_DEMO_COMMAND_LENGTH];
+	demoCommandVariable_t	variables[MAX_DEMO_COMMAND_VARIABLES]; // 0-9
+	struct					demoCommandPoint_s *next, *prev;
+	int						time;
 } demoCommandPoint_t;
 
 typedef struct demoCameraPoint_s {
@@ -230,6 +249,7 @@ qboolean lineParse( BG_XMLParse_t *parse, const struct BG_XMLParseBlock_s *fromB
 demoLinePoint_t *linePointSynch(int playTime);
 
 //COMMANDS
+void evaluateDemoCommand();
 void demoCommandsCommand_f(void);
 void commandsSave(fileHandle_t fileHandle);
 qboolean commandsParse(BG_XMLParse_t* parse, const struct BG_XMLParseBlock_s* fromBlock, void* data);

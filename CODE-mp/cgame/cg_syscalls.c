@@ -902,6 +902,9 @@ int trap_MME_SeekTime( int seekTime ) {
 void trap_MME_Music( const char *musicName, float time, float length ) {
 	syscall( CG_MME_MUSIC, musicName, PASSFLOAT(time), PASSFLOAT(length) );
 }
+void trap_MME_Time( int time ) {
+	syscall( CG_MME_TIME, time );
+}
 void trap_MME_TimeFraction( float timeFraction ) {
 	syscall( CG_MME_TIMEFRACTION, PASSFLOAT(timeFraction) );
 }
@@ -928,4 +931,12 @@ void trap_S_UpdateScale( float scale ) {
 }
 void trap_MME_FakeAdvanceFrame(int count ) {
 	syscall(CG_MME_FAKEADVANCEFRAMES, count );
+}
+
+void trap_R_ParseWaveform(const char* text, waveForm_t* wf) {
+	syscall(CG_R_PARSEWAVEFORM, text,  wf);
+}
+float trap_R_EvalWaveform(waveForm_t* wf) {
+	int retVal = syscall(CG_R_EVALWAVEFORM, wf);
+	return *(float*)&retVal;
 }
