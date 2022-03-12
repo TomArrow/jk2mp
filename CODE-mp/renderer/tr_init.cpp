@@ -1151,6 +1151,7 @@ void R_Init( void ) {
 	//Com_Memset( tess.constantColor255, 255, sizeof( tess.constantColor255 ) );
 	for (i = 0; i < SHADER_MAX_VERTEXES; i++) {
 		tess.constantColor255[i][0] = tess.constantColor255[i][1] = tess.constantColor255[i][2] = tess.constantColor255[i][3] = 255;
+		tess.constantColor255Scaled[i][0] = tess.constantColor255Scaled[i][1] = tess.constantColor255Scaled[i][2] = tess.constantColor255Scaled[i][3] = 1.0f;
 	}
 #endif
 	//

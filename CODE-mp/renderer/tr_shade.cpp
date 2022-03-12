@@ -16,6 +16,8 @@ static qboolean	setArraysOnce;
 
 color4f_t	styleColors[MAX_LIGHT_STYLES];
 
+const float floatColorsScaleFactor = 1.0f / 255.0f;
+
 //color4f_t	tmpScaledColors[SHADER_MAX_VERTEXES];
 
 #ifdef JEDIACADEMY_GLOW
@@ -1134,7 +1136,7 @@ static void RB_FogPass( void ) {
 	qglEnableClientState( GL_COLOR_ARRAY );
 
 	for (i = 0; i < SHADER_MAX_VERTEXES; i++) {
-		Vector4Scale(tess.svars.colors[i], 1.0f / 255.0f, tess.svars.colorsScaled[i]);
+		Vector4Scale(tess.svars.colors[i], floatColorsScaleFactor, tess.svars.colorsScaled[i]);
 	}
 	qglColorPointer(4, GL_FLOAT, 0, tess.svars.colorsScaled);
 	//qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, tess.svars.colors );
@@ -1144,7 +1146,7 @@ static void RB_FogPass( void ) {
 
 	fog = tr.world->fogs + tess.fogNum;
 
-	for ( i = 0; i < tess.numVertexes; i++ ) {
+	for ( i = 0; i < tess.numIndexes; i++ ) {
 		Vector4Copy(*(color4ub_t*)&fog->colorInt, tess.svars.colors[i]);
 		//* ( int * )&tess.svars.colors[i] = fog->colorInt;
 	}
@@ -1661,8 +1663,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			qglEnableClientState( GL_COLOR_ARRAY );
 			//qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, input->svars.colors ); 
-			for (int i = 0; i < SHADER_MAX_VERTEXES; i++) {
-				Vector4Scale(input->svars.colors[i], 1.0f / 255.0f, input->svars.colorsScaled[i]);
+			for (int i = 0; i < input->numIndexes; i++) {
+				Vector4Scale(input->svars.colors[i], floatColorsScaleFactor, input->svars.colorsScaled[i]);
 			}
 			qglColorPointer(4, GL_FLOAT, 0, input->svars.colorsScaled);
 		}
@@ -1765,8 +1767,8 @@ void RB_StageIteratorGeneric( void )
 		
 		//static vec4_t tmp;
 		//Vector4Scale((vec_t*)tess.svars.colors, 1.0f / 255.0f, tmp);
-		for (int i = 0; i < SHADER_MAX_VERTEXES; i++) {
-			Vector4Scale(tess.svars.colors[i], 1.0f / 255.0f, tess.svars.colorsScaled[i]);
+		for (int i = 0; i < tess.numIndexes; i++) {
+			Vector4Scale(tess.svars.colors[i], floatColorsScaleFactor, tess.svars.colorsScaled[i]);
 		}
 		qglColorPointer( 4, GL_FLOAT, 0, tess.svars.colorsScaled);
 		//qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, tess.svars.colors );
@@ -1889,8 +1891,8 @@ void RB_StageIteratorVertexLitTexture( void )
 	qglEnableClientState( GL_TEXTURE_COORD_ARRAY);
 
 	//qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, tess.svars.colors );
-	for (int i = 0; i < SHADER_MAX_VERTEXES; i++) {
-		Vector4Scale(tess.svars.colors[i], 1.0f / 255.0f, tess.svars.colorsScaled[i]);
+	for (int i = 0; i < input->numIndexes; i++) {
+		Vector4Scale(tess.svars.colors[i], floatColorsScaleFactor, tess.svars.colorsScaled[i]);
 	}
 	qglColorPointer(4, GL_FLOAT, 0, tess.svars.colorsScaled);
 
@@ -1985,9 +1987,9 @@ void RB_StageIteratorLightmappedMultitexture( void ) {
 #else
 	qglEnableClientState( GL_COLOR_ARRAY );
 	//qglColorPointer(4, GL_UNSIGNED_BYTE, 0, tess.constantColor255);
-	for (int i = 0; i < SHADER_MAX_VERTEXES; i++) {
-		Vector4Scale(tess.constantColor255[i], 1.0f / 255.0f, tess.constantColor255Scaled[i]);
-	}
+	//for (int i = 0; i < input->numIndexes; i++) {
+	//	Vector4Scale(tess.constantColor255[i], floatColorsScaleFactor, tess.constantColor255Scaled[i]);
+	//}
 	qglColorPointer(4, GL_FLOAT, 0, tess.constantColor255Scaled);
 #endif
 

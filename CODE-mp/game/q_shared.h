@@ -50,6 +50,7 @@
 #endif
 
 
+extern const float floatColorsScaleFactor;
 
 #if defined(Q3_VM) || defined(CGAME) || defined(QAGAME) || defined(UI_EXPORTS)
 

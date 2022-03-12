@@ -67,8 +67,8 @@ void CQuickSpriteSystem::Flush(void)
 	qglEnableClientState( GL_TEXTURE_COORD_ARRAY);
 
 	qglEnableClientState( GL_COLOR_ARRAY);
-	for (int i = 0; i < SHADER_MAX_VERTEXES; i++) {
-		Vector4Scale(mColors[i], 1.0f / 255.0f, mColorsScaled[i]);
+	for (int i = 0; i < mNextVert; i++) {
+		Vector4Scale(mColors[i], floatColorsScaleFactor, mColorsScaled[i]);
 	}
 	qglColorPointer(4, GL_FLOAT, 0, mColorsScaled);
 	//qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, mColors );
