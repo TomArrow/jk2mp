@@ -800,6 +800,8 @@ qboolean R_FrameBuffer_ApplyExposure( ) { // really kinda useless unless you wan
 		}
 	}
 
+	//R_FrameBuffer_GenerateMainMipMaps();
+
 	// First copy image into exposure FBO and apply exposure
 	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.exposure->fbo);
 	qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
@@ -818,16 +820,16 @@ qboolean R_FrameBuffer_ApplyExposure( ) { // really kinda useless unless you wan
 	}
 	qglColor4f(tint[0], tint[1], tint[2], 1.0f);
 	GL_State(/*GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO |*/ GLS_DEPTHTEST_DISABLE);
-	R_SetGL2DSize(glConfig.vidWidth, glConfig.vidHeight);
-	R_DrawQuad(fbo.main->color, glConfig.vidWidth, glConfig.vidHeight);
+	R_SetGL2DSize(glConfig.vidWidth*superSampleMultiplier, glConfig.vidHeight * superSampleMultiplier);
+	R_DrawQuad(fbo.main->color, glConfig.vidWidth * superSampleMultiplier, glConfig.vidHeight * superSampleMultiplier);
 
 	// Now copy it back
 	qglBindFramebuffer( GL_FRAMEBUFFER_EXT, fbo.main->fbo );
 	qglDrawBuffer( GL_COLOR_ATTACHMENT0_EXT );
 	qglColor4f(1, 1, 1, 1);
 	GL_State(GLS_DEPTHTEST_DISABLE );
-	R_SetGL2DSize( glConfig.vidWidth, glConfig.vidHeight );
-	R_DrawQuad(	fbo.exposure->color, glConfig.vidWidth, glConfig.vidHeight );
+	R_SetGL2DSize( glConfig.vidWidth * superSampleMultiplier, glConfig.vidHeight * superSampleMultiplier);
+	R_DrawQuad(	fbo.exposure->color, glConfig.vidWidth * superSampleMultiplier, glConfig.vidHeight * superSampleMultiplier);
 	mipMapsAlreadyGeneratedThisFrame = qfalse;
 	return qtrue;
 #endif

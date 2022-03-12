@@ -1135,7 +1135,7 @@ static void RB_FogPass( void ) {
 
 	qglEnableClientState( GL_COLOR_ARRAY );
 
-	for (i = 0; i < SHADER_MAX_VERTEXES; i++) {
+	for (i = 0; i < tess.numIndexes; i++) {
 		Vector4Scale(tess.svars.colors[i], floatColorsScaleFactor, tess.svars.colorsScaled[i]);
 	}
 	qglColorPointer(4, GL_FLOAT, 0, tess.svars.colorsScaled);
