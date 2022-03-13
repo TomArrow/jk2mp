@@ -59,6 +59,7 @@ cvar_t	*com_fixedtime;
 cvar_t	*com_dropsim;		// 0.0 to 1.0, simulated packet drops
 cvar_t	*com_journal;
 cvar_t	*com_maxfps;
+cvar_t	*com_skipWrite;
 cvar_t	*com_timedemo;
 cvar_t	*com_sv_running;
 cvar_t	*com_cl_running;
@@ -2511,6 +2512,9 @@ void Com_Init( char *commandLine ) {
 		}
 
 		Cbuf_AddText ("exec autoexec.cfg\n");
+
+		// Need this one up here because it is actually read inside Cbuf_Execute.
+		com_skipWrite = Cvar_Get("com_skipWrite", "0", CVAR_TEMP); // skip writing CVAR_ARCHIVE to config. For animation. When you change a var every frame, you dont want to rewrite config file thousands of times.
 
 		Cbuf_Execute ();
 

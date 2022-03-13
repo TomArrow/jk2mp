@@ -357,7 +357,9 @@ void demoCommandsCommand_f(void) {
 void evaluateDemoCommand() {
 	int i, srcLength;
 	qboolean isDynamic = qfalse;
-	char composedCommand[MAX_DEMO_COMMAND_LENGTH];
+	const char skipWriteCmdOn[] = "com_skipWrite 1;";
+	const char skipWriteCmdOff[] = ";com_skipWrite 0";
+	char composedCommand[MAX_DEMO_COMMAND_LENGTH+sizeof(skipWriteCmdOn)+sizeof(skipWriteCmdOff)];
 
 	if (!demo.commands.locked) {
 		demo.commands.lastPoint = 0;
@@ -373,6 +375,8 @@ void evaluateDemoCommand() {
 	}
 
 	char* text = cmdHere->command;
+
+	strcat_s(composedCommand, sizeof(composedCommand), skipWriteCmdOn);// Don't write anything to a config changed during execution of a command point. We would have a config write on every single frame. Bad.
 
 	srcLength = max(strlen(cmdHere->command),sizeof(cmdHere->command));
 	for (i = 0; i < srcLength;i++) {
@@ -395,6 +399,8 @@ void evaluateDemoCommand() {
 			strncat_s(composedCommand,sizeof(composedCommand),&text[i],1);
 		}
 	}
+
+	strcat_s(composedCommand, sizeof(composedCommand), skipWriteCmdOff);
 
 	strncat_s(composedCommand, sizeof(composedCommand), "\n", 1);
 

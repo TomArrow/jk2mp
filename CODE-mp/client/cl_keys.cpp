@@ -1215,7 +1215,9 @@ void Key_SetBinding( int keynum, const char *binding ) {
 
 	// consider this like modifying an archived cvar, so the
 	// file write will be triggered at the next oportunity
-	cvar_modifiedFlags |= CVAR_ARCHIVE;
+	if (!com_skipWrite->integer) {
+		cvar_modifiedFlags |= CVAR_ARCHIVE;
+	}
 }
 
 

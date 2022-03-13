@@ -204,7 +204,11 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 
 			// ZOID--needs to be set so that cvars the game sets as 
 			// SERVERINFO get sent to clients
-			cvar_modifiedFlags |= flags;
+			int tmpFlags = flags;
+			if (com_skipWrite->integer) {
+				tmpFlags &= ~CVAR_ARCHIVE;
+			}
+			cvar_modifiedFlags |= tmpFlags;
 		}
 
 		var->flags |= flags;
@@ -313,7 +317,11 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 		return var;
 	}
 	// note what types of cvars have been modified (userinfo, archive, serverinfo, systeminfo)
-	cvar_modifiedFlags |= var->flags;
+	int tmpFlags = var->flags;
+	if (com_skipWrite->integer) {
+		tmpFlags &= ~CVAR_ARCHIVE;
+	}
+	cvar_modifiedFlags |= tmpFlags;
 
 	if (!force)
 	{
