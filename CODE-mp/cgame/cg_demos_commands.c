@@ -32,6 +32,26 @@ demoCommandPoint_t* commandPointSynch(int playTime) {
 	return point;
 }
 
+// Get command point for specific layer
+demoCommandPoint_t* commandPointSynchForLayer(int playTime,int layer) {
+	demoCommandPoint_t* point = demo.commands.points;
+	if (!point)
+		return 0;
+	demoCommandPoint_t* lastValidPoint = point->layer == layer ? point : 0;
+	while (1) {
+		if (point->next && point->next->time <= playTime) {
+			point = point->next;
+			if (point->layer == layer) {
+				lastValidPoint = point;
+			}
+		}
+		else {
+			break;
+		}
+	}
+	return lastValidPoint;
+}
+
 
 extern void trap_R_ParseWaveform(const char* text, waveForm_t* wf);
 extern float trap_R_EvalWaveform(waveForm_t* wf);
@@ -61,7 +81,7 @@ static void evaluateCommandVariable(demoCommandVariable_t* var) {
 	}
 }
 
-static qboolean commandPointAdd(int time, const char* command, demoCommandVariableRawCollection_t* variableCollection) {
+static qboolean commandPointAdd(int layer, int time, const char* command, demoCommandVariableRawCollection_t* variableCollection) {
 	demoCommandPoint_t* point = commandPointSynch(time);
 	demoCommandPoint_t* newPoint;
 	int i;
@@ -86,6 +106,7 @@ static qboolean commandPointAdd(int time, const char* command, demoCommandVariab
 	}
 	newPoint->time = time;
 	strcpy_s(newPoint->command, sizeof(newPoint->command), command);
+	newPoint->layer = layer;
 	for (int i = 0; i< MAX_DEMO_COMMAND_VARIABLES; i++) {
 		strcpy_s(newPoint->variables[i].raw, sizeof(demoCommandVariableRaw_t), (*variableCollection)[i]);
 		evaluateCommandVariable(&newPoint->variables[i]);
@@ -118,11 +139,12 @@ typedef struct {
 } parseCommandPointVariable_t;
 
 typedef struct {
+	int layer;
 	int time;
 	char command[MAX_DEMO_COMMAND_LENGTH];
 	demoCommandVariableRawCollection_t variables;
 	qboolean variableExists[MAX_DEMO_COMMAND_VARIABLES];
-	qboolean hasTime, hasCommand;
+	qboolean hasTime, hasCommand, hasLayer;
 } parseCommandPoint_t;
 
 static qboolean commandParseTime(BG_XMLParse_t* parse, const char* line, void* data) {
@@ -131,6 +153,14 @@ static qboolean commandParseTime(BG_XMLParse_t* parse, const char* line, void* d
 		return qfalse;
 	point->time = atoi(line);
 	point->hasTime = qtrue;
+	return qtrue;
+}
+static qboolean commandParseLayer(BG_XMLParse_t* parse, const char* line, void* data) {
+	parseCommandPoint_t* point = (parseCommandPoint_t*)data;
+	if (!line[0])
+		return qfalse;
+	point->layer = atoi(line);
+	point->hasLayer = qtrue;
 	return qtrue;
 }
 static qboolean commandParseCommand(BG_XMLParse_t* parse, const char* line, void* data) {
@@ -181,6 +211,7 @@ static qboolean commandParseVariable(BG_XMLParse_t* parse, const struct BG_XMLPa
 static qboolean commandParsePoint(BG_XMLParse_t* parse, const struct BG_XMLParseBlock_s* fromBlock, void* data) {
 	parseCommandPoint_t pointLoad;
 	static BG_XMLParseBlock_t commandParseBlock[] = {
+		{"layer", 0, commandParseLayer},
 		{"time", 0, commandParseTime},
 		{"command", 0, commandParseCommand},
 		{"variable", commandParseVariable, 0},
@@ -192,7 +223,9 @@ static qboolean commandParsePoint(BG_XMLParse_t* parse, const struct BG_XMLParse
 	}
 	if (!pointLoad.hasTime || !pointLoad.hasCommand)
 		return BG_XMLError(parse, "Missing section in command point");
-	commandPointAdd(pointLoad.time, pointLoad.command,pointLoad.variables);
+	if (!pointLoad.hasLayer)
+		pointLoad.layer = 0;
+	commandPointAdd(pointLoad.layer,pointLoad.time, pointLoad.command,pointLoad.variables);
 	return qtrue;
 }
 static qboolean commandsParseLocked(BG_XMLParse_t* parse, const char* line, void* data) {
@@ -226,6 +259,7 @@ void commandsSave(fileHandle_t fileHandle) {
 	demoSaveLine(fileHandle, "\t<locked>%d</locked>\n", demo.commands.locked);
 	while (point) {
 		demoSaveLine(fileHandle, "\t<point>\n");
+		demoSaveLine(fileHandle, "\t\t<layer>%10d</layer>\n", point->layer);
 		demoSaveLine(fileHandle, "\t\t<time>%10d</time>\n", point->time);
 		demoSaveLine(fileHandle, "\t\t<command>%s</command>\n", point->command);
 
@@ -264,24 +298,39 @@ void demoCommandsCommand_f(void) {
 	else if (!Q_stricmp(cmd, "add")) {
 		int i;
 		qboolean hasAtLeastOneVariable = qfalse;
+		int layer = 0;
+		int offset = 0;
+
+		const char* layerOrCommand = CG_Argv(2);
+		if (strlen(layerOrCommand) == 1 && isdigit(layerOrCommand[0])) {
+			// If we want to, we can first specify the layer and then the command.
+			layer = layerOrCommand[0] - '0';
+			offset++;
+		}
 		
 		demoCommandVariableRawCollection_t* varCollection = (demoCommandVariableRawCollection_t*)malloc(sizeof(demoCommandVariableRawCollection_t));
 		memset(varCollection, 0, sizeof(demoCommandVariableRawCollection_t));
 
 		for (int i = 0; i < MAX_DEMO_COMMAND_VARIABLES; i++) {
-			const char* variabletext = CG_Argv(3+i);
+			const char* variabletext = CG_Argv(3+ offset +i);
+			int varNum = i;
+			if (strlen(variabletext) > 2 && isdigit(variabletext[0]) && variabletext[1] == ':') {
+				// A specific varnum was specified
+				varNum = variabletext[0] - '0'; // Set correct varnum to write to
+				variabletext += 2; // Forward the text pointer by 2 to skip the varnum declaration
+			}
 			if (strlen(variabletext)) {
-				strcpy_s((*varCollection)[i],sizeof(demoCommandVariableRaw_t),variabletext);
+				strcpy_s((*varCollection)[varNum],sizeof(demoCommandVariableRaw_t),variabletext);
 				hasAtLeastOneVariable = qtrue;
 			}
 		}
-		const char* commandToAdd = CG_Argv(2);
+		const char* commandToAdd = CG_Argv(2+ offset);
 		if (!strlen(commandToAdd) && !hasAtLeastOneVariable) { // We Will actually allow empty commands now so we can make keypoints solely for the variables
 
 			CG_DemosAddLog("Failed to add command point. Need at least a command or one variable. Syntax: commands add \"[command]\" \"[optional variable 0\"  \"[optional variable 1\"...");
 		}
 		else {
-			if (commandPointAdd(demo.play.time, commandToAdd, varCollection)) {
+			if (commandPointAdd(layer,demo.play.time, commandToAdd, varCollection)) {
 				CG_DemosAddLog("Added command point");
 			}
 			else {
@@ -355,74 +404,64 @@ void demoCommandsCommand_f(void) {
 }
 
 void evaluateDemoCommand() {
-	int i, srcLength;
+	int i,l, srcLength;
 	qboolean isDynamic = qfalse;
 	const char skipWriteCmdOn[] = "com_skipWrite 1;";
 	const char skipWriteCmdOff[] = ";com_skipWrite 0";
 	char composedCommand[MAX_DEMO_COMMAND_LENGTH+sizeof(skipWriteCmdOn)+sizeof(skipWriteCmdOff)];
 
-	if (!demo.commands.locked) {
-		demo.commands.lastPoint = 0;
-		return;
-	}
+	for (l = 0; l < MAX_DEMO_COMMAND_LAYERS; l++) {
 
-	memset(composedCommand,0,sizeof(composedCommand));
+		if (!demo.commands.locked) {
+			demo.commands.lastPoint[l] = 0;
+			continue;
+		}
 
-	demoCommandPoint_t* cmdHere = commandPointSynch(demo.play.time);
+		demoCommandPoint_t* cmdHere = commandPointSynchForLayer(demo.play.time,l);
 	
-	if (!cmdHere) {
-		return;
-	}
+		if (!cmdHere) {
+			return;
+		}
 
-	char* text = cmdHere->command;
+		memset(composedCommand, 0, sizeof(composedCommand));
 
-	strcat_s(composedCommand, sizeof(composedCommand), skipWriteCmdOn);// Don't write anything to a config changed during execution of a command point. We would have a config write on every single frame. Bad.
+		char* text = cmdHere->command;
 
-	srcLength = max(strlen(cmdHere->command),sizeof(cmdHere->command));
-	for (i = 0; i < srcLength;i++) {
-		if (text[i] == '%' && isdigit(text[i + 1]) && (i == 0 || text[i - 1] != '\\')) {
-			// This is a variable
-			char formattedNumber[100];
+		strcat_s(composedCommand, sizeof(composedCommand), skipWriteCmdOn);// Don't write anything to a config changed during execution of a command point. We would have a config write on every single frame. Bad.
 
-			int variableNum = text[i + 1]-'0'; 
-			float result;
-			if (evaluateCommandVariableAt(variableNum,&result)) {
-				isDynamic = qtrue;
+		srcLength = max(strlen(cmdHere->command),sizeof(cmdHere->command));
+		for (i = 0; i < srcLength;i++) {
+			if (text[i] == '%' && isdigit(text[i + 1]) && (i == 0 || text[i - 1] != '\\')) {
+				// This is a variable
+				char formattedNumber[100];
+
+				int variableNum = text[i + 1]-'0'; 
+				float result;
+				if (evaluateCommandVariableAt(variableNum,&result)) {
+					isDynamic = qtrue;
+				}
+
+				sprintf_s(formattedNumber, sizeof(formattedNumber), "%.5f", result);
+				strcat_s(composedCommand, sizeof(composedCommand), formattedNumber);
+
+				i++;
 			}
-
-			sprintf_s(formattedNumber, sizeof(formattedNumber), "%.5f", result);
-			strcat_s(composedCommand, sizeof(composedCommand), formattedNumber);
-
-			i++;
+			else {
+				strncat_s(composedCommand,sizeof(composedCommand),&text[i],1);
+			}
 		}
-		else {
-			strncat_s(composedCommand,sizeof(composedCommand),&text[i],1);
+
+		strcat_s(composedCommand, sizeof(composedCommand), skipWriteCmdOff);
+
+		strncat_s(composedCommand, sizeof(composedCommand), "\n", 1);
+
+		if (demo.commands.lastPoint[l] != cmdHere || isDynamic) { // Don't execute a command twice unless it is dynamic
+
+			trap_SendConsoleCommand(composedCommand);
 		}
+		demo.commands.lastPoint[l] = cmdHere;
+
 	}
-
-	strcat_s(composedCommand, sizeof(composedCommand), skipWriteCmdOff);
-
-	strncat_s(composedCommand, sizeof(composedCommand), "\n", 1);
-
-	if (demo.commands.lastPoint != cmdHere || isDynamic) { // Don't execute a command twice unless it is dynamic
-
-		trap_SendConsoleCommand(composedCommand);
-	}
-	demo.commands.lastPoint = cmdHere;
-
-	/*if (demo.commands.locked) {
-		demoCommandPoint_t* commandPointHere = commandPointSynch(demo.play.time);
-		if (demo.commands.lastPoint != commandPointHere) { // Don't execute a command twice
-
-			trap_SendConsoleCommand(commandPointHere->command);
-		}
-		demo.commands.lastPoint = commandPointHere;
-	}
-	else {
-		demo.commands.lastPoint = 0;
-	}*/
-
-	//lineAt(demo.play.time, demo.play.fraction, &demo.line.time, &cg.timeFraction, &frameSpeed);
 }
 
 qboolean evaluateCommandVariableAt(int variableNumber, float* result) {

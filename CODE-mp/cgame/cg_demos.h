@@ -6,6 +6,7 @@
 
 #define LOGLINES 8
 #define MAX_DEMO_COMMAND_LENGTH 1024
+#define MAX_DEMO_COMMAND_LAYERS 10
 #define MAX_DEMO_COMMAND_VARIABLE_LENGTH 256
 #define MAX_DEMO_COMMAND_VARIABLES 10
 
@@ -58,6 +59,7 @@ typedef struct demoCommandPoint_s {
 	demoCommandVariable_t	variables[MAX_DEMO_COMMAND_VARIABLES]; // 0-9
 	struct					demoCommandPoint_s *next, *prev;
 	int						time;
+	int						layer;
 } demoCommandPoint_t;
 
 typedef struct demoCameraPoint_s {
@@ -109,7 +111,7 @@ typedef struct demoMain_s {
 		float		timeShift;
 		int			shiftWarn;
 		demoCommandPoint_t *points;
-		demoCommandPoint_t *lastPoint;
+		demoCommandPoint_t *lastPoint[MAX_DEMO_COMMAND_LAYERS];
 	} commands;
 	struct {
 		int			start;
