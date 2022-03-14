@@ -1802,7 +1802,7 @@ static void LoadRadiance( const char *filename, unsigned char **pic, int *width,
 		return;
 	}*/
 
-	Com_Printf("Loaded Radiance image with %d x %d pixels!\n", *width,*height);
+	//Com_Printf("Loaded Radiance image with %d x %d pixels!\n", *width,*height);
 
 	int memoryAmount = (*width) * (*height) * 4 * 4;
 	out = (unsigned char*)ri.Malloc(memoryAmount, TAG_TEMP_WORKSPACE, qfalse);
