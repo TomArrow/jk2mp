@@ -50,6 +50,8 @@ static void LoadJPG( const char *name, byte **pic, int *width, int *height );
 static byte			 s_intensitytable[256];
 static unsigned char s_gammatable[256];
 
+extern cvar_t* r_fbo;
+
 int		gl_filter_min = GL_LINEAR_MIPMAP_NEAREST;
 int		gl_filter_max = GL_LINEAR;
 
@@ -352,7 +354,8 @@ void R_LightScaleTexture (T *inNative, int inwidth, int inheight, qboolean only_
 	constexpr float maxValue = std::numeric_limits<T>::max();
 #pragma pop_macro("max")
 
-	T overBrightBitsMultiplier = pow(2,tr.overbrightBits);
+	//T overBrightBitsMultiplier = pow(2,tr.overbrightBits);
+	T overBrightBitsMultiplier = (T)tr.overbrightBitsMultiplier;
 
 	if ( only_gamma )
 	{
@@ -2712,9 +2715,14 @@ void R_SetColorMappings( void ) {
 
 	// setup the overbright lighting
 	tr.overbrightBits = r_overBrightBits->integer;
-	if ( !glConfig.deviceSupportsGamma ) {
+	/*if ( !glConfig.deviceSupportsGamma && !(r_fbo->integer && r_fboOverbright->integer )) {
 		tr.overbrightBits = 0;		// need hardware gamma for overbright
-	}
+	}*/ // Whatever, I want overbright bits to always work so the capture is right.
+
+	// Overbright bits multiplier is for float stuff.
+	// We can't reproduce it perfectly for obvious reasons, but, we can at least have the peak light end up with 
+	// the same intensity change
+	tr.overbrightBitsMultiplier = 1.0f / R_sRGBToLinear(1.0f/pow(2, tr.overbrightBits));
 
 #ifndef QSDL
 	// never overbright in windowed mode
@@ -2776,7 +2784,10 @@ void R_SetColorMappings( void ) {
 
 	if ( glConfig.deviceSupportsGamma )
 	{
-		GLimp_SetGamma( s_gammatable, s_gammatable, s_gammatable );
+		if (!(r_fbo->integer && r_fboOverbright->integer)) {
+
+			GLimp_SetGamma(s_gammatable, s_gammatable, s_gammatable);
+		}
 	}
 }
 

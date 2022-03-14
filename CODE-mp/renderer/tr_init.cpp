@@ -186,6 +186,7 @@ cvar_t	*r_customheight;
 cvar_t	*r_customaspect;
 
 cvar_t	*r_overBrightBits;
+cvar_t	*r_fboOverbright;
 
 cvar_t	*r_debugSurface;
 cvar_t	*r_simpleMipMaps;
@@ -902,6 +903,7 @@ void R_Register( void )
 	r_stencilbits = ri.Cvar_Get( "r_stencilbits", "8", CVAR_ARCHIVE | CVAR_LATCH );
 	r_depthbits = ri.Cvar_Get( "r_depthbits", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_overBrightBits = ri.Cvar_Get ("r_overBrightBits", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_fboOverbright = ri.Cvar_Get ("r_fboOverbright", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ignorehwgamma = ri.Cvar_Get( "r_ignorehwgamma", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_mode = ri.Cvar_Get( "r_mode", "3", CVAR_ARCHIVE | CVAR_LATCH );
 	r_fullscreen = ri.Cvar_Get( "r_fullscreen", "1", CVAR_ARCHIVE | CVAR_LATCH );

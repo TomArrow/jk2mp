@@ -860,7 +860,12 @@ void R_FrameBuffer_EndFrame( void ) {
 	}
 
 	GL_State( GLS_DEPTHTEST_DISABLE );
-	qglColor4f(1, 1, 1, 1 );
+	if (r_fbo->integer && r_fboOverbright->integer) {
+		qglColor4f(tr.overbrightBitsMultiplier, tr.overbrightBitsMultiplier, tr.overbrightBitsMultiplier, 1);
+	}
+	else {
+		qglColor4f(1, 1, 1, 1);
+	}
 	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, 0);
 	qglEnable(GL_FRAMEBUFFER_SRGB);
 	R_SetGL2DSize( fbo.screenWidth, fbo.screenHeight );
