@@ -39,7 +39,7 @@ demoCommandPoint_t* commandPointSynchForLayer(int playTime,int layer) {
 		return 0;
 	demoCommandPoint_t* lastValidPoint = point->layer == layer ? point : 0;
 	while (1) {
-		if (point->next && point->next->time <= playTime) {
+		if (point->next && (point->next->time <= playTime || !lastValidPoint)) {
 			point = point->next;
 			if (point->layer == layer) {
 				lastValidPoint = point;
