@@ -1135,7 +1135,8 @@ static void RB_FogPass( void ) {
 
 	qglEnableClientState( GL_COLOR_ARRAY );
 
-	for (i = 0; i < tess.numIndexes; i++) {
+	//for (i = 0; i < tess.numIndexes; i++) {
+	for (i = 0; i < tess.numVertexes; i++) {
 		Vector4Scale(tess.svars.colors[i], floatColorsScaleFactor, tess.svars.colorsScaled[i]);
 	}
 	qglColorPointer(4, GL_FLOAT, 0, tess.svars.colorsScaled);
@@ -1663,7 +1664,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			qglEnableClientState( GL_COLOR_ARRAY );
 			//qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, input->svars.colors ); 
-			for (int i = 0; i < input->numIndexes; i++) {
+			//for (int i = 0; i < input->numIndexes; i++) { // This messes up console text. Must be the wrong number
+			//for (int i = 0; i < input->numIndexes; i++) {
+			for (int i = 0; i < input->numVertexes; i++) {
+			//for (int i = 0; i < SHADER_MAX_VERTEXES; i++) {
 				Vector4Scale(input->svars.colors[i], floatColorsScaleFactor, input->svars.colorsScaled[i]);
 			}
 			qglColorPointer(4, GL_FLOAT, 0, input->svars.colorsScaled);
@@ -1767,7 +1771,9 @@ void RB_StageIteratorGeneric( void )
 		
 		//static vec4_t tmp;
 		//Vector4Scale((vec_t*)tess.svars.colors, 1.0f / 255.0f, tmp);
-		for (int i = 0; i < tess.numIndexes; i++) {
+		//for (int i = 0; i < tess.numIndexes; i++) {
+		for (int i = 0; i < tess.numVertexes; i++) {
+		//for (int i = 0; i < SHADER_MAX_VERTEXES; i++) {
 			Vector4Scale(tess.svars.colors[i], floatColorsScaleFactor, tess.svars.colorsScaled[i]);
 		}
 		qglColorPointer( 4, GL_FLOAT, 0, tess.svars.colorsScaled);
@@ -1891,7 +1897,8 @@ void RB_StageIteratorVertexLitTexture( void )
 	qglEnableClientState( GL_TEXTURE_COORD_ARRAY);
 
 	//qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, tess.svars.colors );
-	for (int i = 0; i < input->numIndexes; i++) {
+	//for (int i = 0; i < input->numIndexes; i++) {
+	for (int i = 0; i < input->numVertexes; i++) {
 		Vector4Scale(tess.svars.colors[i], floatColorsScaleFactor, tess.svars.colorsScaled[i]);
 	}
 	qglColorPointer(4, GL_FLOAT, 0, tess.svars.colorsScaled);
