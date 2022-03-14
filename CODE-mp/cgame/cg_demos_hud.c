@@ -44,7 +44,9 @@ typedef enum {
 	hudDemoName,
 	hudCGTime,
 
+	hudCommandLayerHere,
 	hudCommandHere,
+	hudCommandVariablesHere,
 
 	hudCamCheckPos,
 	hudCamCheckAngles,
@@ -278,7 +280,7 @@ static float *hudGetFloat( hudItem_t *item ) {
 static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
 	char tmp[32];
 	char tmp2[32];
-	int i, highestSlashIndex;
+	int i, highestSlashIndex,count;
 	char* onlyFilenameTmp;
 
 	buf[0] = 0;
@@ -351,6 +353,29 @@ static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
 	case hudCommandHere:
 		if (hud.commandPoint) {
 			Com_sprintf(buf, bufSize, "%s", hud.commandPoint->command);
+		}
+		return;
+	case hudCommandVariablesHere:
+		if (hud.commandPoint) {
+			buf[0] = 0;
+			count = 0;
+			for (i = 0; i < MAX_DEMO_COMMAND_VARIABLES; i++) {
+				if (hud.commandPoint->variables[i].isValid) {
+					char tmpVar[MAX_DEMO_COMMAND_VARIABLE_LENGTH + 5];
+					if (count++ == 0) {
+						Com_sprintf(tmpVar, sizeof(tmpVar), "%d:%s", i, hud.commandPoint->variables[i].raw);
+					}
+					else {
+						Com_sprintf(tmpVar, sizeof(tmpVar), " | %d:%s", i, hud.commandPoint->variables[i].raw);
+					}
+					strcat_s(buf, bufSize, tmpVar);
+				}
+			}
+		}
+		return;
+	case hudCommandLayerHere:
+		if (hud.commandPoint) {
+			Com_sprintf(buf, bufSize, "%d", hud.commandPoint->layer);
 		}
 		return;
 	case hudCamSpeed:
@@ -754,7 +779,9 @@ void hudInitTables(void) {
 		hudAddHandler(   0,  25+i, 0, 0, hudLogBase+i );
 
 	// Command items
-	hudAddHandler(0, 4, MASK_CMDS, "Command:", hudCommandHere);
+	hudAddHandler(0, 4, MASK_CMDS, "Layer:", hudCommandLayerHere);
+	hudAddHandler(0, 5, MASK_CMDS, "Command:", hudCommandHere);
+	hudAddHandler(0, 6, MASK_CMDS, "Variables:", hudCommandVariablesHere);
 
 	// Camera Items
 	hudAddFloat(   0,  4, MASK_CAM_EDIT, "PosX:",  hudCamPosX );
