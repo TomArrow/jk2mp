@@ -3,7 +3,7 @@
 #include "cg_demos.h"
 
 #ifdef RELDEBUG
-#pragma optimize("", off)
+//#pragma optimize("", off)
 #endif
 
 static demoCommandPoint_t* commandPointAlloc(void) {
@@ -221,7 +221,7 @@ static qboolean commandParsePoint(BG_XMLParse_t* parse, const struct BG_XMLParse
 	if (!BG_XMLParse(parse, fromBlock, commandParseBlock, &pointLoad)) {
 		return qfalse;
 	}
-	if (!pointLoad.hasTime || !pointLoad.hasCommand)
+	if (!pointLoad.hasTime/* || !pointLoad.hasCommand*/) // We allow points without a command, for example for only manipulating variables
 		return BG_XMLError(parse, "Missing section in command point");
 	if (!pointLoad.hasLayer)
 		pointLoad.layer = 0;
@@ -261,7 +261,9 @@ void commandsSave(fileHandle_t fileHandle) {
 		demoSaveLine(fileHandle, "\t<point>\n");
 		demoSaveLine(fileHandle, "\t\t<layer>%10d</layer>\n", point->layer);
 		demoSaveLine(fileHandle, "\t\t<time>%10d</time>\n", point->time);
-		demoSaveLine(fileHandle, "\t\t<command>%s</command>\n", point->command);
+		if (strlen(point->command)) {
+			demoSaveLine(fileHandle, "\t\t<command>%s</command>\n", point->command);
+		}
 
 		for (i = 0; i < MAX_DEMO_COMMAND_VARIABLES; i++) {
 			if (!strlen(point->variables[i].raw)) {
@@ -406,6 +408,7 @@ void demoCommandsCommand_f(void) {
 void evaluateDemoCommand() {
 	int i,l, srcLength;
 	qboolean isDynamic = qfalse;
+	qboolean varsHaveChanged = qfalse;
 	const char skipWriteCmdOn[] = "com_skipWrite 1;";
 	const char skipWriteCmdOff[] = ";com_skipWrite 0";
 	char composedCommand[MAX_DEMO_COMMAND_LENGTH+sizeof(skipWriteCmdOn)+sizeof(skipWriteCmdOff)];
@@ -438,8 +441,12 @@ void evaluateDemoCommand() {
 				int variableNum = text[i + 1]-'0'; 
 				float result;
 				if (evaluateCommandVariableAt(variableNum,&result)) {
-					isDynamic = qtrue;
+					isDynamic = qtrue; // Probably get rid of this, it's not reliable anyway.
 				}
+				if (demo.commands.lastValue[variableNum] != result){
+					varsHaveChanged = qtrue;
+				}
+				demo.commands.lastValue[variableNum] = result;
 
 				sprintf_s(formattedNumber, sizeof(formattedNumber), "%.5f", result);
 				strcat_s(composedCommand, sizeof(composedCommand), formattedNumber);
@@ -455,7 +462,7 @@ void evaluateDemoCommand() {
 
 		strncat_s(composedCommand, sizeof(composedCommand), "\n", 1);
 
-		if (demo.commands.lastPoint[l] != cmdHere || isDynamic) { // Don't execute a command twice unless it is dynamic
+		if (demo.commands.lastPoint[l] != cmdHere || isDynamic || varsHaveChanged) { // Don't execute a command twice unless it is dynamic
 
 			trap_SendConsoleCommand(composedCommand);
 		}
@@ -546,5 +553,5 @@ qboolean evaluateCommandVariableValue(demoCommandVariable_t* variable, float* re
 
 
 #ifdef RELDEBUG
-#pragma optimize("", on)
+//#pragma optimize("", on)
 #endif

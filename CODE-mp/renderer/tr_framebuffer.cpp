@@ -776,8 +776,9 @@ qboolean R_FrameBuffer_Blur( float scale, int frame, int total ) {
 #endif
 }
 #ifdef RELDEBUG
-#pragma optimize("", off)
+//#pragma optimize("", off)
 #endif
+const vec3_t brightnessWeightsPhotometric{0.2126f,0.7162f,0.0722f};
 qboolean R_FrameBuffer_ApplyExposure( ) { // really kinda useless unless you want to reduce exposure sadly. Numbers are clamped.
 #ifdef HAVE_GLES
 	//TODO
@@ -813,6 +814,12 @@ qboolean R_FrameBuffer_ApplyExposure( ) { // really kinda useless unless you wan
 
 		vec3_t invertedSkyTint;
 		VectorInvert(tr.mmeSkyTint, invertedSkyTint);
+		if (r_fboCompensateSkyTint->integer == 3) {
+			// compensate brightness - "photometric" mode
+			float resultingBrightness = DotProduct(brightnessWeightsPhotometric, invertedSkyTint);
+			VectorScale(invertedSkyTint, 1.0f / resultingBrightness,invertedSkyTint);
+		}
+
 		VectorMultiply(invertedSkyTint,tint,tint);
 	}
 	if (tr.mmeFBOImageTintIsSet ) {
@@ -835,7 +842,7 @@ qboolean R_FrameBuffer_ApplyExposure( ) { // really kinda useless unless you wan
 #endif
 }
 #ifdef RELDEBUG
-#pragma optimize("", on)
+//#pragma optimize("", on)
 #endif
 
 

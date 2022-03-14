@@ -111,7 +111,10 @@ typedef struct demoMain_s {
 		float		timeShift;
 		int			shiftWarn;
 		demoCommandPoint_t *points;
+
+		// Used to determine if a new command must be executed or not:
 		demoCommandPoint_t *lastPoint[MAX_DEMO_COMMAND_LAYERS];
+		float lastValue[MAX_DEMO_COMMAND_VARIABLES];
 	} commands;
 	struct {
 		int			start;

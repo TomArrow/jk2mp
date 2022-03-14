@@ -982,7 +982,7 @@ static void demoSeekTwoCommand_f(void) {
 	}
 }
 #ifdef RELDEBUG
-#pragma optimize("", off)
+//#pragma optimize("", off)
 #endif
 static void demoSeekSyncCommand_f(void) {
 	const char *cmd = CG_Argv(1);
@@ -1029,7 +1029,7 @@ static void demoSeekSyncCommand_f(void) {
 	}
 }
 #ifdef RELDEBUG
-#pragma optimize("", on)
+//#pragma optimize("", on)
 #endif
 
 // seek by server time, not demotime
