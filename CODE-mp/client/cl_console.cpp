@@ -455,7 +455,7 @@ void CL_ConsolePrint( char *txt ) {
 			if ( prev < 0 )
 				prev = NUM_CON_TIMES - 1;
 			con.times[prev] = 0;
-			con.gameTimes[prev] = 0;
+			con.gameTimes[prev] = 0; // I don't understand why this was done? I tihink it partly causes chatbox usage to hide normal printouts.
 		}
 		else {
 

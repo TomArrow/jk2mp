@@ -307,8 +307,9 @@ typedef struct {
 	float gameTime; // For notify message duration and such.
 } clientStatic_t;
 
-#define	CON_TEXTSIZE	32768
-#define	NUM_CON_TIMES	4
+//#define	CON_TEXTSIZE	32768
+#define	CON_TEXTSIZE	131072 // increased from jk2mv
+#define	NUM_CON_TIMES	32
 
 typedef struct {
 	qboolean	initialized;

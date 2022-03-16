@@ -1200,12 +1200,12 @@ The string has been tokenized and can be retrieved with
 Cmd_Argc() / Cmd_Argv()
 =================
 */
-static char demo15chat[MAX_SAY_TEXT] = "";			//not only 1.02?
+static char demo15chat[MAX_STRIPED_SV_STRING] = "";			//not only 1.02?
 static qboolean demo15trychat = qfalse;	//not only 1.02?
 extern void CG_ChatBox_AddString(char *chatStr); //cg_draw.c
 static void CG_ServerCommand( void ) {
 	const char	*cmd;
-	char		text[MAX_SAY_TEXT];
+	char		text[MAX_STRIPED_SV_STRING];
 
 	cmd = CG_Argv(0);
 
