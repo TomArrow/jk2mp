@@ -423,7 +423,7 @@ void evaluateDemoCommand() {
 		demoCommandPoint_t* cmdHere = commandPointSynchForLayer(demo.play.time,l);
 	
 		if (!cmdHere) {
-			return;
+			continue;
 		}
 
 		memset(composedCommand, 0, sizeof(composedCommand));
