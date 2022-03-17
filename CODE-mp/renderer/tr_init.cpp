@@ -56,6 +56,7 @@ cvar_t	*r_displayRefresh;
 cvar_t	*r_detailTextures;
 
 cvar_t	*r_znear;				// near Z clip plane
+cvar_t	*r_zinvert;				// invert z buffer
 cvar_t	*r_zproj;				// z distance of projection plane
 cvar_t	*r_stereoSeparation;	// separation of cameras for stereo capture
 
@@ -674,7 +675,7 @@ static void R_ScreenShotPNG_f (void) {
 ** GL_SetDefaultState
 */
 void GL_SetDefaultState( void ) {
-	qglClearDepth( 1.0f );
+	qglClearDepth(1.0f);
 
 	qglCullFace(GL_FRONT);
 
@@ -695,7 +696,8 @@ void GL_SetDefaultState( void ) {
 	GL_TexEnv( GL_MODULATE );
 
 	qglShadeModel( GL_SMOOTH );
-	qglDepthFunc( GL_LEQUAL );
+
+	qglDepthFunc(GL_LEQUAL);
 
 	// the vertex array is always enabled, but the color and texture
 	// arrays are enabled and disabled around the compiled vertex array call
@@ -958,6 +960,7 @@ void R_Register( void )
 
 	r_flares = ri.Cvar_Get ("r_flares", "0", CVAR_ARCHIVE );
 	r_znear = ri.Cvar_Get( "r_znear", "1", CVAR_CHEAT );
+	r_zinvert = ri.Cvar_Get( "r_zinvert", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	AssertCvarRange( r_znear, 0.001f, 200, qfalse );
 	r_zproj = ri.Cvar_Get( "r_zproj", "107", CVAR_ARCHIVE );
 	r_stereoSeparation = ri.Cvar_Get( "r_stereoSeparation", "0", 0 );

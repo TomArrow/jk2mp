@@ -263,7 +263,9 @@ static void DrawTris (shaderCommands_t *input) {
 	qglColor3f (1,1,1);
 
 	GL_State( GLS_POLYMODE_LINE | GLS_DEPTHMASK_TRUE );
-	qglDepthRange( 0, 0 );
+	
+	qglDepthRange(0, 0);
+	
 
 	if (!( r_showtris->integer & 0x2) ) {
 		qglDisableClientState (GL_COLOR_ARRAY);
@@ -272,7 +274,8 @@ static void DrawTris (shaderCommands_t *input) {
 	}
 
 	if ( !(r_showtris->integer & 0x4 )) {
-		qglDepthRange( 0, 0 );
+		
+		qglDepthRange(0, 0);
 	}
 
 	qglVertexPointer (3, GL_FLOAT, 16, input->xyz);	// padded for SIMD
@@ -288,7 +291,7 @@ static void DrawTris (shaderCommands_t *input) {
 		qglUnlockArraysEXT();
 		GLimp_LogComment( "glUnlockArraysEXT\n" );
 	}
-	qglDepthRange( 0, 1 );
+	qglDepthRange(0, 1 );
 }
 
 
@@ -305,7 +308,7 @@ static void DrawNormals (shaderCommands_t *input) {
 
 	GL_Bind( tr.whiteImage );
 	qglColor3f (1,1,1);
-	qglDepthRange( 0, 0 );	// never occluded
+	qglDepthRange(0,0);	// never occluded
 	GL_State( GLS_POLYMODE_LINE | GLS_DEPTHMASK_TRUE );
 
 	qglBegin (GL_LINES);
@@ -316,7 +319,7 @@ static void DrawNormals (shaderCommands_t *input) {
 	}
 	qglEnd ();
 
-	qglDepthRange( 0, 1 );
+	qglDepthRange(0, 1 );
 }
 
 /*

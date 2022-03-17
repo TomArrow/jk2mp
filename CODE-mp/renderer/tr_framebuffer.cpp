@@ -68,10 +68,14 @@ cvar_t *r_fboExposure;
 cvar_t *r_fboCompensateSkyTint;
 cvar_t *r_fboSuperSample;
 cvar_t *r_fboSuperSampleMipMap;
+cvar_t *r_fboDepthBits;
+cvar_t *r_fboDepthPacked;
+cvar_t *r_fboStencilWhenNotPacked;
 cvar_t *r_fboMultiSample;
 cvar_t *r_fboBlur;
 cvar_t *r_fboWidth;
 cvar_t *r_fboHeight;
+cvar_t *r_glDepthClamp;
 
 qboolean mipMapsAlreadyGeneratedThisFrame = qfalse;
 
@@ -81,9 +85,19 @@ qboolean mipMapsAlreadyGeneratedThisFrame = qfalse;
 int superSampleMultiplier =1; // outside of this file, only READ this. 
 
 
-#define GL_DEPTH_STENCIL_EXT 0x84F9
-#define GL_UNSIGNED_INT_24_8_EXT 0x84FA
-#define GL_DEPTH24_STENCIL8_EXT 0x88F0
+#define GL_DEPTH_STENCIL_EXT					0x84F9
+#define GL_UNSIGNED_INT_24_8_EXT				0x84FA
+#define GL_DEPTH24_STENCIL8_EXT					0x88F0
+#define GL_DEPTH32_STENCIL8						0x8CAD
+#define GL_DEPTH_COMPONENT24					0x81A6
+#define GL_DEPTH_COMPONENT32					0x81A7
+#define GL_DEPTH_COMPONENT32F					0x8CAC
+#define GL_DEPTH32F_STENCIL8					0x8CAD // Oh.. same value as GL_DEPTH32_STENCIL8! hmm..
+#define GL_DEPTH_COMPONENT32F_NV				0x8DAB
+#define GL_DEPTH32F_STENCIL8_NV					0x8DAC
+#define GL_FLOAT_32_UNSIGNED_INT_24_8_REV		0x8DAD
+#define GL_FLOAT_32_UNSIGNED_INT_24_8_REV_NV	0x8DAD
+#define GL_DEPTH_CLAMP							0x864F
 
 #define RGBA32F_ARB                      0x8814
 #define RGBA16F_ARB                      0x881A
@@ -213,9 +227,91 @@ void R_DrawQuadPartial(GLuint tex, int width, int height,int offsetX, int offset
 #endif
 }
 
+static void GetDesiredDepthType(GLenum& requestedType, GLenum& requestedFormat,int& requestedBitDepth, qboolean& isFloat, qboolean packed = qfalse) {
+	requestedFormat = packed ? GL_UNSIGNED_INT_24_8_EXT : 0;
+	isFloat = qfalse;
+	if (!Q_stricmp(r_fboDepthBits->string,"32f")) {
+		requestedBitDepth = 32;
+		if (glConfig.depthMapFloatNV) {
+			requestedType = packed ? GL_DEPTH32F_STENCIL8_NV : GL_DEPTH_COMPONENT32F_NV;
+			requestedFormat = packed ? GL_FLOAT_32_UNSIGNED_INT_24_8_REV_NV : GL_FLOAT;
+			isFloat = qtrue;
+		}
+		else if (glConfig.depthMapFloat) {
+			requestedType = packed ? GL_DEPTH32F_STENCIL8 : GL_DEPTH_COMPONENT32F;
+			requestedFormat = packed ? GL_FLOAT_32_UNSIGNED_INT_24_8_REV : GL_FLOAT;
+			isFloat = qtrue;
+		}
+		else {
+			if (packed) {
+				// Afaik there is no packed 32 bit depth buffer format.
+				ri.Printf(PRINT_WARNING, "Floating point depth buffer requested, but not supported by GPU. Requesting 24 bit packed instead.\n");
+				requestedBitDepth = 24;
+				requestedType = GL_DEPTH24_STENCIL8_EXT;
+				requestedFormat = GL_UNSIGNED_INT_24_8_EXT;
+			}
+			else {
+				ri.Printf(PRINT_WARNING, "Floating point depth buffer requested, but not supported by GPU. Requesting 32 bit instead.\n");
+				requestedType = GL_DEPTH_COMPONENT32;
+				requestedFormat = GL_UNSIGNED_INT;
+			}
+		}
+	}
+	else if(!r_fboDepthBits->integer) { // Nothing requested
+		requestedBitDepth = 0;
+		requestedType = packed ? GL_DEPTH24_STENCIL8_EXT : GL_DEPTH_COMPONENT;
+		requestedFormat = packed ? GL_UNSIGNED_INT_24_8_EXT : GL_UNSIGNED_INT;
+	}
+	else {
+		if (r_fboDepthBits->integer == 32) {
+			requestedBitDepth = 32;
+			requestedType = packed ? GL_DEPTH32_STENCIL8 : GL_DEPTH_COMPONENT32; // this is WRONG for packed. GL_DEPTH32_STENCIL8 doesn't actually exist, that's a float format, just wrongly named
+			requestedFormat = packed ? GL_UNSIGNED_INT_24_8_EXT : GL_UNSIGNED_INT;
+		}
+		else if (r_fboDepthBits->integer == 24) {
+			requestedBitDepth = 24;
+			requestedType = packed ? GL_DEPTH24_STENCIL8_EXT : GL_DEPTH_COMPONENT24;
+			requestedFormat = packed ? GL_UNSIGNED_INT_24_8_EXT : GL_UNSIGNED_INT;
+		}
+		else {
+			requestedBitDepth = 0;
+			requestedType = packed ? GL_DEPTH24_STENCIL8_EXT : GL_DEPTH_COMPONENT;
+			requestedFormat = packed ? GL_UNSIGNED_INT_24_8_EXT : GL_UNSIGNED_INT;
+			ri.Printf(PRINT_WARNING, "Invalid value of %d for r_fboDepthBits.\n", r_fboDepthBits->integer);
+		}
+	}
+}
+
+/*static qboolean ProcessGLDepthEnumBits(GLenum& bindType) {
+	qboolean isDepth = (qboolean)(bindType == GL_DEPTH_COMPONENT || bindType == GL_DEPTH24_STENCIL8_EXT);
+	if (isDepth && r_fboDepthBits->integer) {
+		if (bindType == GL_DEPTH_COMPONENT) {
+
+			switch (r_fboDepthBits->integer) {
+			case 32:
+				bindType = GL_DEPTH_COMPONENT32;
+				break;
+			case 24:
+				bindType = GL_DEPTH_COMPONENT24;
+				break;
+			}
+		}
+		else if (bindType == GL_DEPTH24_STENCIL8_EXT) {
+
+			switch (r_fboDepthBits->integer) {
+			case 32:
+				bindType = GL_DEPTH32_STENCIL8;
+				break;
+			}
+		}
+	}
+	return isDepth;
+}*/
+
 static int CreateTextureBuffer( int width, int height, GLenum internalFormat, GLenum format, GLenum type, int superSample ) {
 	int ret = 0;
 	int error = qglGetError();
+
 	qglGenTextures( 1, (GLuint *)&ret );
 	qglBindTexture(	GL_TEXTURE_2D, ret );
 	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, superSample == 1 ?  GL_NEAREST : (r_fboSuperSampleMipMap->integer ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR) );
@@ -238,11 +334,13 @@ static int CreateRenderBuffer( int samples, int width, int height, GLenum bindTy
 #else
 	qglGenRenderbuffers( 1, (GLuint *)&ret );
 	qglBindRenderbuffer( GL_RENDERBUFFER_EXT, ret );
+
 	if ( samples ) {
 		qglRenderbufferStorageMultisampleEXT( GL_RENDERBUFFER_EXT, samples, bindType, width* superSample, height * superSample);
 	} else {
 		qglRenderbufferStorage(	GL_RENDERBUFFER_EXT, bindType, width * superSample, height * superSample);
 	}
+
 #endif
 	return ret;
 }
@@ -293,6 +391,9 @@ frameBufferData_t* R_FrameBufferCreate( int width, int height, int flags, int su
 #else
 	frameBufferData_t *buffer;
 	GLuint status;
+	GLenum desiredDepthType,desiredDepthFormat;
+	qboolean desiringFloatDepth;
+	int desiredDepthBitDepth = 0;
 	int samples = 0;
 
 	buffer = (frameBufferData_t *)malloc( sizeof( *buffer ) );
@@ -310,25 +411,42 @@ frameBufferData_t* R_FrameBufferCreate( int width, int height, int flags, int su
 	}
 
 	if ( flags & FB_PACKED ) {
+		GetDesiredDepthType(desiredDepthType, desiredDepthFormat,desiredDepthBitDepth, desiringFloatDepth, qtrue);
 		if ( samples ) {
-			buffer->packed = CreateRenderBuffer( samples, width, height, GL_DEPTH24_STENCIL8_EXT, superSample );
+			buffer->packed = CreateRenderBuffer( samples, width, height, desiredDepthType, superSample );
 			qglFramebufferRenderbuffer(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, buffer->packed );
 			qglFramebufferRenderbuffer(GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, buffer->packed );
 		} else {
 			// Setup depth_stencil texture (not mipmap)
-			buffer->packed = CreateTextureBuffer( width, height, GL_DEPTH24_STENCIL8_EXT, GL_DEPTH_STENCIL_EXT, GL_UNSIGNED_INT_24_8_EXT,superSample );
+			buffer->packed = CreateTextureBuffer( width, height, desiredDepthType, GL_DEPTH_STENCIL_EXT, desiredDepthFormat,superSample );
 			qglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, buffer->packed, 0);
 			qglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT, GL_TEXTURE_2D, buffer->packed, 0);
 		}
 	} else {
-		if ( flags & FB_DEPTH ) {
-			buffer->depth = CreateRenderBuffer( samples, width, height, GL_DEPTH_COMPONENT, superSample);
-			qglFramebufferRenderbuffer(	GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, buffer->depth );
+		GetDesiredDepthType(desiredDepthType, desiredDepthFormat, desiredDepthBitDepth, desiringFloatDepth, qfalse);
+		if (1 /*samples*/) {
+			if (flags & FB_DEPTH) {
+				buffer->depth = CreateRenderBuffer(samples, width, height, desiredDepthType, superSample);
+				qglFramebufferRenderbuffer(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, buffer->depth);
+			}
+			if (flags & FB_STENCIL) {
+				buffer->stencil = CreateRenderBuffer(samples, width, height, GL_STENCIL_INDEX8_EXT, superSample);
+				qglFramebufferRenderbuffer(GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, buffer->stencil);
+			}
 		}
-		if ( flags & FB_STENCIL ) {
-			buffer->stencil = CreateRenderBuffer( samples, width, height, GL_STENCIL_INDEX8_EXT, superSample);
-			qglFramebufferRenderbuffer(	GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, buffer->stencil );
-		}
+		/*else { // This was just an attempt. Didn't really help with anything
+			if (flags & FB_DEPTH) {
+				//buffer->depth = CreateRenderBuffer(samples, width, height, desiredDepthType, superSample);
+				buffer->depth = CreateTextureBuffer(width, height, desiredDepthType, GL_DEPTH_COMPONENT, desiredDepthFormat, superSample);
+				//buffer->depth = CreateTextureBuffer(width, height, GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_FLOAT, superSample);
+				qglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, buffer->depth,0);
+			}
+			if (flags & FB_STENCIL) {
+				//buffer->stencil = CreateRenderBuffer(samples, width, height, GL_STENCIL_INDEX8_EXT, superSample);
+				buffer->stencil = CreateTextureBuffer(width, height, GL_STENCIL_INDEX8_EXT, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, superSample);
+				qglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT, GL_TEXTURE_2D, buffer->stencil,0);
+			}
+		}*/		
 	}
 	/* Attach the color buffer */
 	
@@ -376,7 +494,31 @@ frameBufferData_t* R_FrameBufferCreate( int width, int height, int flags, int su
 	    }
 		R_FrameBufferDelete( buffer );
 		return 0;
-	}		
+	}
+
+	GLint depthBufferBits;
+	qglGetIntegerv(GL_DEPTH_BITS, &depthBufferBits);
+	if (flags & FB_PACKED || flags & FB_DEPTH) {
+		if (desiredDepthBitDepth && desiredDepthBitDepth != depthBufferBits) {
+			ri.Printf(PRINT_WARNING, "FBO: Tried to create %d bit depth buffer, OpenGL used %d bits instead.\n", r_fboDepthBits->integer, depthBufferBits);
+		}
+		else {
+			if (desiredDepthBitDepth == 32 && desiringFloatDepth && glConfig.depthMapFloatNV) {
+				glConfig.depthMapFloatNVActive = qtrue;
+			}
+			if (glConfig.depthMapFloatNVActive || r_zinvert->integer > 1) {
+				// Activate zinvert trick for nvidia cards. Scaling the depth map to -1:1 instead of 0:1 along with a changed projection matrix (elsewhere in code).
+				// This relies on detecting the nvidia extension but r_zinvert > 1 can force it since technically other GPUs are allowed not to clamp those values now (?)
+				// however most GPUs likely still do.
+				qglDepthRange = dllDepthRange = depthRangeScaledNV;
+			}
+			
+			ri.Printf(PRINT_ALL, "FBO: %d bit depth buffer created.\n", depthBufferBits);
+		}
+	}
+
+
+
 	return buffer;
 #endif
 }
@@ -386,9 +528,13 @@ void R_FrameBuffer_Init( void ) {
 	//TODO
 #else
 	int flags, width, height;
+	GLenum tmp;
 
 	memset( &fbo, 0, sizeof( fbo ) );
 	r_fbo = ri.Cvar_Get( "r_fbo", "0", CVAR_ARCHIVE | CVAR_LATCH);
+	r_fboDepthBits = ri.Cvar_Get( "r_fboDepthBits", "32", CVAR_ARCHIVE | CVAR_LATCH);
+	r_fboDepthPacked = ri.Cvar_Get( "r_fboDepthPacked", "1", CVAR_ARCHIVE | CVAR_LATCH);
+	r_fboStencilWhenNotPacked = ri.Cvar_Get( "r_fboStencilWhenNotPacked", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboExposure = ri.Cvar_Get("r_fboExposure", "1.0", CVAR_ARCHIVE);
 	r_fboCompensateSkyTint = ri.Cvar_Get("r_fboCompensateSkyTint", "0", CVAR_ARCHIVE);
 	r_fboSuperSample = ri.Cvar_Get( "r_fboSuperSample", "0", CVAR_ARCHIVE | CVAR_LATCH);	
@@ -396,6 +542,7 @@ void R_FrameBuffer_Init( void ) {
 	r_fboBlur = ri.Cvar_Get( "r_fboBlur", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_fboWidth = ri.Cvar_Get( "r_fboWidth", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_fboHeight = ri.Cvar_Get( "r_fboHeight", "0", CVAR_ARCHIVE | CVAR_LATCH);	
+	r_glDepthClamp = ri.Cvar_Get( "r_glDepthClamp", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboMultiSample = ri.Cvar_Get( "r_fboMultiSample", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_floatBuffer = ri.Cvar_Get( "r_floatBuffer", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_convertToHDR = ri.Cvar_Get( "r_convertToHDR", "1", CVAR_ARCHIVE | CVAR_LATCH);
@@ -418,10 +565,23 @@ void R_FrameBuffer_Init( void ) {
 
 	ri.Printf( PRINT_ALL, "----- Enabling FrameBuffer Path -----\n" );
 
-	//set our main screen flags									
+
+	//set our main screen flags
+	qboolean floatDepthRequested;
+	int requestedDepthBits;
+	GetDesiredDepthType(tmp,tmp,requestedDepthBits,floatDepthRequested);
+	qboolean requestingIntegral32 = (qboolean)(requestedDepthBits == 32 && !floatDepthRequested);
 	flags = 0;
 	if ( (glConfig.stencilBits > 0) ) {
-		flags |= FB_PACKED;
+		if (glConfig.packedDepthStencil && r_fboDepthPacked->integer && !requestingIntegral32) { // Not sure if I got this all right
+			flags |= FB_PACKED;
+		}
+		else {
+			flags |= FB_DEPTH;
+			if (r_fboStencilWhenNotPacked->integer) {
+				flags |= FB_STENCIL;
+			}
+		}
 	} else {
 		flags |= FB_DEPTH;
 	}
@@ -550,6 +710,9 @@ void R_FrameBuffer_StartFrame( void ) {
 		qglBindFramebuffer( GL_FRAMEBUFFER_EXT, fbo.main->fbo );
 	}
 	qglDrawBuffer( GL_COLOR_ATTACHMENT0_EXT );
+	if (glConfig.depthClamp && r_glDepthClamp->integer) {
+		qglEnable(GL_DEPTH_CLAMP);
+	}
 	qglClampColor(GL_CLAMP_VERTEX_COLOR_ARB,GL_FALSE);
 	qglClampColor(GL_CLAMP_FRAGMENT_COLOR_ARB,GL_FALSE);
 	qglClampColor(GL_CLAMP_READ_COLOR_ARB,GL_FALSE);

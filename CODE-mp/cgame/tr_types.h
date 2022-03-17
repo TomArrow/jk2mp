@@ -300,6 +300,11 @@ typedef struct {
 	qboolean				textureEnvAddAvailable;
 	qboolean				textureFilterAnisotropicAvailable;
 	qboolean				clampToEdgeAvailable;
+	qboolean				depthMapFloat; // GPU supports float depth maps - GL_ARB_depth_buffer_float
+	qboolean				depthMapFloatNV; // GPU supports float depth maps (unclamped NVIDIA version) - GL_NV_depth_buffer_float
+	qboolean				depthMapFloatNVActive; // NV float depth map is activated.
+	qboolean				depthClamp; // GPU supports GL_ARB_depth_clamp (clamping instead of clipping depth map)
+	qboolean				packedDepthStencil; // GPU supports EXT_packed_depth_stenci
 
 	int						vidWidth, vidHeight;
 	// aspect is the screen's physical width / height, which may be different

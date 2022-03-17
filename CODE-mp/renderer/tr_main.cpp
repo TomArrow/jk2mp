@@ -528,9 +528,9 @@ void R_SetupProjection( void ) {
 	//
 	// set up projection matrix
 	//
-	zNear	= r_znear->value;
+	zNear = r_znear->value;
+	zFar = tr.viewParms.zFar;
 	zProj	= r_zproj->value;
-	zFar	= tr.viewParms.zFar;
 	stereoSep = r_stereoSeparation->value;
 
 	ymax = zNear * tan( tr.refdef.fov_y * M_PI / 360.0f );
@@ -555,8 +555,14 @@ void R_SetupProjection( void ) {
 
 	tr.viewParms.projectionMatrix[2] = 0;
 	tr.viewParms.projectionMatrix[6] = 0;
-	tr.viewParms.projectionMatrix[10] = -( zFar + zNear ) / depth;
-	tr.viewParms.projectionMatrix[14] = -2 * zFar * zNear / depth;
+	if (r_zinvert->integer) {
+		tr.viewParms.projectionMatrix[10] = -(zNear) / depth;
+		tr.viewParms.projectionMatrix[14] = -zFar * zNear / depth;
+	}
+	else {
+		tr.viewParms.projectionMatrix[10] = -(zFar + zNear) / depth;
+		tr.viewParms.projectionMatrix[14] = -2 * zFar * zNear / depth;
+	}
 
 	tr.viewParms.projectionMatrix[3] = 0;
 	tr.viewParms.projectionMatrix[7] = 0;
@@ -1598,14 +1604,16 @@ void R_DebugPolygon( int color, int numPoints, float *points ) {
 
 	// draw wireframe outline
 	GL_State( GLS_POLYMODE_LINE | GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE );
-	qglDepthRange( 0, 0 );
+	
+	qglDepthRange(0, 0);
+	
 	qglColor3f( 1, 1, 1 );
 	qglBegin( GL_POLYGON );
 	for ( i = 0 ; i < numPoints ; i++ ) {
 		qglVertex3fv( points + i * 3 );
 	}
 	qglEnd();
-	qglDepthRange( 0, 1 );
+	qglDepthRange(0, 1 );
 }
 
 /*

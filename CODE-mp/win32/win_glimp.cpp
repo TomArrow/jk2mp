@@ -1749,11 +1749,41 @@ static void GLW_InitExtensions( void )
 		if (!strstr(glConfig.extensions_string, "GL_ARB_depth_texture")) {
 			ri.Printf(PRINT_WARNING, "WARNING: GL_ARB_depth_texture is missing\n");
 		}
-		if (!strstr(glConfig.extensions_string, "GL_EXT_packed_depth_stencil") ||
+		/*if (!strstr(glConfig.extensions_string, "GL_EXT_packed_depth_stencil") ||
 			!strstr(glConfig.extensions_string, "GL_NV_packed_depth_stencil")) {
+			glConfig.packedDepthStencil = qfalse;
+			ri.Printf(PRINT_WARNING, "WARNING: packed_depth_stencil is missing\n");
+		}*/ // wtf?!?
+		glConfig.packedDepthStencil = qfalse;
+		if (strstr(glConfig.extensions_string, "GL_EXT_packed_depth_stencil") ||
+			strstr(glConfig.extensions_string, "GL_NV_packed_depth_stencil")) {
+			glConfig.packedDepthStencil = qtrue;
+		}
+		else {
 			ri.Printf(PRINT_WARNING, "WARNING: packed_depth_stencil is missing\n");
 		}
 	}
+
+	glConfig.depthMapFloat = qfalse;
+	if (strstr(glConfig.extensions_string, "GL_ARB_depth_buffer_float")) {
+		ri.Printf(PRINT_ALL, "GL_ARB_depth_buffer_float detected.\n");
+		glConfig.depthMapFloat = qtrue;
+	}
+	glConfig.depthMapFloatNV = qfalse;
+	glConfig.depthMapFloatNVActive = qfalse; // Other code sets this.
+	if (strstr(glConfig.extensions_string, "GL_NV_depth_buffer_float")) {
+		ri.Printf(PRINT_ALL, "GL_NV_depth_buffer_float detected. Replacing functions with NV versions.\n");
+		qglDepthRangeReal = dllDepthRangeReal = (void (APIENTRY*) (GLdouble, GLdouble)) qwglGetProcAddress("glDepthRangedNV");
+		qglDepthRange = dllDepthRange = (void (APIENTRY*) (GLdouble, GLdouble)) qwglGetProcAddress("glDepthRangedNV");
+		qglClearDepth = dllClearDepth = (void (APIENTRY*) (GLdouble)) qwglGetProcAddress("glClearDepthdNV");
+		glConfig.depthMapFloatNV = qtrue;
+	}
+	glConfig.depthClamp = qfalse;
+	if (strstr(glConfig.extensions_string, "GL_ARB_depth_clamp")) {
+		glConfig.depthClamp = qtrue;
+	}
+
+
 	glMMEConfig.framebufferMultiSample = qfalse;
 	if (strstr(glConfig.extensions_string, "GL_EXT_framebuffer_multisample") && strstr(glConfig.extensions_string, "GL_EXT_framebuffer_blit")) {
 		qglRenderbufferStorageMultisampleEXT = (void (APIENTRYP)(GLenum, GLsizei, GLenum, GLsizei, GLsizei))qwglGetProcAddress("glRenderbufferStorageMultisampleEXT");

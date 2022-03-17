@@ -731,7 +731,7 @@ void RB_DrawSun( void ) {
 	VectorScale( vec2, size, vec2 );
 
 	// farthest depth range
-	qglDepthRange( 1.0, 1.0 );
+	qglDepthRange(1.0, 1.0);
 
 	// FIXME: use quad stamp
 	RB_BeginSurface( tr.sunShader, tess.fogNum );
@@ -789,7 +789,7 @@ void RB_DrawSun( void ) {
 	RB_EndSurface();
 
 	// back to normal depth range
-	qglDepthRange( 0.0, 1.0 );
+	qglDepthRange(0, 1.0 );
 }
 
 
@@ -822,7 +822,7 @@ void RB_StageIteratorSky( void ) {
 	// r_showsky will let all the sky blocks be drawn in
 	// front of everything to allow developers to see how
 	// much sky is getting sucked in
-	if ( r_showsky->integer ) {
+	if (r_showsky->integer /* !r_showsky->integer != !r_zinvert->integer*/) { // It's a xor lol. r_showsky->integer xor r_zinvert->integer
 		qglDepthRange( 0.0, 0.0 );
 	} else {
 		qglDepthRange( 1.0, 1.0 );
@@ -856,7 +856,7 @@ void RB_StageIteratorSky( void ) {
 
 
 	// back to normal depth range
-	qglDepthRange( 0.0, 1.0 );
+	qglDepthRange(0, 1.0 );
 
 	// note that sky was drawn so we will draw a sun later
 	backEnd.skyRenderedThisView = qtrue;

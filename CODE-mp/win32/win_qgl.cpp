@@ -118,6 +118,7 @@ void ( APIENTRY * qglDeleteTextures )(GLsizei n, const GLuint *textures);
 void ( APIENTRY * qglDepthFunc )(GLenum func);
 void ( APIENTRY * qglDepthMask )(GLboolean flag);
 void ( APIENTRY * qglDepthRange )(GLclampd zNear, GLclampd zFar);
+void ( APIENTRY * qglDepthRangeReal )(GLclampd zNear, GLclampd zFar);
 void ( APIENTRY * qglDisable )(GLenum cap);
 void ( APIENTRY * qglDisableClientState )(GLenum array);
 void ( APIENTRY * qglDrawArrays )(GLenum mode, GLint first, GLsizei count);
@@ -446,7 +447,7 @@ static void ( APIENTRY * dllCallLists )(GLsizei n, GLenum type, const GLvoid *li
 static void ( APIENTRY * dllClear )(GLbitfield mask);
 static void ( APIENTRY * dllClearAccum )(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
 static void ( APIENTRY * dllClearColor )(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
-static void ( APIENTRY * dllClearDepth )(GLclampd depth);
+void ( APIENTRY * dllClearDepth )(GLclampd depth);
 static void ( APIENTRY * dllClearIndex )(GLfloat c);
 static void ( APIENTRY * dllClearStencil )(GLint s);
 static void ( APIENTRY * dllClipPlane )(GLenum plane, const GLdouble *equation);
@@ -495,7 +496,8 @@ static void ( APIENTRY * dllDeleteLists )(GLuint list, GLsizei range);
 static void ( APIENTRY * dllDeleteTextures )(GLsizei n, const GLuint *textures);
 static void ( APIENTRY * dllDepthFunc )(GLenum func);
 static void ( APIENTRY * dllDepthMask )(GLboolean flag);
-static void ( APIENTRY * dllDepthRange )(GLclampd zNear, GLclampd zFar);
+void ( APIENTRY * dllDepthRange )(GLclampd zNear, GLclampd zFar);
+void ( APIENTRY * dllDepthRangeReal )(GLclampd zNear, GLclampd zFar);
 static void ( APIENTRY * dllDisable )(GLenum cap);
 static void ( APIENTRY * dllDisableClientState )(GLenum array);
 static void ( APIENTRY * dllDrawArrays )(GLenum mode, GLint first, GLsizei count);
@@ -1297,10 +1299,27 @@ static void APIENTRY logDepthMask(GLboolean flag)
 	dllDepthMask( flag );
 }
 
+/* Replaced with the function depthRangeScaledNV below to avoid the if.
+static void APIENTRY depthRangeManaged(GLclampd zNear, GLclampd zFar)
+{
+	if (r_zinvert->integer && glConfig.depthMapFloatNVActive) {
+		qglDepthRangeReal(zNear *2.0-1.0, zFar * 2.0 - 1.0);
+	}
+	else {
+		qglDepthRangeReal(zNear, zFar);
+	}
+}*/
+
+void APIENTRY depthRangeScaledNV(GLclampd zNear, GLclampd zFar)
+{
+	qglDepthRangeReal(zNear * 2.0 - 1.0, zFar * 2.0 - 1.0);
+}
+
 static void APIENTRY logDepthRange(GLclampd zNear, GLclampd zFar)
 {
 	fprintf( glw_state.log_fp, "glDepthRange( %f, %f )\n", ( float ) zNear, ( float ) zFar );
 	dllDepthRange( zNear, zFar );
+	//dllDepthRange( zNear, zFar );
 }
 
 static void APIENTRY logDisable(GLenum cap)
@@ -3300,7 +3319,8 @@ qboolean QGL_Init( const char *dllname )
 	qglDeleteTextures            = dllDeleteTextures = (void (__stdcall *)(int,const unsigned int *))GPA( "glDeleteTextures" );
 	qglDepthFunc                 = dllDepthFunc = (void (__stdcall *)(unsigned int))GPA( "glDepthFunc" );
 	qglDepthMask                 = dllDepthMask = (void (__stdcall *)(unsigned char))GPA( "glDepthMask" );
-	qglDepthRange                = dllDepthRange = (void (__stdcall *)(double,double))GPA( "glDepthRange" );
+	qglDepthRangeReal            = dllDepthRangeReal = (void (__stdcall *)(double,double))GPA( "glDepthRange" ); // In case we wanna replace qglDepthRange with the NVIDIA scaling thing for r_zinvert
+	qglDepthRange				 = dllDepthRange = (void (__stdcall *)(double,double))GPA( "glDepthRange" );
 	qglDisable                   = dllDisable = (void (__stdcall *)(unsigned int))GPA( "glDisable" );
 	qglDisableClientState        = dllDisableClientState = (void (__stdcall *)(unsigned int))GPA( "glDisableClientState" );
 	qglDrawArrays                = dllDrawArrays = (void (__stdcall *)(unsigned int,int,int))GPA( "glDrawArrays" );
@@ -3706,7 +3726,8 @@ void QGL_EnableLogging( qboolean enable )
 		qglDeleteTextures            = logDeleteTextures ;
 		qglDepthFunc                 = logDepthFunc ;
 		qglDepthMask                 = logDepthMask ;
-		qglDepthRange                = logDepthRange ;
+		//qglDepthRangeReal            = logDepthRange ;
+		qglDepthRange					= logDepthRange ;
 		qglDisable                   = logDisable ;
 		qglDisableClientState        = logDisableClientState ;
 		qglDrawArrays                = logDrawArrays ;
@@ -4050,7 +4071,8 @@ void QGL_EnableLogging( qboolean enable )
 		qglDeleteTextures            = dllDeleteTextures ;
 		qglDepthFunc                 = dllDepthFunc ;
 		qglDepthMask                 = dllDepthMask ;
-		qglDepthRange                = dllDepthRange ;
+		//qglDepthRangeReal            = dllDepthRangeReal ;
+		qglDepthRange				 = dllDepthRange ;
 		qglDisable                   = dllDisable ;
 		qglDisableClientState        = dllDisableClientState ;
 		qglDrawArrays                = dllDrawArrays ;

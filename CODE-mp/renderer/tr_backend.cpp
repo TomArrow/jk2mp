@@ -228,7 +228,7 @@ void GL_State( unsigned long stateBits )
 		}
 		else
 		{
-			qglDepthFunc( GL_LEQUAL );
+			qglDepthFunc(GL_LEQUAL);
 		}
 	}
 
@@ -431,8 +431,9 @@ static void SetFinalProjection( void ) {
 	//
 	// set up projection matrix
 	//
-	zNear	= r_znear->value;
-	zFar	= backEnd.viewParms.zFar;
+	zNear = r_znear->value;
+	zFar = backEnd.viewParms.zFar;
+	
 	
 	zProj	= r_zproj->value;
 	stereoSep = r_stereoSeparation->value;
@@ -483,8 +484,14 @@ static void SetFinalProjection( void ) {
 
 	backEnd.viewParms.projectionMatrix[2] = 0;
 	backEnd.viewParms.projectionMatrix[6] = 0;
-	backEnd.viewParms.projectionMatrix[10] = -( zFar + zNear ) / depth;
-	backEnd.viewParms.projectionMatrix[14] = -2 * zFar * zNear / depth;
+	if (r_zinvert->integer) {
+		backEnd.viewParms.projectionMatrix[10] = -(zNear) / depth;
+		backEnd.viewParms.projectionMatrix[14] = -zFar * zNear / depth;
+	}
+	else {
+		backEnd.viewParms.projectionMatrix[10] = -(zFar + zNear) / depth;
+		backEnd.viewParms.projectionMatrix[14] = -2 * zFar * zNear / depth;
+	}
 
 	backEnd.viewParms.projectionMatrix[3] = 0;
 	backEnd.viewParms.projectionMatrix[7] = 0;
@@ -801,11 +808,11 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 						break;
 
 					case 1:
-						qglDepthRange (0, .3);	
+						qglDepthRange (0, .3);
 						break;
 
 					case 2:
-						qglDepthRange (0, 0);
+						qglDepthRange(0, 0);
 						break;
 				}
 
@@ -871,11 +878,16 @@ RB_SetGL2D
 void	RB_SetGL2D (void) {
 	backEnd.projection2D = qtrue;
 
+	static float zInvertedIdentity[] = {1,0,0,0,
+										0,1,0,0,
+										0,0,-1,0,
+										0,0,0,1,};
+
 	// set 2D virtual screen size
 	qglViewport( 0, 0, glConfig.vidWidth* superSampleMultiplier, glConfig.vidHeight * superSampleMultiplier);
 	qglScissor( 0, 0, glConfig.vidWidth* superSampleMultiplier, glConfig.vidHeight * superSampleMultiplier);
 	qglMatrixMode(GL_PROJECTION);
-    qglLoadIdentity ();
+	qglLoadIdentity();
 	qglOrtho (0, 640, 480, 0, 0, 1);
 	qglMatrixMode(GL_MODELVIEW);
     qglLoadIdentity ();
@@ -1080,7 +1092,7 @@ const void *RB_StretchPic ( const void *data ) {
 
 	tess.xyz[ numVerts ][0] = cmd->x;
 	tess.xyz[ numVerts ][1] = cmd->y;
-	tess.xyz[ numVerts ][2] = 0;
+	tess.xyz[ numVerts ][2] = 0; // Setting these to -1 makes it work with the inverted z buffer with the default RB_SetGL2D
 
 	tess.texCoords[ numVerts ][0][0] = cmd->s1;
 	tess.texCoords[ numVerts ][0][1] = cmd->t1;

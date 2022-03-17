@@ -1161,6 +1161,7 @@ extern cvar_t	*r_verbose;				// used for verbose debug spew
 extern cvar_t	*r_ignoreFastPath;		// allows us to ignore our Tess fast paths
 
 extern cvar_t	*r_znear;				// near Z clip plane
+extern cvar_t	*r_zinvert;				// invert z buffer
 extern cvar_t	*r_zproj;				// z distance of projection plane
 extern cvar_t	*r_stereoSeparation;	// separation of cameras for stereo capture
 

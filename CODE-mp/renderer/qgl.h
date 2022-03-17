@@ -526,6 +526,8 @@ extern  void ( APIENTRY * qglDeleteTextures )(GLsizei n, const GLuint *textures)
 extern  void ( APIENTRY * qglDepthFunc )(GLenum func);
 extern  void ( APIENTRY * qglDepthMask )(GLboolean flag);
 extern  void ( APIENTRY * qglDepthRange )(GLclampd zNear, GLclampd zFar);
+extern  void ( APIENTRY * qglDepthRangeReal )(GLclampd zNear, GLclampd zFar);
+extern  void APIENTRY depthRangeScaledNV(GLclampd zNear, GLclampd zFar);
 extern  void ( APIENTRY * qglDisable )(GLenum cap);
 extern  void ( APIENTRY * qglDisableClientState )(GLenum array);
 extern  void ( APIENTRY * qglDrawArrays )(GLenum mode, GLint first, GLsizei count);
@@ -880,6 +882,11 @@ extern void (APIENTRYP qglGetProgramiv) (GLuint, GLenum, GLint*);
 extern void (APIENTRYP qglGetProgramInfoLog) (GLuint, GLsizei, GLsizei*, GLchar*);
 extern void (APIENTRYP qglGetShaderiv) (GLuint, GLenum, GLint*);
 extern void (APIENTRYP qglGetShaderInfoLog) (GLuint, GLsizei, GLsizei*, GLchar*);
+
+// Added support for GL_NV_depth_buffer_float
+extern void (APIENTRY* dllDepthRange)(GLclampd zNear, GLclampd zFar); // So we can overwrite it.
+extern void (APIENTRY* dllDepthRangeReal)(GLclampd zNear, GLclampd zFar); // So we can overwrite it.
+extern void (APIENTRY* dllClearDepth)(GLclampd depth);
 
 #define     GL_FRAGMENT_SHADER  0x8B30
 #define     GL_VERTEX_SHADER    0x8B31

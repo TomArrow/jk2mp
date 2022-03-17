@@ -82,7 +82,7 @@ void R_MME_GetDepth( byte *output ) {
 	zAdd =  ( 2 * backEnd.sceneZfar * r_znear->value ) / zRange;
 
 	temp = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * sizeof( float ) );
-	qglDepthRange( 0.0f, 1.0f );
+	qglDepthRange(0, 1.0f );
 	qglReadPixels( 0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_DEPTH_COMPONENT, GL_FLOAT, temp ); 
 	/* Could probably speed this up a bit with SSE but frack it for now */
 	for ( i=0 ; i < pixelCount; i++ ) {
