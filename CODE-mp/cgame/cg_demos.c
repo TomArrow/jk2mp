@@ -693,12 +693,16 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	
 	VectorClear(cg.lastFPFlashPoint);
 
+	// Demo project objects
+	drawDemoObjects();
+
 	CG_CalcScreenEffects();
-		
+
 	CG_AddPacketEntities();			// adter calcViewValues, so predicted player state is correct
 	CG_AddMarks();
 	CG_AddParticles ();
 	CG_AddLocalEntities();
+
 
 	if ( cg.playerCent == &cg_entities[cg.predictedPlayerState.clientNum] ) {
 		// warning sounds when powerup is wearing off
@@ -938,9 +942,12 @@ static void demoEditCommand_f(void) {
 	} else if (!Q_stricmp(cmd, "line")) {
 		demo.editType = editLine;
 		CG_DemosAddLog("Editing timeline");
-	}  if (!Q_stricmp(cmd, "commands")) {
+	} else if (!Q_stricmp(cmd, "commands")) {
 		demo.editType = editCommands;
 		CG_DemosAddLog("Editing commands");
+	} else if (!Q_stricmp(cmd, "objects")) {
+		demo.editType = editObjects;
+		CG_DemosAddLog("Editing objects");
 	} else {
 		switch ( demo.editType ) {
 		case editCamera:
@@ -954,6 +961,9 @@ static void demoEditCommand_f(void) {
 			break;
 		case editCommands:
 			demoCommandsCommand_f();
+			break;
+		case editObjects:
+			demoObjectsCommand_f();
 			break;
 		case editDof:
 			demoDofCommand_f();
@@ -1203,6 +1213,7 @@ void demoPlaybackInit(void) {
 	trap_AddCommand("hudToggle");
 	trap_AddCommand("line");
 	trap_AddCommand("commands");
+	trap_AddCommand("objects");
 	trap_AddCommand("save");
 	trap_AddCommand("load");
 	trap_AddCommand("+seek");
@@ -1421,6 +1432,8 @@ qboolean CG_DemosConsoleCommand( void ) {
 		demoLineCommand_f();
 	} else if (!Q_stricmp(cmd, "commands")) {
 		demoCommandsCommand_f();
+	} else if (!Q_stricmp(cmd, "objects")) {
+		demoObjectsCommand_f();
 	} else if (!Q_stricmp(cmd, "load")) {
 		demoLoadCommand_f();
 	} else if (!Q_stricmp(cmd, "save")) {

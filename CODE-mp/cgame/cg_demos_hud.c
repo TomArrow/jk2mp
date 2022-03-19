@@ -83,6 +83,7 @@ typedef enum {
 #define MASK_CHASE				0x00040
 #define MASK_DOF				0x00400
 #define MASK_CMDS				0x00800
+#define MASK_OBJECT				0x01000
 
 #define MASK_HUD				0x1
 #define MASK_POINT				0x2
@@ -125,6 +126,7 @@ static struct {
 	} dof;
 	demoLinePoint_t *linePoint;
 	demoCommandPoint_t *commandPoint;
+	demoObject_t* closestObject;
 	const char	*logLines[LOGLINES];
 } hud;
 
@@ -615,6 +617,18 @@ void hudDraw( void ) {
 		}
 		else {
 			hud.commandPoint = 0;
+		}
+		break;
+	case editObjects:
+		hud.showMask = 0;
+		if (demo.objects.locked) {
+			hud.closestObject = closestObject(demo.viewOrigin);
+			if(hud.closestObject) {
+				hud.showMask |= MASK_OBJECT;
+			}
+		}
+		else {
+			hud.closestObject = 0;
 		}
 		break;
 	case editChase:

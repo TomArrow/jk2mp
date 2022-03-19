@@ -9,6 +9,7 @@
 #define MAX_DEMO_COMMAND_LAYERS 10
 #define MAX_DEMO_COMMAND_VARIABLE_LENGTH 256
 #define MAX_DEMO_COMMAND_VARIABLES 10
+#define MAX_DEMO_OBJECT_PARAM_LENGTH 1024
 
 typedef enum {
 	editNone,
@@ -17,7 +18,8 @@ typedef enum {
 	editLine,
 	editDof,
 	editLast,
-	editCommands
+	editCommands,
+	editObjects
 } demoEditType_t;
 
 typedef enum {
@@ -61,6 +63,20 @@ typedef struct demoCommandPoint_s {
 	int						time;
 	int						layer;
 } demoCommandPoint_t;
+
+typedef struct demoObject_s {
+	char					param1[MAX_DEMO_OBJECT_PARAM_LENGTH]; // For polys: Shader name. For models (not implemented), this could be model name.
+	float					size1; // Width for polys. For models (not implemented), this could be scaling factor.
+	float					size2; // Height
+	vec3_t					angles;
+	vec3_t					origin;
+	vec3_t					axes[3]; // Will be quicker to compute polyvert coordinats with. Will be generated from angles.
+	polyVert_t				verts[4]; // Since this doesn't ever change, we can calculate it once and reuse.
+	qhandle_t				shader; // So we don't have to look it up every time.
+	struct					demoObject_s *next, *prev;
+	int						timeIn;		// At what time does this start? demotime.
+	int						timeOut;	// At what time does this end? 0 = never, >0 = demotime.
+} demoObject_t;
 
 typedef struct demoCameraPoint_s {
 	struct			demoCameraPoint_s *next, *prev;
@@ -116,6 +132,10 @@ typedef struct demoMain_s {
 		demoCommandPoint_t *lastPoint[MAX_DEMO_COMMAND_LAYERS];
 		float lastValue[MAX_DEMO_COMMAND_VARIABLES];
 	} commands;
+	struct {
+		qboolean	locked;
+		demoObject_t* objects;
+	} objects;
 	struct {
 		int			start;
 		float		range;
@@ -259,6 +279,13 @@ void demoCommandsCommand_f(void);
 void commandsSave(fileHandle_t fileHandle);
 qboolean commandsParse(BG_XMLParse_t* parse, const struct BG_XMLParseBlock_s* fromBlock, void* data);
 demoCommandPoint_t* commandPointSynch(int playTime);
+
+// Objects
+void objectsSave(fileHandle_t fileHandle);
+qboolean objectsParse(BG_XMLParse_t* parse, const struct BG_XMLParseBlock_s* fromBlock, void* data);
+void drawDemoObjects();
+void demoObjectsCommand_f(void);
+demoObject_t* closestObject(vec3_t origin);
 
 //DOF
 demoDofPoint_t *dofPointSynch( int time );
