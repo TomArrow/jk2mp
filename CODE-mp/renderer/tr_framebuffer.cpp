@@ -597,7 +597,7 @@ void R_FrameBuffer_Init( void ) {
 		height = fbo.screenHeight;
 	}
 
-	if (r_floatBuffer->integer > 1) {
+	if (r_floatBuffer->integer > 2) {
 		flags |= FB_FLOAT32;
 	}
 	else if (r_floatBuffer->integer) {
@@ -637,7 +637,7 @@ void R_FrameBuffer_Init( void ) {
 		fbo.blur = R_FrameBufferCreate( width, height, flags );
 	}
 
-	if (r_floatBuffer->integer > 2) { // Rolling shutter buffers eat a lot of memory. Need r_floatBuffer of at least 3 to activate 32 bit floating points for rolling shutter.
+	if (r_floatBuffer->integer > 1) { // Rolling shutter buffers eat a lot of memory. Need r_floatBuffer of at least 3 to activate 32 bit floating points for rolling shutter.
 		flags = FB_FLOAT32;
 	}
 	else if (r_floatBuffer->integer) {
