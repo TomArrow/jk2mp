@@ -505,7 +505,9 @@ const void *RB_ScreenShotCmd( const void *data ) {
 
 	qglReadPixels( 0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, inBuf ); 
 	if ( ( mme_screenShotGamma->integer || (tr.overbrightBits > 0) ) && (glConfig.deviceSupportsGamma ) ) {
-		R_GammaCorrect( inBuf, outSize );
+		if (!r_fboOverbright->integer) { // All a bit shitty. Should fix it up a bit someday.
+			R_GammaCorrect(inBuf, outSize);
+		}
 	}
 	switch ( cmd->format ) {
 	case mmeShotFormatJPG:
