@@ -4,15 +4,31 @@
 #pragma optimize("", off)
 #endif
 
-void drawDemoObjects() {
+void drawDemoObjects(qboolean drawHUD) {
 	
+	if (!demo.objects.locked) {
+		return; // Only draw 'em when locked.
+	}
 
 	demoObject_t* object = demo.objects.objects;
+	demoObject_t* closestObj = 0;
+	if (drawHUD) {
+		closestObj = closestObject(demo.viewOrigin);
+	}
 
 	while (object) {
+
 		if (object->timeIn <= demo.play.time && (!object->timeOut || demo.play.time < object->timeOut)) {
 
 			trap_R_AddPolyToScene(object->shader, 4, object->verts);
+		}
+		if (drawHUD) {
+			if (object == closestObj) {
+				demoDrawCross(object->origin, colorRed);
+			}
+			else {
+				demoDrawCross(object->origin, colorWhite);
+			}
 		}
 		object = object->next;
 	}
@@ -25,9 +41,10 @@ typedef struct {
 	float					size2; // Height
 	vec3_t					angles;
 	vec3_t					origin;
+	vec4_t					modulate;
 	int						timeIn;		// At what time does this start? demotime.
 	int						timeOut;	// At what time does this end? 0 = never, >0 = demotime.
-	qboolean				hasParam1, hasSize1, hasSize2, hasAngles, hasOrigin, hasTimeIn, hasTimeOut;
+	qboolean				hasParam1, hasSize1, hasSize2, hasAngles, hasOrigin, hasModulate, hasTimeIn, hasTimeOut;
 } parseObjectPoint_t;
 
 static demoObject_t* objectAlloc(void) {
@@ -70,7 +87,10 @@ static void objectInitCalculations(demoObject_t* object) {
 	VectorCopy(object->origin, object->verts[3].xyz);
 
 	for (int i = 0; i < 4; i++) {
-		object->verts[i].modulate[0] = object->verts[i].modulate[1] = object->verts[i].modulate[2] = object->verts[i].modulate[3] = 255.0f;
+		object->verts[i].modulate[0] = 255.0f * object->modulate[0];
+		object->verts[i].modulate[1] = 255.0f * object->modulate[1];
+		object->verts[i].modulate[2] = 255.0f * object->modulate[2];
+		object->verts[i].modulate[3] = 255.0f * object->modulate[3];
 	}
 
 	VectorScale(object->axes[1],-object->size1/2.0f, tmp);
@@ -111,7 +131,8 @@ demoObject_t* closestObject(vec3_t origin) {
 	demoObject_t* object = demo.objects.objects;
 	demoObject_t* closestObject = 0;
 	while (object) {
-		float distance = VectorLength(origin, object->origin);
+		VectorSubtract(origin, object->origin, tmp);
+		float distance = VectorLength(tmp);
 		if (distance < smallestDistance) {
 			smallestDistance = distance;
 			closestObject = object;
@@ -121,7 +142,7 @@ demoObject_t* closestObject(vec3_t origin) {
 	return closestObject;
 }
 
-static demoObject_t* objectAdd(vec3_t origin, vec3_t angles, const char* param1, float size1, float size2, int timeIn, int timeOut) {
+static demoObject_t* objectAdd(vec3_t origin, vec3_t angles, vec4_t modulate, const char* param1, float size1, float size2, int timeIn, int timeOut) {
 
 	demoObject_t* object = demo.objects.objects;
 	demoObject_t* newObject;
@@ -142,6 +163,7 @@ static demoObject_t* objectAdd(vec3_t origin, vec3_t angles, const char* param1,
 	// Copy over values
 	VectorCopy(origin, newObject->origin);
 	VectorCopy(angles, newObject->angles);
+	Vector4Copy(modulate, newObject->modulate);
 	strcpy_s(newObject->param1,sizeof(newObject->param1),param1);
 	newObject->size1 = size1;
 	newObject->size2 = size2;
@@ -167,6 +189,7 @@ void objectsSave(fileHandle_t fileHandle) {
 			demoSaveLine(fileHandle, "\t\t<timeOut>%10d</timeOut>\n", point->timeOut);
 		demoSaveLine(fileHandle, "\t\t<origin>%9.4f %9.4f %9.4f</origin>\n", point->origin[0], point->origin[1], point->origin[2]);
 		demoSaveLine(fileHandle, "\t\t<angles>%9.4f %9.4f %9.4f</angles>\n", point->angles[0], point->angles[1], point->angles[2]);
+		demoSaveLine(fileHandle, "\t\t<modulate>%9.4f %9.4f %9.4f %9.4f</modulate>\n", point->modulate[0], point->modulate[1], point->modulate[2], point->modulate[3]);
 		demoSaveLine(fileHandle, "\t\t<param1>%s</param1>\n", point->param1);
 		demoSaveLine(fileHandle, "\t\t<size1>%f</size1>\n", point->size1);
 		demoSaveLine(fileHandle, "\t\t<size2>%f</size2>\n", point->size2);
@@ -225,11 +248,43 @@ static qboolean objectParseOrigin(BG_XMLParse_t* parse, const char* line, void* 
 	point->hasOrigin = qtrue;
 	return qtrue;
 }
+
+static int parseModulateVec4(char* text,vec4_t out) {
+	int matches = sscanf(text, "%f %f %f %f", &out[0], &out[1], &out[2], &out[3]);
+	if (matches <= 0) {
+		out[0] = out[1] = out[2] = out[3] = 1.0f;
+	}
+	else if (matches == 1) {
+		// Only 1 number. Use as scale in general for colors.
+		out[1] = out[2] = out[0];
+		out[3] = 1.0f;
+	}
+	else if (matches == 3) { // Alpha not specified
+		out[3] = 1.0f;
+	}
+	else if (matches == 2) { // First number is color scale, second is alpha
+		out[3] = out[1];
+		out[1] = out[2] = out[0];
+	}
+	else {
+		// I guess we got all 4? All good.
+	}
+	return matches;
+}
+
+static qboolean objectParseModulate(BG_XMLParse_t* parse, const char* line, void* data) {
+	parseObjectPoint_t* point = (parseObjectPoint_t*)data;
+
+	parseModulateVec4(line, point->modulate);
+	point->hasModulate = qtrue;
+	return qtrue;
+}
 static qboolean objectParsePoint(BG_XMLParse_t* parse, const struct BG_XMLParseBlock_s* fromBlock, void* data) {
 	parseObjectPoint_t pointLoad;
 	demoObject_t* point;
 	static BG_XMLParseBlock_t objectParseBlock[] = {
 		{"origin", 0, objectParseOrigin},
+		{"modulate", 0, objectParseModulate},
 		{"angles", 0, objectParseAngles},
 		{"timeIn", 0, objectParseTimeIn},
 		{"timeOut", 0, objectParseTimeOut},
@@ -245,7 +300,10 @@ static qboolean objectParsePoint(BG_XMLParse_t* parse, const struct BG_XMLParseB
 	if (!pointLoad.hasAngles || !pointLoad.hasOrigin || !pointLoad.hasParam1 || !pointLoad.hasSize1 || !pointLoad.hasSize2)
 		return BG_XMLError(parse, "Missing section in object point variable");
 
-	point = objectAdd(pointLoad.origin,pointLoad.angles,pointLoad.param1,pointLoad.size1,pointLoad.size2,pointLoad.timeIn,pointLoad.timeOut);
+	if (!pointLoad.hasModulate) {
+		pointLoad.modulate[0] = pointLoad.modulate[1] = pointLoad.modulate[2] = pointLoad.modulate[3] = 1.0f;
+	}
+	point = objectAdd(pointLoad.origin,pointLoad.angles,pointLoad.modulate,pointLoad.param1,pointLoad.size1,pointLoad.size2,pointLoad.timeIn,pointLoad.timeOut);
 	return qtrue;
 }
 static qboolean objectParseLocked(BG_XMLParse_t* parse, const char* line, void* data) {
@@ -279,9 +337,11 @@ void demoObjectsCommand_f(void) {
 
 		float size1 = atof(CG_Argv(3));
 		float size2 = atof(CG_Argv(4));
+		vec4_t modulate;
+		parseModulateVec4(CG_Argv(5),modulate); // Optional argument, but the parseModulateVec4 function already accounts for not having any matches. 
 		char* param1 = CG_Argv(2);
 
-		objectAdd(demo.viewOrigin,demo.viewAngles, param1,size1,size2,demo.play.time,0);
+		objectAdd(demo.viewOrigin,demo.viewAngles, modulate, param1,size1,size2,demo.play.time,0);
 		/*int i;
 		qboolean hasAtLeastOneVariable = qfalse;
 		int layer = 0;
@@ -363,18 +423,90 @@ void demoObjectsCommand_f(void) {
 		demo.play.time = point->time;
 		demo.play.fraction = 0;
 	}*/
+	else if (!Q_stricmp(cmd, "size")) {
+
+		demoObject_t* closestObj = closestObject(demo.viewOrigin);
+		if (closestObj) {
+			float size1 = atof(CG_Argv(2));
+			float size2 = atof(CG_Argv(3));
+			closestObj->size1 = size1;
+			closestObj->size2 = size2;
+			objectInitCalculations(closestObj);
+		}
+	}
+	else if (!Q_stricmp(cmd, "shader")) {
+
+		demoObject_t* closestObj = closestObject(demo.viewOrigin);
+		if (closestObj) {
+			strcpy_s(closestObj->param1, sizeof(closestObj->param1), CG_Argv(2));
+			objectInitCalculations(closestObj);
+		}
+	}
+	else if (!Q_stricmp(cmd, "modulate")) {
+
+		demoObject_t* closestObj = closestObject(demo.viewOrigin);
+		if (closestObj) {
+			vec4_t modulate;
+			parseModulateVec4(CG_Argv(2), modulate); // Optional argument, but the parseModulateVec4 function already accounts for not having any matches. 
+			Vector4Copy(modulate, closestObj->modulate);
+			objectInitCalculations(closestObj);
+		}
+	}
 	else if (!Q_stricmp(cmd, "start")) {
 		demoObject_t* closestObj = closestObject(demo.viewOrigin);
-		closestObj->timeIn = demo.play.time;
+		if(closestObj)
+			closestObj->timeIn = demo.play.time;
 	}
 	else if (!Q_stricmp(cmd, "end")) {
 		demoObject_t* closestObj = closestObject(demo.viewOrigin);
-		closestObj->timeOut = demo.play.time;
+		if (closestObj)
+			closestObj->timeOut = demo.play.time;
+	}
+	else if (!Q_stricmp(cmd, "moveHorz")) {
+		demoObject_t* closestObj = closestObject(demo.viewOrigin);
+		if (closestObj) {
+			float amount = atof(CG_Argv(2));
+			vec3_t tmp;
+			vec3_t tmpAxis[3];
+			AnglesToAxis(demo.viewAngles, tmpAxis);
+			VectorScale(tmpAxis[1],-amount,tmp);
+			VectorAdd(closestObj->origin, tmp,closestObj->origin);
+			objectInitCalculations(closestObj);
+		}
+	}
+	else if (!Q_stricmp(cmd, "moveVert")) {
+		demoObject_t* closestObj = closestObject(demo.viewOrigin);
+		if (closestObj) {
+			float amount = atof(CG_Argv(2));
+			vec3_t tmp;
+			vec3_t tmpAxis[3];
+			AnglesToAxis(demo.viewAngles, tmpAxis);
+			VectorScale(tmpAxis[2], amount, tmp);
+			VectorAdd(closestObj->origin, tmp, closestObj->origin);
+			objectInitCalculations(closestObj);
+		}
+	}
+	else if (!Q_stricmp(cmd, "snap")) {
+		demoObject_t* closestObj = closestObject(demo.viewOrigin);
+		if (closestObj) {
+			char* snapAngleStr = CG_Argv(2);
+			float snapAngle = strlen(snapAngleStr)? atof(snapAngleStr) : 90.0f;
+			for (int i = 0; i < 3; i++) {
+				closestObj->angles[i] = snapAngle*roundf(closestObj->angles[i]/snapAngle);
+			}
+			objectInitCalculations(closestObj);
+		}
 	}
 	else {
 		Com_Printf("objects usage:\n");
 		Com_Printf("objects lock, lock commands to use the keypoints\n");
-		Com_Printf("objects add \"[shader]\" [width] [height], add object at current location\n");
+		Com_Printf("objects add \"[shader]\" [width] [height] \"[0-1] [0-1] [0-1] [0-1]\" (last one is optional, RGBA modulation), add object at current location\n");
+		Com_Printf("objects shader \"[shader]\", change shader of closest object\n");
+		Com_Printf("objects size [width] [height], change size of closest object\n");
+		Com_Printf("objects moveHorz [number], Move object horizontally, negative or positive number\n");
+		Com_Printf("objects moveVert [number], Move object vertically, negative or positive number\n");
+		Com_Printf("objects snap [number], Snap angles of object to specified multiple. If no number is specified, 90 degrees is used.\n");
+		Com_Printf("objects modulate \"[0-1] [0-1] [0-1] [0-1]\", change modulation of closest object. RGBA values.\n");
 		Com_Printf("objects del, Delete nearest object\n");
 		Com_Printf("objects clear, Clear all objects\n");
 		Com_Printf("objects start/end, set timeIn/timeOut of nearest object\n");

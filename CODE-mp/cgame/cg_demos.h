@@ -70,6 +70,7 @@ typedef struct demoObject_s {
 	float					size2; // Height
 	vec3_t					angles;
 	vec3_t					origin;
+	vec4_t					modulate; // 0...1 0...1 0...1 0...1 RGBA
 	vec3_t					axes[3]; // Will be quicker to compute polyvert coordinats with. Will be generated from angles.
 	polyVert_t				verts[4]; // Since this doesn't ever change, we can calculate it once and reuse.
 	qhandle_t				shader; // So we don't have to look it up every time.
@@ -283,7 +284,7 @@ demoCommandPoint_t* commandPointSynch(int playTime);
 // Objects
 void objectsSave(fileHandle_t fileHandle);
 qboolean objectsParse(BG_XMLParse_t* parse, const struct BG_XMLParseBlock_s* fromBlock, void* data);
-void drawDemoObjects();
+void drawDemoObjects(qboolean drawHUD);
 void demoObjectsCommand_f(void);
 demoObject_t* closestObject(vec3_t origin);
 

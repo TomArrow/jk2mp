@@ -335,6 +335,9 @@ static void hudGetHandler( hudItem_t *item, char *buf, int bufSize ) {
 		case editCommands:
 			Com_sprintf( buf, bufSize, "Commands%s", demo.commands.locked ? " locked" : "" );
 			break;
+		case editObjects:
+			Com_sprintf( buf, bufSize, "Objects%s", demo.objects.locked ? " locked" : "" );
+			break;
 		}
 		return;
 	case hudViewName:

@@ -694,7 +694,7 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	VectorClear(cg.lastFPFlashPoint);
 
 	// Demo project objects
-	drawDemoObjects();
+	drawDemoObjects(!captureFrame);
 
 	CG_CalcScreenEffects();
 
