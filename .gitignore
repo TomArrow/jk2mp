@@ -43,6 +43,7 @@ local.properties
 
 # Build results
 [Dd]ebug/
+!CODE-mp/boost/preprocessor/debug
 [Rr]elease/
 [Ff]inal/
 [Ff]inal[Bb]uild/
