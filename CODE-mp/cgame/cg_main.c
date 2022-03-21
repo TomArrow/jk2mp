@@ -834,7 +834,7 @@ Ghoul2 Insert End
 	{ &cg_chatBox,			"cg_chatBox",			"0",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_chatBoxHeight,	"cg_chatBoxHeight",		"350",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_chatBoxMaxItems,	"cg_chatBoxMaxItems",	"5",			NULL,	CVAR_ARCHIVE	},
-	{ &cg_commandSmooth,	"cg_commandSmooth",		"1",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_commandSmooth,	"cg_commandSmooth",		"2",			NULL,	CVAR_ARCHIVE	},
 	//mme
 	{ &mme_demoFileName,	"mme_demoFileName",		"",				NULL,	0				},
 	{ &mme_chaseViewHeightFix,	"mme_chaseViewHeightFix",	"1",	NULL,	CVAR_ARCHIVE	},
