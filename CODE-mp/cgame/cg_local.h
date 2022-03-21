@@ -1826,6 +1826,7 @@ extern	vmCvar_t	mov_absorbVisibility;
 extern	vmCvar_t	mov_absorbColour;
 extern	vmCvar_t	mov_protectColour;
 extern	vmCvar_t	mov_rageColour;
+extern	vmCvar_t	mov_sortObjects;
 
 extern	vmCvar_t	mme_demoFileName;
 extern	vmCvar_t	mme_chaseViewHeightFix;

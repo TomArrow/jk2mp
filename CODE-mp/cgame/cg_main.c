@@ -634,6 +634,7 @@ vmCvar_t	mov_absorbVisibility;
 vmCvar_t	mov_absorbColour;
 vmCvar_t	mov_protectColour;
 vmCvar_t	mov_rageColour;
+vmCvar_t	mov_sortObjects;
 
 vmCvar_t	mme_demoFileName;
 vmCvar_t	mme_chaseViewHeightFix;
@@ -867,6 +868,7 @@ Ghoul2 Insert End
 	{ &mov_absorbColour,	"mov_absorbColour",		"0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_protectColour,	"mov_protectColour",	"0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_rageColour,		"mov_rageColour",		"0",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_sortObjects,		"mov_sortObjects",		"1",			NULL,	CVAR_ARCHIVE	},
 	{ &fx_Vibrate,			"fx_Vibrate",			"1",			NULL,	CVAR_ARCHIVE	},
 	{ &fx_vfps,				"fx_vfps",				"1000",			NULL,	CVAR_ARCHIVE	},
 	{ &fx_disruptTime,		"fx_disruptTime",		"-1",			NULL,	CVAR_ARCHIVE	},	//from smod

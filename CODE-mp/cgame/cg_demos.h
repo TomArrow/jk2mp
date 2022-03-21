@@ -75,6 +75,8 @@ typedef struct demoObject_s {
 	polyVert_t				verts[4]; // Since this doesn't ever change, we can calculate it once and reuse.
 	qhandle_t				shader; // So we don't have to look it up every time.
 	struct					demoObject_s *next, *prev;
+	struct					demoObject_s *sortedNext, *sortedPrev;
+	float					tmpDistance; // Helper for sorting
 	int						timeIn;		// At what time does this start? demotime.
 	int						timeOut;	// At what time does this end? 0 = never, >0 = demotime.
 } demoObject_t;

@@ -16,6 +16,69 @@ void drawDemoObjects(qboolean drawHUD) {
 		closestObj = closestObject(demo.viewOrigin);
 	}
 
+	
+	// Sorting by distance.
+	if (!mov_sortObjects.integer) {
+
+		while (object) {
+			// Just move over those vars so there's no confusion in next step
+			object->sortedNext = object->next;
+			object->sortedPrev = object->prev;
+			object = object->next;
+		}
+		object = demo.objects.objects;
+
+	}else{
+		// Prepare for sorting
+		while (object) {
+			// Copy over link info so we can sort in the next step.
+			object->sortedNext = object->next;
+			object->sortedPrev = object->prev;
+			vec3_t tmp;
+			VectorSubtract(demo.viewOrigin,object->origin,tmp);
+			object->tmpDistance = VectorLength(tmp);
+
+			object = object->next;
+		}
+
+		object = demo.objects.objects;
+
+
+		// Sort by distance
+		demoObject_t* prevObject;
+		demoObject_t* nextObject = object->sortedNext;
+		while(nextObject ) {
+
+			object = nextObject;
+			// Remember next one
+			nextObject = object->sortedNext;
+
+			// Closest one comes first. 
+			// you wanna draw furthest objects first bc of the overlay nature of the thing. 
+			// But it seems that the last object added to the queue actually gets drawn first. Weird?
+			while (object->sortedPrev && (object->sortedPrev->tmpDistance < object->tmpDistance && mov_sortObjects.integer>0 || object->sortedPrev->tmpDistance > object->tmpDistance && mov_sortObjects.integer<0)) {
+
+				// switch this one with the previous one
+				if(object->sortedNext)
+					object->sortedNext->sortedPrev = object->sortedPrev;
+				if (object->sortedPrev->sortedPrev)
+					object->sortedPrev->sortedPrev->sortedNext = object;
+				object->sortedPrev->sortedNext = object->sortedNext;
+				prevObject = object->sortedPrev;
+				object->sortedPrev = object->sortedPrev->sortedPrev;
+				prevObject->sortedPrev = object;
+				object->sortedNext = prevObject;
+			}
+
+
+		}
+
+		// Rewind
+		while (object->sortedPrev) {
+			object = object->sortedPrev;
+		}
+	}
+
 	while (object) {
 
 		if (object->timeIn <= demo.play.time && (!object->timeOut || demo.play.time < object->timeOut)) {
@@ -30,7 +93,7 @@ void drawDemoObjects(qboolean drawHUD) {
 				demoDrawCross(object->origin, colorWhite);
 			}
 		}
-		object = object->next;
+		object = object->sortedNext;
 	}
 
 }
