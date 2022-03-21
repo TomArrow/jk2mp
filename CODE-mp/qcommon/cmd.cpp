@@ -455,9 +455,9 @@ void Cmd_TokenizeString( const char *text_in ) {
 			cmd_argc++;
 			text++;
 			while ( *text && *text != '"' ) {
-				if (*text == '\\' && text[1] == '"') {
+				/*if (*text == '\\' && text[1] == '"') {
 					text++; // Allow double quotes inside double quotes if they are escaped
-				}
+				}*/ // This causes issues on some demos... sad.
 				*textOut++ = *text++;
 			}
 			*textOut++ = 0;
@@ -487,9 +487,9 @@ void Cmd_TokenizeString( const char *text_in ) {
 				break;
 			}
 
-			if (*text == '\\' && text[1] == '"') {
+			/*if (*text == '\\' && text[1] == '"') {
 				text++; // Allow double quotes as string content if they are escaped (let's hope this does not interefere with other stuff)
-			}
+			}*/ // This causes issues on some demos... sad.
 
 			*textOut++ = *text++;
 		}
