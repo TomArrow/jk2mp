@@ -3049,22 +3049,55 @@ qhandle_t RE_RegisterIndividualSkin(const char* name, qhandle_t hSkin)
 			ri.Printf(PRINT_ALL, "WARNING: RE_RegisterSkin( '%s' ) more than %u surfaces!\n", name, (unsigned int)(sizeof(skin->surfaces) / sizeof(*(skin->surfaces))));
 			break;
 		}
-		surf = skin->surfaces[skin->numSurfaces] = (skinSurface_t*)Hunk_Alloc(sizeof(*skin->surfaces[0]), h_low);
-		Q_strncpyz(surf->name, surfName, sizeof(surf->name));
 
-		/*
-		if (gServerSkinHack)
-		{
-			surf->shader = R_FindServerShader( token, lightmapsNone, stylesDefault, qtrue );
+		int reDefinitionOf = 0; // see if that name is already defined
+		for (int i = 0; i < skin->numSurfaces; i++) {
+			if (!Q_stricmp(surfName, skin->surfaces[i]->name)) {
+				reDefinitionOf = i;
+			}
 		}
-		else
-		{
-		*/
-		surf->shader = R_FindShader(token, lightmapsNone, stylesDefault, qtrue);
-		/*
+
+		if (reDefinitionOf) {
+			surf = skin->surfaces[reDefinitionOf];
+
+			if (!surf->turnedOff) { // If it's already turned off, no use parsing the other stuff
+				if (!Q_stricmp(token, "*off")) { // Ugly hack to make JKA skins with turned off surfaces work better :P
+					surf->shader = R_FindShader("textures/system/nodraw", lightmapsNone, stylesDefault, qtrue);
+					surf->turnedOff = qtrue;
+				}
+				else {
+					// We already have one texture for that surface. User shouldn't have defined more than one.
+				}
+			}
+
 		}
-		*/
-		skin->numSurfaces++;
+		else {
+			surf = skin->surfaces[skin->numSurfaces] = (skinSurface_t*)Hunk_Alloc(sizeof(*skin->surfaces[0]), h_low);
+			Q_strncpyz(surf->name, surfName, sizeof(surf->name));
+
+			/*
+			if (gServerSkinHack)
+			{
+				surf->shader = R_FindServerShader( token, lightmapsNone, stylesDefault, qtrue );
+			}
+			else
+			{
+			*/
+			if (!Q_stricmp(token, "*off")) { // Ugly hack to make JKA skins with turned off surfaces work better :P
+				surf->shader = R_FindShader("textures/system/nodraw", lightmapsNone, stylesDefault, qtrue);
+				surf->turnedOff = qtrue;
+			}
+			else {
+				surf->shader = R_FindShader(token, lightmapsNone, stylesDefault, qtrue);
+				surf->turnedOff = qfalse;
+			}
+			/*
+			}
+			*/
+			skin->numSurfaces++;
+		}
+
+		
 	}
 
 	ri.FS_FreeFile(text);

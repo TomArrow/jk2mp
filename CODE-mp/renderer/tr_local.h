@@ -552,6 +552,7 @@ typedef struct {
 // skins allow models to be retextured without modifying the model file
 typedef struct {
 	char		name[MAX_QPATH];
+	qboolean	turnedOff;
 	shader_t	*shader;
 } skinSurface_t;
 
