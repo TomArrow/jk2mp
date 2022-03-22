@@ -209,6 +209,9 @@ cvar_t	*r_modelpoolmegs;
 
 cvar_t* r_drawAllAreas;
 
+cvar_t* r_convertModelBones;
+cvar_t* r_loadSkinsJKA;
+
 /*
 Ghoul2 Insert Start
 */
@@ -1048,6 +1051,9 @@ void R_Register( void )
 
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%d", MAX_POLYS), 0);
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%d", MAX_POLYVERTS), 0);
+
+	r_convertModelBones = ri.Cvar_Get("r_convertModelBones", "1", CVAR_ARCHIVE);
+	r_loadSkinsJKA = ri.Cvar_Get("r_loadSkinsJKA", "1", CVAR_ARCHIVE);
 /*
 Ghoul2 Insert Start
 */
