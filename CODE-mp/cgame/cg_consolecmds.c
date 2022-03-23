@@ -384,6 +384,191 @@ static void CG_StartOrbit_f( void ) {
 	}
 }
 
+
+//jk2pro stuff ported from eternaljk2mv
+typedef struct bitInfo_S {
+	const char* string;
+} bitInfo_T;
+
+static bitInfo_T strafeTweaks[] = {
+	{ "Original style" },//0
+	{ "Updated style" },//1
+	{ "Cgaz style" },//2
+	{ "Warsow style" },//3
+	{ "Sound" },//4
+	{ "W" },//5
+	{ "WA" },//6
+	{ "WD" },//7
+	{ "A" },//8
+	{ "D" },//9
+	{ "Rear" },//10
+	{ "Center" },//11
+	{ "Accel bar" },//12
+	{ "Weze style" },//13
+	{ "Line Crosshair" }//13
+};
+static const int MAX_STRAFEHELPER_TWEAKS = ARRAY_LEN(strafeTweaks);
+
+void CG_StrafeHelper_f(void) {
+	if (trap_Argc() == 1) {
+		int i = 0;
+		for (i = 0; i < MAX_STRAFEHELPER_TWEAKS; i++) {
+			if ((cg_strafeHelper.integer & (1 << i))) {
+				Com_Printf("%2d [X] %s\n", i, strafeTweaks[i].string);
+			}
+			else {
+				Com_Printf("%2d [ ] %s\n", i, strafeTweaks[i].string);
+			}
+		}
+		return;
+	}
+	else {
+		char arg[8] = { 0 };
+		int index;
+		const uint32_t mask = (1 << MAX_STRAFEHELPER_TWEAKS) - 1;
+
+		trap_Argv(1, arg, sizeof(arg));
+		index = atoi(arg);
+
+		if (index < 0 || index >= MAX_STRAFEHELPER_TWEAKS) {
+			Com_Printf("strafeHelper: Invalid range: %i [0, %i]\n", index, MAX_STRAFEHELPER_TWEAKS - 1);
+			return;
+		}
+
+		if ((index == 0 || index == 1 || index == 2 || index == 3 || index == 13)) { //Radio button these options
+																					 //Toggle index, and make sure everything else in this group (0,1,2,3,13) is turned off
+			int groupMask = (1 << 0) + (1 << 1) + (1 << 2) + (1 << 3) + (1 << 13);
+			int value = cg_strafeHelper.integer;
+
+			groupMask &= ~(1 << index); //Remove index from groupmask
+			value &= ~(groupMask); //Turn groupmask off
+			value ^= (1 << index); //Toggle index item
+
+			trap_Cvar_Set("cg_strafeHelper", va("%i", value));
+		}
+		else {
+			trap_Cvar_Set("cg_strafeHelper", va("%i", (1 << index) ^ (cg_strafeHelper.integer & mask)));
+		}
+		trap_Cvar_Update(&cg_strafeHelper);
+
+		Com_Printf("%s %s^7\n", strafeTweaks[index].string, ((cg_strafeHelper.integer & (1 << index))
+			? "^2Enabled" : "^1Disabled"));
+	}
+}
+
+static bitInfo_T speedometerSettings[] = { // MAX_WEAPON_TWEAKS tweaks (24)
+	{ "Enable speedometer" },//0
+	{ "Pre-speed display" },//1
+	{ "Jump height display" },//2
+	{ "Jump distance display" },//3
+	{ "Vertical speed indicator" },//4
+	{ "Yaw speed indicator" },//5
+	{ "Accel meter" },//6
+	{ "Speed graph" },//7
+	{ "Display speed in kilometers instead of units" },//8
+	{ "Display speed in imperial miles instead of units" },//9
+};
+static const int MAX_SPEEDOMETER_SETTINGS = ARRAY_LEN(speedometerSettings);
+
+void cg_speedometer_f(void)
+{
+	if (trap_Argc() == 1) {
+		int i = 0, display = 0;
+
+		for (i = 0; i < MAX_SPEEDOMETER_SETTINGS; i++) {
+			if ((cg_speedometer.integer & (1 << i))) {
+				Com_Printf("%2d [X] %s\n", display, speedometerSettings[i].string);
+			}
+			else {
+				Com_Printf("%2d [ ] %s\n", display, speedometerSettings[i].string);
+			}
+			display++;
+		}
+		return;
+	}
+	else {
+		char arg[8] = { 0 };
+		int index, index2;
+		const uint32_t mask = (1 << MAX_SPEEDOMETER_SETTINGS) - 1;
+
+		trap_Argv(1, arg, sizeof(arg));
+		index = atoi(arg);
+		index2 = index;
+
+		if (index2 < 0 || index2 >= MAX_SPEEDOMETER_SETTINGS) {
+			Com_Printf("style: Invalid range: %i [0, %i]\n", index2, MAX_SPEEDOMETER_SETTINGS - 1);
+			return;
+		}
+
+		if (index == 8 || index == 9) { //Radio button these options
+		//Toggle index, and make sure everything else in this group (8,9) is turned off
+			int groupMask = (1 << 8) + (1 << 9);
+			int value = cg_speedometer.integer;
+
+			groupMask &= ~(1 << index); //Remove index from groupmask
+			value &= ~(groupMask); //Turn groupmask off
+			value ^= (1 << index); //Toggle index item
+
+			trap_Cvar_Set("cg_speedometer", va("%i", value));
+		}
+		else {
+			trap_Cvar_Set("cg_speedometer", va("%i", (1 << index) ^ (cg_speedometer.integer & mask)));
+		}
+		trap_Cvar_Update(&cg_speedometer);
+
+		Com_Printf("%s %s^7\n", speedometerSettings[index2].string, ((cg_speedometer.integer & (1 << index2))
+			? "^2Enabled" : "^1Disabled"));
+	}
+}
+
+void CG_ClientList_f(void)
+{
+	clientInfo_t* ci;
+	int i;
+	int count = 0;
+
+	for (i = 0; i < MAX_CLIENTS; i++)
+	{
+		ci = &cgs.clientinfo[i];
+		if (!ci->infoValid)
+			continue;
+
+		switch (ci->team)
+		{
+		case TEAM_FREE:
+			if (cgs.isCTFMod && cgs.CTF3ModeActive) {
+				CG_Printf("%2d " S_COLOR_YELLOW "Y   " S_COLOR_WHITE "%s" S_COLOR_WHITE "%s\n", i,
+					ci->name, (ci->botSkill != 0) ? " (bot)" : "");
+			}
+			else {
+				CG_Printf("%2d " S_COLOR_YELLOW "F   " S_COLOR_WHITE "%s" S_COLOR_WHITE "%s\n", i,
+					ci->name, (ci->botSkill != 0) ? " (bot)" : "");
+			}
+			break;
+
+		case TEAM_RED:
+			CG_Printf("%2d " S_COLOR_RED "R   " S_COLOR_WHITE "%s" S_COLOR_WHITE "%s\n", i,
+				ci->name, (ci->botSkill != 0) ? " (bot)" : "");
+			break;
+
+		case TEAM_BLUE:
+			CG_Printf("%2d " S_COLOR_BLUE "B   " S_COLOR_WHITE "%s" S_COLOR_WHITE "%s\n", i,
+				ci->name, (ci->botSkill != 0) ? " (bot)" : "");
+			break;
+
+		default:
+		case TEAM_SPECTATOR:
+			CG_Printf("%2d " S_COLOR_YELLOW "S   " S_COLOR_WHITE "%s" S_COLOR_WHITE "%s\n", i,
+				ci->name, (ci->botSkill != 0) ? " (bot)" : "");
+			break;
+		}
+
+		count++;
+	}
+
+	CG_Printf("Listed %2d clients\n", count);
+}
+
 /*
 static void CG_Camera_f( void ) {
 	char name[1024];
@@ -452,7 +637,12 @@ static consoleCommand_t	commands[] = {
 	{ "invnext", CG_NextInventory_f },
 	{ "invprev", CG_PrevInventory_f },
 	{ "forcenext", CG_NextForcePower_f },
-	{ "forceprev", CG_PrevForcePower_f }
+	{ "forceprev", CG_PrevForcePower_f },
+
+	//jk2pro stuff ported from eternal
+	{ "strafeHelper", CG_StrafeHelper_f },
+	{ "speedometer", cg_speedometer_f },
+	{ "clientlist", CG_ClientList_f },
 };
 
 

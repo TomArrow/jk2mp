@@ -514,6 +514,37 @@ vmCvar_t	cg_animBlend;
 
 vmCvar_t	cg_dismember;
 
+//jk2pro Client Cvars - start (ported from eternaljk2mv)
+//vmCvar_t	cg_raceTimer;
+//vmCvar_t	cg_raceTimerSize;
+//vmCvar_t	cg_raceTimerX;
+//vmCvar_t	cg_raceTimerY;
+vmCvar_t	cg_speedometer;
+vmCvar_t	cg_speedometerX;
+vmCvar_t	cg_speedometerY;
+vmCvar_t	cg_speedometerSize;
+vmCvar_t	cg_showpos;
+
+
+vmCvar_t	cg_strafeHelperCutoff;
+vmCvar_t	cg_strafeHelper;
+vmCvar_t	cg_strafeHelperPrecision;
+vmCvar_t	cg_strafeHelperLineWidth;
+vmCvar_t	cg_strafeHelperActiveColor;
+vmCvar_t	cg_strafeHelperInactiveAlpha;
+
+vmCvar_t	cg_strafeHelperOffset;
+vmCvar_t	cg_strafeHelper_FPS;
+
+vmCvar_t	cg_enhancedFlagStatus;
+vmCvar_t	cg_drawTimerMsec;
+vmCvar_t	cg_movementKeys;
+vmCvar_t	cg_movementKeysX;
+vmCvar_t	cg_movementKeysY;
+vmCvar_t	cg_movementKeysSize;
+
+//jk2 pro stuff end
+
 vmCvar_t	cg_thirdPerson;
 vmCvar_t	cg_thirdPersonRange;
 vmCvar_t	cg_thirdPersonAngle;
@@ -759,6 +790,36 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cg_animBlend, "cg_animBlend", "1", NULL, 0 },
 
 	{ &cg_dismember, "cg_dismember", "0", NULL, CVAR_ARCHIVE },
+
+	//jk2pro Client Cvars start (ported from eternaljk2mv)
+	//{ &cg_raceTimer, "cg_raceTimer", "3", 0 },
+	//{ &cg_raceTimerSize, "cg_raceTimerSize", "0.75", 0 },
+	//{ &cg_raceTimerX, "cg_raceTimerX", "5", 0 },
+	//{ &cg_raceTimerY, "cg_raceTimerY", "280", 0 },
+	{ &cg_speedometer, "cg_speedometer", "0", NULL, CVAR_ARCHIVE },
+	{ &cg_speedometerX, "cg_speedometerX", "98", NULL, CVAR_ARCHIVE },
+	{ &cg_speedometerY, "cg_speedometerY", "460", NULL, CVAR_ARCHIVE },
+	{ &cg_speedometerSize, "cg_speedometerSize", "0.75", NULL, CVAR_ARCHIVE },
+	{ &cg_showpos, "cg_showpos", "0", NULL, 0 },
+
+	{ &cg_strafeHelperCutoff, "cg_strafeHelperCutoff", "240", NULL, CVAR_ARCHIVE },
+	{ &cg_strafeHelper, "cg_strafeHelper", "992", NULL, CVAR_ARCHIVE },
+	{ &cg_strafeHelperPrecision, "cg_strafeHelperPrecision", "256", NULL, 0 },
+	{ &cg_strafeHelperLineWidth, "cg_strafeHelperLineWidth", "1", NULL, CVAR_ARCHIVE },
+	{ &cg_strafeHelperActiveColor, "cg_strafeHelperActiveColor", "0 255 0 200", NULL, CVAR_ARCHIVE },
+	{ &cg_strafeHelperInactiveAlpha, "cg_strafeHelperInactiveAlpha", "200", NULL, CVAR_ARCHIVE },
+
+	{ &cg_strafeHelperOffset, "cg_strafeHelperOffset", "75", NULL, CVAR_ARCHIVE },
+	{ &cg_strafeHelper_FPS, "cg_strafeHelper_FPS", "0", NULL, 0 },
+
+	{ &cg_enhancedFlagStatus, "cg_enhancedFlagStatus", "2", NULL, CVAR_ARCHIVE },
+	{ &cg_drawTimerMsec, "cg_drawTimerMsec", "1", NULL, CVAR_ARCHIVE },
+	{ &cg_movementKeys, "cg_movementKeys", "0", NULL, CVAR_ARCHIVE },
+	{ &cg_movementKeysX, "cg_movementKeysX", "148", NULL, CVAR_ARCHIVE },
+	{ &cg_movementKeysY, "cg_movementKeysY", "428", NULL, CVAR_ARCHIVE },
+	{ &cg_movementKeysSize, "cg_movementKeysSize", "1.0", NULL, CVAR_ARCHIVE },
+
+	//jk2pro stuff end
 
 	{ &cg_thirdPerson, "cg_thirdPerson", "0", NULL, CVAR_ARCHIVE },
 	{ &cg_thirdPersonRange, "cg_thirdPersonRange", "80", NULL, CVAR_CHEAT },
@@ -1434,6 +1495,18 @@ static void CG_RegisterSounds( void ) {
 	
 	cgs.media.winnerSound = trap_S_RegisterSound( "sound/chars/mothma/misc/40MOM006" );
 	cgs.media.loserSound = trap_S_RegisterSound( "sound/chars/mothma/misc/40MOM010" );
+
+	//jk2pro
+	cgs.media.lowHPSound = trap_S_RegisterSound("sound/common/warning.wav");
+	cgs.media.hitSound = trap_S_RegisterSound("sound/effects/hitsound.wav");
+	cgs.media.hitSound2 = trap_S_RegisterSound("sound/effects/hitsound2.wav");
+	cgs.media.hitSound3 = trap_S_RegisterSound("sound/effects/hitsound3.wav");
+	cgs.media.hitSound4 = trap_S_RegisterSound("sound/effects/hitsound4.wav");
+	cgs.media.hitTeamSound = trap_S_RegisterSound("sound/effects/hitsoundteam.wav");
+
+	//new chat sound options
+	cgs.media.teamChatSound = trap_S_RegisterSound("sound/movers/switches/button_11.mp3");
+	cgs.media.privateChatSound = trap_S_RegisterSound("sound/interface/commlink_off.mp3");
 }
 
 
@@ -1664,6 +1737,18 @@ static void CG_RegisterGraphics( void ) {
 			cgs.media.blueFlagModel = trap_R_RegisterModel( "models/flags/b_flag_ysal.md3" );
 		}
 
+		cgs.media.flagShaderYsal[TEAM_RED] = trap_R_RegisterShaderNoMip("gfx/hud/mpi_rflag_ys");
+		cgs.media.flagShaderYsal[TEAM_BLUE] = trap_R_RegisterShaderNoMip("gfx/hud/mpi_bflag_ys");
+		cgs.media.flagShaderYsal[TEAM_FREE] = trap_R_RegisterShaderNoMip("icons/iconf_neutral1"); //will have to do for now
+
+		cgs.media.flagShader[TEAM_RED] = trap_R_RegisterShaderNoMip("gfx/hud/mpi_rflag");
+		cgs.media.flagShader[TEAM_BLUE] = trap_R_RegisterShaderNoMip("gfx/hud/mpi_bflag");
+		cgs.media.flagShader[TEAM_FREE] = trap_R_RegisterShaderNoMip("icons/iconf_neutral1");
+
+		cgs.media.flagShaderTaken[TEAM_RED] = trap_R_RegisterShaderNoMip("gfx/hud/mpi_rflag_x");
+		cgs.media.flagShaderTaken[TEAM_BLUE] = trap_R_RegisterShaderNoMip("gfx/hud/mpi_bflag_x");
+		cgs.media.flagShaderTaken[TEAM_FREE] = trap_R_RegisterShaderNoMip("icons/iconf_neutral1_x");
+
 		trap_R_RegisterShaderNoMip( "gfx/hud/mpi_rflag_x" );
 		trap_R_RegisterShaderNoMip( "gfx/hud/mpi_bflag_x" );
 
@@ -1719,6 +1804,21 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.endarkenmentShader	= trap_R_RegisterShader( "powerups/endarkenmentshell");
 	cgs.media.enlightenmentShader	= trap_R_RegisterShader( "powerups/enlightenmentshell");
 	cgs.media.invulnerabilityShader = trap_R_RegisterShader( "powerups/invulnerabilityshell");
+
+	//JAPRO - Clientside - Movement Keys - Start
+	cgs.media.keyCrouchOffShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/crouch_off");
+	cgs.media.keyCrouchOnShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/crouch_on");
+	cgs.media.keyJumpOffShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/jump_off");
+	cgs.media.keyJumpOnShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/jump_on");
+	cgs.media.keyBackOffShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/back_off");
+	cgs.media.keyBackOnShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/back_on");
+	cgs.media.keyForwardOffShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/forward_off");
+	cgs.media.keyForwardOnShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/forward_on");
+	cgs.media.keyLeftOffShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/left_off");
+	cgs.media.keyLeftOnShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/left_on");
+	cgs.media.keyRightOffShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/right_off");
+	cgs.media.keyRightOnShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/right_on");
+	//JAPRO - Clientside - Movement Keys - End
 
 #ifdef JK2AWARDS
 	cgs.media.medalImpressive		= trap_R_RegisterShaderNoMip( "medal_impressive" );

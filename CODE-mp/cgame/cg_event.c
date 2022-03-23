@@ -993,6 +993,25 @@ void CG_GetCTFMessageEvent(entityState_t *es)
 		teamName = CG_TeamName(teamIndex);
 	}
 
+	if (teamIndex == TEAM_RED) {
+		if (es->eventParm == CTFMESSAGE_PLAYER_GOT_FLAG) {
+			cgs.redFlagCarrier = ci;
+			cgs.redFlagTime = cg.time;
+		}
+	}
+	else if (teamIndex == TEAM_FREE) {
+		if (es->eventParm == CTFMESSAGE_PLAYER_GOT_FLAG) {
+			cgs.yellowFlagCarrier = ci;
+			cgs.yellowFlagTime = cg.time;
+		}
+	}
+	else { //if (teamIndex == TEAM_BLUE) {
+		if (es->eventParm == CTFMESSAGE_PLAYER_GOT_FLAG) {
+			cgs.blueFlagCarrier = ci;
+			cgs.blueFlagTime = cg.time;
+		}
+	}
+
 	CG_PrintCTFMessage(ci, teamName, es->eventParm);
 }
 

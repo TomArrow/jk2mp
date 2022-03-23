@@ -168,6 +168,29 @@ movement on the server game.
 ===================================================================================
 */
 
+
+// From eternaljk2mv:
+//extern ID_INLINE int PM_GetMovePhysics(void);
+typedef enum //movementstyle enum
+{
+	MV_SIEGE,
+	MV_JKA,
+	MV_QW,
+	MV_CPM,
+	MV_Q3,
+	MV_PJK,
+	MV_WSW,
+	MV_RJQ3,
+	MV_RJCPM,
+	MV_SWOOP,
+	MV_JETPACK,
+	MV_SPEED,
+	MV_SP,
+	MV_SLICK,
+	MV_BOTCPM,
+	MV_NUMSTYLES
+} movementStyle_e;
+
 extern qboolean demo15detected;
 extern qboolean saberShenanigans;
 
@@ -321,7 +344,16 @@ typedef enum {
 	STAT_ARMOR,				
 	STAT_DEAD_YAW,					// look this direction when dead (FIXME: get rid of?)
 	STAT_CLIENTS_READY,				// bit mask of clients wishing to exit the intermission (FIXME: configstring?)
-	STAT_MAX_HEALTH					// health / armor limit, changable by handicap
+	STAT_MAX_HEALTH,				// health / armor limit, changable by handicap
+
+	// ported from eternaljk2mv
+	STAT_DASHTIME,
+	STAT_LASTJUMPSPEED,
+	STAT_RACEMODE,
+	STAT_ONLYBHOP,
+	STAT_MOVEMENTSTYLE,
+	STAT_JUMPTIME,
+	STAT_WJTIME
 } statIndex_t;
 
 

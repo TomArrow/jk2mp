@@ -95,6 +95,11 @@ extern camera_t cam;
 
 #define JK2AWARDS
 
+//[JK2PRO - Clientside - All - Jcinfo bitvalues
+#define JK2PRO_CINFO_HIGHFPSFIX		(1<<0) //unused
+
+extern int dueltypes[MAX_CLIENTS];//jk2PRO - Clientside - Fullforce Duels
+
 extern int fxT;
 extern qboolean doFX;
 
@@ -984,6 +989,29 @@ Ghoul2 Insert End
 	chatBoxItem_t	chatItems[MAX_CHATBOX_ITEMS];
 	int				chatItemActive;
 
+	// From eternaljk2mv start: (not sure if all of them are needed for the stuff i do rn. i just ported speedometer and strafehelper)
+	unsigned int		displacement, displacementSamples; //Speedometer, racetimer stuff
+	float				maxSpeed, currentSpeed, previousSpeed;
+	vec3_t				lastGroundPosition;
+	int					lastGroundTime, lastJumpHeightTime, lastJumpDistanceTime;
+	qboolean			firstTimeInAir, wasOnGround;
+	float				lastZSpeed, lastGroundSpeed, lastJumpHeight, lastJumpDistance, lastYawSpeed;
+	int					lastCheckPointPrintTime;
+	int					timerStartTime;
+	vec4_t				strafeHelperActiveColor;
+	vec4_t				crosshairColor;
+	//char				logStrafeTrailFilename[MAX_QPATH];
+	//qboolean			loggingStrafeTrail;
+	//fileHandle_t		strafeTrailFileHandle;
+	//clientCheckpoint_t	clientCheckpoints[MAX_CLIENT_CHECKPOINTS];//japro checkpoint
+	int					doVstrTime;
+	char				doVstr[MAX_QPATH];
+	short				numFKFrames;
+	short				numJumps;
+	int					lastAutoKillTime;
+	// from eternaljk2mv stop. 
+
+
 	int				eventTime;
 	int				eventOldTime;
 	float			eventRadius;
@@ -1059,6 +1087,9 @@ typedef struct {
 	qhandle_t	blueFlagModel;
 	qhandle_t	neutralFlagModel;
 	qhandle_t	flagShader[4];
+	qhandle_t	flagShaderYsal[4];
+	//qhandle_t	flagShader[3]; //JK2
+	qhandle_t	flagShaderTaken[4];
 
 	qhandle_t	flagPoleModel;
 	qhandle_t	flagFlapModel;
@@ -1077,6 +1108,21 @@ typedef struct {
 	qhandle_t	teamStatusBar;
 
 	qhandle_t	deferShader;
+
+	//JAPRO - Clientside - Movement keys - Start
+	qhandle_t	keyCrouchOffShader;
+	qhandle_t	keyCrouchOnShader;
+	qhandle_t	keyJumpOffShader;
+	qhandle_t	keyJumpOnShader;
+	qhandle_t	keyBackOffShader;
+	qhandle_t	keyBackOnShader;
+	qhandle_t	keyForwardOffShader;
+	qhandle_t	keyForwardOnShader;
+	qhandle_t	keyLeftOffShader;
+	qhandle_t	keyLeftOnShader;
+	qhandle_t	keyRightOffShader;
+	qhandle_t	keyRightOnShader;
+	//JAPRO - Clientside - Movement keys - End
 
 #ifdef GIB
 	// gib explosions
@@ -1416,6 +1462,17 @@ typedef struct {
 
 	// Weather
 	qhandle_t	saberFlare; //and used for sun
+
+	//jk2pro
+	sfxHandle_t	lowHPSound;
+	sfxHandle_t	hitSound;
+	sfxHandle_t	hitSound2;
+	sfxHandle_t	hitSound3;
+	sfxHandle_t	hitSound4;
+	sfxHandle_t	hitTeamSound;
+
+	sfxHandle_t	teamChatSound;
+	sfxHandle_t	privateChatSound;
 } cgMedia_t;
 
 
@@ -1555,8 +1612,12 @@ typedef struct {
 	int				duelWinner;
 	int				duelist1;
 	int				duelist2;
-	int				redflag, blueflag;		// flag status from configstrings
+	int				redflag, blueflag, yellowflag;		// flag status from configstrings
 	int				flagStatus;
+
+	//new flagstatus stuff
+	clientInfo_t* redFlagCarrier, * blueFlagCarrier, * yellowFlagCarrier;
+	int				redFlagTime, blueFlagTime, yellowFlagTime;
 
 	qboolean  newHud;
 
@@ -1623,6 +1684,14 @@ Ghoul2 Insert End
 
 	float widthRatioCoef;	//to make 2Ds be not stretched
 	char *gamename;
+
+	//jk2pro (not all implemented)
+	int				jcinfo;
+	qboolean		isJK2Pro;
+	qboolean		isCTFMod;
+	qboolean		CTF3ModeActive;
+	qboolean		isolateDuels;
+	qboolean		isCaMod;
 } cgs_t;
 
 //==============================================================================
@@ -1716,6 +1785,36 @@ extern	vmCvar_t		cg_auraShell;
 extern	vmCvar_t		cg_animBlend;
 
 extern	vmCvar_t		cg_dismember;
+
+//jk2pro Client Cvars - start (ported from eternaljk2mv)
+//extern	vmCvar_t		cg_raceTimer;
+//extern	vmCvar_t		cg_raceTimerSize;
+//extern	vmCvar_t		cg_raceTimerX;
+//extern	vmCvar_t		cg_raceTimerY;
+extern	vmCvar_t		cg_speedometer;
+extern	vmCvar_t		cg_speedometerX;
+extern	vmCvar_t		cg_speedometerY;
+extern	vmCvar_t		cg_speedometerSize;
+extern	vmCvar_t		cg_showpos;
+
+extern	vmCvar_t		cg_strafeHelperCutoff;
+extern	vmCvar_t		cg_strafeHelper;
+extern	vmCvar_t		cg_strafeHelperPrecision;
+extern	vmCvar_t		cg_strafeHelperLineWidth;
+extern	vmCvar_t		cg_strafeHelperActiveColor;
+extern	vmCvar_t		cg_strafeHelperInactiveAlpha;
+
+extern	vmCvar_t		cg_strafeHelperOffset;
+extern	vmCvar_t		cg_strafeHelper_FPS;
+
+extern	vmCvar_t		cg_enhancedFlagStatus;
+extern	vmCvar_t		cg_drawTimerMsec;
+extern	vmCvar_t		cg_movementKeys;
+extern	vmCvar_t		cg_movementKeysX;
+extern	vmCvar_t		cg_movementKeysY;
+extern	vmCvar_t		cg_movementKeysSize;
+//jk2 pro stuff end
+
 
 extern	vmCvar_t		cg_thirdPerson;
 extern	vmCvar_t		cg_thirdPersonRange;
@@ -1994,6 +2093,7 @@ void CG_CheckOrderPending(void);
 const char *CG_GameTypeString(void);
 qboolean CG_YourTeamHasFlag(void);
 qboolean CG_OtherTeamHasFlag(void);
+clientInfo_t* CG_GetFlagCarrier(team_t flag);
 qhandle_t CG_StatusHandle(int task);
 
 

@@ -134,6 +134,7 @@ extern void CG_ForceNTDemo(void);
 void CG_ParseServerinfo( void ) {
 	const char	*info;
 	char	*mapname;
+	char* v = NULL;
 
 	info = CG_ConfigString( CS_SERVERINFO );
 	cgs.gametype = atoi( Info_ValueForKey( info, "g_gametype" ) );
@@ -149,7 +150,46 @@ void CG_ParseServerinfo( void ) {
 	cgs.capturelimit = atoi( Info_ValueForKey( info, "capturelimit" ) );
 	cgs.timelimit = atoi( Info_ValueForKey( info, "timelimit" ) );
 	cgs.maxclients = atoi( Info_ValueForKey( info, "sv_maxclients" ) );
-	mapname = Info_ValueForKey( info, "mapname" );
+
+	cgs.isJK2Pro = qfalse;
+
+	v = Info_ValueForKey(info, "gamename"); // from eternaljk2mv
+	if (v)
+	{
+		Q_CleanStr(v, qtrue);
+		if (!Q_stricmpn(v, "jk2pro", 5)) {
+			cgs.isJK2Pro = qtrue;
+			cgs.isolateDuels = qtrue;
+			v = Info_ValueForKey(info, "jcinfo");
+			cgs.jcinfo = atoi(v);//[JAPRO - Clientside - All - Add gamename variable to get jcinfo from japro servers]
+			v = Info_ValueForKey(info, "g_fixHighFPSAbuse");
+			if (v && !(cgs.jcinfo & JK2PRO_CINFO_HIGHFPSFIX)) {
+				cgs.jcinfo |= JK2PRO_CINFO_HIGHFPSFIX;
+			}
+			trap_Cvar_Set("cjp_client", "1.4JAPRO");
+		}
+		else if (!Q_stricmpn(v, "< VvV >", 7) || !Q_stricmpn(v, "CPT ][ Mod", 10)) {
+			cgs.isCTFMod = qtrue;
+			cgs.CTF3ModeActive = (qboolean)(atoi(Info_ValueForKey(info, "g_allowFreeTeam")));
+			v = Info_ValueForKey(info, "g_block333");
+			if (v) cgs.jcinfo = atoi(v);
+			if (cgs.jcinfo && cgs.jcinfo != 3) {
+				cgs.jcinfo = JK2PRO_CINFO_HIGHFPSFIX;
+			}
+			trap_Cvar_Set("cjp_client", "1.4JAPRO");
+		}
+		else if (!Q_stricmpn(v, "Ca Mod", 6))
+		{
+			cgs.isolateDuels = qtrue;
+			cgs.isCaMod = qtrue;
+		}
+		else if (!Q_stricmpn(v, "fgcMod", 6))
+		{
+			cgs.isolateDuels = qtrue;
+			cgs.isCaMod = qfalse;
+		}
+	}
+
 	
 	cg.ntModDetected = qfalse;
 	saberShenanigans = qfalse;
@@ -164,6 +204,9 @@ void CG_ParseServerinfo( void ) {
 		Com_Printf("\nSaberShenanigans mod detected\n\n");
 	}
 	CG_ForceNTDemo();
+
+
+	mapname = Info_ValueForKey(info, "mapname");
 
 	//rww - You must do this one here, Info_ValueForKey always uses the same memory pointer.
 	trap_Cvar_Set ( "ui_about_mapname", mapname );
@@ -422,12 +465,19 @@ static void CG_ConfigStringModified( void ) {
 	} else if ( num == CS_FLAGSTATUS ) {
 		if( cgs.gametype == GT_CTF || cgs.gametype == GT_CTY ) {
 			// format is rb where its red/blue, 0 is at base, 1 is taken, 2 is dropped
-			int redflagId = str[0] - '0', blueflagId = str[1] - '0';
+			int redflagId = str[0] - '0', blueflagId = str[1] - '0', yellowflagId;
 			//ent: Raz: improved flag status remapping
 			if ( redflagId >= 0 && redflagId < ARRAY_LEN( ctfFlagStatusRemap ) ) 
 				cgs.redflag = ctfFlagStatusRemap[redflagId];
 			if ( blueflagId >= 0 && blueflagId < ARRAY_LEN( ctfFlagStatusRemap ) )  
 				cgs.blueflag = ctfFlagStatusRemap[blueflagId];
+			if (cgs.isCTFMod && cgs.CTF3ModeActive) {
+				yellowflagId = str[2] - '0';
+				if (yellowflagId >= 0 && yellowflagId < ARRAY_LEN(ctfFlagStatusRemap))
+					cgs.yellowflag = ctfFlagStatusRemap[yellowflagId];
+			}
+			else
+				cgs.yellowflag = 0;
 		}
 	}
 	else if ( num == CS_SHADERSTATE ) {

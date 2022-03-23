@@ -240,6 +240,47 @@ qboolean CG_YourTeamHasFlag(void) {
 	return qfalse;
 }
 
+clientInfo_t* CG_GetFlagCarrier(team_t flag) {
+	int flagStatus = 0, flagBit = 0, w;
+	clientInfo_t* ci = NULL;
+
+	switch (flag) {
+	case TEAM_RED:
+		flagStatus = cgs.redflag;
+		flagBit = PW_REDFLAG;
+		break;
+	case TEAM_BLUE:
+		flagStatus = cgs.blueflag;
+		flagBit = PW_BLUEFLAG;
+		break;
+	case TEAM_FREE:
+		if (cgs.isCTFMod && cgs.CTF3ModeActive) {
+			flagStatus = cgs.yellowflag;
+			flagBit = PW_NEUTRALFLAG;
+			break;
+		}
+	default:
+		return NULL;
+		break;
+	}
+
+	if (flagStatus != FLAG_TAKEN) {
+		return NULL;
+	}
+
+	for (w = 0; w < MAX_CLIENTS; w++) {
+		ci = &cgs.clientinfo[w];
+
+		if (!ci || !ci->infoValid)
+			continue;
+
+		if (ci->powerups & (1 << flagBit))
+			return ci;
+	}
+
+	return NULL;
+}
+
 // THINKABOUTME: should these be exclusive or inclusive.. 
 // 
 qboolean CG_OwnerDrawVisible(int flags) {
