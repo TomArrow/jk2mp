@@ -1879,6 +1879,10 @@ extern	vmCvar_t		ui_myteam;
 
 // From Nerevar Cam mod
 extern  vmCvar_t		cam_shownames;
+extern  vmCvar_t		cam_shownames3D;
+extern  vmCvar_t		cam_shownames3DScale;
+extern	vmCvar_t		cam_shownames3DLockZRot;
+extern	vmCvar_t		cam_shownames3DLockYRot;
 extern  vmCvar_t		cam_shownamesStyle;
 extern  vmCvar_t		cam_shownamesIncludePlayer;
 extern  vmCvar_t		cam_shownamesPositionBasedOnG2Head;
@@ -2074,6 +2078,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team );
 void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y, int ownerDraw, int ownerDrawFlags, int align, float special, float scale, vec4_t color, qhandle_t shader, int textStyle,int font);
 void CG_Text_Paint(float x, float y, float scale, vec4_t color, const char *text, float adjust, int limit, int style, int iMenuFont);
+void CG_Text_Paint_3D(vec3_t origin, vec3_t axis[3], float scale, vec4_t color, const char* text, float adjust, int limit, int style, int iMenuFont);
 int CG_Text_Width(const char *text, float scale, int iMenuFont);
 int CG_Text_Height(const char *text, float scale, int iMenuFont);
 void CG_SelectPrevPlayer(void);
@@ -2400,6 +2405,7 @@ int			trap_R_Font_StrLenPixels(const char *text, const int iFontIndex, const flo
 int			trap_R_Font_StrLenChars(const char *text);
 int			trap_R_Font_HeightPixels(const int iFontIndex, const float scale);
 void		trap_R_Font_DrawString(float ox, float oy, const char *text, const float *rgba, const int setIndex, int iCharLimit, const float scale);
+void		trap_R_Font_DrawString_3D(vec3_t origin, vec3_t axis[3], const char* text, const float* rgba, const int setIndex, int iCharLimit, const float scale);
 qboolean	trap_Language_IsAsian(void);
 qboolean	trap_Language_UsesSpaces(void);
 unsigned	trap_AnyLanguage_ReadCharFromString( const char *psText, int *piAdvanceCount, qboolean *pbIsTrailingPunctuation/* = NULL*/ );

@@ -385,11 +385,13 @@ CFontInfo::CFontInfo(const char *fontName)
 	{
 		mHeight = 0;
 		mShader = 0;
+		mShader3D = 0;
 	}
 
 	Q_strncpyz(m_sFontName, fontName, sizeof(m_sFontName));
 	COM_StripExtension( m_sFontName, m_sFontName );	// so we get better error printing if failed to load shader (ie lose ".fontdat")
 	mShader = RE_RegisterShaderNoMip(m_sFontName);
+	mShader3D = RE_RegisterShader3DPolyAlpha (m_sFontName);
 
 	FlagNoAsianGlyphs();
 	UpdateAsianIfNeeded(true);
@@ -478,6 +480,7 @@ void CFontInfo::UpdateAsianIfNeeded( bool bForceReEval /* = false */ )
 					// returning 0 here will automatically inhibit Asian glyph calculations at runtime...
 					//
 					m_hAsianShaders[i] = RE_RegisterShaderNoMip( sTemp );
+					m_hAsianShaders3D[i] = RE_RegisterShader3DPolyAlpha( sTemp );
 				}
 			
 				// for now I'm hardwiring these, but if we ever have more than one glyph set per language then they'll be changed...
@@ -519,7 +522,7 @@ void CFontInfo::UpdateAsianIfNeeded( bool bForceReEval /* = false */ )
 // needed to add *piShader param because of multiple TPs, 
 //	if not passed in, then I also skip S,T calculations for re-usable static asian glyphinfo struct...
 //
-const glyphInfo_t *CFontInfo::GetLetter(const unsigned int uiLetter, int *piShader /* = NULL */)
+const glyphInfo_t *CFontInfo::GetLetter(const unsigned int uiLetter, int *piShader /* = NULL */, qboolean get3D)
 { 	
 	if ( AsianGlyphsAvailable() )
 	{
@@ -608,7 +611,7 @@ const glyphInfo_t *CFontInfo::GetLetter(const unsigned int uiLetter, int *piShad
 					}
 					break;
 				}
-				*piShader = m_hAsianShaders[ iTexturePageIndex ];
+				*piShader = get3D ? m_hAsianShaders3D[iTexturePageIndex] : m_hAsianShaders[ iTexturePageIndex ];
 			}
 			return &m_AsianGlyph;
 		}
@@ -616,7 +619,7 @@ const glyphInfo_t *CFontInfo::GetLetter(const unsigned int uiLetter, int *piShad
 
 	if (piShader)
 	{
-		*piShader = GetShader();
+		*piShader = get3D ? GetShader3D(): GetShader();
 	}
 
 	return(mGlyphs + (uiLetter & 0xff)); 
@@ -799,17 +802,106 @@ CFontInfo* RE_Font_GetVariant(CFontInfo* font, float* scale, float xadjust, floa
 	return font;
 }
 
+CFontInfo* RE_Font_GetSharpestVariant(CFontInfo* font, float* scale, float xadjust, float yadjust) {
+	int variants = font->GetNumVariants();
+
+	if (variants > 0) {
+		CFontInfo* variant;
+		CFontInfo* biggestVariant;
+		/*int requestedSize = font->GetPointSize() * *scale *
+			r_fontSharpness->value * glConfig.vidHeight *
+			(yadjust / SCREEN_HEIGHT);
+
+		if (requestedSize <= font->GetPointSize())
+			return font;*/
+
+		int biggestSize = font->GetPointSize();
+		biggestVariant = font;
+
+		for (int i = 0; i < variants; i++) {
+			variant = font->GetVariant(i);
+
+			if (biggestSize < variant->GetPointSize()) {
+				biggestSize = variant->GetPointSize();
+				biggestVariant = variant;
+			}
+		}
+
+		*scale *= (float)font->GetPointSize() / biggestVariant->GetPointSize();
+		return biggestVariant;
+	}
+
+	return font;
+}
+
+enum fontDrawType_t {
+	FONTDRAW2D,
+	FONTDRAW3D
+};
+struct fontDrawPosition_t {
+	fontDrawType_t type;
+	float x, y;
+	vec3_t position3D;
+	vec3_t axis3D[3];
+};
+#ifdef RELDEBUG
+#pragma optimize("", off)
+#endif
+
+static vec4_t	currentFontColor; // For 3D bc it ignores SetColor
+void RE_Font_DrawGlyph3D(const fontDrawPosition_t* drawPosition,const glyphInfo_t *glyphInfo, float xScale, float yScale, qhandle_t hShader) {
+	/*2D for reference
+	RE_StretchPic(drawPosition.x, // float x
+		drawPosition.y,	// float y
+		pLetter->width * xScale,	// float w
+		pLetter->height * yScale, // float h
+		pLetter->s,						// float s1
+		pLetter->t,						// float t1
+		pLetter->s2,					// float s2
+		pLetter->t2,					// float t2
+		//lastcolour.c, 
+		hShader							// qhandle_t hShader
+	);*/
+
+	float width = glyphInfo->width * xScale;
+	float height = glyphInfo->height * yScale;
+
+	polyVert_t polys[4];
+	for (int i = 0; i < 4; i++) {
+		VectorCopy(drawPosition->position3D, polys[i].xyz);
+		Vector4Scale(currentFontColor,255.0f,polys[i].modulate);
+	}
+	polys[0].st[0] = glyphInfo->s;
+	polys[0].st[1] = glyphInfo->t;
+	polys[1].st[0] = glyphInfo->s2;
+	polys[1].st[1] = glyphInfo->t;
+	polys[2].st[0] = glyphInfo->s2;
+	polys[2].st[1] = glyphInfo->t2;
+	polys[3].st[0] = glyphInfo->s;
+	polys[3].st[1] = glyphInfo->t2;
+
+	VectorMA(polys[1].xyz, -width, drawPosition->axis3D[1], polys[1].xyz);
+
+	VectorMA(polys[2].xyz, -height, drawPosition->axis3D[2], polys[2].xyz);
+	VectorMA(polys[2].xyz, -width, drawPosition->axis3D[1], polys[2].xyz);
+
+	VectorMA(polys[3].xyz, -height, drawPosition->axis3D[2], polys[3].xyz);
+
+
+	RE_AddPolyToScene(hShader,4,polys,1);
+}
 
 // iCharLimit is -1 for "all of string", else MBCS char count...
 //
 qboolean gbInShadow = qfalse;	// MUST default to this
-void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgba, int iFontHandle, int iCharLimit, float fScale)
+void RE_Font_DrawStringReal(fontDrawPosition_t drawPosition, const char *psText, const float *rgba, int iFontHandle, int iCharLimit, float fScale)
 {		
-	float				x, y, offset;
+	float				/*x, y,*/ offset;
 	int					colour;
 	const glyphInfo_t	*pLetter;
 	qhandle_t			hShader;
 	qboolean			qbThisCharCountsAsLetter;	// logic for this bool must be kept same in this function and RE_Font_StrLenChars()
+	
 
 	if(iFontHandle & STYLE_BLINK)
 	{
@@ -838,7 +930,13 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 	float xadjust = (float)SCREEN_WIDTH / glConfig.vidWidth;
 	float yadjust = (float)SCREEN_HEIGHT / glConfig.vidHeight;
 
-	curfont = RE_Font_GetVariant(curfont, &fScale, xadjust, yadjust);
+	if (drawPosition.type == FONTDRAW2D) {
+
+		curfont = RE_Font_GetVariant(curfont, &fScale, xadjust, yadjust);
+	}
+	else {
+		curfont = RE_Font_GetSharpestVariant(curfont, &fScale, xadjust, yadjust); // Bc we may actually get very close in 3D
+	}
 	iFontHandle = curfont->GetHandle() | (iFontHandle & ~SET_MASK);
 
 	float fScaleA = fScale;
@@ -863,7 +961,22 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 		offset = curfont->GetPointSize() * fScale * 0.075f;
 		
 		gbInShadow = qtrue;
-		RE_Font_DrawString(ox + offset * fontRatioFix, oy + offset, psText, v4DKGREY2, iFontHandle & SET_MASK, iCharLimit, fScale);
+		fontDrawPosition_t shadowDrawPos = drawPosition;
+		switch (shadowDrawPos.type)
+		{
+			case FONTDRAW3D:
+				VectorMA(shadowDrawPos.position3D, -offset * fontRatioFix, shadowDrawPos.axis3D[1], shadowDrawPos.position3D); // Move right
+				VectorMA(shadowDrawPos.position3D, offset, shadowDrawPos.axis3D[0], shadowDrawPos.position3D); // Move back
+				VectorMA(shadowDrawPos.position3D, -offset, shadowDrawPos.axis3D[2], shadowDrawPos.position3D); // Move down
+				break;
+			case FONTDRAW2D:
+			default:
+				shadowDrawPos.x += offset * fontRatioFix;
+				shadowDrawPos.y += offset;
+				break;
+		}
+		//RE_Font_DrawString(ox + offset * fontRatioFix, oy + offset, psText, v4DKGREY2, iFontHandle & SET_MASK, iCharLimit, fScale);
+		RE_Font_DrawStringReal(shadowDrawPos, psText, v4DKGREY2, iFontHandle & SET_MASK, iCharLimit, fScale);
 		gbInShadow = qfalse;
 	} else if (demo15detected && iFontHandle & STYLE_DROPSHADOW) {
 		int i = 0, r = 0;
@@ -895,14 +1008,37 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 		}
 		dropShadowText[r] = 0;
 
-		RE_Font_DrawString(ox + offset * fontRatioFix, oy + offset, dropShadowText, v4DKGREY2, iFontHandle & SET_MASK, iCharLimit, fScale);
+		fontDrawPosition_t shadowDrawPos = drawPosition;
+		switch (shadowDrawPos.type)
+		{
+			case FONTDRAW3D:
+				VectorMA(shadowDrawPos.position3D, -offset * fontRatioFix, shadowDrawPos.axis3D[1], shadowDrawPos.position3D); // Move right
+				VectorMA(shadowDrawPos.position3D, offset, shadowDrawPos.axis3D[0], shadowDrawPos.position3D); // Move back
+				VectorMA(shadowDrawPos.position3D, -offset, shadowDrawPos.axis3D[2], shadowDrawPos.position3D); // Move down
+				break;
+			case FONTDRAW2D:
+			default:
+				shadowDrawPos.x += offset * fontRatioFix;
+				shadowDrawPos.y += offset;
+				break;
+		}
+		//RE_Font_DrawString(ox + offset * fontRatioFix, oy + offset, dropShadowText, v4DKGREY2, iFontHandle & SET_MASK, iCharLimit, fScale);
+		RE_Font_DrawStringReal(shadowDrawPos, dropShadowText, v4DKGREY2, iFontHandle & SET_MASK, iCharLimit, fScale);
 	}
 
-	RE_SetColor( rgba );
+	if (drawPosition.type == FONTDRAW3D) {
+		Vector4Copy(rgba, currentFontColor);
+	}
+	else {
+		RE_SetColor(rgba);
+	}
 
-	x = ox;
-	oy += (curfont->GetHeight() - (curfont->GetDescender() >> 1)) * fScale;
+	//x = ox;
+	//oy += (curfont->GetHeight() - (curfont->GetDescender() >> 1)) * fScale;
+	fontDrawPosition_t dynPos;
+	float yOffset= (curfont->GetHeight() - (curfont->GetDescender() >> 1)) * fScale, xOffset = 0;
 	
+
 	while(*psText)
 	{
 		int iAdvanceCount;
@@ -927,7 +1063,12 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 						color[2] = R_sRGBToLinear(color[2]);
 						//color[3] = R_sRGBToLinear(color[3]);
 					}
-					RE_SetColor(color);
+					if (drawPosition.type == FONTDRAW3D) {
+						Vector4Copy(color, currentFontColor);
+					}
+					else {
+						RE_SetColor(color);
+					}
 				}
 			}
 			else if (Q_IsColorString(psText - 1) ||  Q_IsColorString_1_02(psText - 1) || Q_IsColorString_Extended(psText - 1))
@@ -943,7 +1084,12 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 						color[2] = R_sRGBToLinear(color[2]);
 						//color[3] = R_sRGBToLinear(color[3]);
 					}
-					RE_SetColor(color);
+					if (drawPosition.type == FONTDRAW3D) {
+						Vector4Copy(color, currentFontColor);
+					}
+					else {
+						RE_SetColor(color);
+					}
 				}
 				++psText;
 				break;
@@ -954,21 +1100,33 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 				colour = ColorIndexNT(*psText++);
 				Com_Memcpy( color, g_color_table_nt[colour], sizeof( color ) );
 				color[3] = rgba[3];
-				RE_SetColor( color );
+				if (drawPosition.type == FONTDRAW3D) {
+					Vector4Copy(color,currentFontColor);
+				}
+				else {
+					RE_SetColor( color );
+				}
 			} else {
 				colour = ColorIndex(*psText++);
 				if (!gbInShadow || demo15detected) {
 					vec4_t color;
 					Com_Memcpy( color, g_color_table[colour], sizeof( color ) );
 					color[3] = rgba[3];
-					RE_SetColor( color );
+					if (drawPosition.type == FONTDRAW3D) {
+						Vector4Copy(color,currentFontColor);
+					}
+					else {
+						RE_SetColor( color );
+					}
 				}
 			}*/
 		}
 		break;
 		case 10:						//linefeed
-			x = ox;
-			oy += curfont->GetPointSize() * fScale;
+			//x = ox;
+			xOffset = 0;
+			//oy += curfont->GetPointSize() * fScale;
+			yOffset += curfont->GetPointSize() * fScale;
 //			if (Language_IsAsian())
 //			{
 //				oy += 4;	// this only comes into effect when playing in asian (for SP, though I'm going to keep it in MP probbly) "A long time ago in a galaxy" etc, all other text is line-broken in feeder functions
@@ -979,12 +1137,13 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 		case 32:						// Space
 			qbThisCharCountsAsLetter = qtrue;
 			pLetter = curfont->GetLetter(' ');
-			x += pLetter->horizAdvance * fScale * fontRatioFix;
+			//x += pLetter->horizAdvance * fScale * fontRatioFix;
+			xOffset += pLetter->horizAdvance * fScale * fontRatioFix;
 			break;
 
 		default:
 			qbThisCharCountsAsLetter = qtrue;
-			pLetter = curfont->GetLetter( uiLetter, &hShader );			// Description of pLetter
+			pLetter = curfont->GetLetter( uiLetter, &hShader, (qboolean)(drawPosition.type == FONTDRAW3D) );			// Description of pLetter
 			if(!pLetter->width)
 			{
 				pLetter = curfont->GetLetter('.');
@@ -995,21 +1154,44 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 			// this 'mbRoundCalcs' stuff is crap, but the only way to make the font code work. Sigh...
 			//
 			float fThisScale = uiLetter > 255 ? fScaleA : fScale;
-			y = oy - pLetter->baseline * fThisScale;
+			//y = oy - pLetter->baseline * fThisScale;
 
-			RE_StretchPic ( x + pLetter->horizOffset * fThisScale, // float x
-							(uiLetter > 255) ? y - iAsianYAdjust : y,	// float y
-							pLetter->width * fThisScale * fontRatioFix,	// float w
-							pLetter->height * fThisScale, // float h
-							pLetter->s,						// float s1
-							pLetter->t,						// float t1
-							pLetter->s2,					// float s2
-							pLetter->t2,					// float t2
-							//lastcolour.c, 
-							hShader							// qhandle_t hShader
-							);
+			dynPos = drawPosition;
 
-			x += pLetter->horizAdvance * fThisScale * fontRatioFix;
+			switch (dynPos.type)
+			{
+				case FONTDRAW3D:
+					VectorMA(dynPos.position3D, -(yOffset - pLetter->baseline * fThisScale - ((uiLetter > 255) ? iAsianYAdjust : 0)), dynPos.axis3D[2], dynPos.position3D);
+					VectorMA(dynPos.position3D, -(xOffset + pLetter->horizOffset * fThisScale), dynPos.axis3D[1], dynPos.position3D);
+					break;
+				case FONTDRAW2D:
+				default:
+					dynPos.x += xOffset + pLetter->horizOffset * fThisScale;
+					dynPos.y += yOffset - pLetter->baseline * fThisScale - ((uiLetter > 255) ? iAsianYAdjust : 0);
+					break;
+			}
+
+			if(dynPos.type == FONTDRAW2D){ // Classical 2D drawing type
+
+				RE_StretchPic(dynPos.x, // float x
+					dynPos.y,	// float y
+					pLetter->width* fThisScale* fontRatioFix,	// float w
+					pLetter->height* fThisScale, // float h
+					pLetter->s,						// float s1
+					pLetter->t,						// float t1
+					pLetter->s2,					// float s2
+					pLetter->t2,					// float t2
+					//lastcolour.c, 
+					hShader							// qhandle_t hShader
+				);
+			}
+			else if (dynPos.type == FONTDRAW3D){
+				RE_Font_DrawGlyph3D(&dynPos,pLetter, fThisScale* fontRatioFix, fThisScale, hShader);
+			}
+			
+
+			//x += pLetter->horizAdvance * fThisScale * fontRatioFix;
+			xOffset += pLetter->horizAdvance * fThisScale * fontRatioFix;
 			break;
 		}		
 
@@ -1021,6 +1203,26 @@ void RE_Font_DrawString(float ox, float oy, const char *psText, const float *rgb
 	}
 	//let it remember the old color //RE_SetColor(NULL);;
 }
+
+
+void RE_Font_DrawString(float ox, float oy, const char* psText, const float* rgba, int iFontHandle, int iCharLimit, float fScale) {
+	fontDrawPosition_t drawPos2D;
+	drawPos2D.type = FONTDRAW2D;
+	drawPos2D.x = ox;
+	drawPos2D.y = oy;
+	RE_Font_DrawStringReal(drawPos2D,psText,rgba,iFontHandle,iCharLimit,fScale);
+}
+
+void RE_Font_DrawString_3D(vec_t* origin, vec_t* axis, const char* psText, const float* rgba, int iFontHandle, int iCharLimit, float fScale) {
+	fontDrawPosition_t drawPos3D;
+	drawPos3D.type = FONTDRAW3D;
+	VectorCopy(origin,drawPos3D.position3D);
+	Com_Memcpy(drawPos3D.axis3D, axis, sizeof(float) * 9);
+	RE_Font_DrawStringReal(drawPos3D,psText,rgba,iFontHandle,iCharLimit,fScale);
+}
+#ifdef RELDEBUG
+#pragma optimize("", on)
+#endif
 
 int RE_RegisterFont_Real(const char* psName)
 {

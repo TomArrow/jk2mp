@@ -1491,6 +1491,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.Font_StrLenChars = RE_Font_StrLenChars;
 	re.Font_HeightPixels = RE_Font_HeightPixels;
 	re.Font_DrawString = RE_Font_DrawString;
+	re.Font_DrawString_3D = RE_Font_DrawString_3D;
 	re.Language_IsAsian = Language_IsAsian;
 	re.Language_UsesSpaces = Language_UsesSpaces;
 	re.AnyLanguage_ReadCharFromString = AnyLanguage_ReadCharFromString;

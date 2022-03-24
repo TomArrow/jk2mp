@@ -361,10 +361,10 @@ typedef struct {
 
 struct shaderCommands_s;
 
-#define LIGHTMAP_2D			-4		// shader is for 2D rendering
-#define LIGHTMAP_BY_VERTEX	-3		// pre-lit triangle models
-#define LIGHTMAP_WHITEIMAGE	-2
-#define	LIGHTMAP_NONE		-1
+#define LIGHTMAP_2D					-4		// shader is for 2D rendering
+#define LIGHTMAP_BY_VERTEX			-3		// pre-lit triangle models
+#define LIGHTMAP_WHITEIMAGE			-2
+#define	LIGHTMAP_NONE				-1
 
 typedef enum {
 	CT_FRONT_SIDED,
@@ -1542,10 +1542,12 @@ extern	const byte	stylesDefault[MAXLIGHTMAPS];
 qhandle_t RE_RegisterShaderLightMap( const char *name, const int *lightmapIndex, const byte *styles ) ;
 qhandle_t		 RE_RegisterShader( const char *name );
 qhandle_t		 RE_RegisterShaderNoMip( const char *name );
+qhandle_t		 RE_RegisterShader3DPoly( const char *name );
+qhandle_t		 RE_RegisterShader3DPolyAlpha( const char *name );
 qhandle_t		 RE_RegisterShaderNoMipHUD( const char *name );
 qhandle_t RE_RegisterShaderFromImage(const char *name, int *lightmapIndex, byte *styles, image_t *image, qboolean mipRawImage);
 
-shader_t	*R_FindShader( const char *name, const int *lightmapIndex, const byte *styles, qboolean mipRawImage );
+shader_t	*R_FindShader( const char *name, const int *lightmapIndex, const byte *styles, qboolean mipRawImage,qboolean vertexLightmapWithAlpha = qfalse );
 shader_t	*R_GetShaderByHandle( qhandle_t hShader );
 shader_t	*R_GetShaderByState( int index, long *cycleTime );
 shader_t *R_FindShaderByName( const char *name );

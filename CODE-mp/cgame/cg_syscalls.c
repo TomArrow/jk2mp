@@ -255,6 +255,17 @@ void trap_R_Font_DrawString(float ox, float oy, const char *text, const float *r
 	syscall( CG_R_FONT_DRAWSTRING, PASSFLOAT(ox), PASSFLOAT(oy), text, rgba, setIndex, iCharLimit, PASSFLOAT(scale));
 }
 
+#ifdef RELDEBUG
+#pragma optimize("", off)
+#endif
+void trap_R_Font_DrawString_3D(vec3_t origin, vec3_t axis[3], const char *text, const float *rgba, const int setIndex, int iCharLimit, const float scale)
+{
+	syscall( CG_R_FONT_DRAWSTRING_3D, (float*)origin, (float*)axis, text, rgba, setIndex, iCharLimit, PASSFLOAT(scale));
+}
+#ifdef RELDEBUG
+#pragma optimize("", on)
+#endif
+
 qboolean trap_Language_IsAsian(void)
 {
 	return syscall( CG_LANGUAGE_ISASIAN );

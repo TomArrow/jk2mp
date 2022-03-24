@@ -662,6 +662,13 @@ int CL_CgameSystemCalls( int *args ) {
 		}
 		re.Font_DrawString( ox, oy, (const char *)VMA(3), (const float *) VMA(4), args[5], args[6], VMF(7) );}
 		return 0;
+	case CG_R_FONT_DRAWSTRING_3D:
+		{vec_t* origin, *axis;
+		cvar_t *fs_game;
+		origin = (vec_t*)VMA(1);
+		axis = (vec_t*)VMA(2);
+		re.Font_DrawString_3D( origin, axis, (const char *)VMA(3), (const float *) VMA(4), args[5], args[6], VMF(7) );}
+		return 0;
 	case CG_LANGUAGE_ISASIAN:
 		return re.Language_IsAsian();
 	case CG_LANGUAGE_USESSPACES:

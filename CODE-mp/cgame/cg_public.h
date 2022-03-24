@@ -265,7 +265,8 @@ Ghoul2 Insert End
 	CG_R_REGISTERSHADERNOMIPHUD, // For controlling HUD Brightness, special handler
 	CG_MME_FAKEADVANCEFRAMES,
 	CG_R_PARSEWAVEFORM,
-	CG_R_EVALWAVEFORM
+	CG_R_EVALWAVEFORM,
+	CG_R_FONT_DRAWSTRING_3D,
 } cgameImport_t;
 
 

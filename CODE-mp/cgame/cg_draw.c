@@ -154,6 +154,32 @@ void CG_Text_Paint(float x, float y, float scale, vec4_t color, const char *text
 							);
 }
 
+void CG_Text_Paint_3D(vec3_t origin, vec3_t axis[3], float scale, vec4_t color, const char *text, float adjust, int limit, int style, int iMenuFont)
+{
+	int iStyleOR = 0;
+	int iFontIndex = MenuFontToHandle(iMenuFont);
+	
+	switch (style)
+	{
+	case  ITEM_TEXTSTYLE_NORMAL:			iStyleOR = 0;break;					// JK2 normal text
+	case  ITEM_TEXTSTYLE_BLINK:				iStyleOR = STYLE_BLINK;break;		// JK2 fast blinking
+	case  ITEM_TEXTSTYLE_PULSE:				iStyleOR = STYLE_BLINK;break;		// JK2 slow pulsing
+	case  ITEM_TEXTSTYLE_SHADOWED:			iStyleOR = (int)STYLE_DROPSHADOW;break;	// JK2 drop shadow ( need a color for this )
+	case  ITEM_TEXTSTYLE_OUTLINED:			iStyleOR = (int)STYLE_DROPSHADOW;break;	// JK2 drop shadow ( need a color for this )
+	case  ITEM_TEXTSTYLE_OUTLINESHADOWED:	iStyleOR = (int)STYLE_DROPSHADOW;break;	// JK2 drop shadow ( need a color for this )
+	case  ITEM_TEXTSTYLE_SHADOWEDMORE:		iStyleOR = (int)STYLE_DROPSHADOW;break;	// JK2 drop shadow ( need a color for this )
+	}
+
+	trap_R_Font_DrawString_3D(origin,		// int ox
+							axis,		// int oy
+							text,	// const char *text
+							color,	// paletteRGBA_c c
+							iStyleOR | iFontIndex,	// const int iFontHandle
+							!limit?-1:limit,		// iCharLimit (-1 = none)
+							scale	// const float scale = 1.0f
+							);
+}
+
 /*
 qboolean CG_WorldCoordToScreenCoord(vec3_t worldCoord, int *x, int *y)
 

@@ -128,6 +128,7 @@ const int lightmapsVertex[MAXLIGHTMAPS] =
 	LIGHTMAP_BY_VERTEX 
 };
 
+
 const int lightmapsFullBright[MAXLIGHTMAPS] = 
 {
 	LIGHTMAP_WHITEIMAGE,
@@ -3530,7 +3531,7 @@ most world construction surfaces.
 
 ===============
 */
-shader_t *R_FindShader( const char *name, const int *lightmapIndex, const byte *styles, qboolean mipRawImage ) 
+shader_t *R_FindShader( const char *name, const int *lightmapIndex, const byte *styles, qboolean mipRawImage, qboolean vertexLightmapWithAlpha)
 {
 	char		strippedName[MAX_QPATH];
 	char		fileName[MAX_QPATH];
@@ -3642,12 +3643,24 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndex, const byte *
 		stages[0].rgbGen = CGEN_LIGHTING_DIFFUSE;
 		stages[0].stateBits = GLS_DEFAULT;
 	} else if ( shader.lightmapIndex[0] == LIGHTMAP_BY_VERTEX ) {
-		// explicit colors at vertexes
-		stages[0].bundle[0].image[0] = image;
-		stages[0].active = qtrue;
-		stages[0].rgbGen = CGEN_EXACT_VERTEX;
-		stages[0].alphaGen = AGEN_SKIP;
-		stages[0].stateBits = GLS_DEFAULT;
+		if (vertexLightmapWithAlpha) {
+			// explicit colors at vertexes + alpha
+			stages[0].bundle[0].image[0] = image;
+			stages[0].active = qtrue;
+			stages[0].rgbGen = CGEN_EXACT_VERTEX;
+			stages[0].alphaGen = AGEN_VERTEX;
+			stages[0].stateBits = GLS_SRCBLEND_SRC_ALPHA |
+				GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+			shader.sort = SS_BLEND0;
+		}
+		else {
+			// explicit colors at vertexes
+			stages[0].bundle[0].image[0] = image;
+			stages[0].active = qtrue;
+			stages[0].rgbGen = CGEN_EXACT_VERTEX;
+			stages[0].alphaGen = AGEN_SKIP;
+			stages[0].stateBits = GLS_DEFAULT;
+		}
 	} else if ( shader.lightmapIndex[0] == LIGHTMAP_2D ) {
 		// GUI elements
 		stages[0].bundle[0].image[0] = image;
@@ -3871,6 +3884,64 @@ qhandle_t RE_RegisterShaderNoMip( const char *name ) {
 	}
 
 	sh = R_FindShader( name, lightmaps2d, stylesDefault, qfalse );
+
+	// we want to return 0 if the shader failed to
+	// load for some reason, but R_FindShader should
+	// still keep a name allocated for it, so if
+	// something calls RE_RegisterShader again with
+	// the same name, we don't try looking for it again
+	if ( sh->defaultShader ) {
+		return 0;
+	}
+
+	return sh->index;
+}
+
+/*
+====================
+RE_RegisterShader3DPoly
+
+For polys that need to be drawn in scene in 3D
+====================
+*/
+qhandle_t RE_RegisterShader3DPoly( const char *name ) {
+	shader_t	*sh;
+
+	if ( strlen( name ) >= MAX_QPATH ) {
+		Com_Printf( "Shader name exceeds MAX_QPATH\n" );
+		return 0;
+	}
+
+	sh = R_FindShader( name, lightmapsVertex, stylesDefault, qtrue );
+
+	// we want to return 0 if the shader failed to
+	// load for some reason, but R_FindShader should
+	// still keep a name allocated for it, so if
+	// something calls RE_RegisterShader again with
+	// the same name, we don't try looking for it again
+	if ( sh->defaultShader ) {
+		return 0;
+	}
+
+	return sh->index;
+}
+
+/*
+====================
+RE_RegisterShader3DPoly
+
+For polys that need to be drawn in scene in 3D
+====================
+*/
+qhandle_t RE_RegisterShader3DPolyAlpha( const char *name ) {
+	shader_t	*sh;
+
+	if ( strlen( name ) >= MAX_QPATH ) {
+		Com_Printf( "Shader name exceeds MAX_QPATH\n" );
+		return 0;
+	}
+
+	sh = R_FindShader( name, lightmapsVertex, stylesDefault, qtrue,qtrue );
 
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should

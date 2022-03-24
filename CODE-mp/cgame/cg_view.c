@@ -1887,6 +1887,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, int demoPlayb
 		CG_AddLocalEntities();
 	}
 	CG_AddViewWeapon( &cg.predictedPlayerState );
+	Cam_Draw3d(); //3D
 
 	if ( !cg.hyperspace) {
 		trap_FX_AddScheduledEffects();
