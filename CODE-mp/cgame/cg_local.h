@@ -1880,6 +1880,7 @@ extern	vmCvar_t		ui_myteam;
 // From Nerevar Cam mod
 extern  vmCvar_t		cam_shownames;
 extern  vmCvar_t		cam_shownames3D;
+extern  vmCvar_t		cam_shownames3DCamOrient;
 extern  vmCvar_t		cam_shownames3DScale;
 extern	vmCvar_t		cam_shownames3DLockZRot;
 extern	vmCvar_t		cam_shownames3DLockYRot;
@@ -2071,6 +2072,7 @@ extern  char teamChat2[256];
 
 void CG_AddLagometerFrameInfo( void );
 void CG_AddLagometerSnapshotInfo( snapshot_t *snap );
+void CG_AddSpeed(void);
 void CG_CenterPrint( const char *str, int y, int charWidth );
 void CG_DrawHead( float x, float y, float w, float h, int clientNum, vec3_t headAngles );
 void CG_DrawActive( stereoFrame_t stereoView );

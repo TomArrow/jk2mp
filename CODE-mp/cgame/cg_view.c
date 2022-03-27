@@ -1867,6 +1867,9 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, int demoPlayb
 	cg.zoomMode = cg.snap->ps.zoomMode || cg.predictedPlayerState.zoomMode;
 	CG_SetPredictedThirdPerson();
 
+	// update speedometer
+	CG_AddSpeed();
+
 	// build cg.refdef
 	inwater = CG_CalcViewValues();
 	

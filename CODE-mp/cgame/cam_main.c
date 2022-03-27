@@ -32,7 +32,7 @@ void Cam_DrawClientNames(void) //FIXME: draw entitynums
 			}
 			CG_Trace(&trace, cg.refdef.vieworg, NULL, NULL, cent->lerpOrigin, skipNumber, CONTENTS_SOLID | CONTENTS_PLAYERCLIP | CONTENTS_BODY | CONTENTS_CORPSE);
 
-			if (trace.entityNum == i || cam_shownames3D.integer)
+			if (trace.entityNum == i || (cam_shownames3D.integer && skipNumber != i))
 			{
 				float x, y;
 				vec3_t org;
@@ -76,7 +76,15 @@ void Cam_DrawClientNames(void) //FIXME: draw entitynums
 					//
 					vec3_t axis[3];
 					vec3_t angles;
-					VectorCopy(cg.refdefViewAngles, angles);
+					if (cam_shownames3DCamOrient.integer) { // Angle looking actually towards camera
+						vec3_t viewDir;
+						VectorSubtract(org,cg.refdef.vieworg,viewDir);
+						vectoangles(viewDir, angles);
+						angles[2] = cg.refdefViewAngles[2];
+					}
+					else { // Angle looking towards plane of camera
+						VectorCopy(cg.refdefViewAngles, angles);
+					}
 					if (cam_shownames3DLockZRot.integer)
 						angles[2] = 0;
 					if (cam_shownames3DLockYRot.integer)

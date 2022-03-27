@@ -618,6 +618,7 @@ vmCvar_t	ui_myteam;
 // From Nerevar
 vmCvar_t	cam_shownames;
 vmCvar_t	cam_shownames3D;
+vmCvar_t	cam_shownames3DCamOrient;
 vmCvar_t	cam_shownames3DScale;
 vmCvar_t	cam_shownames3DLockZRot;
 vmCvar_t	cam_shownames3DLockYRot;
@@ -704,6 +705,7 @@ typedef struct {
 static cvarTable_t cvarTable[] = { // bk001129
 	{ &cam_shownames, "cam_shownames", "0", NULL, CVAR_ARCHIVE },
 	{ &cam_shownames3D, "cam_shownames3D", "1", NULL, CVAR_ARCHIVE },
+	{ &cam_shownames3DCamOrient, "cam_shownames3DCamOrient", "1", NULL, CVAR_ARCHIVE },
 	{ &cam_shownames3DScale, "cam_shownames3DScale", "1.0", NULL, CVAR_ARCHIVE },
 	{ &cam_shownames3DLockZRot, "cam_shownames3DLockZRot", "1", NULL, CVAR_ARCHIVE },
 	{ &cam_shownames3DLockYRot, "cam_shownames3DLockYRot", "1", NULL, CVAR_ARCHIVE },
