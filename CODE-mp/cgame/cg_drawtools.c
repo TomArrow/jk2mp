@@ -217,7 +217,13 @@ int CG_Text_Width2(const char *text, float scale, int limit) {
 		}
 		count = 0;
 		while (s && *s && count < len) {
-			if ( ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) ) || Q_IsColorString( s ) ) {
+			if (Q_IsColorStringHex(s + 1)) {
+				int skipCount = 0;
+				Q_parseColorHex(s + 1, 0, &skipCount);
+				s += 1 + skipCount;
+				continue;
+			}
+			else if ( ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) ) || Q_IsColorString( s ) ) {
 				s += 2;
 				continue;
 			} else {
@@ -247,7 +253,13 @@ int CG_Text_Height2(const char *text, float scale, int limit) {
 		}
 		count = 0;
 		while (s && *s && count < len) {
-			if ( ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) ) || Q_IsColorString( s ) ) {
+			if (Q_IsColorStringHex(s + 1)) {
+				int skipCount = 0;
+				Q_parseColorHex(s + 1, 0, &skipCount);
+				s += 1 + skipCount;
+				continue;
+			}
+			else if ( ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) ) || Q_IsColorString( s ) ) {
 				s += 2;
 				continue;
 			} else {
@@ -289,7 +301,15 @@ void CG_Text_Paint2(float x, float y, float scale, vec4_t color, const char *tex
 			glyph = &font->glyphs[(int)*s]; // TTimo: FIXME: getting nasty warnings without the cast, hopefully this doesn't break the VM build
 			//int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
 			//float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
-			if ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) ) {
+			if (Q_IsColorStringHex(s + 1)) {
+				int skipCount = 0;
+				Q_parseColorHex(s + 1, newColor, &skipCount);
+				s += 1 + skipCount;
+				//newColor[3] = color[3]; // eeeh.
+				trap_R_SetColor(newColor);
+				continue;
+			}
+			else if ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) ) {
 				memcpy( newColor, g_color_table_nt[ColorIndexNT(*(s+1))], sizeof( newColor ) );
 				newColor[3] = color[3];
 				trap_R_SetColor( newColor );
@@ -375,7 +395,13 @@ void CG_DrawStringExt( int x, int y, const char *string, const float *setColor,
 			s = string;
 			xx = x;
 			while ( *s ) {
-				if ( ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) ) || Q_IsColorString( s ) ) {
+				if (Q_IsColorStringHex(s + 1)) {
+					int skipCount = 0;
+					Q_parseColorHex(s + 1, 0, &skipCount);
+					s += 1 + skipCount;
+					continue;
+				}
+				else if ( ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) ) || Q_IsColorString( s ) ) {
 					s += 2;
 					continue;
 				}
@@ -390,7 +416,17 @@ void CG_DrawStringExt( int x, int y, const char *string, const float *setColor,
 		xx = x;
 		trap_R_SetColor( setColor );
 		while ( *s ) {
-			if ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) ) {
+			if (Q_IsColorStringHex(s + 1)) {
+				int skipCount = 0;
+				Q_parseColorHex(s + 1, color, &skipCount);
+				s += 1 + skipCount;
+				if (!forceColor) {
+					//color[3] = setColor[3]; // eeeh.
+					trap_R_SetColor(color);
+				}
+				continue;
+			}
+			else if ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) ) {
 				if ( !forceColor ) {
 					memcpy( color, g_color_table_nt[ColorIndexNT(*(s+1))], sizeof( color ) );
 					color[3] = setColor[3];
@@ -451,7 +487,12 @@ int CG_DrawStrlen( const char *str ) {
 	int count = 0;
 
 	while ( *s ) {
-		if ( ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) )
+		if (Q_IsColorStringHex(s + 1)) {
+			int skipCount = 0;
+			Q_parseColorHex(s + 1, 0, &skipCount);
+			s += 1 + skipCount;
+		}
+		else if ( ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) )
 			|| Q_IsColorString( s ) || Q_IsColorString_1_02(s) || Q_IsColorString_Extended(s)) {
 			s += 2;
 		} else {

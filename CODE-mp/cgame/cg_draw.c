@@ -5915,6 +5915,95 @@ static void CG_DrawSpeedGraph(rectDef_t* rect, vec4_t foreColor,
 	trap_R_SetColor(NULL);
 }
 
+void CG_DrawSpeedGraph3D(/*vec4_t foreColor,
+	vec4_t backColor*/)
+{
+	if (!cg_draw3DSpeedgraph.integer)
+		return;
+
+	static qhandle_t speedgraph3dShader = 0;
+	if (!speedgraph3dShader) {
+		speedgraph3dShader = trap_R_RegisterShader("gfx/effects/solidWhite");
+	}
+
+	int i;
+	float val, max, top;
+	// colour of graph is interpolated between these values
+	const vec3_t slow = { 0.0, 0.0, 1.0 };
+	const vec3_t medium = { 0.0, 1.0, 0.0 };
+	const vec3_t fast = { 1.0, 0.0, 0.0 };
+	vec4_t color, lastColor;
+	speedSample_t* currentSample,*lastSample=NULL;
+
+	color[3] = 1.0f;
+
+	max = speedSamples[maxSpeedSample].speed;
+	if (max < SPEEDOMETER_MIN_RANGE)
+		max = SPEEDOMETER_MIN_RANGE;
+
+	//trap_R_SetColor(backColor);
+	//CG_DrawPic(rect->x, rect->y, rect->w, rect->h, cgs.media.whiteShader);
+
+	//Vector4Copy(foreColor, color);
+
+	for (i = 1; i < SPEEDOMETER_NUM_SAMPLES; i++)
+	{
+		currentSample = &speedSamples[(oldestSpeedSample + i) % SPEEDOMETER_NUM_SAMPLES];
+		val = currentSample->speed;
+		//val = speedSamples[(oldestSpeedSample + i) % SPEEDOMETER_NUM_SAMPLES].speed;
+
+		if (val < SPEED_MED)
+			VectorLerp(val / SPEED_MED, slow, medium, color);
+		else if (val < SPEED_FAST)
+			VectorLerp((val - SPEED_MED) / (SPEED_FAST - SPEED_MED),
+				medium, fast, color);
+		else
+			VectorCopy(fast, color);
+		//trap_R_SetColor(color);
+
+		//top = rect->y + (1 - val / max) * rect->h;
+		top = 1 - val / max;
+
+		Vector4Scale(color, 255.0f, color);
+
+		if (lastSample) {
+			polyVert_t polys[4];
+			Vector4Copy(color, polys[0].modulate);
+			Vector4Copy(color, polys[1].modulate);
+			Vector4Copy(lastColor, polys[2].modulate);
+			Vector4Copy(lastColor, polys[3].modulate);
+
+			// Not that it matters? Just a white shader
+			polys[0].st[0] = 1.0f;
+			polys[0].st[1] = 0.0f;
+			polys[1].st[0] = 1.0f;
+			polys[1].st[1] = 1.0f;
+			polys[2].st[0] = 0.0f;
+			polys[2].st[1] = 1.0f;
+			polys[3].st[0] = 0.0f;
+			polys[3].st[1] = 0.0f;
+
+			VectorCopy(currentSample->origin, polys[0].xyz);
+			VectorCopy(currentSample->origin, polys[1].xyz);
+			VectorCopy(lastSample->origin, polys[2].xyz);
+			VectorCopy(lastSample->origin, polys[3].xyz);
+			polys[0].xyz[2] += val/20.0f;
+			polys[3].xyz[2] += lastSample->speed/20.0f;
+
+			trap_R_AddPolyToScene(speedgraph3dShader,4,polys);
+
+			//CG_DrawPic(rect->x + (i / (float)SPEEDOMETER_NUM_SAMPLES) * rect->w, top,
+			//	rect->w / (float)SPEEDOMETER_NUM_SAMPLES, val * rect->h / max,
+			//	cgs.media.whiteShader);
+		}
+		
+
+		Vector4Copy(color, lastColor);
+		lastSample = currentSample;
+	}
+	//trap_R_SetColor(NULL);
+}
+
 void Dzikie_CG_DrawSpeed(int moveDir) {
 	float length;
 	float diff;

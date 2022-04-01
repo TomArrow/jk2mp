@@ -500,7 +500,8 @@ CG_AddToTeamChat
 static void CG_AddToTeamChat( const char *str ) {
 	int len;
 	char *p, *ls;
-	int lastcolor;
+	char lastcolor[8+1] = "7"; // Maximum length of color string. Hexcolor can be up to 8 chars + null ending
+	int lastColorCharLength;
 	int chatHeight;
 
 	if (cg_teamChatHeight.integer < TEAMCHAT_HEIGHT) {
@@ -520,7 +521,8 @@ static void CG_AddToTeamChat( const char *str ) {
 	p = cgs.teamChatMsgs[cgs.teamChatPos % chatHeight];
 	*p = 0;
 
-	lastcolor = '7';
+	//lastcolor = "7";
+	lastColorCharLength = 1;
 
 	ls = NULL;
 	while (*str) {
@@ -538,19 +540,37 @@ static void CG_AddToTeamChat( const char *str ) {
 			p = cgs.teamChatMsgs[cgs.teamChatPos % chatHeight];
 			*p = 0;
 			*p++ = Q_COLOR_ESCAPE;
-			*p++ = lastcolor;
+			//*p++ = lastcolor;
+			for (int c = 0; c < lastColorCharLength; c++) {
+				*p++ = *(lastcolor+c);
+			}
 			len = 0;
 			ls = NULL;
 		}
 
-		if ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( str ) ) {
+		if (Q_IsColorStringHex(str + 1)) {// TODO Check if this doesnt cause some weird issues with the line wrap or whatever...
+			int skipCount = 0;
+			Q_parseColorHex(str + 1, 0, &skipCount);
 			*p++ = *str++;
-			lastcolor = *str;
+			lastColorCharLength = skipCount;
+			for (int c = 0; c < skipCount; c++) {
+				lastcolor[c] = *str;
+				*p++ = *str++;
+			}
+			lastcolor[skipCount] = '\0';
+		}
+		else if ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( str ) ) {
+			*p++ = *str++;
+			lastcolor[0] = *str;
+			lastcolor[1] = '\0';
+			lastColorCharLength = 1;
 			*p++ = *str++;
 			continue;
 		} else if ( Q_IsColorString( str ) || Q_IsColorString_1_02(str) || Q_IsColorString_Extended(str)) {
 			*p++ = *str++;
-			lastcolor = *str;
+			lastcolor[0] = *str;
+			lastcolor[1] = '\0';
+			lastColorCharLength = 1;
 			*p++ = *str++;
 			continue;
 		}

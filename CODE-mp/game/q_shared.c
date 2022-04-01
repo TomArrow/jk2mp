@@ -2,7 +2,6 @@
 //
 // q_shared.c -- stateless support routines that are included in each code dll
 #include "q_shared.h"
-
 /*
 -------------------------
 GetIDForString 
@@ -1050,6 +1049,45 @@ int Q_parseColor( const char *p, const vec3_t numberColors[10], float *color ) {
 	return 0;
 }
 
+char* Q_colorToHex(float* color,qboolean ntMod) {
+	
+	static char retVal[10]; // Allow up to 9 characters for hexcolor+one ending \0
+	retVal[0] = '\0';
+	qboolean matchFound = qfalse;
+	if (ntMod) {
+		int colorTableLength = sizeof(g_color_table_nt) / sizeof(g_color_table_nt[0]);
+		for (int i = 0; i < colorTableLength; i++) {
+			if (Vector4Compare(g_color_table_nt[i], color)) {
+				retVal[0] = i + '0';
+				retVal[1] = '\0';
+				matchFound = qtrue;
+				break;
+			}
+		}
+	}
+	else {
+		int colorTableLength = sizeof(g_color_table) / sizeof(g_color_table[0]);
+		for (int i = 0; i < colorTableLength; i++) {
+			if (Vector4Compare(g_color_table[i], color)) {
+				retVal[0] = i + '0';
+				retVal[1] = '\0';
+				matchFound = qtrue;
+				break;
+			}
+		}
+	}
+	
+	// Use hexcolor
+	if (!matchFound) {
+		sprintf_s(retVal, 10, "Y%02X%02X%02X%02X",(unsigned char)(fmaxf(0.0f, fminf(255.0f,color[0]*255.0f))+0.5f),
+			(unsigned char)(fmaxf(0.0f, fminf(255.0f, color[1] * 255.0f)) + 0.5f),
+			(unsigned char)(fmaxf(0.0f, fminf(255.0f, color[2] * 255.0f)) + 0.5f),
+			(unsigned char)(fmaxf(0.0f, fminf(255.0f, color[3] * 255.0f)) + 0.5f)
+			);
+	}
+	return retVal;
+}
+
 qboolean Q_parseColorHex( const char *p, float *color, int* skipCount ) {
 	char c = *p++;
 	int i;
@@ -1162,7 +1200,12 @@ int Q_PrintStrlenNT( const char *string ) {
 	len = 0;
 	p = string;
 	while( *p ) {
-		if( Q_IsColorStringNT( p ) ) {
+		if (Q_IsColorStringHex(p + 1)) {
+			int skipCount = 0;
+			Q_parseColorHex(p + 1, 0, &skipCount);
+			p += 1 + skipCount;
+		}
+		else if( Q_IsColorStringNT( p ) ) {
 			p += 2;
 			continue;
 		}
@@ -1184,7 +1227,12 @@ int Q_PrintStrlen( const char *string ) {
 	len = 0;
 	p = string;
 	while( *p ) {
-		if( Q_IsColorString( p ) || Q_IsColorString_1_02(p) || Q_IsColorString_Extended(p)) {
+		if (Q_IsColorStringHex(p + 1)) {
+			int skipCount = 0;
+			Q_parseColorHex(p + 1, 0, &skipCount);
+			p += 1 + skipCount;
+		}
+		else if( Q_IsColorString( p ) || Q_IsColorString_1_02(p) || Q_IsColorString_Extended(p)) {
 			p += 2;
 			continue;
 		}
@@ -1203,7 +1251,12 @@ char *Q_CleanStrNT( char *string ) {
 	s = string;
 	d = string;
 	while ((c = *s) != 0 ) {
-		if ( Q_IsColorStringNT( s ) ) {
+		if (Q_IsColorStringHex(s + 1)) {
+			int skipCount = 0;
+			Q_parseColorHex(s + 1, 0, &skipCount);
+			s += skipCount;
+		}
+		else if ( Q_IsColorStringNT( s ) ) {
 			s++;
 		}		
 		else if ( c >= 0x20 && c <= 0x7E ) {
@@ -1224,7 +1277,12 @@ char *Q_CleanStr( char *string ) {
 	s = string;
 	d = string;
 	while ((c = *s) != 0 ) {
-		if ( Q_IsColorString( s ) || Q_IsColorString_1_02(s) || Q_IsColorString_Extended(s)) {
+		if (Q_IsColorStringHex(s + 1)) {
+			int skipCount = 0;
+			Q_parseColorHex(s + 1, 0, &skipCount);
+			s += skipCount;
+		}
+		else if ( Q_IsColorString( s ) || Q_IsColorString_1_02(s) || Q_IsColorString_Extended(s)) {
 			s++;
 		}		
 		else if ( c >= 0x20 && c <= 0x7E ) {
@@ -1259,7 +1317,13 @@ void Q_StripColor(char *text)
 		read = write = text;
 		while ( *read )
 		{
-			if ( Q_IsColorStringExt(read) )
+			if (Q_IsColorStringHex(read + 1)) {
+				doPass = qtrue;
+				int skipCount = 0;
+				Q_parseColorHex(read + 1, 0, &skipCount);
+				read += 1 + skipCount;
+			}
+			else if ( Q_IsColorStringExt(read) )
 			{
 				doPass = qtrue;
 				read += 2;

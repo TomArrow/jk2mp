@@ -813,6 +813,7 @@ extern	vec4_t		colorDkBlue;
 extern const vec3_t defaultColors[10];
 int Q_parseColor( const char *p, const vec3_t numberColors[10], float *color );
 qboolean Q_parseColorHex(const char* p, float* color, int* skipCount);
+char* Q_colorToHex(float* color, qboolean ntMod);
 
 #define Q_COLOR_ESCAPE	'^'
 // you MUST have the last bit on here about colour strings being less than 7 or taiwanese strings register as colour!!!!
@@ -996,6 +997,13 @@ float RadiusFromBounds( const vec3_t mins, const vec3_t maxs );
 void ClearBounds( vec3_t mins, vec3_t maxs );
 void AddPointToBounds( const vec3_t v, vec3_t mins, vec3_t maxs );
 
+static ID_INLINE int Vector4Compare(const vec4_t v1, const vec4_t v2) {
+	if (v1[0] != v2[0] || v1[1] != v2[1] || v1[2] != v2[2] || v1[3] != v2[3]) {
+		return 0;
+	}
+	return 1;
+}
+
 #ifndef __LCC__
 static ID_INLINE int VectorCompare( const vec3_t v1, const vec3_t v2 ) {
 	if (v1[0] != v2[0] || v1[1] != v2[1] || v1[2] != v2[2]) {
@@ -1003,6 +1011,7 @@ static ID_INLINE int VectorCompare( const vec3_t v1, const vec3_t v2 ) {
 	}			
 	return 1;
 }
+
 
 static ID_INLINE vec_t VectorLength( const vec3_t v ) {
 	return (vec_t)sqrt (v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);

@@ -108,7 +108,8 @@ void Con_Clear_f (void) {
 	int		i;
 
 	for ( i = 0 ; i < CON_TEXTSIZE ; i++ ) {
-		con.text[i] = (ColorIndex(COLOR_WHITE)<<8) | ' ';
+		con.text[i].letter = ' ';
+		Vector4Copy(g_color_table[ColorIndex(COLOR_WHITE)],con.text[i].color);
 	}
 
 	Con_Bottom();		// go to end
@@ -125,7 +126,7 @@ Save the console contents out to a file
 void Con_Dump_f (void)
 {
 	int				l, x, i;
-	short			*line;
+	consoleLetter_t			*line;
 	fileHandle_t	f;
 	char			buffer[1024];
 
@@ -149,7 +150,8 @@ void Con_Dump_f (void)
 	{
 		line = con.text + (l%con.totallines)*con.linewidth;
 		for (x=0 ; x<con.linewidth ; x++)
-			if ((line[x] & 0xff) != ' ')
+			//if ((line[x] & 0xff) != ' ')
+			if ((line[x].letter) != ' ')
 				break;
 		if (x != con.linewidth)
 			break;
@@ -161,7 +163,8 @@ void Con_Dump_f (void)
 	{
 		line = con.text + (l%con.totallines)*con.linewidth;
 		for(i=0; i<con.linewidth; i++)
-			buffer[i] = (char) (line[i] & 0xff);
+			//buffer[i] = (char) (line[i] & 0xff);
+			buffer[i] = line[i].letter;
 		for (x=con.linewidth-1 ; x>=0 ; x--)
 		{
 			if (buffer[x] == ' ')
@@ -203,7 +206,8 @@ If the line width has changed, reformat the buffer.
 void Con_CheckResize (void)
 {
 	int		i, j, width, oldwidth, oldtotallines, numlines, numchars;
-	MAC_STATIC short	tbuf[CON_TEXTSIZE];
+	//MAC_STATIC short	tbuf[CON_TEXTSIZE];
+	static consoleLetter_t	tbuf[CON_TEXTSIZE]; // make it static so its on the heap and doesnt kill the stack with the 4 float values per letter
 
 //	width = (SCREEN_WIDTH / SMALLCHAR_WIDTH) - 2;
 	width = (cls.glconfig.vidWidth / SMALLCHAR_WIDTH) - 2;
@@ -221,7 +225,9 @@ void Con_CheckResize (void)
 		con.totallines = CON_TEXTSIZE / con.linewidth;
 		for(i=0; i<CON_TEXTSIZE; i++)
 		{
-			con.text[i] = (ColorIndex(COLOR_WHITE)<<8) | ' ';
+			//con.text[i] = (ColorIndex(COLOR_WHITE)<<8) | ' ';
+			con.text[i].letter = ' ';
+			Vector4Copy(g_color_table[ColorIndex(COLOR_WHITE)], con.text[i].color);
 		}
 	}
 	else
@@ -245,9 +251,12 @@ void Con_CheckResize (void)
 			numchars = con.linewidth;
 
 		Com_Memcpy (tbuf, con.text, CON_TEXTSIZE * sizeof(short));
-		for(i=0; i<CON_TEXTSIZE; i++)
+		for (i = 0; i < CON_TEXTSIZE; i++) {
 
-			con.text[i] = (ColorIndex(COLOR_WHITE)<<8) | ' ';
+			//con.text[i] = (ColorIndex(COLOR_WHITE)<<8) | ' ';
+			con.text[i].letter = ' ';
+			Vector4Copy(g_color_table[ColorIndex(COLOR_WHITE)], con.text[i].color);
+		}
 
 
 		for (i=0 ; i<numlines ; i++)
@@ -326,8 +335,11 @@ static void Con_Linefeed (qboolean skipnotify) {
 	if (con.display == con.current)
 		con.display++;
 	con.current++;
-	for(i=0; i<con.linewidth; i++)
-		con.text[(con.current%con.totallines)*con.linewidth+i] = (ColorIndex(COLOR_WHITE)<<8) | ' ';
+	for (i = 0; i < con.linewidth; i++) {
+		con.text[(con.current % con.totallines) * con.linewidth + i].letter = ' ';
+		Vector4Copy(g_color_table[ColorIndex(COLOR_WHITE)], con.text[(con.current % con.totallines) * con.linewidth + i].color);
+		//con.text[(con.current % con.totallines) * con.linewidth + i] = (ColorIndex(COLOR_WHITE) << 8) | ' ';
+	}
 }
 
 /*
@@ -371,6 +383,7 @@ void CL_ConsolePrint( char *txt ) {
 	int		y;
 	int		c, l;
 	int		color;
+	vec4_t	colorVec;
 	qboolean skipnotify = qfalse;		// NERVE - SMF
 	int prev;							// NERVE - SMF
 
@@ -395,14 +408,23 @@ void CL_ConsolePrint( char *txt ) {
 	}
 
 	color = ColorIndex(COLOR_WHITE);
+	Vector4Copy(g_color_table[color],colorVec);
 	txt = (char*)CL_ConsolePrintTimeStamp(txt); // TODO: this doesn't work. Try and fix someday.
 	while ( (c = (unsigned char) *txt) != 0 ) {
-		if ( demo15detected && ntModDetected && Q_IsColorStringNT( (unsigned char*) txt ) ) {
+		if (Q_IsColorStringHex((unsigned char*)txt + 1)) {
+			int skipCount = 0;
+			Q_parseColorHex(txt + 1, colorVec, &skipCount);
+			txt += 1 + skipCount;
+			continue;
+		}
+		else if ( demo15detected && ntModDetected && Q_IsColorStringNT( (unsigned char*) txt ) ) {
 			color = ColorIndexNT( *(txt+1) );
+			Vector4Copy(g_color_table_nt[color], colorVec);
 			txt += 2;
 			continue;
 		} else if ( Q_IsColorString( (unsigned char*) txt ) || Q_IsColorString_1_02((unsigned char*)txt) || Q_IsColorString_Extended((unsigned char*)txt)) {
 			color = ColorIndex( *(txt+1) );
+			Vector4Copy(g_color_table[color], colorVec);
 			txt += 2;
 			continue;
 		}
@@ -434,7 +456,9 @@ void CL_ConsolePrint( char *txt ) {
 			break;
 		default:	// display character and advance
 			y = con.current % con.totallines;
-			con.text[y*con.linewidth+con.x] = (short) ((color << 8) | c);
+			//con.text[y*con.linewidth+con.x] = (short) ((color << 8) | c);
+			Vector4Copy(colorVec, con.text[y*con.linewidth+con.x].color);
+			con.text[y * con.linewidth + con.x].letter = c;
 			con.x++;
 			if (con.x >= con.linewidth) {
 				Con_Linefeed(skipnotify);
@@ -515,14 +539,17 @@ Draws the last few lines of output transparently over the game top
 void Con_DrawNotify (void)
 {
 	int		x, v;
-	short	*text;
+	//short	*text;
+	consoleLetter_t	*text;
 	int		i;
 	double		time,gameTime;
 	int		skip;
-	int		currentColor;
+	//int		currentColor;
+	vec4_t		currentColor;
 
-	currentColor = 7;
-	re.SetColor( g_color_table[currentColor] );
+	//currentColor = 7;
+	Vector4Copy(g_color_table[7],currentColor);
+	re.SetColor(currentColor);
 
 	v = 0;
 	for (i= con.current-NUM_CON_TIMES+1 ; i<=con.current ; i++)
@@ -568,37 +595,53 @@ void Con_DrawNotify (void)
 			char sTemp[4096]={0};	// ott
 			for (x = 0 ; x < con.linewidth ; x++) 
 			{
-				if ( ( (text[x]>>8)&7 ) != currentColor ) {
-					currentColor = (text[x]>>8)&7;
-					strcat(sTemp,va("^%i", (text[x]>>8)&7) );
+				
+				//if ( ( (text[x]>>8)&7 ) != currentColor ) {
+				if (!Vector4Compare(currentColor,text[x].color)) {
+					Vector4Copy(text[x].color,currentColor);
+					//currentColor = (text[x]>>8)&7;
+					//strcat(sTemp,va("^%i", (text[x]>>8)&7) );
+					strcat(sTemp,va("^%s", Q_colorToHex(text[x].color, (qboolean)(demo15detected && ntModDetected))) );
 				}
-				strcat(sTemp,va("%c",text[x] & 0xFF));				
+				//strcat(sTemp,va("%c",text[x] & 0xFF));				
+				strcat(sTemp,va("%c",text[x].letter));				
 			}
 			//
 			// and print...
 			//
-			re.Font_DrawString(cl_conXOffset->integer + con.xadjust*(con.xadjust + (1*SMALLCHAR_WIDTH/*aesthetics*/)), con.yadjust*(v), sTemp, g_color_table[currentColor], iFontIndex, -1, fFontScale);
+			re.Font_DrawString(cl_conXOffset->integer + con.xadjust*(con.xadjust + (1*SMALLCHAR_WIDTH/*aesthetics*/)), con.yadjust*(v), sTemp, currentColor, iFontIndex, -1, fFontScale);
 
 			v +=  iPixelHeightToAdvance;
 		}
 		else
 		{		
 			for (x = 0 ; x < con.linewidth ; x++) {
-				if ( ( text[x] & 0xff ) == ' ' ) {
+				//if ( ( text[x] & 0xff ) == ' ' ) {
+				if (  text[x].letter == ' ' ) {
 					continue;
 				}
-				if ( demo15detected && ntModDetected && ( (text[x]>>8)&127 ) != currentColor ) {
-					currentColor = (text[x]>>8)&127;
+				/*//if ( demo15detected && ntModDetected && ( (text[x]>>8)&127 ) != currentColor ) {
+				if ( demo15detected && ntModDetected && !Vector4Compare(text[x].color,currentColor) ) {
+					//currentColor = (text[x]>>8)&127;
+					Vector4Compare(text[x].color, currentColor);
 					re.SetColor( g_color_table_nt[currentColor] );
-				} else if ( !ntModDetected && ( (text[x]>>8)&7 ) != currentColor ) {
-					currentColor = (text[x]>>8)&7;
+				//} else if ( !ntModDetected && ( (text[x]>>8)&7 ) != currentColor ) {
+				} else if ( !ntModDetected && !Vector4Compare(text[x].color, currentColor)) {
+					//currentColor = (text[x]>>8)&7;
+					Vector4Compare(text[x].color,currentColor);
 					re.SetColor( g_color_table[currentColor] );
+				}*/
+				if (!Vector4Compare(text[x].color, currentColor)) {
+					//currentColor = (text[x]>>8)&127;
+					Vector4Compare(text[x].color, currentColor);
+					re.SetColor(currentColor);
 				}
 				if (!cl_conXOffset)
 				{
 					cl_conXOffset = Cvar_Get ("cl_conXOffset", "0", 0);
 				}
-				SCR_DrawSmallChar( (int)(cl_conXOffset->integer + con.xadjust + (x+1)*SMALLCHAR_WIDTH), v, text[x] & 0xff );
+				//SCR_DrawSmallChar( (int)(cl_conXOffset->integer + con.xadjust + (x+1)*SMALLCHAR_WIDTH), v, text[x] & 0xff );
+				SCR_DrawSmallChar( (int)(cl_conXOffset->integer + con.xadjust + (x+1)*SMALLCHAR_WIDTH), v, text[x].letter );
 			}
 
 			v += SMALLCHAR_HEIGHT;
@@ -663,11 +706,13 @@ Draws the console with the solid background
 void Con_DrawSolidConsole( float frac ) {
 	int				i, x, y;
 	int				rows;
-	short			*text;
+	//short			*text;
+	consoleLetter_t	*text;
 	int				row;
 	int				lines;
 //	qhandle_t		conShader;
-	int				currentColor;
+	//int				currentColor;
+	vec4_t				currentColor;
 	const			char *version = Q3_VERSION;
 
 	lines = (int) (cls.glconfig.vidHeight * frac);
@@ -733,8 +778,9 @@ void Con_DrawSolidConsole( float frac ) {
 		row--;
 	}
 
-	currentColor = 7;
-	re.SetColor( g_color_table[currentColor] );
+	//currentColor = 7;
+	Vector4Copy(g_color_table[7], currentColor);
+	re.SetColor(currentColor);
 
 	static int iFontIndexForAsian = 0;
 	const float fFontScaleForAsian = 0.75f*con.yadjust;
@@ -770,32 +816,42 @@ void Con_DrawSolidConsole( float frac ) {
 			char sTemp[4096]={0};	// ott
 			for (x = 0 ; x < con.linewidth ; x++) 
 			{
-				if ( ( (text[x]>>8)&7 ) != currentColor ) {
-					currentColor = (text[x]>>8)&7;
-					strcat(sTemp,va("^%i", (text[x]>>8)&7) );
+				//if ( ( (text[x]>>8)&7 ) != currentColor ) {
+				if ( !Vector4Compare(text[x].color,currentColor)) {
+					//currentColor = (text[x]>>8)&7;
+					Vector4Copy(text[x].color, currentColor);
+					//strcat(sTemp,va("^%i", (text[x]>>8)&7) );
+					strcat(sTemp,va("^%i",Q_colorToHex(text[x].color,(qboolean)( demo15detected && ntModDetected))));
 				}
-				strcat(sTemp,va("%c",text[x] & 0xFF));				
+				//strcat(sTemp,va("%c",text[x] & 0xFF));				
+				strcat(sTemp,va("%c",text[x].letter));				
 			}
 			//
 			// and print...
 			//
-			re.Font_DrawString(con.xadjust*(con.xadjust + (1*SMALLCHAR_WIDTH/*(aesthetics)*/)), con.yadjust*(y), sTemp, g_color_table[currentColor], iFontIndexForAsian, -1, fFontScaleForAsian);
+			re.Font_DrawString(con.xadjust*(con.xadjust + (1*SMALLCHAR_WIDTH/*(aesthetics)*/)), con.yadjust*(y), sTemp, currentColor, iFontIndexForAsian, -1, fFontScaleForAsian);
 		}
 		else
 		{		
 			for (x=0 ; x<con.linewidth ; x++) {
-				if ( ( text[x] & 0xff ) == ' ' ) {
+				//if ( ( text[x] & 0xff ) == ' ' ) {
+				if ( ( text[x].letter ) == ' ' ) {
 					continue;
 				}
 
-				if ( demo15detected && ntModDetected && ( (text[x]>>8)&127 ) != currentColor ) {
+				/*if ( demo15detected && ntModDetected && ( (text[x]>>8)&127 ) != currentColor ) {
 					currentColor = (text[x]>>8)&127;
 					re.SetColor( g_color_table_nt[currentColor] );
 				} else if ( !ntModDetected && ( (text[x]>>8)&7 ) != currentColor ) {
 					currentColor = (text[x]>>8)&7;
 					re.SetColor( g_color_table[currentColor] );
+				}*/
+				if(!Vector4Compare(text[x].color, currentColor)) {
+					//currentColor = (text[x] >> 8) & 127;
+					Vector4Copy(text[x].color, currentColor);
+					re.SetColor(currentColor);
 				}
-				SCR_DrawSmallChar(  (int) (con.xadjust + (x+1)*SMALLCHAR_WIDTH), y, text[x] & 0xff );
+				SCR_DrawSmallChar(  (int) (con.xadjust + (x+1)*SMALLCHAR_WIDTH), y, text[x].letter );
 			}
 		}
 	}

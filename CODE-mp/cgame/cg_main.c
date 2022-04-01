@@ -519,6 +519,7 @@ vmCvar_t	cg_dismember;
 //vmCvar_t	cg_raceTimerSize;
 //vmCvar_t	cg_raceTimerX;
 //vmCvar_t	cg_raceTimerY;
+vmCvar_t	cg_draw3DSpeedgraph;
 vmCvar_t	cg_speedometer;
 vmCvar_t	cg_speedometerX;
 vmCvar_t	cg_speedometerY;
@@ -806,6 +807,7 @@ static cvarTable_t cvarTable[] = { // bk001129
 	//{ &cg_raceTimerSize, "cg_raceTimerSize", "0.75", 0 },
 	//{ &cg_raceTimerX, "cg_raceTimerX", "5", 0 },
 	//{ &cg_raceTimerY, "cg_raceTimerY", "280", 0 },
+	{ &cg_draw3DSpeedgraph, "cg_draw3DSpeedgraph", "0", NULL, CVAR_ARCHIVE },
 	{ &cg_speedometer, "cg_speedometer", "0", NULL, CVAR_ARCHIVE },
 	{ &cg_speedometerX, "cg_speedometerX", "98", NULL, CVAR_ARCHIVE },
 	{ &cg_speedometerY, "cg_speedometerY", "460", NULL, CVAR_ARCHIVE },

@@ -1791,6 +1791,7 @@ extern	vmCvar_t		cg_dismember;
 //extern	vmCvar_t		cg_raceTimerSize;
 //extern	vmCvar_t		cg_raceTimerX;
 //extern	vmCvar_t		cg_raceTimerY;
+extern	vmCvar_t		cg_draw3DSpeedgraph;
 extern	vmCvar_t		cg_speedometer;
 extern	vmCvar_t		cg_speedometerX;
 extern	vmCvar_t		cg_speedometerY;

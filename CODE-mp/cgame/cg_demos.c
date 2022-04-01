@@ -14,6 +14,8 @@ extern void CG_PowerupTimerSounds( void );
 extern void CG_UpdateSoundTrackers();
 extern void CG_Clear2DTintsTimes(void);
 extern void CG_Draw2D( void );
+extern void CG_DrawSpeedGraph3D(/*vec4_t foreColor,
+	vec4_t backColor*/);
 extern void CG_SaberClashFlare( void );
 extern float CG_DrawFPS( float y );
 extern void CG_InterpolatePlayerState( qboolean grabAngles );
@@ -676,7 +678,9 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	VectorCopy( cg_entities[cg.snap->ps.clientNum].currentState.apos.trBase, cg_entities[cg.snap->ps.clientNum].lerpAngles );
 
 	// update speedometer
-	CG_AddSpeed();
+	if (!demo.play.paused) {
+		CG_AddSpeed();
+	}
 
 	inwater = demoSetupView();
 	
@@ -699,6 +703,7 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	// Demo project objects
 	drawDemoObjects(!captureFrame); 
 	Cam_Draw3d();
+	CG_DrawSpeedGraph3D();
 
 	CG_CalcScreenEffects();
 
