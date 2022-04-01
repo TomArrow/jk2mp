@@ -230,6 +230,7 @@ Ghoul2 Insert End
 */
 
 cvar_t* r_fontSharpness;
+cvar_t* r_font3DBrightness;
 
 #ifndef DEDICATED
 
@@ -1095,6 +1096,7 @@ extern qboolean Sys_LowPhysicalMemory();
 	ri.Cmd_AddCommand( "modelcacheinfo", RE_RegisterModels_Info_f);
 
 	r_fontSharpness = ri.Cvar_Get("r_fontSharpness", "0", CVAR_ARCHIVE);
+	r_font3DBrightness = ri.Cvar_Get("r_font3DBrightness", "1.0", CVAR_ARCHIVE);
 }
 
 #ifdef G2_COLLISION_ENABLED

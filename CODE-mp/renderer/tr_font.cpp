@@ -870,6 +870,7 @@ void RE_Font_DrawGlyph3D(const fontDrawPosition_t* drawPosition,const glyphInfo_
 	for (int i = 0; i < 4; i++) {
 		VectorCopy(drawPosition->position3D, polys[i].xyz);
 		Vector4Scale(currentFontColor,255.0f,polys[i].modulate);
+		VectorScale(polys[i].modulate,r_font3DBrightness->value/ tr.overbrightBitsMultiplier, polys[i].modulate);
 	}
 	polys[0].st[0] = glyphInfo->s;
 	polys[0].st[1] = glyphInfo->t;

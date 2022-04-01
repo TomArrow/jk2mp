@@ -1327,6 +1327,7 @@ Ghoul2 Insert End
 */
 
 extern	cvar_t* r_fontSharpness;
+extern	cvar_t* r_font3DBrightness;
 
 //====================================================================
 
