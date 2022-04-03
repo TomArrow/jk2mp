@@ -633,6 +633,8 @@ typedef struct {
 	vec3_t			rgb1;
 	vec3_t			rgb2;
 	//[/RGBSabers]
+
+	float			saberLength;
 } clientInfo_t;
 
 

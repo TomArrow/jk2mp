@@ -632,7 +632,8 @@ void CG_KillCEntityInstances()
 		cg_entities[i].bolt3 = 0;
 		cg_entities[i].bolt4 = 0;
 
-		cg_entities[i].saberLength = SABER_LENGTH_MAX;
+		//cg_entities[i].saberLength = SABER_LENGTH_MAX;
+		cg_entities[i].saberLength = i < MAX_CLIENTS ? cgs.clientinfo[i].saberLength : SABER_LENGTH_MAX;
 		cg_entities[i].saberExtendTime = 0;
 
 		cg_entities[i].boltInfo = 0;

@@ -1097,6 +1097,10 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 	if ( v[0] )
 		newInfo.shaderOverride = trap_R_RegisterShader( v );
 
+	// Saber length. - TA
+	v = ConfigValue( strings, "sl");
+	newInfo.saberLength = v[0] ? atof(v) : (float)SABER_LENGTH_MAX;
+
 	v = ConfigValue( strings, "effect");
 	if ( v[0] )
 		newInfo.effectOverride = trap_FX_RegisterEffect( v );
@@ -1422,6 +1426,7 @@ void CG_ClientOverride_f(void) {
 		CG_Printf("n \"name\", Change name\n" );
 		CG_Printf("t \"0-3\", Change team number\n" );
 		CG_Printf("c1 \"0-9,a-t,u-zhexcode\", Change saber color1\n" );
+		CG_Printf("sl \"[number]\", Change saber length. Default is 40.\n" );
 		CG_Printf("hide \"0,1\", hide player yes or no\n" );
 		CG_Printf("hilt \"hiltname\", Change saber hilt\n" );
 		CG_Printf("shader \"shadername\", Shader override to be use on the whole player\n" );
@@ -4281,7 +4286,8 @@ void CG_DoSaber(vec3_t origin, vec3_t dir, float length, saber_colors_t color, i
 
 	// Jeff, I did this because I foolishly wished to have a bright halo as the saber is unleashed.  
 	// It's not quite what I'd hoped tho.  If you have any ideas, go for it!  --Pat
-	if (length < SABER_LENGTH_MAX) {
+	//if (length < SABER_LENGTH_MAX) {
+	if (length < cgs.clientinfo[cnum].saberLength) {
 		radiusmult = 1.0 + (2.0 / length);		// Note this creates a curve, and length cannot be < 0.5.
 	} else {
 		radiusmult = 1.0;
@@ -4701,12 +4707,13 @@ void CG_AddSaberBlade( centity_t *cent, centity_t *scent, refEntity_t *saber, in
 			cent->saberExtendTime = cg.time;
 		}
 
-		if (cent->saberLength < SABER_LENGTH_MAX) {
+		//if (cent->saberLength < SABER_LENGTH_MAX) {
+		if (cent->saberLength < cgs.clientinfo[cent->currentState.number].saberLength) {
 			cent->saberLength += ((cg.time - cent->saberExtendTime) + cg.timeFraction)*0.05f;
 		}
 
-		if (cent->saberLength > SABER_LENGTH_MAX) {
-			cent->saberLength = SABER_LENGTH_MAX;
+		if (cent->saberLength > cgs.clientinfo[cent->currentState.number].saberLength) {
+			cent->saberLength = cgs.clientinfo[cent->currentState.number].saberLength;
 		}
 
 		cent->saberExtendTime = cg.time;

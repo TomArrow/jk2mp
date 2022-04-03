@@ -1248,7 +1248,8 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			cl_ent->bolt2 = 0;
 			cl_ent->bolt3 = 0;
 			cl_ent->bolt4 = 0;
-			cl_ent->saberLength = SABER_LENGTH_MAX;
+			//cl_ent->saberLength = SABER_LENGTH_MAX;
+			cl_ent->saberLength = cgs.clientinfo[es->eventParm].saberLength;
 			cl_ent->saberExtendTime = 0;
 			cl_ent->boltInfo = 0;
 			cl_ent->frame_minus1_refreshed = 0;
