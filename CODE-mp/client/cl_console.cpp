@@ -601,7 +601,7 @@ void Con_DrawNotify (void)
 					Vector4Copy(text[x].color,currentColor);
 					//currentColor = (text[x]>>8)&7;
 					//strcat(sTemp,va("^%i", (text[x]>>8)&7) );
-					strcat(sTemp,va("^%s", Q_colorToHex(text[x].color, (qboolean)(demo15detected && ntModDetected))) );
+					strcat(sTemp,va("^%s", Q_colorToHex(currentColor, (qboolean)(demo15detected && ntModDetected))) );
 				}
 				//strcat(sTemp,va("%c",text[x] & 0xFF));				
 				strcat(sTemp,va("%c",text[x].letter));				
@@ -623,17 +623,17 @@ void Con_DrawNotify (void)
 				/*//if ( demo15detected && ntModDetected && ( (text[x]>>8)&127 ) != currentColor ) {
 				if ( demo15detected && ntModDetected && !Vector4Compare(text[x].color,currentColor) ) {
 					//currentColor = (text[x]>>8)&127;
-					Vector4Compare(text[x].color, currentColor);
+					Vector4Copy(text[x].color, currentColor);
 					re.SetColor( g_color_table_nt[currentColor] );
 				//} else if ( !ntModDetected && ( (text[x]>>8)&7 ) != currentColor ) {
 				} else if ( !ntModDetected && !Vector4Compare(text[x].color, currentColor)) {
 					//currentColor = (text[x]>>8)&7;
-					Vector4Compare(text[x].color,currentColor);
+					Vector4Copy(text[x].color,currentColor);
 					re.SetColor( g_color_table[currentColor] );
 				}*/
 				if (!Vector4Compare(text[x].color, currentColor)) {
 					//currentColor = (text[x]>>8)&127;
-					Vector4Compare(text[x].color, currentColor);
+					Vector4Copy(text[x].color, currentColor);
 					re.SetColor(currentColor);
 				}
 				if (!cl_conXOffset)
