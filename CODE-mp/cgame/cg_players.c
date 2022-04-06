@@ -4679,7 +4679,7 @@ static void CG_G2SaberEffects(vec3_t start, vec3_t end, centity_t *owner) {
 #endif
 
 #ifdef RELDEBUG
-#pragma optimize("", off)
+//#pragma optimize("", off)
 #endif
 
 #define SABER_TRAIL_TIME	40.0f
@@ -4877,6 +4877,20 @@ Ghoul2 Insert Start
 					{//only put marks on architecture
 						// Let's do some cool burn/glowing mark bits!!!
 						CG_CreateSaberMarks(client->saberTrail.oldPos[i], trace.endpos, trace.plane.normal);
+
+						// Draw more sparks if we scratched a particularly long distance. The more distance we scratch over, the more sparks there should be! - TA
+						if (cg_saberSparksPerDistance.integer) {
+							vec3_t direction, sparkPosition;
+							VectorSubtract(trace.endpos,client->saberTrail.oldPos[i],direction);
+							VectorCopy(client->saberTrail.oldPos[i],sparkPosition);
+							int distance = VectorDistance(client->saberTrail.oldPos[i], trace.endpos);
+							int newSparksCount = distance / cg_saberSparksPerDistance.integer -1; // Don't need one at the old position itself
+							VectorScale(direction,1.0f/(float)newSparksCount,direction);
+							for (int sp = 0; sp < newSparksCount; sp++) {
+								VectorAdd(sparkPosition,direction, sparkPosition);
+								trap_FX_PlayEffectID(cgs.effects.mSparks, sparkPosition, trDir); // Effect direction should be interpolated I guess but fuck it.
+							}
+						}
 
 						if (client->saberHitWallSoundDebounceTime > cg.time) {
 							client->saberHitWallSoundDebounceTime = 0;
@@ -5196,7 +5210,7 @@ JustDoIt:
 }
 
 #ifdef RELDEBUG
-#pragma optimize("", on)
+//#pragma optimize("", on)
 #endif
 
 int CG_IsMindTricked(int trickIndex1, int trickIndex2, int trickIndex3, int trickIndex4, int client) {

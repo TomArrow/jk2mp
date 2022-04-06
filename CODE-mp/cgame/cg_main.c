@@ -680,6 +680,7 @@ vmCvar_t	fx_Vibrate;
 vmCvar_t	fx_vfps;
 vmCvar_t	cg_saberMarksFps;
 vmCvar_t	cg_saberMarksDoubleSided;
+vmCvar_t	cg_saberSparksPerDistance;
 
 vmCvar_t	fx_disruptTime;
 vmCvar_t	fx_disruptTeamColour;
@@ -948,6 +949,7 @@ Ghoul2 Insert End
 	{ &fx_vfps,				"fx_vfps",				"1000",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_saberMarksFps,	"cg_saberMarksFps",		"250",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_saberMarksDoubleSided,	"cg_saberMarksDoubleSided",		"1",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_saberSparksPerDistance,	"cg_saberSparksPerDistance",		"4",			NULL,	CVAR_ARCHIVE	},
 	{ &fx_disruptTime,		"fx_disruptTime",		"-1",			NULL,	CVAR_ARCHIVE	},	//from smod
 	{ &fx_disruptTeamColour,"fx_disruptTeamColour",	"0",			NULL,	CVAR_ARCHIVE	},
 	{ &fx_disruptSpiral,	"fx_disruptSpiral",		"0",			NULL,	CVAR_ARCHIVE	},
