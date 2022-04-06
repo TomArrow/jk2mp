@@ -4709,7 +4709,7 @@ void CG_AddSaberBlade( centity_t *cent, centity_t *scent, refEntity_t *saber, in
 
 		//if (cent->saberLength < SABER_LENGTH_MAX) {
 		if (cent->saberLength < cgs.clientinfo[cent->currentState.number].saberLength) {
-			cent->saberLength += ((cg.time - cent->saberExtendTime) + cg.timeFraction)*0.05f;
+			cent->saberLength += ((cg.time - cent->saberExtendTime) + cg.timeFraction)*(0.05f* cgs.clientinfo[cent->currentState.number].saberLength / SABER_LENGTH_MAX);
 		}
 
 		if (cent->saberLength > cgs.clientinfo[cent->currentState.number].saberLength) {
