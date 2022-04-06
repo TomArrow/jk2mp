@@ -845,7 +845,7 @@ struct fontDrawPosition_t {
 	vec3_t axis3D[3];
 };
 #ifdef RELDEBUG
-#pragma optimize("", off)
+//#pragma optimize("", off)
 #endif
 
 static vec4_t	currentFontColor; // For 3D bc it ignores SetColor
@@ -1222,7 +1222,7 @@ void RE_Font_DrawString_3D(vec_t* origin, vec_t* axis, const char* psText, const
 	RE_Font_DrawStringReal(drawPos3D,psText,rgba,iFontHandle,iCharLimit,fScale);
 }
 #ifdef RELDEBUG
-#pragma optimize("", on)
+//#pragma optimize("", on)
 #endif
 
 int RE_RegisterFont_Real(const char* psName)

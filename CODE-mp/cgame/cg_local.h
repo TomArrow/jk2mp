@@ -1942,6 +1942,7 @@ extern	vmCvar_t	mme_chaseViewHeightFix;
 extern	vmCvar_t	fx_Vibrate;
 extern	vmCvar_t	fx_vfps;
 extern	vmCvar_t	cg_saberMarksFps;
+extern	vmCvar_t	cg_saberMarksDoubleSided;
 
 extern	vmCvar_t	fx_disruptTime;
 extern	vmCvar_t	fx_disruptTeamColour;

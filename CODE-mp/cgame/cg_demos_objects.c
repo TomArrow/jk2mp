@@ -1,7 +1,7 @@
 #include "cg_demos.h"
 
 #ifdef RELDEBUG
-#pragma optimize("", off)
+//#pragma optimize("", off)
 #endif
 
 void drawDemoObjects(qboolean drawHUD) {
@@ -578,5 +578,5 @@ void demoObjectsCommand_f(void) {
 
 
 #ifdef RELDEBUG
-#pragma optimize("", on)
+//#pragma optimize("", on)
 #endif

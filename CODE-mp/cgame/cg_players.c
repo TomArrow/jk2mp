@@ -4678,6 +4678,10 @@ static void CG_G2SaberEffects(vec3_t start, vec3_t end, centity_t *owner) {
 }
 #endif
 
+#ifdef RELDEBUG
+#pragma optimize("", off)
+#endif
+
 #define SABER_TRAIL_TIME	40.0f
 #define FX_USE_ALPHA		0x08000000
 #include "cg_demos_math.h"
@@ -4830,9 +4834,10 @@ Ghoul2 Insert Start
 #endif
 
 	int saberMarksFps = cg_saberMarksFps.integer ? cg_saberMarksFps.integer : fx_vfps.integer;
+	int iterations = cg_saberMarksDoubleSided.integer ? 2 : 1;
 	if (cg.time > client->saberTrail.lastTimeMark + 1000 / saberMarksFps) {
 		client->saberTrail.lastTimeMark = cg.time;
-		for (i = 0; i < 1; i++)//was 2 because it would go through architecture and leave saber trails on either side of the brush - but still looks bad if we hit a corner, blade is still 8 longer than hit
+		for (i = 0; i < iterations; i++)//was 2 because it would go through architecture and leave saber trails on either side of the brush - but still looks bad if we hit a corner, blade is still 8 longer than hit
 		{
 			if (i)
 			{//tracing from end to base
@@ -4855,9 +4860,10 @@ Ghoul2 Insert Start
 
 				//Stop saber? (it wouldn't look right if it was stuck through a thin wall and unable to hurt players on the other side)
 				VectorSubtract(org_, trace.endpos, v);
-				saberLen = VectorLength(v);
-
-				VectorCopy(trace.endpos, end);
+				if (!cg_saberMarksDoubleSided.integer) {
+					saberLen = VectorLength(v);
+					VectorCopy(trace.endpos, end);
+				}
 
 				if (cent->currentState.bolt2)
 				{
@@ -4925,7 +4931,7 @@ Ghoul2 Insert Start
 		for ( i = 0; i < 1; i++ )//was 2 because it would go through architecture and leave saber trails on either side of the brush - but still looks bad if we hit a corner, blade is still 8 longer than hit
 		{
 			CG_Trace( &trace, otherPos, NULL, NULL, otherEnd, ENTITYNUM_NONE, MASK_SOLID );
-		
+
 			if ( trace.fraction < 1.0f )
 			{
 				vec3_t trDir;
@@ -5188,6 +5194,10 @@ JustDoIt:
 		CG_DoSaber(org_, axis_[0], saberLen, scolor, renderfx, cent->currentState.clientNum);
 	}
 }
+
+#ifdef RELDEBUG
+#pragma optimize("", on)
+#endif
 
 int CG_IsMindTricked(int trickIndex1, int trickIndex2, int trickIndex3, int trickIndex4, int client) {
 	int checkIn;
