@@ -4829,90 +4829,94 @@ Ghoul2 Insert Start
 	}
 #endif
 
-	for ( i = 0; i < 1; i++ )//was 2 because it would go through architecture and leave saber trails on either side of the brush - but still looks bad if we hit a corner, blade is still 8 longer than hit
-	{
-		if ( i )
-		{//tracing from end to base
-			CG_Trace( &trace, end, NULL, NULL, org_, ENTITYNUM_NONE, MASK_SOLID );
-		}
-		else
-		{//tracing from base to end
-			CG_Trace( &trace, org_, NULL, NULL, end, ENTITYNUM_NONE, MASK_SOLID );
-		}
-		
-		if ( trace.fraction < 1.0f )
+	int saberMarksFps = cg_saberMarksFps.integer ? cg_saberMarksFps.integer : fx_vfps.integer;
+	if (cg.time > client->saberTrail.lastTimeMark + 1000 / saberMarksFps) {
+		client->saberTrail.lastTimeMark = cg.time;
+		for (i = 0; i < 1; i++)//was 2 because it would go through architecture and leave saber trails on either side of the brush - but still looks bad if we hit a corner, blade is still 8 longer than hit
 		{
-			vec3_t trDir;
-			VectorCopy(trace.plane.normal, trDir);
-			if (!trDir[0] && !trDir[1] && !trDir[2])
-			{
-				trDir[1] = 1;
+			if (i)
+			{//tracing from end to base
+				CG_Trace(&trace, end, NULL, NULL, org_, ENTITYNUM_NONE, MASK_SOLID);
 			}
-			trap_FX_PlayEffectID( cgs.effects.mSparks, trace.endpos, trDir );
-
-			//Stop saber? (it wouldn't look right if it was stuck through a thin wall and unable to hurt players on the other side)
-			VectorSubtract(org_, trace.endpos, v);
-			saberLen = VectorLength(v);
-
-			VectorCopy(trace.endpos, end);
-
-			if (cent->currentState.bolt2)
-			{
-				break;
+			else
+			{//tracing from base to end
+				CG_Trace(&trace, org_, NULL, NULL, end, ENTITYNUM_NONE, MASK_SOLID);
 			}
-			// All I need is a bool to mark whether I have a previous point to work with.
-			//....come up with something better..
-			if ( client->saberTrail.haveOldPos[i] )
-			{
-				if ( trace.entityNum == ENTITYNUM_WORLD )
-				{//only put marks on architecture
-					// Let's do some cool burn/glowing mark bits!!!
-					CG_CreateSaberMarks( client->saberTrail.oldPos[i], trace.endpos, trace.plane.normal );
 
-					if (client->saberHitWallSoundDebounceTime > cg.time) {
-						client->saberHitWallSoundDebounceTime = 0;
-					}
-					//make a sound
-					if ( cg.time - client->saberHitWallSoundDebounceTime >= 100 )
-					{//ugh, need to have a real sound debouncer... or do this game-side
-						client->saberHitWallSoundDebounceTime = cg.time;
-						if (cg.frametime > 0
-							&& ((cg.frametime < 50 && cg.time % 50 <= cg.frametime)
-							|| cg.frametime >= 50))
-							trap_S_StartSound ( trace.endpos, -1, CHAN_WEAPON, trap_S_RegisterSound( va("sound/weapons/saber/saberhitwall%i", (random() * 2 + 1)) ) );
+			if (trace.fraction < 1.0f)
+			{
+				vec3_t trDir;
+				VectorCopy(trace.plane.normal, trDir);
+				if (!trDir[0] && !trDir[1] && !trDir[2])
+				{
+					trDir[1] = 1;
+				}
+				trap_FX_PlayEffectID(cgs.effects.mSparks, trace.endpos, trDir);
+
+				//Stop saber? (it wouldn't look right if it was stuck through a thin wall and unable to hurt players on the other side)
+				VectorSubtract(org_, trace.endpos, v);
+				saberLen = VectorLength(v);
+
+				VectorCopy(trace.endpos, end);
+
+				if (cent->currentState.bolt2)
+				{
+					break;
+				}
+				// All I need is a bool to mark whether I have a previous point to work with.
+				//....come up with something better..
+				if (client->saberTrail.haveOldPos[i])
+				{
+					if (trace.entityNum == ENTITYNUM_WORLD)
+					{//only put marks on architecture
+						// Let's do some cool burn/glowing mark bits!!!
+						CG_CreateSaberMarks(client->saberTrail.oldPos[i], trace.endpos, trace.plane.normal);
+
+						if (client->saberHitWallSoundDebounceTime > cg.time) {
+							client->saberHitWallSoundDebounceTime = 0;
+						}
+						//make a sound
+						if (cg.time - client->saberHitWallSoundDebounceTime >= 100)
+						{//ugh, need to have a real sound debouncer... or do this game-side
+							client->saberHitWallSoundDebounceTime = cg.time;
+							if (cg.frametime > 0
+								&& ((cg.frametime < 50 && cg.time % 50 <= cg.frametime)
+									|| cg.frametime >= 50))
+								trap_S_StartSound(trace.endpos, -1, CHAN_WEAPON, trap_S_RegisterSound(va("sound/weapons/saber/saberhitwall%i", (random() * 2 + 1))));
+						}
 					}
 				}
+				else
+				{
+					// if we impact next frame, we'll mark a slash mark
+					client->saberTrail.haveOldPos[i] = qtrue;
+					//				CG_ImpactMark( cgs.media.rivetMarkShader, client->saberTrail.oldPos[i], client->saberTrail.oldNormal[i],
+					//						0.0f, 1.0f, 1.0f, 1.0f, 1.0f, qfalse, 1.1f, qfalse );
+				}
+
+				// stash point so we can connect-the-dots later
+				VectorCopy(trace.endpos, client->saberTrail.oldPos[i]);
+				VectorCopy(trace.plane.normal, client->saberTrail.oldNormal[i]);
 			}
 			else
 			{
-				// if we impact next frame, we'll mark a slash mark
-				client->saberTrail.haveOldPos[i] = qtrue;
-//				CG_ImpactMark( cgs.media.rivetMarkShader, client->saberTrail.oldPos[i], client->saberTrail.oldNormal[i],
-//						0.0f, 1.0f, 1.0f, 1.0f, 1.0f, qfalse, 1.1f, qfalse );
-			}
+				if (cent->currentState.bolt2)
+				{
+					break;
+				}
 
-			// stash point so we can connect-the-dots later
-			VectorCopy( trace.endpos, client->saberTrail.oldPos[i] );
-			VectorCopy( trace.plane.normal, client->saberTrail.oldNormal[i] );
-		}
-		else
-		{
-			if (cent->currentState.bolt2)
-			{
-				break;
-			}
+				if (client->saberTrail.haveOldPos[i])
+				{
+					// Hmmm, no impact this frame, but we have an old point
+					// Let's put the mark there, we should use an endcap mark to close the line, but we 
+					//	can probably just get away with a round mark
+	//					CG_ImpactMark( cgs.media.rivetMarkShader, client->saberTrail.oldPos[i], client->saberTrail.oldNormal[i],
+	//							0.0f, 1.0f, 1.0f, 1.0f, 1.0f, qfalse, 1.1f, qfalse );
+				}
 
-			if ( client->saberTrail.haveOldPos[i] )
-			{
-				// Hmmm, no impact this frame, but we have an old point
-				// Let's put the mark there, we should use an endcap mark to close the line, but we 
-				//	can probably just get away with a round mark
-//					CG_ImpactMark( cgs.media.rivetMarkShader, client->saberTrail.oldPos[i], client->saberTrail.oldNormal[i],
-//							0.0f, 1.0f, 1.0f, 1.0f, 1.0f, qfalse, 1.1f, qfalse );
+				// we aren't impacting, so turn off our mark tracking mechanism
+				client->saberTrail.haveOldPos[i] = qfalse;
 			}
-
-			// we aren't impacting, so turn off our mark tracking mechanism
-			client->saberTrail.haveOldPos[i] = qfalse;
 		}
 	}
 
@@ -4950,12 +4954,12 @@ CheckTrail:
 	{ //don't do the trail in this case
 		goto JustDoIt;
 	}
-
+	
 	saberTrail = &client->saberTrail;
 
 	// if we happen to be timescaled or running in a high framerate situation, we don't want to flood
 	//	the system with very small trail slices...but perhaps doing it by distance would yield better results?
-	if ( cg.time > saberTrail->lastTime + 2 ) { // 2ms
+	if ( cg.time > saberTrail->lastTime + 1 ) { // 2ms
 		if ((saberMoveData[cent->currentState.saberMove].trailLength > 0
 			|| ((cent->currentState.powerups & (1 << PW_SPEED) && (cg_speedTrail.integer || cg_saberTrail.integer == 2))) || cent->currentState.saberInFlight)
 			&& cg.time < saberTrail->lastTime + 2000 ) // if we have a stale segment, don't draw until we have a fresh one

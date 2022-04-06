@@ -678,6 +678,7 @@ vmCvar_t	mme_chaseViewHeightFix;
 
 vmCvar_t	fx_Vibrate;
 vmCvar_t	fx_vfps;
+vmCvar_t	cg_saberMarksFps;
 
 vmCvar_t	fx_disruptTime;
 vmCvar_t	fx_disruptTeamColour;
@@ -944,6 +945,7 @@ Ghoul2 Insert End
 	{ &mov_sortObjects,		"mov_sortObjects",		"1",			NULL,	CVAR_ARCHIVE	},
 	{ &fx_Vibrate,			"fx_Vibrate",			"1",			NULL,	CVAR_ARCHIVE	},
 	{ &fx_vfps,				"fx_vfps",				"1000",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_saberMarksFps,	"cg_saberMarksFps",		"250",			NULL,	CVAR_ARCHIVE	},
 	{ &fx_disruptTime,		"fx_disruptTime",		"-1",			NULL,	CVAR_ARCHIVE	},	//from smod
 	{ &fx_disruptTeamColour,"fx_disruptTeamColour",	"0",			NULL,	CVAR_ARCHIVE	},
 	{ &fx_disruptSpiral,	"fx_disruptSpiral",		"0",			NULL,	CVAR_ARCHIVE	},

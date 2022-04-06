@@ -531,6 +531,7 @@ typedef struct
 	vec3_t	dualtip;
 
 	// Marks stuff
+	int			lastTimeMark;
 	qboolean	haveOldPos[2];
 	vec3_t		oldPos[2];		
 	vec3_t		oldNormal[2];	// store this in case we don't have a connect-the-dots situation
@@ -1940,6 +1941,7 @@ extern	vmCvar_t	mme_chaseViewHeightFix;
 
 extern	vmCvar_t	fx_Vibrate;
 extern	vmCvar_t	fx_vfps;
+extern	vmCvar_t	cg_saberMarksFps;
 
 extern	vmCvar_t	fx_disruptTime;
 extern	vmCvar_t	fx_disruptTeamColour;
