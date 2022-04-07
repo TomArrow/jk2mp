@@ -634,7 +634,17 @@ void Con_DrawNotify (void)
 				if (!Vector4Compare(text[x].color, currentColor)) {
 					//currentColor = (text[x]>>8)&127;
 					Vector4Copy(text[x].color, currentColor);
-					re.SetColor(currentColor);
+					if (r_gammaSrgbLightvalues->integer) {
+						vec4_t tmp;
+						tmp[0] = R_sRGBToLinear( currentColor[0]);
+						tmp[1] = R_sRGBToLinear( currentColor[1]);
+						tmp[2] = R_sRGBToLinear( currentColor[2]);
+						tmp[3] = currentColor[3];
+						re.SetColor(tmp);
+					}
+					else {
+						re.SetColor(currentColor);
+					}
 				}
 				if (!cl_conXOffset)
 				{
@@ -849,7 +859,17 @@ void Con_DrawSolidConsole( float frac ) {
 				if(!Vector4Compare(text[x].color, currentColor)) {
 					//currentColor = (text[x] >> 8) & 127;
 					Vector4Copy(text[x].color, currentColor);
-					re.SetColor(currentColor);
+					if (r_gammaSrgbLightvalues->integer) {
+						vec4_t tmp;
+						tmp[0] = R_sRGBToLinear(currentColor[0]);
+						tmp[1] = R_sRGBToLinear(currentColor[1]);
+						tmp[2] = R_sRGBToLinear(currentColor[2]);
+						tmp[3] = currentColor[3];
+						re.SetColor(tmp);
+					}
+					else {
+						re.SetColor(currentColor);
+					}
 				}
 				SCR_DrawSmallChar(  (int) (con.xadjust + (x+1)*SMALLCHAR_WIDTH), y, text[x].letter );
 			}

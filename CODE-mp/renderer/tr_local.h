@@ -1254,11 +1254,7 @@ extern cvar_t	*r_DynamicGlowHeight;
 
 extern cvar_t* r_hdr;
 
-extern cvar_t* r_gammaSrgbLightmaps;
-extern cvar_t* r_gammaSrgbTextures;
-extern cvar_t* r_gammaLegacy;
-extern cvar_t* r_gammaLegacyPrecision;
-extern cvar_t* r_gammaSrgbLightvalues;
+
 extern cvar_t* r_HUDBrightness;
 
 extern cvar_t* r_hideMissingModels; // don't draw the colorful RGB null axis
@@ -1519,9 +1515,7 @@ void	R_ImageList_f( void );
 void	R_SkinList_f( void );
 const void *RB_ScreenShotCmd( const void *data );
 
-inline float R_sRGBToLinear(const float n) {
-	return (n > 0.04045f ? (float)pow((n + 0.055) / 1.055, 2.4) : n / 12.92f);
-}
+
 void	R_InitFogTable( void );
 float	R_FogFactor( float s, float t );
 void	R_InitImages( void );

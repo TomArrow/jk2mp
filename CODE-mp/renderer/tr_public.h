@@ -5,7 +5,15 @@
 
 #define	REF_API_VERSION		8
 
+extern cvar_t* r_gammaSrgbLightmaps;
+extern cvar_t* r_gammaSrgbTextures;
+extern cvar_t* r_gammaLegacy;
+extern cvar_t* r_gammaLegacyPrecision;
+extern cvar_t* r_gammaSrgbLightvalues;
 
+inline float R_sRGBToLinear(const float n) {
+	return (n > 0.04045f ? (float)pow((n + 0.055) / 1.055, 2.4) : n / 12.92f);
+}
 
 //
 // these are the functions exported by the refresh module
