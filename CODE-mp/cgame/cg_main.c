@@ -665,6 +665,7 @@ vmCvar_t	mov_wallhack;
 vmCvar_t	mov_camerafps;
 
 vmCvar_t	mov_dismember;
+vmCvar_t	mov_dismemberCheckSegments;
 vmCvar_t	mov_forceNTdemo;
 
 vmCvar_t	mov_absorbVisibility;
@@ -939,6 +940,7 @@ Ghoul2 Insert End
 	{ &mov_wallhack,		"mov_wallhack",			"0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_camerafps,		"mov_camerafps",		"125",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_dismember,		"mov_dismember",		"0",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_dismemberCheckSegments,		"mov_dismemberCheckSegments",		"10",			NULL,	CVAR_ARCHIVE	}, // How many segments is saber divided into to check for dismemberment? Higher segment count = more precise. Is increased if player's max saber length is higher than default.
 	{ &mov_forceNTdemo,		"mov_forceNTdemo",		"0",  CG_ForceNTDemo,	CVAR_ARCHIVE	},
 	{ &mov_absorbVisibility,"mov_absorbVisibility",	"0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_absorbColour,	"mov_absorbColour",		"0",			NULL,	CVAR_ARCHIVE	},

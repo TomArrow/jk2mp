@@ -200,6 +200,7 @@ static void demoDismember( centity_t *cent , vec3_t dir, int part, vec3_t limbor
 	trap_FX_PlayEffectID( trap_FX_RegisterEffect("saber/blood_sparks.efx"), limborg, dir );
 }
 
+// TODO Wtf is this algorithm. Seems random af. It should check for contact with body parts but it does some other random thing instead.
 void demoCheckDismember(vec3_t saberhitorg) {
 	centity_t *attacker;
 	centity_t *target;
@@ -379,7 +380,8 @@ void demoCheckCorpseDism( centity_t *attacker ) {
 		if (i != attacker->currentState.number) {
 			centity_t *target = &cg_entities[i];
 		
-			if ( target && target->currentState.eFlags & EF_DEAD && Distance(target->lerpOrigin,saberend) < 80 && Distance(target->lerpOrigin,saberend)) {
+			float attackerMaxSaberLength = cgs.clientinfo[i].saberLength;
+			if ( target && target->currentState.eFlags & EF_DEAD && Distance(target->lerpOrigin,saberend) < max(80,(80* attackerMaxSaberLength/SABER_LENGTH_MAX)) /*&& Distance(target->lerpOrigin,saberend)*/) {
 				vec3_t boltOrg, boltAng;
 				int newBolt;
 				mdxaBone_t			matrix;
@@ -419,9 +421,12 @@ void demoCheckCorpseDism( centity_t *attacker ) {
 						trap_G2API_GiveMeVectorFromMatrix(&matrix, ORIGIN, boltOrg);
 						trap_G2API_GiveMeVectorFromMatrix(&matrix, NEGATIVE_Y, boltAng);
 						
-						for (length = 0; length < 5; length++) {
+						//int segments = min(5 * attackerMaxSaberLength / SABER_LENGTH_MAX,5);
+						int segments = max(mov_dismemberCheckSegments.integer * attackerMaxSaberLength / SABER_LENGTH_MAX, mov_dismemberCheckSegments.integer);
+						float distancePerSegment = 1.0f/(float)segments;
+						for (length = 0; length < segments; length++) {
 							vec3_t checkorg;							
-							VectorMA(saberend,-attacker->saberLength*length*0.2, saberang,checkorg);							
+							VectorMA(saberend,-attacker->saberLength*length* distancePerSegment, saberang,checkorg);
 							if (Distance(boltOrg,checkorg) < rad) {
 								demoDismember(target,saberang,part,boltOrg,boltAng);
 							}

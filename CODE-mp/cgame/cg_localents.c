@@ -403,7 +403,7 @@ void CG_AddFragment( localEntity_t *le ) {
 	}
 
 	if (!trace.startsolid) {
-		if (!mov_dismember.integer) {
+		if (!mov_dismember.integer) { // TODO Weird.
 			// leave a mark
 			CG_FragmentBounceMark( le, &trace );
 			// do a bouncy sound

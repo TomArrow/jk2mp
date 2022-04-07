@@ -1928,6 +1928,7 @@ extern	vmCvar_t	mov_wallhack;
 extern	vmCvar_t	mov_camerafps;
 
 extern	vmCvar_t	mov_dismember;
+extern	vmCvar_t	mov_dismemberCheckSegments;
 extern	vmCvar_t	mov_forceNTdemo;
 
 extern	vmCvar_t	mov_absorbVisibility;
