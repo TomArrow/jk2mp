@@ -4682,7 +4682,7 @@ static void CG_G2SaberEffects(vec3_t start, vec3_t end, centity_t *owner) {
 //#pragma optimize("", off)
 #endif
 
-#define SABER_TRAIL_TIME	40.0f
+#define SABER_TRAIL_TIME	40.0f // You can ignore. Is a cvar now. (cg_saberTrailTime) -TA
 #define FX_USE_ALPHA		0x08000000
 #include "cg_demos_math.h"
 const vec3_t container = { -8.0f, 8.0f, 8.0f };
@@ -5078,7 +5078,8 @@ CheckTrail:
 			//This prevents the trail from showing at all in low framerate situations.
 			//if ( diff <= SABER_TRAIL_TIME * 2 )
 			{
-				float oldAlpha = 1.0f - ( diff / SABER_TRAIL_TIME );
+				//float oldAlpha = 1.0f - ( diff / SABER_TRAIL_TIME );
+				float oldAlpha = 1.0f - ( diff / cg_saberTrailTime.value );
 
 				// New muzzle
 				VectorCopy( rgb1, fx.mVerts[0].rgb );
@@ -5119,13 +5120,15 @@ CheckTrail:
 				//[RGBSabers]
 				fx.mShader = trailShader;//cgs.media.saberBlurShader;
 				fx.mSetFlags = FX_USE_ALPHA;
-				fx.mKillTime = SABER_TRAIL_TIME;
+				//fx.mKillTime = SABER_TRAIL_TIME;
+				fx.mKillTime = cg_saberTrailTime.value;
 
 				trap_FX_AddPrimitive(&fx);
 			}
 
 			if (cent->currentState.bolt2) {
-				float oldAlpha = 1.0f - ( diff / SABER_TRAIL_TIME );
+				//float oldAlpha = 1.0f - ( diff / SABER_TRAIL_TIME );
+				float oldAlpha = 1.0f - ( diff / cg_saberTrailTime.value);
 
 				VectorCopy( otherPos, fx.mVerts[0].origin );
 				VectorMA( otherEnd, 3.0f, otherDir, fx.mVerts[1].origin );
@@ -5172,7 +5175,8 @@ CheckTrail:
 				//[RGBSabers]
 				fx.mShader = trailShader;//cgs.media.saberBlurShader;
 				fx.mSetFlags = FX_USE_ALPHA;
-				fx.mKillTime = SABER_TRAIL_TIME;
+				//fx.mKillTime = SABER_TRAIL_TIME;
+				fx.mKillTime = cg_saberTrailTime.value;
 
 				trap_FX_AddPrimitive(&fx);
 			}
