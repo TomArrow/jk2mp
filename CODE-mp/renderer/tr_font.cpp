@@ -957,12 +957,12 @@ void RE_Font_DrawStringReal(fontDrawPosition_t drawPosition, const char *psText,
 	
 	// Draw a dropshadow if required
 	vec4_t v4DKGREY2 = { 0.15f, 0.15f, 0.15f, rgba ? rgba[3] : 1.0f };
-	if (r_gammaSrgbLightvalues->integer) {
+	/*if (r_gammaSrgbLightvalues->integer) { // No need to do this here, I do it to the rgba argument now anyway.
 		v4DKGREY2[0] = R_sRGBToLinear(v4DKGREY2[0]);
 		v4DKGREY2[1] = R_sRGBToLinear(v4DKGREY2[1]);
 		v4DKGREY2[2] = R_sRGBToLinear(v4DKGREY2[2]);
 		//v4DKGREY2[3] = R_sRGBToLinear(v4DKGREY2[3]);
-	}
+	}*/
 	if(!demo15detected && iFontHandle & STYLE_DROPSHADOW) {
 
 		offset = curfont->GetPointSize() * fScale * 0.075f;
