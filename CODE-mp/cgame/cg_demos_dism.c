@@ -8,6 +8,8 @@
 ===========================================================================================
 =========================================================================================*/
 
+// TODO Try to also allow dismemberment for dead bodies that are no longer at the original entity number < MAX_CLIENTS
+
 void demoSaberDismember(centity_t *cent, vec3_t dir) {
 	localEntity_t	*le;
 	refEntity_t		*re;
@@ -363,6 +365,10 @@ void demoCheckDismember(vec3_t saberhitorg) {
 	}
 }
 
+#ifdef RELDEBUG
+//#pragma optimize("", off)
+#endif
+
 void demoCheckCorpseDism( centity_t *attacker ) {
 	centity_t *saber = &cg_entities[attacker->currentState.saberEntityNum];
 	vec3_t saberstart,saberend,saberang;
@@ -380,7 +386,7 @@ void demoCheckCorpseDism( centity_t *attacker ) {
 		if (i != attacker->currentState.number) {
 			centity_t *target = &cg_entities[i];
 		
-			float attackerMaxSaberLength = cgs.clientinfo[i].saberLength;
+			float attackerMaxSaberLength = cgs.clientinfo[attacker->currentState.number].saberLength;
 			if ( target && target->currentState.eFlags & EF_DEAD && Distance(target->lerpOrigin,saberend) < max(80,(80* attackerMaxSaberLength/SABER_LENGTH_MAX)) /*&& Distance(target->lerpOrigin,saberend)*/) {
 				vec3_t boltOrg, boltAng;
 				int newBolt;
@@ -437,6 +443,10 @@ void demoCheckCorpseDism( centity_t *attacker ) {
 		}		
 	}
 }
+
+#ifdef RELDEBUG
+//#pragma optimize("", on)
+#endif
 
 void demoPlayerDismember(centity_t *cent) {
 	int clientnum = cent->currentState.number;
