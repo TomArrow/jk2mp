@@ -91,7 +91,7 @@ void Cam_DrawClientNames(void) //FIXME: draw entitynums
 						angles[0] = 0;
 					AnglesToAxis(angles, axis);
 					VectorMA(org, x, axis[1], org);
-					CG_Text_Paint_3D(org, axis, size, colorLtGrey, text, 0, 0, style/*NORMAL*/, FONT_LARGE);
+					CG_Text_Paint_3D(org, axis, size, colorWhite, text, 0, 0, style/*NORMAL*/, FONT_LARGE);
 
 
 					// This works: but hard to lock angles.
@@ -124,7 +124,7 @@ void Cam_DrawClientNames(void) //FIXME: draw entitynums
 
 						x -= CG_Text_Width(text, size, FONT_MEDIUM) / 2;
 						//y -= CG_Text_Width(text, size, FONT_MEDIUM) / 2;
-						CG_Text_Paint(x, y, size, colorLtGrey, text, 0, 0, style/*NORMAL*/, FONT_MEDIUM);
+						CG_Text_Paint(x, y, size, colorWhite, text, 0, 0, style/*NORMAL*/, FONT_MEDIUM);
 					}
 				}
 				

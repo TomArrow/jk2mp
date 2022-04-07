@@ -895,14 +895,20 @@ void RE_Font_DrawGlyph3D(const fontDrawPosition_t* drawPosition,const glyphInfo_
 // iCharLimit is -1 for "all of string", else MBCS char count...
 //
 qboolean gbInShadow = qfalse;	// MUST default to this
-void RE_Font_DrawStringReal(fontDrawPosition_t drawPosition, const char *psText, const float *rgba, int iFontHandle, int iCharLimit, float fScale)
+void RE_Font_DrawStringReal(fontDrawPosition_t drawPosition, const char *psText, const float *rgbaArg, int iFontHandle, int iCharLimit, float fScale)
 {		
 	float				/*x, y,*/ offset;
 	int					colour;
 	const glyphInfo_t	*pLetter;
 	qhandle_t			hShader;
 	qboolean			qbThisCharCountsAsLetter;	// logic for this bool must be kept same in this function and RE_Font_StrLenChars()
-	
+	vec4_t				rgba;
+
+	if (rgbaArg) {
+		Vector4Copy(rgbaArg, rgba);
+	}else {
+		rgba[0] = rgba[1] = rgba[2] = rgba[3] = 1.0f;
+	}
 
 	if(iFontHandle & STYLE_BLINK)
 	{
@@ -1025,6 +1031,14 @@ void RE_Font_DrawStringReal(fontDrawPosition_t drawPosition, const char *psText,
 		}
 		//RE_Font_DrawString(ox + offset * fontRatioFix, oy + offset, dropShadowText, v4DKGREY2, iFontHandle & SET_MASK, iCharLimit, fScale);
 		RE_Font_DrawStringReal(shadowDrawPos, dropShadowText, v4DKGREY2, iFontHandle & SET_MASK, iCharLimit, fScale);
+	}
+
+
+	if (r_gammaSrgbLightvalues->integer) {
+		rgba[0] = R_sRGBToLinear(rgba[0]);
+		rgba[1] = R_sRGBToLinear(rgba[1]);
+		rgba[2] = R_sRGBToLinear(rgba[2]);
+		//v4DKGREY2[3] = R_sRGBToLinear(v4DKGREY2[3]);
 	}
 
 	if (drawPosition.type == FONTDRAW3D) {
