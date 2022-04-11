@@ -16,6 +16,8 @@ void drawDemoObjects(qboolean drawHUD) {
 		closestObj = closestObject(demo.viewOrigin);
 	}
 
+	if (!object) return;
+
 	
 	// Sorting by distance.
 	if (!mov_sortObjects.integer) {
