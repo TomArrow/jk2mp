@@ -915,7 +915,7 @@ void S_MixInit( void ) {
 		Com_Error (ERR_FATAL, "Failed to allocate memory for sound system\n");
 	}
 	/* How many similar sounding close to eachother sound effects */
-	s_mixSame = Cvar_Get( "s_mixSame", "2", CVAR_ARCHIVE );
+	s_mixSame = Cvar_Get( "s_mixSame", "8", CVAR_ARCHIVE );
 	s_mixSameTime = Cvar_Get( "s_mixSameTime", "10", CVAR_ARCHIVE );
 
 	s_effects = Cvar_Get( "s_effects", "1", CVAR_ARCHIVE );

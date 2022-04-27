@@ -1843,12 +1843,12 @@ void R_LoadLightGrid(lump_t *l ) {
 
 			for (i = 0; i < w->lightGridBounds[0] * w->lightGridBounds[1] * w->lightGridBounds[2]; i++)
 			{
-				w->hdrLightGrid[i * 6] = hdrLightGrid[i * 6] / M_PI;
-				w->hdrLightGrid[i * 6 + 1] = hdrLightGrid[i * 6 + 1] / M_PI;
-				w->hdrLightGrid[i * 6 + 2] = hdrLightGrid[i * 6 + 2] / M_PI;
-				w->hdrLightGrid[i * 6 + 3] = hdrLightGrid[i * 6 + 3] / M_PI;
-				w->hdrLightGrid[i * 6 + 4] = hdrLightGrid[i * 6 + 4] / M_PI;
-				w->hdrLightGrid[i * 6 + 5] = hdrLightGrid[i * 6 + 5] / M_PI;
+				w->hdrLightGrid[i * 6] = hdrLightGrid[i * 6];// / M_PI;
+				w->hdrLightGrid[i * 6 + 1] = hdrLightGrid[i * 6 + 1];// / M_PI;
+				w->hdrLightGrid[i * 6 + 2] = hdrLightGrid[i * 6 + 2];// / M_PI;
+				w->hdrLightGrid[i * 6 + 3] = hdrLightGrid[i * 6 + 3];// / M_PI;
+				w->hdrLightGrid[i * 6 + 4] = hdrLightGrid[i * 6 + 4];// / M_PI;
+				w->hdrLightGrid[i * 6 + 5] = hdrLightGrid[i * 6 + 5];// / M_PI;
 			}
 		}
 

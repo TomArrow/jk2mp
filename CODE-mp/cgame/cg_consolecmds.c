@@ -56,9 +56,12 @@ Debugging command to print the current position
 =============
 */
 static void CG_Viewpos_f (void) {
-	CG_Printf ("%s (%i %i %i) : %i\n", cgs.mapname, (int)cg.refdef.vieworg[0],
-		(int)cg.refdef.vieworg[1], (int)cg.refdef.vieworg[2], 
-		(int)cg.refdefViewAngles[YAW]);
+	//CG_Printf ("%s (%i %i %i) : %i\n", cgs.mapname, (int)cg.refdef.vieworg[0],
+	//	(int)cg.refdef.vieworg[1], (int)cg.refdef.vieworg[2], 
+	//	(int)cg.refdefViewAngles[YAW]);
+	CG_Printf ("%s (%f %f %f) : %f %f %f\n", cgs.mapname, cg.refdef.vieworg[0],
+		cg.refdef.vieworg[1], cg.refdef.vieworg[2], 
+		cg.refdefViewAngles[PITCH], cg.refdefViewAngles[YAW], cg.refdefViewAngles[ROLL]);
 }
 
 
