@@ -4835,6 +4835,10 @@ Ghoul2 Insert Start
 
 	int saberMarksFps = cg_saberMarksFps.integer ? cg_saberMarksFps.integer : fx_vfps.integer;
 	int iterations = cg_saberMarksDoubleSided.integer ? 2 : 1;
+
+	if (cg.time < client->saberTrail.lastTimeMark) // In case we rewind.
+		client->saberTrail.lastTimeMark = cg.time;
+
 	if (cg.time > client->saberTrail.lastTimeMark + 1000 / saberMarksFps) {
 		client->saberTrail.lastTimeMark = cg.time;
 		for (i = 0; i < iterations; i++)//was 2 because it would go through architecture and leave saber trails on either side of the brush - but still looks bad if we hit a corner, blade is still 8 longer than hit
