@@ -80,6 +80,8 @@ cvar_t	*mme_dofFrames;
 cvar_t	*mme_dofRadius;
 cvar_t	*mme_dofQuick;
 cvar_t	* mme_dofQuickRandom;
+cvar_t	* mme_dofMask;
+cvar_t	* mme_dofMaskInvert;
 
 cvar_t	*mme_cpuSSE2;
 cvar_t	*mme_pbo;
@@ -163,6 +165,94 @@ void R_MME_FakeAdvanceFrames(int count) {
 	}
 }
 
+static qboolean R_MME_LoadDOFMask(float* jitterTable, int countNeeded, char* maskPath) {
+	int dofMaskWidth, dofMaskHeight;
+	textureImage_t picWrap;
+	R_LoadImage(maskPath, &picWrap, &dofMaskWidth, &dofMaskHeight);
+	if (picWrap.ptr != NULL) {
+		int pixelCount = dofMaskWidth * dofMaskHeight;
+		float* dofMaskFloat = new float[(dofMaskWidth+1) * dofMaskHeight+1];// The two +1 additions are bc of the Floyd Steinberg Dithering, it needs some extra.
+
+		// Convert image to monochrome float mask. We just take the red channel and ignore the others, who cares, the mask can't have colors anyway.
+		double totalValue = 0.0;
+		for (int i = 0; i < pixelCount; i++) {
+			switch (picWrap.bpc) {
+			case BPC_8BIT:
+				dofMaskFloat[i] = ((byte*)picWrap.ptr)[i * 4];
+				break;
+			case BPC_16BIT:
+				dofMaskFloat[i] = ((unsigned short*)picWrap.ptr)[i * 4];
+				break;
+			case BPC_32BIT:
+				dofMaskFloat[i] = ((unsigned int*)picWrap.ptr)[i * 4];
+				break;
+			case BPC_32FLOAT:
+				dofMaskFloat[i] = ((float*)picWrap.ptr)[i * 4];
+				break;
+			}
+			totalValue += (double)dofMaskFloat[i];
+		}
+
+		// Make it so that the added up value of each pixel together equals the needed count of entries in jitter table.
+		// Basically, this dofMaskFloat will be a map saying how many samples should be taken at each point of the image.
+		double multiplier = countNeeded/totalValue; 
+		for (int i = 0; i < pixelCount; i++) {
+			dofMaskFloat[i] *= multiplier;
+		}
+
+		// Now apply a nice little Floyd-Steinberg dithering because we will have nonsensical stuff like
+		// pixels saying that 0.3 samples must be taken at them. The dithering will make it so that every pixel has an integer value
+		// and the total added up value stays consistent.
+		// Dithering algorithm based on pseudo code from https://en.wikipedia.org/wiki/Floyd%E2%80%93Steinberg_dithering
+		int addedSamples = 0;
+		int longerSide = max(dofMaskWidth, dofMaskHeight);
+		float pixelSideSize = 1.0f / (float)longerSide;
+		float sign = mme_dofMaskInvert->integer ? -1.0f : 1.0f;
+		for (int y = 0; y < dofMaskHeight; y++) {
+			for (int x = 0; x < dofMaskWidth; x++) {
+				float oldPixel = dofMaskFloat[y * dofMaskWidth + x];
+				float newPixel = roundf(oldPixel);
+				dofMaskFloat[y * dofMaskWidth + x] = newPixel;
+
+				// Add samples
+				int samplesHere = newPixel+0.5f;
+				while (samplesHere-- > 0 && addedSamples < countNeeded) {
+					float xRand = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) - 0.5f;
+					float yRand = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) - 0.5f;
+					jitterTable[addedSamples * 2] = sign*((float)x / (float)longerSide -0.5f+ xRand* pixelSideSize);
+					jitterTable[addedSamples * 2+1] = sign*((float)y / (float)longerSide -0.5f + yRand * pixelSideSize);
+					addedSamples++;
+				}
+
+				// Distribute error
+				float quantError = oldPixel - newPixel;
+				dofMaskFloat[y * dofMaskWidth + x+1] += quantError * 7.0f / 16.0f;
+				dofMaskFloat[(y+1) * dofMaskWidth + x -1] += quantError * 3.0f / 16.0f;
+				dofMaskFloat[(y+1) * dofMaskWidth + x] += quantError * 5.0f / 16.0f;
+				dofMaskFloat[(y+1) * dofMaskWidth + x+1] += quantError * 1.0f / 16.0f;
+			}
+		}
+
+		// May happen.
+		while (addedSamples < countNeeded) {
+			// Just duplicate some random one.
+			int sourceSample = rand() % addedSamples;
+			jitterTable[addedSamples * 2] = jitterTable[sourceSample * 2];
+			jitterTable[addedSamples * 2+1] = jitterTable[sourceSample * 2+1];
+			addedSamples++;
+		}
+
+		// Done.
+
+		delete[] dofMaskFloat;
+		ri.Free(picWrap.ptr);
+		return qtrue;
+	}
+	else {
+		return qfalse;
+	}
+}
+
 static void R_MME_CheckCvars( void ) {
 	int pixelCount, blurTotal, passTotal, quickDOF;
 	mmeBlurControl_t* blurControl = &blurData.control;
@@ -243,7 +333,7 @@ static void R_MME_CheckCvars( void ) {
 			float blurDuration = mme_rollingShutterBlur->value * (1.0f / shotData.fps);
 			int blurFrames = (int)(blurDuration * captureFPS);
 
-			if (blurFrames != passData.quickJitterTotalCount) {
+			if (blurFrames != passData.quickJitterTotalCount || mme_dofMask->modified || mme_dofQuickRandom->modified) {
 				passData.quickJitterTotalCount = blurFrames;
 				if (passData.quickJitter) {
 					delete[] passData.quickJitter;
@@ -252,12 +342,19 @@ static void R_MME_CheckCvars( void ) {
 				passData.quickJitter = new float[blurFrames * 2];
 				passData.quickJitterIndex = 0;
 
-				R_MME_JitterTable(passData.quickJitter, blurFrames);
+				bool dofMaskLoaded = false;
+				if (strlen(mme_dofMask->string)) {
+
+					dofMaskLoaded = R_MME_LoadDOFMask(passData.quickJitter, blurFrames,mme_dofMask->string);
+				}
+				if (!dofMaskLoaded) {
+					R_MME_JitterTable(passData.quickJitter, blurFrames);
+				}
 				if (mme_dofQuickRandom->integer) {
 
 					std::random_device rd;
 					std::mt19937 g(rd());
-					std::shuffle(&passData.quickJitter[0], &passData.quickJitter[blurFrames * 2], g);
+					std::shuffle((uint64_t*)&passData.quickJitter[0], (uint64_t*)&passData.quickJitter[blurFrames * 2], g);
 				}
 			}
 		}
@@ -270,6 +367,7 @@ static void R_MME_CheckCvars( void ) {
 	mme_dofFrames->modified = qfalse;
 	mme_dofQuick->modified = qfalse; // Not sure why I'm even doing this tbh. I'm an idiot.
 	mme_dofQuickRandom->modified = qfalse; 
+	mme_dofMask->modified = qfalse;
 }
 
 /* each loop LEFT shotData.take becomes true, but we don't want it when taking RIGHT (stereo) screenshot,
@@ -373,7 +471,7 @@ int R_MME_MultiPassNext( ) {
 
 			std::random_device rd;
 			std::mt19937 g(rd());
-			std::shuffle(&passData.quickJitter[0], &passData.quickJitter[passData.quickJitterTotalCount * 2], g);
+			std::shuffle((uint64_t*)&passData.quickJitter[0], (uint64_t*)&passData.quickJitter[passData.quickJitterTotalCount * 2], g);
 		}
 	}
 
@@ -1157,6 +1255,8 @@ void R_MME_Init(void) {
 	mme_dofRadius = ri.Cvar_Get ( "mme_dofRadius", "2", CVAR_ARCHIVE );
 	mme_dofQuick = ri.Cvar_Get ( "mme_dofQuick", "1", CVAR_ARCHIVE );
 	mme_dofQuickRandom = ri.Cvar_Get ( "mme_dofQuickRandom", "2", CVAR_ARCHIVE );
+	mme_dofMaskInvert = ri.Cvar_Get ( "mme_dofMaskInvert", "0", CVAR_ARCHIVE );
+	mme_dofMask = ri.Cvar_Get ( "mme_dofMask", "gfx/bokeh/circle", CVAR_ARCHIVE );
 
 	mme_cpuSSE2 = ri.Cvar_Get ( "mme_cpuSSE2", "0", CVAR_ARCHIVE );
 	mme_pbo = ri.Cvar_Get ( "mme_pbo", "1", CVAR_ARCHIVE );

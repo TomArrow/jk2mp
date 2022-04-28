@@ -111,6 +111,8 @@ extern cvar_t	*mme_dofFrames;
 extern cvar_t	*mme_dofRadius;
 extern cvar_t	*mme_dofQuick;
 extern cvar_t	*mme_dofQuickRandom;
+extern cvar_t	*mme_dofMask;
+extern cvar_t	* mme_dofMaskInvert;
 
 ID_INLINE byte * R_MME_BlurOverlapBuf( mmeBlurBlock_t *block ) {
 	mmeBlurControl_t* control = block->control;
