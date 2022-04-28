@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <thread>
 #include <mutex>
+#include <random>
 
 
 
@@ -35,7 +36,13 @@ static struct {
 	mmeBlurControl_t control;
 	mmeBlurBlock_t dof;
 	float	jitter[BLURMAX][2];
+
+	// QuickDOF
+	int		quickJitterTotalCount;
+	int		quickJitterIndex;
+	float*	quickJitter;
 } passData;
+
 
 static struct {
 	int pixelCount;
@@ -71,6 +78,8 @@ cvar_t	*mme_blurJitter;
 
 cvar_t	*mme_dofFrames;
 cvar_t	*mme_dofRadius;
+cvar_t	*mme_dofQuick;
+cvar_t	* mme_dofQuickRandom;
 
 cvar_t	*mme_cpuSSE2;
 cvar_t	*mme_pbo;
@@ -155,7 +164,7 @@ void R_MME_FakeAdvanceFrames(int count) {
 }
 
 static void R_MME_CheckCvars( void ) {
-	int pixelCount, blurTotal, passTotal;
+	int pixelCount, blurTotal, passTotal, quickDOF;
 	mmeBlurControl_t* blurControl = &blurData.control;
 	mmeBlurControl_t* passControl = &passData.control;
 
@@ -208,10 +217,59 @@ static void R_MME_CheckCvars( void ) {
 		R_MME_MakeBlurBlock( &passData.dof, pixelCount * 3, passControl );
 		R_MME_JitterTable( passData.jitter[0], passTotal );
 	}
+
+	// Quick DOF
+	// Jitters while the demo keeps moving. Obviously not incredibly accurate but especially with the high rolling shutter
+	// capture FPS, it may not be bad enough to make a real dent.
+	quickDOF = mme_dofQuick->integer;
+	if (quickDOF) { 
+		if (passTotal) { // mme_dofQuick is incompatible with mme_dofFrames
+			passData.quickJitterTotalCount = 0;
+			if (passData.quickJitter) {
+				delete[] passData.quickJitter;
+				passData.quickJitter = NULL;
+			}
+		}
+		else {
+			// Check how many frames it SHOULD be.
+			
+			// Unify this fps calculation code somewhere. UGLY.
+			// Also TODO make this work with normal mme_blurFrames
+			int rollingShutterPixels = mme_rollingShutterPixels->integer;
+			float rollingShutterMultiplier = mme_rollingShutterMultiplier->value;
+			int bufferCountNeededForRollingshutter = (int)(ceil(rollingShutterMultiplier) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
+			int rollingShutterFactor = glConfig.vidHeight / rollingShutterPixels;
+			float captureFPS = shotData.fps * (float)rollingShutterFactor / rollingShutterMultiplier;
+			float blurDuration = mme_rollingShutterBlur->value * (1.0f / shotData.fps);
+			int blurFrames = (int)(blurDuration * captureFPS);
+
+			if (blurFrames != passData.quickJitterTotalCount) {
+				passData.quickJitterTotalCount = blurFrames;
+				if (passData.quickJitter) {
+					delete[] passData.quickJitter;
+					passData.quickJitter = NULL;
+				}
+				passData.quickJitter = new float[blurFrames * 2];
+				passData.quickJitterIndex = 0;
+
+				R_MME_JitterTable(passData.quickJitter, blurFrames);
+				if (mme_dofQuickRandom->integer) {
+
+					std::random_device rd;
+					std::mt19937 g(rd());
+					std::shuffle(&passData.quickJitter[0], &passData.quickJitter[blurFrames * 2], g);
+				}
+			}
+		}
+
+	}
+
 	mme_blurOverlap->modified = qfalse;
 	mme_blurType->modified = qfalse;
 	mme_blurFrames->modified = qfalse;
 	mme_dofFrames->modified = qfalse;
+	mme_dofQuick->modified = qfalse; // Not sure why I'm even doing this tbh. I'm an idiot.
+	mme_dofQuickRandom->modified = qfalse; 
 }
 
 /* each loop LEFT shotData.take becomes true, but we don't want it when taking RIGHT (stereo) screenshot,
@@ -224,6 +282,20 @@ qboolean R_MME_JitterOrigin( float *x, float *y ) {
 	mmeBlurControl_t* passControl = &passData.control;
 	*x = 0;
 	*y = 0;
+
+
+	if (tr.captureIsActive && passData.quickJitter) {
+		int i = passData.quickJitterIndex;
+		float scale;
+		float focus = shotData.dofFocus;
+		float radius = shotData.dofRadius;
+		R_MME_ClampDof(&focus, &radius);
+		scale = radius * R_MME_FocusScale(focus);
+		*x = scale * passData.quickJitter[i * 2];
+		*y = -scale * passData.quickJitter[i * 2 + 1];
+		return qtrue;
+	}
+
 	if ( !shotData.take || tr.finishStereo ) {
 		shotData.take = qfalse;
 		return qfalse;
@@ -238,13 +310,27 @@ qboolean R_MME_JitterOrigin( float *x, float *y ) {
 		*x = scale * passData.jitter[i][0];
 		*y = -scale * passData.jitter[i][1];
 		return qtrue;
-	} 
+	}
 	return qfalse;
 }
 
 void R_MME_JitterView( float *pixels, float *eyes ) {
 	mmeBlurControl_t* blurControl = &blurData.control;
 	mmeBlurControl_t* passControl = &passData.control;
+
+
+	if (tr.captureIsActive &&  passData.quickJitter) {
+		int i = passData.quickJitterIndex;
+		float scale;
+		float focus = shotData.dofFocus;
+		float radius = shotData.dofRadius;
+		R_MME_ClampDof(&focus, &radius);
+		scale = r_znear->value / focus;
+		scale *= radius * R_MME_FocusScale(focus);;
+		eyes[0] = scale * passData.quickJitter[i * 2];
+		eyes[1] = scale * passData.quickJitter[i * 2 + 1];
+	}
+
 	if ( !shotData.take || tr.finishStereo ) {
 		shotData.take = qfalse;
 		return;
@@ -277,6 +363,21 @@ int R_MME_MultiPassNext( ) {
 		shotData.take = qfalse;
 		return 0;
 	}
+	
+	// QuickJitter
+	if (++(passData.quickJitterIndex) >= passData.quickJitterTotalCount) { 
+		// We don't really care about alignment with capture times or anything. It jitters through the wole jitterarray
+		// in the correct amount of frames, that's good enough because I think the jitter table is randomized anyway.
+		passData.quickJitterIndex = 0;
+		if (mme_dofQuickRandom->integer > 1) {
+
+			std::random_device rd;
+			std::mt19937 g(rd());
+			std::shuffle(&passData.quickJitter[0], &passData.quickJitter[passData.quickJitterTotalCount * 2], g);
+		}
+	}
+
+
 	if ( !control->totalFrames )
 		return 0;
 
@@ -1054,6 +1155,8 @@ void R_MME_Init(void) {
 
 	mme_dofFrames = ri.Cvar_Get ( "mme_dofFrames", "0", CVAR_ARCHIVE );
 	mme_dofRadius = ri.Cvar_Get ( "mme_dofRadius", "2", CVAR_ARCHIVE );
+	mme_dofQuick = ri.Cvar_Get ( "mme_dofQuick", "1", CVAR_ARCHIVE );
+	mme_dofQuickRandom = ri.Cvar_Get ( "mme_dofQuickRandom", "2", CVAR_ARCHIVE );
 
 	mme_cpuSSE2 = ri.Cvar_Get ( "mme_cpuSSE2", "0", CVAR_ARCHIVE );
 	mme_pbo = ri.Cvar_Get ( "mme_pbo", "1", CVAR_ARCHIVE );

@@ -488,14 +488,22 @@ static void RE_jitterate2(float *jit1, float *jit2, int num, float _rad2) {
 }
 
 void R_MME_JitterTable(float *jitarr, int num) {
-	float jit2[12 + 256*2];
+
+	float jit2tmp[12 + 256*2];
+	float* jit2;
 	float x, _rad1, _rad2, _rad3;
 	int i;
+	bool mustDelete = false;
 
 	if(num==0)
 		return;
-	if(num>256)
-		return;
+	if (num > 256) {
+		jit2 = new float[12 + num * 2];
+		mustDelete = true;
+	}
+	else {
+		jit2 = jit2tmp;
+	}
 
 	_rad1=  1.0/sqrt((float)num);
 	_rad2= 1.0/((float)num);
@@ -520,7 +528,10 @@ void R_MME_JitterTable(float *jitarr, int num) {
 		jitarr[i] -= 0.5;
 		jitarr[i+1] -= 0.5;
 	}
-	
+
+	if (mustDelete) {
+		delete[] jit2;
+	}
 }
 
 #define FOCUS_CENTRE 128.0f //if focus is 128 or less than it starts blurring far obejcts very slowly

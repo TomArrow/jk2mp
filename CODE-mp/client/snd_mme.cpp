@@ -19,8 +19,8 @@
 #define MME_LOOPCHANNELS 128
 
 extern	cvar_t	*mme_saveWav;
-extern	cvar_t	*mme_rollingShutterPixels;
-extern	cvar_t	*mme_rollingShutterMultiplier;
+extern	cvar_t* mme_rollingShutterPixels;
+extern	cvar_t* mme_rollingShutterMultiplier;
 extern glconfig_t	glConfig;
 extern	std::vector<int> pboRollingShutterProgresses;
 
