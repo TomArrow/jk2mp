@@ -632,7 +632,7 @@ Doesn't print the pacifier message if there is a second arg
 
 static qboolean R_ScreenShotName( const char *start, const char *ext, char *fileName) {
 	int i;
-	for (i=0;i<1000;i++) {
+	for (i=0;i<10000;i++) {
 		Com_sprintf( fileName, MAX_OSPATH, "screenshots/%s.%04d.%s", 
 			start, i, ext );
 		if (!ri.FS_FileExists( fileName))
