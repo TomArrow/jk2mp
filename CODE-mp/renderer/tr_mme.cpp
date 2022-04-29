@@ -31,6 +31,20 @@ static struct {
 
 shotData_t shotData;
 
+
+typedef struct {
+	float position[2];
+	float probability;
+} potentialDofJitterPosition_t;
+
+typedef struct {
+	potentialDofJitterPosition_t* superRandomPotentialJitterPositions; // If mme_dofQuickRandom == 3. Probabilistic jitter position determination on each frame.
+	int		superRandomPotentialJitterPositionsCount;
+	float	pixelSize; // For randomizing on the fly
+	float	sign;
+	float   currentPosition[2]; // Calculated on each frame if superrandom is used.
+} superRandomDofJitterControl_t;
+
 //Data to contain the blurring factors
 static struct {
 	mmeBlurControl_t control;
@@ -41,6 +55,8 @@ static struct {
 	int		quickJitterTotalCount;
 	int		quickJitterIndex;
 	float*	quickJitter;
+
+	superRandomDofJitterControl_t superRandomDofJitterControl;
 } passData;
 
 
@@ -165,11 +181,25 @@ void R_MME_FakeAdvanceFrames(int count) {
 	}
 }
 
-static qboolean R_MME_LoadDOFMask(float* jitterTable, int countNeeded, char* maskPath) {
+
+static qboolean R_MME_LoadDOFMask(float* jitterTable, int countNeeded, char* maskPath, superRandomDofJitterControl_t* superRandomDofJitterControl) {
 	int dofMaskWidth, dofMaskHeight;
 	textureImage_t picWrap;
 	R_LoadImage(maskPath, &picWrap, &dofMaskWidth, &dofMaskHeight);
 	if (picWrap.ptr != NULL) {
+
+		if (superRandomDofJitterControl) {
+			if (superRandomDofJitterControl->superRandomPotentialJitterPositions) {
+				delete[] superRandomDofJitterControl->superRandomPotentialJitterPositions;
+				superRandomDofJitterControl->superRandomPotentialJitterPositions = NULL;
+				superRandomDofJitterControl->superRandomPotentialJitterPositionsCount = 0;
+			}
+			Com_Memset(superRandomDofJitterControl,0,sizeof(superRandomDofJitterControl_t));
+			superRandomDofJitterControl->superRandomPotentialJitterPositions = new potentialDofJitterPosition_t[dofMaskWidth * dofMaskHeight];
+			superRandomDofJitterControl->superRandomPotentialJitterPositionsCount = dofMaskWidth * dofMaskHeight;
+			Com_Memset(superRandomDofJitterControl->superRandomPotentialJitterPositions, 0, sizeof(potentialDofJitterPosition_t) * dofMaskHeight * dofMaskWidth);
+		}
+
 		int pixelCount = dofMaskWidth * dofMaskHeight;
 		float* dofMaskFloat = new float[(dofMaskWidth+1) * dofMaskHeight+1];// The two +1 additions are bc of the Floyd Steinberg Dithering, it needs some extra.
 
@@ -193,6 +223,9 @@ static qboolean R_MME_LoadDOFMask(float* jitterTable, int countNeeded, char* mas
 			totalValue += (double)dofMaskFloat[i];
 		}
 
+
+		
+
 		// Make it so that the added up value of each pixel together equals the needed count of entries in jitter table.
 		// Basically, this dofMaskFloat will be a map saying how many samples should be taken at each point of the image.
 		double multiplier = countNeeded/totalValue; 
@@ -208,6 +241,22 @@ static qboolean R_MME_LoadDOFMask(float* jitterTable, int countNeeded, char* mas
 		int longerSide = max(dofMaskWidth, dofMaskHeight);
 		float pixelSideSize = 1.0f / (float)longerSide;
 		float sign = mme_dofMaskInvert->integer ? -1.0f : 1.0f;
+		if (superRandomDofJitterControl) {
+			superRandomDofJitterControl->pixelSize = pixelSideSize;
+			superRandomDofJitterControl->sign = sign;
+		}
+
+		if (superRandomDofJitterControl) {
+			for (int y = 0; y < dofMaskHeight; y++) {
+				for (int x = 0; x < dofMaskWidth; x++) {
+					float oldPixel = dofMaskFloat[y * dofMaskWidth + x];
+					superRandomDofJitterControl->superRandomPotentialJitterPositions[y * dofMaskWidth + x].position[0] = (float)x / (float)longerSide - 0.5f;
+					superRandomDofJitterControl->superRandomPotentialJitterPositions[y * dofMaskWidth + x].position[1] = (float)y / (float)longerSide - 0.5f;
+					superRandomDofJitterControl->superRandomPotentialJitterPositions[y * dofMaskWidth + x].probability = oldPixel;
+				}
+			}
+		}
+		
 		for (int y = 0; y < dofMaskHeight; y++) {
 			for (int x = 0; x < dofMaskWidth; x++) {
 				float oldPixel = dofMaskFloat[y * dofMaskWidth + x];
@@ -333,7 +382,7 @@ static void R_MME_CheckCvars( void ) {
 			float blurDuration = mme_rollingShutterBlur->value * (1.0f / shotData.fps);
 			int blurFrames = (int)(blurDuration * captureFPS);
 
-			if (blurFrames != passData.quickJitterTotalCount || mme_dofMask->modified || mme_dofQuickRandom->modified) {
+			if (blurFrames != passData.quickJitterTotalCount || mme_dofMask->modified || mme_dofQuickRandom->modified || mme_dofMaskInvert->modified) {
 				passData.quickJitterTotalCount = blurFrames;
 				if (passData.quickJitter) {
 					delete[] passData.quickJitter;
@@ -345,7 +394,19 @@ static void R_MME_CheckCvars( void ) {
 				bool dofMaskLoaded = false;
 				if (strlen(mme_dofMask->string)) {
 
-					dofMaskLoaded = R_MME_LoadDOFMask(passData.quickJitter, blurFrames,mme_dofMask->string);
+					superRandomDofJitterControl_t* srJControl = &passData.superRandomDofJitterControl;
+					if(mme_dofQuickRandom->integer == 3){ // TODO expand to normal jitter? but why even bother...
+						dofMaskLoaded = R_MME_LoadDOFMask(passData.quickJitter, blurFrames, mme_dofMask->string, srJControl);
+					}
+					else {
+						if (srJControl->superRandomPotentialJitterPositions) {
+							delete[] srJControl->superRandomPotentialJitterPositions;
+							srJControl->superRandomPotentialJitterPositions = NULL;
+						}
+						srJControl->superRandomPotentialJitterPositionsCount = 0;
+						dofMaskLoaded = R_MME_LoadDOFMask(passData.quickJitter, blurFrames, mme_dofMask->string, NULL);
+					}
+					
 				}
 				if (!dofMaskLoaded) {
 					R_MME_JitterTable(passData.quickJitter, blurFrames);
@@ -368,6 +429,7 @@ static void R_MME_CheckCvars( void ) {
 	mme_dofQuick->modified = qfalse; // Not sure why I'm even doing this tbh. I'm an idiot.
 	mme_dofQuickRandom->modified = qfalse; 
 	mme_dofMask->modified = qfalse;
+	mme_dofMaskInvert->modified = qfalse;
 }
 
 /* each loop LEFT shotData.take becomes true, but we don't want it when taking RIGHT (stereo) screenshot,
@@ -389,8 +451,17 @@ qboolean R_MME_JitterOrigin( float *x, float *y ) {
 		float radius = shotData.dofRadius;
 		R_MME_ClampDof(&focus, &radius);
 		scale = radius * R_MME_FocusScale(focus);
-		*x = scale * passData.quickJitter[i * 2];
-		*y = -scale * passData.quickJitter[i * 2 + 1];
+		if (passData.superRandomDofJitterControl.superRandomPotentialJitterPositions) {
+			superRandomDofJitterControl_t* srJControl = &passData.superRandomDofJitterControl;
+
+			*x = scale * srJControl->currentPosition[0];
+			*y = -scale * srJControl->currentPosition[1];
+		}
+		else {
+
+			*x = scale * passData.quickJitter[i * 2];
+			*y = -scale * passData.quickJitter[i * 2 + 1];
+		}
 		return qtrue;
 	}
 
@@ -424,9 +495,17 @@ void R_MME_JitterView( float *pixels, float *eyes ) {
 		float radius = shotData.dofRadius;
 		R_MME_ClampDof(&focus, &radius);
 		scale = r_znear->value / focus;
-		scale *= radius * R_MME_FocusScale(focus);;
-		eyes[0] = scale * passData.quickJitter[i * 2];
-		eyes[1] = scale * passData.quickJitter[i * 2 + 1];
+		scale *= radius * R_MME_FocusScale(focus);
+		if (passData.superRandomDofJitterControl.superRandomPotentialJitterPositions) {
+			superRandomDofJitterControl_t* srJControl = &passData.superRandomDofJitterControl;
+
+			eyes[0] = scale * srJControl->currentPosition[0];
+			eyes[1] = scale * srJControl->currentPosition[1];
+		}
+		else {
+			eyes[0] = scale * passData.quickJitter[i * 2];
+			eyes[1] = scale * passData.quickJitter[i * 2 + 1];
+		}
 	}
 
 	if ( !shotData.take || tr.finishStereo ) {
@@ -463,7 +542,31 @@ int R_MME_MultiPassNext( ) {
 	}
 	
 	// QuickJitter
-	if (++(passData.quickJitterIndex) >= passData.quickJitterTotalCount) { 
+	if (passData.superRandomDofJitterControl.superRandomPotentialJitterPositions) {
+
+		// This is when mme_dofQuickRandom == 3. Bokeh is basically a probability image. We basically multiply probability with rand() and pick the highest one on each frame.
+		// Should essentially result in a constantly changing noise in the shape of the bokeh.
+		superRandomDofJitterControl_t* srJControl = &passData.superRandomDofJitterControl;
+		float highestProbability = -std::numeric_limits<float>::infinity();
+		potentialDofJitterPosition_t* highestProbabilityPos = NULL;
+
+		for (int i = 0; i < srJControl->superRandomPotentialJitterPositionsCount; i++) {
+			float randomizedProbabilityHere = rand()*srJControl->superRandomPotentialJitterPositions[i].probability;
+			if(randomizedProbabilityHere>=highestProbability){
+				highestProbability = randomizedProbabilityHere;
+				highestProbabilityPos = &srJControl->superRandomPotentialJitterPositions[i];
+			}
+		}
+
+		if (highestProbabilityPos) { // No reason why that should not be the case, but let's go safe.
+
+			float xRand = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) - 0.5f;
+			float yRand = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) - 0.5f;
+			srJControl->currentPosition[0] = srJControl->sign * (highestProbabilityPos->position[0] + xRand * srJControl->pixelSize);
+			srJControl->currentPosition[1] = srJControl->sign * (highestProbabilityPos->position[1] + yRand * srJControl->pixelSize);
+		}
+	}
+	else if (++(passData.quickJitterIndex) >= passData.quickJitterTotalCount) { 
 		// We don't really care about alignment with capture times or anything. It jitters through the wole jitterarray
 		// in the correct amount of frames, that's good enough because I think the jitter table is randomized anyway.
 		passData.quickJitterIndex = 0;
@@ -1254,7 +1357,7 @@ void R_MME_Init(void) {
 	mme_dofFrames = ri.Cvar_Get ( "mme_dofFrames", "0", CVAR_ARCHIVE );
 	mme_dofRadius = ri.Cvar_Get ( "mme_dofRadius", "2", CVAR_ARCHIVE );
 	mme_dofQuick = ri.Cvar_Get ( "mme_dofQuick", "1", CVAR_ARCHIVE );
-	mme_dofQuickRandom = ri.Cvar_Get ( "mme_dofQuickRandom", "2", CVAR_ARCHIVE );
+	mme_dofQuickRandom = ri.Cvar_Get ( "mme_dofQuickRandom", "3", CVAR_ARCHIVE );
 	mme_dofMaskInvert = ri.Cvar_Get ( "mme_dofMaskInvert", "0", CVAR_ARCHIVE );
 	mme_dofMask = ri.Cvar_Get ( "mme_dofMask", "gfx/bokeh/circle", CVAR_ARCHIVE );
 
