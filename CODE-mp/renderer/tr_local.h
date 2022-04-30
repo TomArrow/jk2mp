@@ -2032,6 +2032,7 @@ void R_DoneFreeType( void );
 void R_MME_RegisterFont(const char *fontName, int pointSize, mmeFontInfo_t *font);
 
 void R_MME_FakeAdvanceFrames(int count);
+mmeRollingShutterInfo_t* R_MME_GetRollingShutterInfo();
 void R_MME_Init(void);
 void R_MME_InitStereo(void);
 void R_MME_Shutdown(void);

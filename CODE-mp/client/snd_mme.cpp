@@ -512,10 +512,13 @@ void S_MMEUpdate(float scale) {
 	//}
 }
 
+extern int rollingShutterSuperSampleMultiplier;
+
 void S_MMERecord( const char *baseName, float deltaTime ) {
 
-	int rollingShutterFactor = glConfig.vidHeight/ mme_rollingShutterPixels->integer;
-	deltaTime = deltaTime / (float)rollingShutterFactor * mme_rollingShutterMultiplier->value;
+	mmeRollingShutterInfo_t* rsInfo = R_MME_GetRollingShutterInfo();
+	//int rollingShutterFactor = glConfig.vidHeight* rollingShutterSuperSampleMultiplier / mme_rollingShutterPixels->integer;
+	deltaTime = deltaTime / rsInfo->captureFpsMultiplier;
 	//for (int i = 0; i < pboRollingShutterProgresses.size(); i++) {
 	//	if (pboRollingShutterProgresses[i] == 0) { // This is the first rolling shutter line/block of lines captured
 			

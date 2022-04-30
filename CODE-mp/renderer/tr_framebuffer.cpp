@@ -67,6 +67,7 @@ cvar_t *r_fbo;
 cvar_t *r_fboExposure;
 cvar_t *r_fboCompensateSkyTint;
 cvar_t *r_fboSuperSample;
+cvar_t *r_fboRollingShutterSuperSample;
 cvar_t *r_fboSuperSampleMipMap;
 cvar_t *r_fboDepthBits;
 cvar_t *r_fboDepthPacked;
@@ -83,6 +84,9 @@ qboolean mipMapsAlreadyGeneratedThisFrame = qfalse;
 // Maybe also needs stepwise downscaling for values over 2? because GL_LINEAR takes only closest 4 pixels into account?
 // Or figure how that mipmap stuff works?
 int superSampleMultiplier =1; // outside of this file, only READ this. 
+int rollingShutterSuperSampleMultiplier =1; // TODO Make it possible to supersample only vertically to get a lot of rolling shutter at lower cost.
+
+
 
 
 #define GL_DEPTH_STENCIL_EXT					0x84F9
@@ -197,7 +201,7 @@ void R_FrameBuffer_GenerateMainMipMaps() {
 #endif
 }
 
-void R_DrawQuadPartial(GLuint tex, int width, int height,int offsetX, int offsetY) {
+void R_DrawQuadPartial(GLuint tex, int width, int height_arg,int offsetX, int offsetY_arg, int Ydivider) {
 #ifdef HAVE_GLES
 	//TODO
 #else
@@ -208,12 +212,24 @@ void R_DrawQuadPartial(GLuint tex, int width, int height,int offsetX, int offset
 		glState.currenttextures[0] = tex;
 	};
 
-	float singlePixelTexWidth = 1.0f / (float)glConfig.vidWidth;
+	/*float singlePixelTexWidth = 1.0f / (float)glConfig.vidWidth;
 	float singlePixelTexHeight = 1.0f / (float)glConfig.vidHeight;
 	int x2 = offsetX + width; // use instead of width
 	int y2 = offsetY + height; // use instead of height
 	int offsetYInverted = glConfig.vidHeight - 1 - offsetY;
-	int y2Inverted = glConfig.vidHeight - 1 - y2;
+	int y2Inverted = glConfig.vidHeight - 1 - y2;*/
+	
+	// Changed everything to float to support Ydivider for rollingshutter supersample
+	float offsetY = (float)offsetY_arg/ (float)Ydivider;
+	float height = (float)height_arg/ (float)Ydivider; // TODO Not sure if this will work properly as we will essentially draw lines that are half a pixel thick. Maybe this will not work or affect brightness, in which case we need to compensate that somehow.
+	float singlePixelTexWidth = 1.0f / (float)glConfig.vidWidth;
+	float singlePixelTexHeight = 1.0f / (float)glConfig.vidHeight;
+	float x2 = offsetX + width; // use instead of width
+	float y2 = offsetY + height; // use instead of height
+	float offsetYInverted = (float)glConfig.vidHeight - 1.0f - offsetY;
+	float y2Inverted = (float)glConfig.vidHeight - 1.0f - y2;
+
+
 
 	// NOTE: Might also need some switching around of offsetX and X and width but I don't have a use case to test it
 	// so I'm leaving it in this possibly broken state bc its good enough for rolling shutter
@@ -538,7 +554,8 @@ void R_FrameBuffer_Init( void ) {
 	r_fboExposure = ri.Cvar_Get("r_fboExposure", "1.0", CVAR_ARCHIVE);
 	r_fboCompensateSkyTint = ri.Cvar_Get("r_fboCompensateSkyTint", "0", CVAR_ARCHIVE);
 	r_fboSuperSample = ri.Cvar_Get( "r_fboSuperSample", "0", CVAR_ARCHIVE | CVAR_LATCH);	
-	r_fboSuperSampleMipMap = ri.Cvar_Get( "r_fboSuperSampleMipMap", "1", CVAR_ARCHIVE | CVAR_LATCH);	
+	r_fboSuperSampleMipMap = ri.Cvar_Get( "r_fboSuperSampleMipMap", "1", CVAR_ARCHIVE | CVAR_LATCH);
+	r_fboRollingShutterSuperSample = ri.Cvar_Get("r_fboRollingShutterSuperSample", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboBlur = ri.Cvar_Get( "r_fboBlur", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_fboWidth = ri.Cvar_Get( "r_fboWidth", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_fboHeight = ri.Cvar_Get( "r_fboHeight", "0", CVAR_ARCHIVE | CVAR_LATCH);	
@@ -548,6 +565,7 @@ void R_FrameBuffer_Init( void ) {
 	r_convertToHDR = ri.Cvar_Get( "r_convertToHDR", "1", CVAR_ARCHIVE | CVAR_LATCH);
 
 	superSampleMultiplier = pow(2, r_fboSuperSample->integer);
+	rollingShutterSuperSampleMultiplier = pow(2, min(r_fboRollingShutterSuperSample->integer, r_fboSuperSample->integer)); // Can't go any higher than normal supersample.
 
 	// make sure all the commands added here are also		
 
@@ -662,14 +680,18 @@ void R_FrameBuffer_Init( void ) {
 
 
 void R_FrameBuffer_CreateRollingShutterBuffers(int width, int height, int flags) {
-	int bufferCountNeededForRollingshutter = (int)(ceil(mme_rollingShutterMultiplier->value) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
-	rollingShutterBufferCount = bufferCountNeededForRollingshutter;
 
-	int rollingShutterFactor = glConfig.vidHeight / mme_rollingShutterPixels->integer; // For example: 1080/1 = 1080
+	mmeRollingShutterInfo_t* rsInfo = R_MME_GetRollingShutterInfo();
+
+	//int bufferCountNeededForRollingshutter = (int)(ceil(mme_rollingShutterMultiplier->value) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
+	//rollingShutterBufferCount = bufferCountNeededForRollingshutter;
+	rollingShutterBufferCount = rsInfo->bufferCountNeededForRollingshutter;
+
+	//int rollingShutterFactor = glConfig.vidHeight*rollingShutterSuperSampleMultiplier / mme_rollingShutterPixels->integer; // For example: 1080/1 = 1080
 
 	// For example: (1080/9.8*10)-1080 = 22.040816326530612244897959183673
 	// Or: (360/9.8*10)-360 = 7.3469387755102040816326530612245
-	float progressOvershootFloat = ((float)rollingShutterFactor / mme_rollingShutterMultiplier->value * (float)bufferCountNeededForRollingshutter) - (float)rollingShutterFactor;
+	float progressOvershootFloat = ((float)rsInfo->rollingShutterFactor / rsInfo->rollingShutterMultiplier * (float)rsInfo->bufferCountNeededForRollingshutter) - (float)rsInfo->rollingShutterFactor;
 	progressOvershoot = (int)progressOvershootFloat;
 	// For example: 0.040816326530612244897959183673
 	drift = progressOvershootFloat - (float)progressOvershoot;
@@ -687,7 +709,7 @@ void R_FrameBuffer_CreateRollingShutterBuffers(int width, int height, int flags)
 		fbo.rollingShutterBuffers[i].next = R_FrameBufferCreate(width, height, flags);
 
 		// For example: -1 * (1080 / 10) = -108
-		pboRollingShutterProgresses[i] = (int)(-(float)i * ((float)rollingShutterFactor / (float)bufferCountNeededForRollingshutter));
+		pboRollingShutterProgresses[i] = (int)(-(float)i * ((float)rsInfo->rollingShutterFactor / (float)rsInfo->bufferCountNeededForRollingshutter));
 		pboRollingShutterDrifts[i] = 0.0f;
 	}
 
@@ -888,7 +910,7 @@ qboolean R_FrameBuffer_RollingShutterCapture(int bufferIndex, int offset, int he
 		GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHTEST_DISABLE);
 	}
 	R_SetGL2DSize(glConfig.vidWidth, glConfig.vidHeight);
-	R_DrawQuadPartial(fbo.main->color, glConfig.vidWidth, height, 0,offset);
+	R_DrawQuadPartial(fbo.main->color, glConfig.vidWidth, height, 0,offset,rollingShutterSuperSampleMultiplier);
 	//Reset fbo
 	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.main->fbo);
 	qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);

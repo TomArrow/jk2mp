@@ -30,8 +30,9 @@ void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterPro
 			ri.Printf(PRINT_WARNING, "WARNING: OpenGL error during capture (before): %d \n", (int)err);
 		}*/
 
-		int byteOffset = rollingShutterProgress * 3 * glConfig.vidWidth * rollingShutterPixels*multiplier;
-		GLvoid* byteOffsetAsPointerHack = (GLvoid*)byteOffset; // holy shit this is ugly.
+		// If you ever comment this in again for whatever reason, keep r_fboRollingShutterSupersample in mind.
+		//int byteOffset = rollingShutterProgress * 3 * glConfig.vidWidth * rollingShutterPixels*multiplier;
+		//GLvoid* byteOffsetAsPointerHack = (GLvoid*)byteOffset; // holy shit this is ugly.
 		
 		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[0]);
 		

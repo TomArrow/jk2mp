@@ -118,6 +118,7 @@ typedef struct {
 	void	(*FontRatioFix)( float ratio );
 	void	(*DemoRandomSeed)( int time, float timeFraction );
 	void	(*MMEFakeAdvanceFrames)( int count );
+	mmeRollingShutterInfo_t* (*MMEGetRollingShutterInfo)( );
 	void	(*ParseWaveformAlone)(char** text, waveForm_t* output);
 	float	(*EvalWaveForm)(const waveForm_t* wf);
 } refexport_t;

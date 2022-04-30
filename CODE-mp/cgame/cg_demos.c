@@ -25,6 +25,7 @@ extern void trap_MME_BlurInfo( int* total, int * index );
 extern void trap_MME_Capture( const char *baseName, float fps, float focus, float radius);
 extern int trap_MME_SeekTime( int seekTime );
 extern int trap_MME_FakeAdvanceFrame(int count);
+extern mmeRollingShutterInfo_t* trap_MME_GetRollingShutterInfo();
 extern void trap_MME_Music( const char *musicName, float time, float length );
 extern void trap_MME_Time( int time );
 extern void trap_MME_TimeFraction( float timeFraction );
@@ -422,10 +423,12 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	qboolean hadSkip;
 	qboolean captureFrame;
 	//int rollingShutterFactor = 108;
-	int mme_rollingShutterPixels = CG_Cvar_GetInt("mme_rollingShutterPixels");
-	float mme_rollingShutterMultiplier = CG_Cvar_Get("mme_rollingShutterMultiplier");
-	int bufferCountNeededForRollingshutter = (int)(ceil(mme_rollingShutterMultiplier) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
-	int rollingShutterFactor = cgs.glconfig.vidHeight/ mme_rollingShutterPixels;
+	//int mme_rollingShutterPixels = CG_Cvar_GetInt("mme_rollingShutterPixels");
+	//float mme_rollingShutterMultiplier = CG_Cvar_Get("mme_rollingShutterMultiplier");
+	//int bufferCountNeededForRollingshutter = (int)(ceil(mme_rollingShutterMultiplier) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
+	//int rollingShutterFactor = cgs.glconfig.vidHeight/ mme_rollingShutterPixels;
+	mmeRollingShutterInfo_t* rsInfo = trap_MME_GetRollingShutterInfo();
+
 	float captureFPS;
 	float frameSpeed;
 	int blurTotal, blurIndex;
@@ -465,7 +468,8 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	captureFrame = (qboolean) (demo.capture.active && !demo.play.paused);
 	if ( captureFrame ) {
 		trap_MME_BlurInfo( &blurTotal, &blurIndex );
-		captureFPS = mov_captureFPS.value*(float)rollingShutterFactor/ mme_rollingShutterMultiplier;
+		captureFPS = mov_captureFPS.value*rsInfo->captureFpsMultiplier;
+		//captureFPS = mov_captureFPS.value*(float)rollingShutterFactor/ mme_rollingShutterMultiplier;
 		//captureFPS = mov_captureFPS.value*(float)rollingShutterFactor/ (float)bufferCountNeededForRollingshutter; // Wrong. Must get frames at correct speed for rolling shutter.
 		if ( blurTotal > 0) {
 			captureFPS *= blurTotal;
@@ -839,11 +843,11 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	}
 
 	Cam_Draw2d(); //2D
-		
+
 	if (captureFrame) {
 		char fileName[MAX_OSPATH];
 		Com_sprintf( fileName, sizeof( fileName ), "capture/%s/%s", mme_demoFileName.string, mov_captureName.string );
-		trap_MME_Capture( fileName, captureFPS/(float)rollingShutterFactor* mme_rollingShutterMultiplier, demo.viewFocus, demo.viewRadius);
+		trap_MME_Capture( fileName, captureFPS/rsInfo->captureFpsMultiplier, demo.viewFocus, demo.viewRadius);
 	} else {
 		if (demo.editType && !cg.playerCent)
 			demoDrawCrosshair();
@@ -1030,11 +1034,13 @@ static void demoSeekSyncCommand_f(void) {
 		float fps = (fpsString && isdigit(fpsString[0])) ? atof(fpsString) : mov_captureFPS.value;
 
 		// Simulate normal adding during capture.
-		int mme_rollingShutterPixels = CG_Cvar_GetInt("mme_rollingShutterPixels");
-		float mme_rollingShutterMultiplier = CG_Cvar_Get("mme_rollingShutterMultiplier");
-		int bufferCountNeededForRollingshutter = (int)(ceil(mme_rollingShutterMultiplier) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
-		int rollingShutterFactor = cgs.glconfig.vidHeight / mme_rollingShutterPixels;
-		float captureFPS = fps * (float)rollingShutterFactor / mme_rollingShutterMultiplier;
+		//int mme_rollingShutterPixels = CG_Cvar_GetInt("mme_rollingShutterPixels");
+		//float mme_rollingShutterMultiplier = CG_Cvar_Get("mme_rollingShutterMultiplier");
+		//int bufferCountNeededForRollingshutter = (int)(ceil(mme_rollingShutterMultiplier) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
+		//int rollingShutterFactor = cgs.glconfig.vidHeight / mme_rollingShutterPixels;
+		//float captureFPS = fps * (float)rollingShutterFactor / mme_rollingShutterMultiplier;
+		mmeRollingShutterInfo_t* rsInfo = trap_MME_GetRollingShutterInfo();
+		float captureFPS = fps * rsInfo->captureFpsMultiplier;
 
 		int frameAdvanceCount = 0;
 		while (((float)demo.play.time + demo.play.fraction) < desiredTime) {

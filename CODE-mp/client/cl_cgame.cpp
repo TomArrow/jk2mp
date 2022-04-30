@@ -1225,6 +1225,13 @@ Ghoul2 Insert End
 	case CG_MME_FAKEADVANCEFRAMES:
 		re.MMEFakeAdvanceFrames(args[1]);
 		return 0;
+	case CG_MME_GETROLLINGSHUTTERINFO:
+		{
+			mmeRollingShutterInfo_t* target = (mmeRollingShutterInfo_t*)VMA(1);
+			mmeRollingShutterInfo_t* src = re.MMEGetRollingShutterInfo();
+			Com_Memcpy(target, src, sizeof(mmeRollingShutterInfo_t)); 
+		}
+		return 0;
 	case CG_R_PARSEWAVEFORM:
 		text = (char*)VMA(1);
 		re.ParseWaveformAlone((char**)&text,(waveForm_t*)VMA(2));

@@ -2138,6 +2138,19 @@ typedef enum {
 	CA_CINEMATIC		// playing a cinematic or a static pic, not connected to a server
 } connstate_t;
 
+
+// rolling shutter stuff
+typedef struct {
+	int rollingShutterFactor;
+	int	rollingShutterSuperSampleMultiplier;
+	int rollingShutterPixels;
+	float rollingShutterMultiplier;
+	int bufferCountNeededForRollingshutter;
+	float captureFpsMultiplier;
+} mmeRollingShutterInfo_t;
+
+
+
 // font support 
 
 #define GLYPH_START 0

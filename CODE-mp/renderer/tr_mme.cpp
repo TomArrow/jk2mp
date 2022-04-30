@@ -14,6 +14,7 @@ byte* shotBufPerm;
 std::thread* saveShotThread;
 std::mutex saveShotThreadMutex;
 
+extern int rollingShutterSuperSampleMultiplier;
 
 
 static char *workAlloc = 0;
@@ -158,9 +159,11 @@ static void R_MME_MakeBlurBlock( mmeBlurBlock_t *block, int size, mmeBlurControl
 // as many times as needed. Lame, but should work.
 void R_MME_FakeAdvanceFrames(int count) {
 
+	mmeRollingShutterInfo_t* rsInfo = R_MME_GetRollingShutterInfo();
+
 	for (int c = 0; c < count; c++) {
 
-		int rollingShutterFactor = glConfig.vidHeight / mme_rollingShutterPixels->integer;
+		//int rollingShutterFactor = glConfig.vidHeight*rollingShutterSuperSampleMultiplier / mme_rollingShutterPixels->integer;
 
 		for (int i = 0; i < rollingShutterBufferCount; i++) {
 
@@ -168,7 +171,7 @@ void R_MME_FakeAdvanceFrames(int count) {
 			float& hereDrift = pboRollingShutterDrifts[i];
 
 			rollingShutterProgress++;
-			if (rollingShutterProgress == rollingShutterFactor) {
+			if (rollingShutterProgress == rsInfo->rollingShutterFactor) {
 				//R_FrameBuffer_RollingShutterFlipDoubleBuffer(i);
 				//rollingShutterProgress = 0;
 				rollingShutterProgress = -progressOvershoot; // Since the rolling shutter multiplier can be a non-integer, sometimes we have to pause rendering frames for a little. Imagine if the rolling shutter is half the shutter speed. Then half the time we're not actually recording anything.
@@ -181,6 +184,20 @@ void R_MME_FakeAdvanceFrames(int count) {
 
 		}
 	}
+}
+
+mmeRollingShutterInfo_t* R_MME_GetRollingShutterInfo() {
+
+	static mmeRollingShutterInfo_t rsInfo;
+
+	rsInfo.rollingShutterPixels = mme_rollingShutterPixels->integer;
+	rsInfo.rollingShutterMultiplier = mme_rollingShutterMultiplier->value;
+	rsInfo.bufferCountNeededForRollingshutter = (int)(ceil(rsInfo.rollingShutterMultiplier) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
+	rsInfo.rollingShutterFactor = glConfig.vidHeight*rollingShutterSuperSampleMultiplier/ rsInfo.rollingShutterPixels;
+	rsInfo.captureFpsMultiplier = (float)rsInfo.rollingShutterFactor / rsInfo.rollingShutterMultiplier;
+	rsInfo.rollingShutterSuperSampleMultiplier = rollingShutterSuperSampleMultiplier;
+
+	return &rsInfo;
 }
 
 // TODO Do a softer superrandom that randoms, but doesnt random every single pixel but rather just changes a settable percentage of the samples on each frame.
@@ -425,15 +442,17 @@ static void R_MME_CheckCvars( void ) {
 			}
 		}
 		else {
+			mmeRollingShutterInfo_t* rsInfo = R_MME_GetRollingShutterInfo();
+
 			// Check how many frames it SHOULD be.
 			
 			// Unify this fps calculation code somewhere. UGLY.
 			// Also TODO make this work with normal mme_blurFrames
-			int rollingShutterPixels = mme_rollingShutterPixels->integer;
-			float rollingShutterMultiplier = mme_rollingShutterMultiplier->value;
-			int bufferCountNeededForRollingshutter = (int)(ceil(rollingShutterMultiplier) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
-			int rollingShutterFactor = glConfig.vidHeight / rollingShutterPixels;
-			float captureFPS = shotData.fps * (float)rollingShutterFactor / rollingShutterMultiplier;
+			//int rollingShutterPixels = mme_rollingShutterPixels->integer;
+			//float rollingShutterMultiplier = mme_rollingShutterMultiplier->value;
+			//int bufferCountNeededForRollingshutter = (int)(ceil(rollingShutterMultiplier) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
+			//int rollingShutterFactor = glConfig.vidHeight*rollingShutterSuperSampleMultiplier / rollingShutterPixels;
+			float captureFPS = shotData.fps * rsInfo->captureFpsMultiplier;
 			float blurDuration = mme_rollingShutterBlur->value * (1.0f / shotData.fps);
 			int blurFrames = (int)(blurDuration * captureFPS);
 
@@ -702,6 +721,7 @@ void R_MME_FlushMultiThreading() {
 	}
 }
 
+
 qboolean R_MME_TakeShot( void ) {
 	int pixelCount;
 	byte inSound[MME_SAMPLERATE] = {0};
@@ -711,7 +731,8 @@ qboolean R_MME_TakeShot( void ) {
 	mmeBlurControl_t* blurControl = &blurData.control;
 
 	//int mme_rollingShutterPixels = Cvar_Get("mme_rollingShutterPixels","1",);
-	int rollingShutterFactor = glConfig.vidHeight/mme_rollingShutterPixels->integer;
+	//int rollingShutterFactor = glConfig.vidHeight* rollingShutterSuperSampleMultiplier/mme_rollingShutterPixels->integer;
+	mmeRollingShutterInfo_t* rsInfo = R_MME_GetRollingShutterInfo();
 
 	//static int rollingShutterProgress = 0;
 
@@ -888,19 +909,20 @@ qboolean R_MME_TakeShot( void ) {
 			float& hereDrift = pboRollingShutterDrifts[i];
 
 			// For example 1.0 * 1080/9.8 = 110.20408163265306122448979591837
-			int rsBlurFrameCount = (int)(mme_rollingShutterBlur->value*(float)rollingShutterFactor/mme_rollingShutterMultiplier->value);
+			//int rsBlurFrameCount = (int)(mme_rollingShutterBlur->value*(float)rsInfo->rollingShutterFactor/mme_rollingShutterMultiplier->value);
+			int rsBlurFrameCount = (int)(mme_rollingShutterBlur->value*rsInfo->captureFpsMultiplier);
 			float intensityMultiplier = 1.0f / (float)rsBlurFrameCount;
 
 			//if(rollingShutterProgress >= 0){ // the later pbos have negative offsets because they start capturing later
 			if(rollingShutterProgress >= -rsBlurFrameCount){ // the later pbos have negative offsets because they start capturing later. We also make use of this for blur as far as possible.
 				
 
-				int rollingShutterProgressReversed = rollingShutterFactor - rollingShutterProgress - 1;
+				int rollingShutterProgressReversed = rsInfo->rollingShutterFactor - rollingShutterProgress - 1;
 
 				// 1. Check lines we can write into the current frame.
 				//		In short, we can write from the current block up to rsBlurFrameCount blocks to the future,
 				//		long as we don't shoot into the next picture.
-				int howManyBlocks = min(rsBlurFrameCount, rollingShutterFactor-rollingShutterProgress);
+				int howManyBlocks = min(rsBlurFrameCount, rsInfo->rollingShutterFactor-rollingShutterProgress);
 				int negativeOffset = mme_rollingShutterPixels->integer *(howManyBlocks - 1); // Opengl is from bottom up, so we gotta move things around...
 				R_FrameBuffer_RollingShutterCapture(i, mme_rollingShutterPixels->integer* rollingShutterProgressReversed- negativeOffset, mme_rollingShutterPixels->integer* howManyBlocks, true, false, intensityMultiplier);
 
@@ -909,11 +931,11 @@ qboolean R_MME_TakeShot( void ) {
 				int preProgressOvershootFrames = rsBlurFrameCount -progressOvershoot;
 				if (preProgressOvershootFrames > 0) {
 					// Possible that we write some.
-					int framesLeftToWrite = rollingShutterFactor - rollingShutterProgress;
+					int framesLeftToWrite = rsInfo->rollingShutterFactor - rollingShutterProgress;
 					if (framesLeftToWrite <= preProgressOvershootFrames) { // Otherwise too early.
 						int blockOffset = preProgressOvershootFrames - framesLeftToWrite - rsBlurFrameCount;
-						int blockOffsetReversed = rollingShutterFactor - blockOffset - 1;
-						int howManyBlocks = min(rsBlurFrameCount, rollingShutterFactor - blockOffset);
+						int blockOffsetReversed = rsInfo->rollingShutterFactor - blockOffset - 1;
+						int howManyBlocks = min(rsBlurFrameCount, rsInfo->rollingShutterFactor - blockOffset);
 						int negativeOffset = mme_rollingShutterPixels->integer * (howManyBlocks - 1); // Opengl is from bottom up, so we gotta move things around...
 						R_FrameBuffer_RollingShutterCapture(i, mme_rollingShutterPixels->integer* blockOffsetReversed- negativeOffset, mme_rollingShutterPixels->integer* howManyBlocks, true, true, intensityMultiplier);
 					}
@@ -923,10 +945,10 @@ qboolean R_MME_TakeShot( void ) {
 				//R_FrameBuffer_RollingShutterCapture(i, mme_rollingShutterPixels->integer* rollingShutterProgressReversed, mme_rollingShutterPixels->integer,true,false);
 				 
 
-				if (rollingShutterProgress == rollingShutterFactor-1){
+				if (rollingShutterProgress == rsInfo->rollingShutterFactor-1){
 
 					R_MME_FlushMultiThreading();
-					R_MME_MultiShot(shotBufPerm, rollingShutterFactor, rollingShutterProgress, mme_rollingShutterPixels->integer, i);
+					R_MME_MultiShot(shotBufPerm, rsInfo->rollingShutterFactor, rollingShutterProgress, mme_rollingShutterPixels->integer, i);
 
 					bool dither = true;
 
@@ -991,7 +1013,7 @@ qboolean R_MME_TakeShot( void ) {
 				}
 			}
 			rollingShutterProgress++;
-			if (rollingShutterProgress == rollingShutterFactor) {
+			if (rollingShutterProgress == rsInfo->rollingShutterFactor) {
 				R_FrameBuffer_RollingShutterFlipDoubleBuffer(i);
 				//rollingShutterProgress = 0;
 				rollingShutterProgress = -progressOvershoot; // Since the rolling shutter multiplier can be a non-integer, sometimes we have to pause rendering frames for a little. Imagine if the rolling shutter is half the shutter speed. Then half the time we're not actually recording anything.

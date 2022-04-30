@@ -943,6 +943,11 @@ void trap_S_UpdateScale( float scale ) {
 void trap_MME_FakeAdvanceFrame(int count ) {
 	syscall(CG_MME_FAKEADVANCEFRAMES, count );
 }
+mmeRollingShutterInfo_t* trap_MME_GetRollingShutterInfo() {
+	static mmeRollingShutterInfo_t  rsInfo;
+	syscall(CG_MME_GETROLLINGSHUTTERINFO, &rsInfo);
+	return &rsInfo;
+}
 
 void trap_R_ParseWaveform(const char* text, waveForm_t* wf) {
 	syscall(CG_R_PARSEWAVEFORM, text,  wf);
