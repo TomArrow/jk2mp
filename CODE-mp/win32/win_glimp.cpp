@@ -1382,7 +1382,7 @@ static void GLW_InitExtensions( void )
 	qglClientActiveTextureARB = NULL;
 	if ( strstr( glConfig.extensions_string, "GL_ARB_multitexture" )  )
 	{
-		if ( r_ext_multitexture->integer )
+		if ( r_ext_multitexture->integer && !r_fboFishEye->integer) // Fisheye uses GLSL. Idk how to make multitexture work with that (yet)
 		{
 			qglMultiTexCoord2fARB = ( void ( APIENTRY * ) ( GLenum, GLfloat, GLfloat ) ) qwglGetProcAddress( "glMultiTexCoord2fARB" );
 			qglActiveTextureARB = ( void ( APIENTRY * ) ( GLenum ) ) qwglGetProcAddress( "glActiveTextureARB" );
@@ -2033,7 +2033,7 @@ void GLimp_Init( void )
 	// them to their default state when the hardware is first installed/run.
 	//
 extern qboolean Sys_LowPhysicalMemory();
-	if ( Q_stricmp( lastValidRenderer->string, glConfig.renderer_string ) )
+	/*if ( Q_stricmp( lastValidRenderer->string, glConfig.renderer_string ) )
 	{
 		if (Sys_LowPhysicalMemory())
 		{
@@ -2068,8 +2068,9 @@ extern qboolean Sys_LowPhysicalMemory();
 			ri.Cvar_Set( "r_texturebits", "16");
 			ri.Cvar_Set( "cg_shadows", "0");
 			ri.Cvar_Set( "r_mode", "3");	//force 640
+			// Nah, don't overwrite any settings.
 		}
-	}
+	}*/// Nah, don't overwrite any settings.
 	
 	ri.Cvar_Set( "r_lastValidRenderer", glConfig.renderer_string );
 

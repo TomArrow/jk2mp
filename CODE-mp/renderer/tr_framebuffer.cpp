@@ -64,6 +64,7 @@ void R_FrameBuffer_CreateRollingShutterBuffers(int width, int height, int flags)
 cvar_t *r_convertToHDR;
 cvar_t *r_floatBuffer;
 cvar_t *r_fbo;
+cvar_t *r_fboFishEye;
 cvar_t *r_fboExposure;
 cvar_t *r_fboCompensateSkyTint;
 cvar_t *r_fboSuperSample;
@@ -558,6 +559,7 @@ void R_FrameBuffer_Init( void ) {
 
 	memset( &fbo, 0, sizeof( fbo ) );
 	r_fbo = ri.Cvar_Get( "r_fbo", "0", CVAR_ARCHIVE | CVAR_LATCH);
+	r_fboFishEye = ri.Cvar_Get( "r_fboFishEye", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboDepthBits = ri.Cvar_Get( "r_fboDepthBits", "32", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboDepthPacked = ri.Cvar_Get( "r_fboDepthPacked", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboStencilWhenNotPacked = ri.Cvar_Get( "r_fboStencilWhenNotPacked", "1", CVAR_ARCHIVE | CVAR_LATCH);
@@ -677,11 +679,11 @@ void R_FrameBuffer_Init( void ) {
 		flags = FB_FLOAT16;
 		fbo.colorSpaceConv = R_FrameBufferCreate(width, height, flags);
 		fbo.colorSpaceConvResult = R_FrameBufferCreate(width, height, flags);
-		hdrPqShader = new R_GLSL("hdrpq-vertex.glsl","hdrpq-fragment.glsl");
+		hdrPqShader = new R_GLSL("hdrpq-vertex.glsl","hdrpq-fragment.glsl",qfalse);
 		if (!hdrPqShader->IsWorking()) {
 			ri.Printf(PRINT_WARNING, "WARNING: HDR PQ Shader could not be compiled. HDR conversion disabled.\n");
 		}
-		fishEyeShader = new R_GLSL("fisheye-vertex.glsl","fisheye-fragment.glsl");
+		fishEyeShader = new R_GLSL("fisheye-vertex.glsl","fisheye-fragment.glsl", qfalse);
 		if (!fishEyeShader->IsWorking()) {
 			ri.Printf(PRINT_WARNING, "WARNING: Fisheye shader could not be compiled. Fisheye mode not available.\n");
 		}

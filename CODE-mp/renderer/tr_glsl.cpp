@@ -3,7 +3,7 @@
 #include <string>
 #include <fstream>
 
-R_GLSL::R_GLSL(char* filenameVertexShader, char* filenameFragmentShader) {
+R_GLSL::R_GLSL(char* filenameVertexShader, char* filenameFragmentShader, qboolean noFragment) {
 
 	//shaderId =
 	const char* vertexText;
@@ -41,7 +41,9 @@ R_GLSL::R_GLSL(char* filenameVertexShader, char* filenameFragmentShader) {
 	shaderId = qglCreateProgram();
 	ri.Printf(PRINT_WARNING, "DEBUG: Program shader id is %d.\n", (int)shaderId);
 	qglAttachShader(shaderId, vertexShaderId);
-	qglAttachShader(shaderId, fragmentShaderId);
+	if (!noFragment) {
+		qglAttachShader(shaderId, fragmentShaderId);
+	}
 	qglLinkProgram(shaderId);
 	if (hasErrored(shaderId, "[shader program]", true)) {
 		success = false;
