@@ -13,7 +13,7 @@ vec3 getPerpendicularAxis(vec3 point, vec3 mainAxis){
 
 void main(void)
 {   
-  //vec4 normaltransform = ftransform();
+  vec4 nabcormaltransform = ftransform();
   vec4 normaltransform = vec4(1.0,1.0,1.0,1.0);
 
   float pi =radians(180);
@@ -39,6 +39,7 @@ void main(void)
   //test.xyz *= 0.005;
   //test.z *= 0.001;
 
+  float distance = length(pointVec);
   pointVec = normalize(pointVec);
   float depth = dot(axisUniform[0].xyz,pointVec);
   float height = dot(axisUniform[2].xyz,pointVec);
@@ -57,7 +58,7 @@ void main(void)
   xAngle -= 0.5;
   xAngle *= 2;
   widthSign = sign(xAngle);
-  xAngle = depth<=0 ? xAngle : -widthSign*(0.5+(0.5-abs(xAngle)));
+  xAngle = depth<=0 ? xAngle : widthSign*(1.0+(1.0-abs(xAngle)));
   //xAngle = depth< 0 ? xAngle : widthSign*(1.0+abs(xAngle));
 
   yAngle -= 0.5;
@@ -79,7 +80,8 @@ void main(void)
   test.y = yAngle*normaltransform.w*2;
   //test.y = normaltransform.y*0.5;
   //test.z = depth<0? normaltransform.z: -normaltransform.z;
-  test.z = normaltransform.w-length(pointVec);
+  //test.z = nabcormaltransform.w-length(pointVec);
+  test.z = 1.0-1.0/distance;
   test.w= normaltransform.w;
   gl_Position = test;
 
