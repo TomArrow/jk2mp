@@ -32,14 +32,34 @@ void main(void)
   float depth = dot(axisUniform[0].xyz,pointVec);
   float height = dot(axisUniform[2].xyz,pointVec);
   float heightSign = sign(height);
+  float width = dot(-axisUniform[1].xyz,pointVec);
+  float widthSign = sign(width);
+  float xAngle = acos(width)/pi;
+  float yAngle = acos(height)/pi;
+
+  //xAngle = depth< 0 ? xAngle : widthSign*1.0+widthSign*(1.0-abs(xAngle));
+  xAngle -= 0.5;
+  xAngle *= 2;
+  widthSign = -sign(xAngle);
+  //xAngle = depth< 0 ? xAngle : widthSign*(1.0+(1.0-abs(xAngle)));
+  xAngle = depth< 0 ? xAngle : widthSign*(1.0+abs(xAngle));
+
+  yAngle -= 0.5;
+  yAngle *= 2;
+  heightSign = -sign(yAngle);
+  //yAngle = depth< 0 ? yAngle : heightSign*(1.0+(1.0-abs(yAngle)));
+  yAngle = depth< 0 ? yAngle : heightSign*(1.0+abs(yAngle));
 
   // Kinda iso perspective:
   //test.x = acos(dot(axisUniform[1].xyz,pointVec));
-  test.x = normaltransform.x;
-  //test.x = (acos(dot(axisUniform[1].xyz,pointVec))/pi*normaltransform.w-normaltransform.w/2)*4;
-  test.y = depth <0 ? (acos(height)/pi*normaltransform.w-normaltransform.w/2)*4 : heightSign*normaltransform.w;
+  //test.x = normaltransform.x;
+  //test.x = depth <0 ? (xAngle*normaltransform.w-normaltransform.w/2)*2 : widthSign*normaltransform.w;
+  test.x = (xAngle*normaltransform.w);
+  //test.y = depth <0 ? (yAngle*normaltransform.w)*2 : heightSign*normaltransform.w;
+  test.y = yAngle*normaltransform.w*2;
   //test.y = normaltransform.y*0.5;
-  test.z = normaltransform.z;
+  //test.z = depth<0? normaltransform.z: -normaltransform.z;
+  test.z = normaltransform.w-length(pointVec);
   test.w= normaltransform.w;
   gl_Position = test;
 
