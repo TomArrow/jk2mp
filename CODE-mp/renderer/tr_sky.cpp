@@ -719,6 +719,7 @@ void RB_DrawSun( void ) {
 	}
 	qglLoadMatrixf( backEnd.viewParms.world.modelMatrix );
 	qglTranslatef (backEnd.viewParms.ori.origin[0], backEnd.viewParms.ori.origin[1], backEnd.viewParms.ori.origin[2]);
+	R_FrameBuffer_ActivateFisheye(backEnd.viewParms.ori.origin, backEnd.viewParms.ori.axis);
 
 	dist = 	backEnd.viewParms.zFar / 1.75;		// div sqrt(3)
 	size = dist * 0.4;
@@ -835,6 +836,7 @@ void RB_StageIteratorSky( void ) {
 		qglPushMatrix ();
 		GL_State( 0 );
 		qglTranslatef (backEnd.viewParms.ori.origin[0], backEnd.viewParms.ori.origin[1], backEnd.viewParms.ori.origin[2]);
+		R_FrameBuffer_ActivateFisheye(backEnd.viewParms.ori.origin, backEnd.viewParms.ori.axis);
 
 		if (tr.mmeSkyShader && tr.mmeSkyShader->sky.outerbox[0] && tr.mmeSkyShader->sky.outerbox[0] != tr.defaultImage) {
 			DrawSkyBox(tr.mmeSkyShader);

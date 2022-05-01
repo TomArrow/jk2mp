@@ -2121,6 +2121,7 @@ void RB_RenderWorldEffects(void)
 	qglMatrixMode(GL_MODELVIEW);
 //	qglPushMatrix();
 	qglLoadMatrixf( backEnd.viewParms.world.modelMatrix );
+	R_FrameBuffer_ActivateFisheye(backEnd.viewParms.ori.origin, backEnd.viewParms.ori.axis);
 
 	originContents = ri.CM_PointContents(backEnd.viewParms.ori.origin, 0);
 

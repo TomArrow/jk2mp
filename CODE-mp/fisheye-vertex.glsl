@@ -18,6 +18,8 @@ void main(void)
 
   float pi =radians(180);
 
+  vec3 axis[3] = axisUniform;
+
   //gl_Position = ftransform(gl_Vertex);
   //gl_Position = transform( gl_ModelViewProjectionMatrix, gl_Vertex );
   //gl_Position.x *= (1-(abs(gl_Position.y)/540.0))*0.5+0.5;
@@ -26,7 +28,9 @@ void main(void)
   //vec4 test = gl_Vertex;
   //test.xyz += axisUniform[0].xyz*100;
   //gl_Position = gl_ModelViewProjectionMatrix * test;
-  vec3 pointVec = originUniform-gl_Vertex.xyz;
+  vec4 correctPos = gl_ModelViewProjectionMatrix * gl_Vertex;
+  //vec3 pointVec = originUniform-correctPos.xyz;
+  vec3 pointVec = correctPos.xyz;
   vec4 test;
   //test.x = dot(axisUniform[1].xyz,pointVec);
   //test.y = dot(-axisUniform[0].xyz,pointVec);
@@ -41,17 +45,17 @@ void main(void)
 
   float distance = length(pointVec);
   pointVec = normalize(pointVec);
-  float depth = dot(axisUniform[0].xyz,pointVec);
-  float height = dot(axisUniform[2].xyz,pointVec);
+  float depth = dot(axis[0].xyz,pointVec);
+  float height = dot(axis[2].xyz,pointVec);
   float heightSign = sign(height);
-  float width = dot(-axisUniform[1].xyz,pointVec);
+  float width = dot(-axis[1].xyz,pointVec);
   float widthSign = sign(width);
 
   //float xAngle = acos(width)/pi;
-  float xAngle = angleOnPlane(pointVec,-axisUniform[1].xyz,axisUniform[0].xyz)/3.14;
+  float xAngle = angleOnPlane(pointVec,-axisUniform[1].xyz,axis[0].xyz)/3.14;
   
   //float yAngle = acos(height)/pi;
-  vec3 perpendicularAxis = getPerpendicularAxis(pointVec,axisUniform[0].xyz);
+  vec3 perpendicularAxis = getPerpendicularAxis(pointVec,axis[0].xyz);
   float yAngle = angleOnPlane(pointVec,axisUniform[2].xyz,perpendicularAxis)/pi;
 
   //xAngle = depth< 0 ? xAngle : widthSign*1.0+widthSign*(1.0-abs(xAngle));
@@ -84,6 +88,23 @@ void main(void)
   test.z = 1.0-1.0/distance;
   test.w= normaltransform.w;
   gl_Position = test;
+
+  //gl_Position = gl_ModelViewProjectionMatrix * test2;
+  //gl_Position = gl_ModelViewProjectionMatrixTranspose * test2;
+
+
+  // This kinda works-ish
+  //vec4 test2 = gl_Vertex;
+  //test2=gl_ModelViewMatrix*test2;
+  //test2.xyz += axisUniform[0].xyz*10;
+  //test2=gl_ProjectionMatrix*test2;
+
+
+  //gl_Position = gl_ProjectionMatrix * test2;
+  //gl_Position = gl_ModelViewProjectionMatrix * test2;
+  //gl_Position =  gl_ProjectionMatrix*gl_ModelViewMatrix*gl_Vertex; // Perfect.
+  //gl_Position =  test2;
+
 
   gl_TexCoord[0] = gl_MultiTexCoord0;
 }

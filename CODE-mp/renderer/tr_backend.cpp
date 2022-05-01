@@ -505,10 +505,11 @@ void SetViewportAndScissor( void ) {
 	R_SetupFrustum();
 	R_SetupProjection();
 	SetFinalProjection();
-	R_FrameBuffer_ActivateFisheye(backEnd.viewParms.ori.origin, backEnd.viewParms.ori.axis);
 	
 	qglLoadMatrixf( backEnd.viewParms.projectionMatrix );
 	qglMatrixMode(GL_MODELVIEW);
+
+	R_FrameBuffer_ActivateFisheye(backEnd.viewParms.ori.origin, backEnd.viewParms.ori.axis);
 
 	// set the window clipping
 	qglViewport( backEnd.viewParms.viewportX * superSampleMultiplier, backEnd.viewParms.viewportY * superSampleMultiplier,
@@ -796,7 +797,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 				R_TransformDlights( backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.ori );
 			}
 
-			qglLoadMatrixf( backEnd.ori.modelMatrix );
+			qglLoadMatrixf( backEnd.ori.modelMatrix ); 
+			R_FrameBuffer_ActivateFisheye(backEnd.refdef.vieworg, backEnd.refdef.viewaxis);
 
 			//
 			// change depthrange if needed
@@ -836,6 +838,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 	// go back to the world modelview matrix
 	qglLoadMatrixf( backEnd.viewParms.world.modelMatrix );
+	R_FrameBuffer_ActivateFisheye(backEnd.viewParms.world.origin, backEnd.viewParms.world.axis);
 	if ( depthRange ) {
 		qglDepthRange (0, 1);
 	}
