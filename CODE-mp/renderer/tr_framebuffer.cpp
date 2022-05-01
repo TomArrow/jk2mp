@@ -120,6 +120,11 @@ typedef struct {
 	frameBufferData_t* next;
 } doubleFrameBufferData_t;
 
+typedef struct {
+	vec3_t origin;
+	vec3_t axis[3];
+} fishEyeData_t;
+
 static struct {
 	frameBufferData_t *multiSample;
 	frameBufferData_t *main;
@@ -129,7 +134,9 @@ static struct {
 	frameBufferData_t *colorSpaceConv;
 	frameBufferData_t *colorSpaceConvResult;
 	std::vector<doubleFrameBufferData_t> rollingShutterBuffers;
+	qboolean fishEyeActive;
 	int screenWidth, screenHeight;
+	fishEyeData_t fishEyeData;
 } fbo;
 
 extern std::vector<int> pboRollingShutterProgresses;
@@ -142,6 +149,7 @@ extern float drift;
 
 
 R_GLSL* hdrPqShader;
+R_GLSL* fishEyeShader;
 //GLuint tmpPBOtexture;
 
 //two functions to bind and unbind the main framebuffer, generally just to be
@@ -546,6 +554,8 @@ void R_FrameBuffer_Init( void ) {
 	int flags, width, height;
 	GLenum tmp;
 
+	fbo.fishEyeActive = qfalse;
+
 	memset( &fbo, 0, sizeof( fbo ) );
 	r_fbo = ri.Cvar_Get( "r_fbo", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboDepthBits = ri.Cvar_Get( "r_fboDepthBits", "32", CVAR_ARCHIVE | CVAR_LATCH);
@@ -670,6 +680,10 @@ void R_FrameBuffer_Init( void ) {
 		hdrPqShader = new R_GLSL("hdrpq-vertex.glsl","hdrpq-fragment.glsl");
 		if (!hdrPqShader->IsWorking()) {
 			ri.Printf(PRINT_WARNING, "WARNING: HDR PQ Shader could not be compiled. HDR conversion disabled.\n");
+		}
+		fishEyeShader = new R_GLSL("fisheye-vertex.glsl","fisheye-fragment.glsl");
+		if (!fishEyeShader->IsWorking()) {
+			ri.Printf(PRINT_WARNING, "WARNING: Fisheye shader could not be compiled. Fisheye mode not available.\n");
 		}
 	}
 
@@ -833,6 +847,62 @@ qboolean R_FrameBuffer_HDRConvert(HDRConvertSource source, int param) {
 #endif
 }
 
+static qboolean R_FrameBuffer_ReactivateFisheye() {
+#ifdef HAVE_GLES
+	//TODO
+	return qfalse;
+#else
+	if (!fishEyeShader->IsWorking())
+		return qfalse;
+
+	qglUseProgram(fishEyeShader->ShaderId());
+	fbo.fishEyeActive = qtrue;
+
+	qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "originUniform"), 1, fbo.fishEyeData.origin);
+	qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "axisUniform"), 3, (GLfloat*)fbo.fishEyeData.axis);
+	
+	return qtrue;
+#endif
+}
+
+qboolean R_FrameBuffer_ActivateFisheye(vec_t* origin, vec3_t* axes) {
+#ifdef HAVE_GLES
+	//TODO
+	return qfalse;
+#else
+	if (!fishEyeShader->IsWorking())
+		return qfalse;
+
+	qglUseProgram(fishEyeShader->ShaderId());
+	fbo.fishEyeActive = qtrue;
+
+	VectorCopy(origin, fbo.fishEyeData.origin);
+	VectorCopy(axes[0], fbo.fishEyeData.axis[0]);
+	VectorCopy(axes[1], fbo.fishEyeData.axis[1]);
+	VectorCopy(axes[2], fbo.fishEyeData.axis[2]);
+
+	qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "originUniform"), 1, origin);
+	qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "axisUniform"), 3, (GLfloat*)axes);
+	
+	return qtrue;
+#endif
+}
+
+qboolean R_FrameBuffer_DeactivateFisheye() {
+#ifdef HAVE_GLES
+	//TODO
+	return qfalse;
+#else
+	if (!fishEyeShader->IsWorking())
+		return qfalse;
+
+	qglUseProgram(0);
+	fbo.fishEyeActive = qfalse;
+
+	return qtrue;
+#endif
+}
+
 qboolean R_FrameBuffer_StartHDRRead() {
 #ifdef HAVE_GLES
 	//TODO
@@ -988,6 +1058,9 @@ qboolean R_FrameBuffer_ApplyExposure( ) { // really kinda useless unless you wan
 
 	//R_FrameBuffer_GenerateMainMipMaps();
 
+	bool fishEyeWasActive = fbo.fishEyeActive;
+	R_FrameBuffer_DeactivateFisheye();
+
 	// First copy image into exposure FBO and apply exposure
 	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.exposure->fbo);
 	qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
@@ -1023,6 +1096,11 @@ qboolean R_FrameBuffer_ApplyExposure( ) { // really kinda useless unless you wan
 	R_SetGL2DSize( glConfig.vidWidth * superSampleMultiplier, glConfig.vidHeight * superSampleMultiplier);
 	R_DrawQuad(	fbo.exposure->color, glConfig.vidWidth * superSampleMultiplier, glConfig.vidHeight * superSampleMultiplier);
 	mipMapsAlreadyGeneratedThisFrame = qfalse;
+
+
+	if (fishEyeWasActive) {
+		R_FrameBuffer_ReactivateFisheye();
+	}
 	return qtrue;
 #endif
 }
@@ -1039,6 +1117,9 @@ void R_FrameBuffer_EndFrame( void ) {
 	if ( !fbo.main ) {
 		return;
 	}
+
+	bool fishEyeWasActive = fbo.fishEyeActive;
+	R_FrameBuffer_DeactivateFisheye();
 
 	R_FrameBuffer_GenerateMainMipMaps();
 
@@ -1068,6 +1149,10 @@ void R_FrameBuffer_EndFrame( void ) {
 	}
 	usedFloat = qfalse;
 	mipMapsAlreadyGeneratedThisFrame = qfalse;
+
+	if (fishEyeWasActive) {
+		R_FrameBuffer_ReactivateFisheye();
+	}
 #endif
 }
 

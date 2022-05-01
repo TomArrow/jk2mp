@@ -1234,6 +1234,12 @@
     <CopyFileToFolders Include="hdrpq-vertex.glsl">
       <Filter>Renderer\glsl</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="fisheye-vertex.glsl">
+      <Filter>Renderer\glsl</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="fisheye-fragment.glsl">
+      <Filter>Renderer\glsl</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <Text Include="jpeg-9a\CMakeLists.txt">

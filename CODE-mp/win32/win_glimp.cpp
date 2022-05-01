@@ -1814,6 +1814,7 @@ static void GLW_InitExtensions( void )
 		qglGetUniformLocation = (GLint(APIENTRY*) (GLuint, const GLchar*)) qwglGetProcAddress("glGetUniformLocation");
 		qglUniform1f = (void (APIENTRY*) (GLint, GLfloat)) qwglGetProcAddress("glUniform1f");
 		qglUniform2f = (void (APIENTRY*) (GLint, GLfloat, GLfloat)) qwglGetProcAddress("glUniform2f");
+		qglUniform3fv = (void (APIENTRY*) (GLint, GLsizei, const GLfloat*)) qwglGetProcAddress("glUniform3fv");
 		qglUniform1i = (void (APIENTRY*) (GLint, GLint)) qwglGetProcAddress("glUniform1i");
 		qglGetProgramiv = (void (APIENTRY*) (GLuint, GLenum, GLint*)) qwglGetProcAddress("glGetProgramiv");
 		qglGetProgramInfoLog = (void (APIENTRY*) (GLuint, GLsizei, GLsizei*, GLchar*)) qwglGetProcAddress("glGetProgramInfoLog");

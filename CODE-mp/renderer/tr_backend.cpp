@@ -505,6 +505,7 @@ void SetViewportAndScissor( void ) {
 	R_SetupFrustum();
 	R_SetupProjection();
 	SetFinalProjection();
+	R_FrameBuffer_ActivateFisheye(backEnd.viewParms.ori.origin, backEnd.viewParms.ori.axis);
 	
 	qglLoadMatrixf( backEnd.viewParms.projectionMatrix );
 	qglMatrixMode(GL_MODELVIEW);
@@ -898,6 +899,8 @@ void	RB_SetGL2D (void) {
 
 	qglDisable( GL_CULL_FACE );
 	qglDisable( GL_CLIP_PLANE0 );
+
+	R_FrameBuffer_DeactivateFisheye();
 
 	// set time for 2D shaders
 	backEnd.refdef.time = ri.Milliseconds();
