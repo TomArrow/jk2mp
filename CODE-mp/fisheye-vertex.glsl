@@ -1,9 +1,20 @@
 uniform vec3 originUniform;
 uniform vec3 axisUniform[3];
 
+float angleOnPlane(vec3 point, vec3 axis1, vec3 axis2){
+	
+	vec2 planePosition = vec2( dot(point,axis1), dot(point,axis2));
+	return acos(dot(vec2(1,0),normalize(planePosition)));
+}
+
+vec3 getPerpendicularAxis(vec3 point, vec3 mainAxis){
+	return point;// - dot(point,mainAxis)*mainAxis;
+}
+
 void main(void)
 {   
-  vec4 normaltransform = ftransform();
+  //vec4 normaltransform = ftransform();
+  vec4 normaltransform = vec4(1.0,1.0,1.0,1.0);
 
   float pi =radians(180);
 
@@ -34,21 +45,30 @@ void main(void)
   float heightSign = sign(height);
   float width = dot(-axisUniform[1].xyz,pointVec);
   float widthSign = sign(width);
-  float xAngle = acos(width)/pi;
-  float yAngle = acos(height)/pi;
+
+  //float xAngle = acos(width)/pi;
+  float xAngle = angleOnPlane(pointVec,-axisUniform[1].xyz,axisUniform[0].xyz)/3.14;
+  
+  //float yAngle = acos(height)/pi;
+  vec3 perpendicularAxis = getPerpendicularAxis(pointVec,axisUniform[0].xyz);
+  float yAngle = angleOnPlane(pointVec,axisUniform[2].xyz,perpendicularAxis)/pi;
 
   //xAngle = depth< 0 ? xAngle : widthSign*1.0+widthSign*(1.0-abs(xAngle));
   xAngle -= 0.5;
   xAngle *= 2;
-  widthSign = -sign(xAngle);
-  //xAngle = depth< 0 ? xAngle : widthSign*(1.0+(1.0-abs(xAngle)));
-  xAngle = depth< 0 ? xAngle : widthSign*(1.0+abs(xAngle));
+  widthSign = sign(xAngle);
+  xAngle = depth<=0 ? xAngle : -widthSign*(0.5+(0.5-abs(xAngle)));
+  //xAngle = depth< 0 ? xAngle : widthSign*(1.0+abs(xAngle));
 
   yAngle -= 0.5;
   yAngle *= 2;
-  heightSign = -sign(yAngle);
+  heightSign = sign(yAngle);
   //yAngle = depth< 0 ? yAngle : heightSign*(1.0+(1.0-abs(yAngle)));
-  yAngle = depth< 0 ? yAngle : heightSign*(1.0+abs(yAngle));
+  //yAngle = depth< 0 ? yAngle : -heightSign;
+ // yAngle = depth< 0 ? yAngle : heightSign*(1.0+abs(yAngle));
+
+  xAngle *= 0.5;
+  //yAngle *= 0.5;
 
   // Kinda iso perspective:
   //test.x = acos(dot(axisUniform[1].xyz,pointVec));
