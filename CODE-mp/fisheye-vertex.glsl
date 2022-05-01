@@ -18,7 +18,19 @@ void main(void)
 
   float pi =radians(180);
 
-  vec3 axis[3] = axisUniform;
+  //vec3 axis[3] = axisUniform;
+ vec3 axis[3];
+   axis[0] = vec3(0.0,0.0,1.0);
+  axis[1] = vec3(1.0,0.0,0.0);
+  axis[2] = vec3(0.0,1.0,0.0);
+  
+  //vec3 axis[3] = axisUniform;
+  //axis[0]=-axisUniform[0];
+  //axis[1]=-axisUniform[1];
+  //axis[2]=-axisUniform[2];
+  //axis[0] = vec3(1.0,0.0,0.0);
+  //axis[1] = vec3(0.0,1.0,0.0);
+  //axis[2] = vec3(0.0,0.0,1.0);
 
   //gl_Position = ftransform(gl_Vertex);
   //gl_Position = transform( gl_ModelViewProjectionMatrix, gl_Vertex );
@@ -28,7 +40,8 @@ void main(void)
   //vec4 test = gl_Vertex;
   //test.xyz += axisUniform[0].xyz*100;
   //gl_Position = gl_ModelViewProjectionMatrix * test;
-  vec4 correctPos = gl_ModelViewProjectionMatrix * gl_Vertex;
+  //vec4 correctPos = gl_ModelViewProjectionMatrix * gl_Vertex;
+  vec4 correctPos = gl_ModelViewMatrix * gl_Vertex;
   //vec3 pointVec = originUniform-correctPos.xyz;
   vec3 pointVec = correctPos.xyz;
   vec4 test;
