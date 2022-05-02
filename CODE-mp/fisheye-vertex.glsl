@@ -1,7 +1,8 @@
 uniform vec3 originUniform;
 uniform vec3 axisUniform[3];
 
-out vec3 color;
+out vec3 debugColor;
+out vec4 color;
 out float realDepth;
 
 float angleOnPlane(vec3 point, vec3 axis1, vec3 axis2){
@@ -14,12 +15,11 @@ vec3 getPerpendicularAxis(vec3 point, vec3 mainAxis){
 	return point - dot(point,mainAxis)*mainAxis;
 }
 
-void debugColor(float x,float y, float z){
-	//color = vec3(max(0.0,min(1.0,x)),max(0.0,min(1.0,y)),max(0.0,min(1.0,z)));
+void setDebugColor(float x,float y, float z){
+	//debugColor = vec3(max(0.0,min(1.0,x)),max(0.0,min(1.0,y)),max(0.0,min(1.0,z)));
 }
 
 void equirectangular(){
-
 
   float pi =radians(180);
 
@@ -29,23 +29,14 @@ void equirectangular(){
   axis[2] = vec3(0.0,1.0,0.0);
 
   vec4 correctPos = gl_ModelViewMatrix * gl_Vertex;
-
-  debugColor(correctPos[0]*0.01,correctPos[1]*0.01,-correctPos[2]*0.0001);
-
-  vec3 pointVec = -correctPos.xyz;
-
-  vec4 test;
+  vec3 pointVec = originUniform-correctPos.xyz;
   float distance = length(pointVec);
   pointVec = normalize(pointVec);
-  float depth = dot(axis[0].xyz,pointVec);
-  float height = dot(axis[2].xyz,pointVec);
-  float heightSign = sign(height);
-  float width = dot(-axis[1].xyz,pointVec);
-  float widthSign = sign(width);
 
+  vec4 outputPos;
+
+  float depth = dot(axis[0].xyz,pointVec);
   realDepth = depth;
-  
-  debugColor(width,height,depth*0.01);
   
   float xAngle = angleOnPlane(pointVec,-axis[1].xyz,axis[0].xyz)/pi;
   
@@ -54,24 +45,23 @@ void equirectangular(){
     
   xAngle -= 0.5;
   xAngle *= 2;
-  widthSign = sign(xAngle);
+  float widthSign = sign(xAngle);
   xAngle = depth<=0 ? xAngle : widthSign*(1.0+(1.0-abs(xAngle)));
+  xAngle *= 0.5;
 
   yAngle -= 0.5;
   yAngle *= 2;
-  heightSign = sign(yAngle);
-  
-  debugColor(xAngle,yAngle,depth*0.01);
+  float heightSign = sign(yAngle);
 
-  xAngle *= 0.5;
-
-  test.x = xAngle;
-  test.y = yAngle;
-  test.z = 1.0-1.0/distance;
-  test.w= 1.0;
-  gl_Position = test;
+  outputPos.x = xAngle;
+  outputPos.y = yAngle;
+  outputPos.z = 1.0-1.0/distance;
+  outputPos.w= 1.0;
+  gl_Position = outputPos;
 
   gl_TexCoord[0] = gl_MultiTexCoord0;
+
+  color = gl_Color;
 }
 
 

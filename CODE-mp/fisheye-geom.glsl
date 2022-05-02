@@ -2,6 +2,8 @@
   #extension GL_ARB_geometry_shader4 : enable
 
   in float realDepth[3];
+  in vec4 color[3];
+  out vec4 vertColor;
 
   // --------------------
   void main()
@@ -26,6 +28,7 @@
         {
           gl_Position = gl_PositionIn[i];
           gl_TexCoord[0] = gl_TexCoordIn[i][0];
+          vertColor = color[i]; 
           EmitVertex();
         }
     }

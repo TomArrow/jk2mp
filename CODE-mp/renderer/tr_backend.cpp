@@ -450,6 +450,8 @@ static void SetFinalProjection( void ) {
 
 	pixelJitter[0] = pixelJitter[1] = 0;
 	eyeJitter[0] = eyeJitter[1] = 0;
+
+
 	/* Jitter the view */
 	if ( stereoSep <= 0.0f) {
 		R_MME_JitterView( pixelJitter, eyeJitter );
@@ -461,6 +463,9 @@ static void SetFinalProjection( void ) {
 	dy = ( pixelJitter[1]*height ) / backEnd.viewParms.viewportHeight;
 	dx += eyeJitter[0];
 	dy += eyeJitter[1];
+
+	vec3_t jitterOrigin = { dx,dy,0 };
+	R_FrameBuffer_ActivateFisheye(jitterOrigin, backEnd.viewParms.ori.axis);//Doesn't work. Needs fixing.
 
 	xmin += dx; xmax += dx;
 	ymin += dy; ymax += dy;
@@ -509,7 +514,6 @@ void SetViewportAndScissor( void ) {
 	qglLoadMatrixf( backEnd.viewParms.projectionMatrix );
 	qglMatrixMode(GL_MODELVIEW);
 
-	R_FrameBuffer_ActivateFisheye(backEnd.viewParms.ori.origin, backEnd.viewParms.ori.axis);
 
 	// set the window clipping
 	qglViewport( backEnd.viewParms.viewportX * superSampleMultiplier, backEnd.viewParms.viewportY * superSampleMultiplier,
@@ -566,7 +570,7 @@ void RB_BeginDrawingView (void) {
 			clearBits |= GL_COLOR_BUFFER_BIT;
 			Q_parseColor( mme_skykey->string, defaultColors, skyColor );
 			qglClearColor( skyColor[0], skyColor[1], skyColor[2], 1.0f );
-		} else if (r_fastsky->integer) {
+		} else if (r_fastsky->integer || r_fboFishEye->integer) {
 			clearBits |= GL_COLOR_BUFFER_BIT;	// FIXME: only if sky shaders have been used
 #ifdef _DEBUG
 			qglClearColor( 0.8f, 0.7f, 0.4f, 1.0f );	// FIXME: get color of sky
@@ -798,7 +802,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			}
 
 			qglLoadMatrixf( backEnd.ori.modelMatrix ); 
-			R_FrameBuffer_ActivateFisheye(backEnd.refdef.vieworg, backEnd.refdef.viewaxis);
+			//R_FrameBuffer_ActivateFisheye(backEnd.refdef.vieworg, backEnd.refdef.viewaxis);
 
 			//
 			// change depthrange if needed
@@ -838,7 +842,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 	// go back to the world modelview matrix
 	qglLoadMatrixf( backEnd.viewParms.world.modelMatrix );
-	R_FrameBuffer_ActivateFisheye(backEnd.viewParms.world.origin, backEnd.viewParms.world.axis);
+	//R_FrameBuffer_ActivateFisheye(backEnd.viewParms.world.origin, backEnd.viewParms.world.axis);
 	if ( depthRange ) {
 		qglDepthRange (0, 1);
 	}
