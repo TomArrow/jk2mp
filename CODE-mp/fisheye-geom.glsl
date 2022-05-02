@@ -18,12 +18,12 @@
         if(gl_PositionIn[i].x > 0) someRight = true;
     }
 
-    bool emit = true;
+    bool wrappedAround = false;
     if(someInBack && someLeft && someRight){
-        emit = false;
+        wrappedAround = true;
     }
 
-    if(emit){
+    if(!wrappedAround){
         for(int i = 0; i < 3; i++)
         {
           gl_Position = gl_PositionIn[i];
@@ -31,6 +31,33 @@
           vertColor = color[i]; 
           EmitVertex();
         }
+            EndPrimitive();
+    } else {
+        // Emit 2 separate vertices.
+        for(int i = 0; i < 3; i++)
+        {
+            vec4 thisPosition = gl_PositionIn[i];
+            if(realDepth[i]>0){
+                if(thisPosition.x <= 0) thisPosition.x+=2.0;
+            }
+            gl_Position = thisPosition;
+            gl_TexCoord[0] = gl_TexCoordIn[i][0];
+            vertColor = color[i]; 
+            EmitVertex();
+        }
+            EndPrimitive();
+        for(int i = 0; i < 3; i++)
+        {
+            vec4 thisPosition = gl_PositionIn[i];
+            if(realDepth[i]>0){
+                if(thisPosition.x > 0) thisPosition.x-=2.0;
+            }
+            gl_Position = thisPosition;
+            gl_TexCoord[0] = gl_TexCoordIn[i][0];
+            vertColor = color[i]; 
+            EmitVertex();
+        }
+            EndPrimitive();
     }
     
 

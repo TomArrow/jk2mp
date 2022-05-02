@@ -69,7 +69,7 @@ R_GLSL::R_GLSL(char* filenameVertexShader, char* filenameGeometryShader, char* f
 	qglAttachShader(shaderId, vertexShaderId);
 	if (doGeometryShader) {
 		qglAttachShader(shaderId, geometryShaderId);
-		qglProgramParameteri(shaderId, GL_GEOMETRY_VERTICES_OUT_ARB, 3);
+		qglProgramParameteri(shaderId, GL_GEOMETRY_VERTICES_OUT_ARB, 6);
 		qglProgramParameteri(shaderId, GL_GEOMETRY_INPUT_TYPE_ARB, GL_TRIANGLES);
 		qglProgramParameteri(shaderId, GL_GEOMETRY_OUTPUT_TYPE_ARB, GL_TRIANGLE_STRIP);
 	}
