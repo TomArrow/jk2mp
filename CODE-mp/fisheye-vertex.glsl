@@ -13,24 +13,58 @@ vec3 getPerpendicularAxis(vec3 point, vec3 mainAxis){
 
 void main(void)
 {   
+
+	/*vec4 test5;
+	vec4 correctPos2 = gl_ModelViewMatrix * gl_Vertex;
+	//test5.x = dot(axisUniform[1].xyz,correctPos2.xyz);
+    //test5.y = dot(-axisUniform[2].xyz,correctPos2.xyz);
+    //test5.z = dot(axisUniform[0].xyz,correctPos2.xyz);
+	test5.xyz = correctPos2.xyz;
+	// test5.w = 1000;
+	//test5.z *= 0.001;
+	test5.xyz *= 0.001;
+
+	gl_Position =  test5;
+
+
+  gl_TexCoord[0] = gl_MultiTexCoord0;
+
+  return;*/
+
   vec4 nabcormaltransform = ftransform();
   vec4 normaltransform = vec4(1.0,1.0,1.0,1.0);
 
   float pi =radians(180);
 
-  //vec3 axis[3] = axisUniform;
- vec3 axis[3];
-   axis[0] = vec3(0.0,0.0,1.0);
-  axis[1] = vec3(1.0,0.0,0.0);
-  axis[2] = vec3(0.0,1.0,0.0);
+  vec3 axis[3] = axisUniform;
+ //vec3 axis[3];
+  // axis[0] = vec3(0.0,0.0,-1.0);
+  //axis[1] = vec3(1.0,0.0,0.0);
+  //axis[2] = vec3(0.0,1.0,0.0);
   
   //vec3 axis[3] = axisUniform;
   //axis[0]=-axisUniform[0];
   //axis[1]=-axisUniform[1];
   //axis[2]=-axisUniform[2];
+
+  // Inverse of jk2
   //axis[0] = vec3(1.0,0.0,0.0);
   //axis[1] = vec3(0.0,1.0,0.0);
   //axis[2] = vec3(0.0,0.0,1.0);
+  axis[0] = vec3(0.0,0.0,-1.0);
+  axis[1] = vec3(-1.0,0.0,0.0);
+  axis[2] = vec3(0.0,1.0,0.0);
+
+  // jk2
+  //axis[0] = vec3(0.0,0.0,-1.0);
+  //axis[1] = vec3(-1.0,0.0,0.0);
+  //axis[2] = vec3(0.0,1.0,1.0);
+
+
+
+  //axis[0]=-axisUniform[0];
+  //axis[1]=-axisUniform[1];
+  //axis[2]=axisUniform[2];
 
   //gl_Position = ftransform(gl_Vertex);
   //gl_Position = transform( gl_ModelViewProjectionMatrix, gl_Vertex );
@@ -43,7 +77,11 @@ void main(void)
   //vec4 correctPos = gl_ModelViewProjectionMatrix * gl_Vertex;
   vec4 correctPos = gl_ModelViewMatrix * gl_Vertex;
   //vec3 pointVec = originUniform-correctPos.xyz;
-  vec3 pointVec = correctPos.xyz;
+  vec3 pointVec = -correctPos.xyz;
+  //pointVec.x = -pointVec.z;
+  //pointVec.y = -pointVec.x;
+  //pointVec.z = pointVec.y;
+
   vec4 test;
   //test.x = dot(axisUniform[1].xyz,pointVec);
   //test.y = dot(-axisUniform[0].xyz,pointVec);
