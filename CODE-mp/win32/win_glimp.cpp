@@ -1363,6 +1363,22 @@ static void GLW_InitExtensions( void )
 		ri.Printf( PRINT_ALL, "...Using GL_EXT_texture_edge_clamp\n" );
 	}
 
+	// GL_ARB_geometry_shader4
+	glConfig.geometryShaderARBAvailable = qfalse;
+	if ( strstr( glConfig.extensions_string, "GL_ARB_geometry_shader4" ) )
+	{
+		glConfig.geometryShaderARBAvailable = qtrue;
+		ri.Printf( PRINT_ALL, "...found GL_ARB_geometry_shader4\n" );
+	}
+
+	// GL_ARB_geometry_shader4
+	glConfig.geometryShaderEXTAvailable = qfalse;
+	if ( strstr( glConfig.extensions_string, "GL_EXT_geometry_shader4" ) )
+	{
+		glConfig.geometryShaderEXTAvailable = qtrue;
+		ri.Printf( PRINT_ALL, "...found GL_EXT_geometry_shader4\n" );
+	}
+
 
 	// WGL_EXT_swap_control
 	qwglSwapIntervalEXT = ( BOOL (WINAPI *)(int)) qwglGetProcAddress( "wglSwapIntervalEXT" );
@@ -1820,6 +1836,8 @@ static void GLW_InitExtensions( void )
 		qglGetProgramInfoLog = (void (APIENTRY*) (GLuint, GLsizei, GLsizei*, GLchar*)) qwglGetProcAddress("glGetProgramInfoLog");
 		qglGetShaderiv = (void (APIENTRY*) (GLuint, GLenum, GLint*)) qwglGetProcAddress("glGetShaderiv");
 		qglGetShaderInfoLog = (void (APIENTRY*) (GLuint, GLsizei, GLsizei*, GLchar*)) qwglGetProcAddress("glGetShaderInfoLog");
+
+		qglProgramParameteri = (void (APIENTRY*) (GLuint, GLenum, GLint)) qwglGetProcAddress("glProgramParameteri");
 	}
 #endif
 }

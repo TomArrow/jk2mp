@@ -433,6 +433,8 @@ void (APIENTRYP qglGetProgramInfoLog) (GLuint, GLsizei, GLsizei*, GLchar*);
 void (APIENTRYP qglGetShaderiv) (GLuint, GLenum, GLint*);
 void (APIENTRYP qglGetShaderInfoLog) (GLuint, GLsizei, GLsizei*, GLchar*);
 
+void (APIENTRYP qglProgramParameteri) (GLuint, GLenum, GLint);
+
 
 
 static void ( APIENTRY * dllAccum )(GLenum op, GLfloat value);

@@ -1240,6 +1240,9 @@
     <CopyFileToFolders Include="fisheye-fragment.glsl">
       <Filter>Renderer\glsl</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="fisheye-geom.glsl">
+      <Filter>Renderer\glsl</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <Text Include="jpeg-9a\CMakeLists.txt">

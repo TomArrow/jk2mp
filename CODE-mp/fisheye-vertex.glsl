@@ -2,6 +2,7 @@ uniform vec3 originUniform;
 uniform vec3 axisUniform[3];
 
 out vec3 color;
+out float realDepth;
 
 float angleOnPlane(vec3 point, vec3 axis1, vec3 axis2){
 	
@@ -48,6 +49,7 @@ void equirectangular2(){
   float width = dot(-axis[1].xyz,pointVec);
   float widthSign = sign(width);
 
+  realDepth = depth;
   
   debugColor(width,height,depth*0.01);
 
@@ -77,8 +79,8 @@ void equirectangular2(){
 
   test.x = (xAngle*normaltransform.w);
   test.y = yAngle*normaltransform.w*2;
-  //test.z = 1.0-1.0/distance;
-  test.z = depth<=0 ? -1.0/distance : 1.0-1.0/distance;
+  test.z = 1.0-1.0/distance;
+  //test.z = depth<=0 ? -1.0/distance : 1.0-1.0/distance;
   test.w= normaltransform.w;
   gl_Position = test;
   //gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;

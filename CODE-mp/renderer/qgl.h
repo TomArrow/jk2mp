@@ -884,16 +884,24 @@ extern void (APIENTRYP qglGetProgramInfoLog) (GLuint, GLsizei, GLsizei*, GLchar*
 extern void (APIENTRYP qglGetShaderiv) (GLuint, GLenum, GLint*);
 extern void (APIENTRYP qglGetShaderInfoLog) (GLuint, GLsizei, GLsizei*, GLchar*);
 
+extern void (APIENTRYP qglProgramParameteri) (GLuint, GLenum, GLint);
+
 // Added support for GL_NV_depth_buffer_float
 extern void (APIENTRY* dllDepthRange)(GLclampd zNear, GLclampd zFar); // So we can overwrite it.
 extern void (APIENTRY* dllDepthRangeReal)(GLclampd zNear, GLclampd zFar); // So we can overwrite it.
 extern void (APIENTRY* dllClearDepth)(GLclampd depth);
 
-#define     GL_FRAGMENT_SHADER  0x8B30
-#define     GL_VERTEX_SHADER    0x8B31
-#define     GL_DELETE_STATUS    0x8B80
-#define     GL_COMPILE_STATUS    0x8B81
-#define     GL_LINK_STATUS    0x8B82
+#define     GL_FRAGMENT_SHADER      0x8B30
+#define     GL_VERTEX_SHADER        0x8B31
+#define     GL_DELETE_STATUS        0x8B80
+#define     GL_COMPILE_STATUS       0x8B81
+#define     GL_LINK_STATUS          0x8B82
+
+#define     GL_GEOMETRY_SHADER_ARB          0x8DD9
+#define     GL_GEOMETRY_VERTICES_OUT_ARB    0x8DDA
+#define     GL_GEOMETRY_INPUT_TYPE_ARB      0x8DDB
+#define     GL_GEOMETRY_OUTPUT_TYPE_ARB     0x8DDC
+
 
 #elif !defined(MACOS_X)
 
