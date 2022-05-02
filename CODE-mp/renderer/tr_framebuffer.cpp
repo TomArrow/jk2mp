@@ -122,8 +122,9 @@ typedef struct {
 } doubleFrameBufferData_t;
 
 typedef struct {
-	vec3_t origin;
-	vec3_t axis[3];
+	vec3_t dofJitter3D;
+	float dofFocus;
+	float dofRadius;
 } fishEyeData_t;
 
 static struct {
@@ -193,8 +194,9 @@ static qboolean R_FrameBuffer_ReactivateFisheye() {
 		qglUseProgram(fishEyeShader->ShaderId());
 		fbo.fishEyeActive = qtrue;
 
-		qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "originUniform"), 1, fbo.fishEyeData.origin);
-		qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "axisUniform"), 3, (GLfloat*)fbo.fishEyeData.axis);
+		qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofJitterUniform"), 1, fbo.fishEyeData.dofJitter3D);
+		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofFocusUniform"), fbo.fishEyeData.dofFocus);
+		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofRadiusUniform"), fbo.fishEyeData.dofRadius);
 
 		fbo.fishEyeTempDisabled = qfalse;
 		return qtrue;
@@ -205,7 +207,7 @@ static qboolean R_FrameBuffer_ReactivateFisheye() {
 #endif
 }
 
-qboolean R_FrameBuffer_ActivateFisheye(vec_t* origin, vec3_t* axes) {
+qboolean R_FrameBuffer_ActivateFisheye(vec_t* dofJitter3D, float dofFocus, float dofRadius) {
 #ifdef HAVE_GLES
 	//TODO
 	return qfalse;
@@ -223,14 +225,13 @@ qboolean R_FrameBuffer_ActivateFisheye(vec_t* origin, vec3_t* axes) {
 	qglUseProgram(fishEyeShader->ShaderId());
 	fbo.fishEyeActive = qtrue;
 
-	VectorCopy(origin, fbo.fishEyeData.origin);
-	VectorCopy(axes[0], fbo.fishEyeData.axis[0]);
-	VectorCopy(axes[1], fbo.fishEyeData.axis[1]);
-	VectorCopy(axes[2], fbo.fishEyeData.axis[2]);
+	VectorCopy(dofJitter3D, fbo.fishEyeData.dofJitter3D);
+	fbo.fishEyeData.dofFocus = dofFocus;
+	fbo.fishEyeData.dofRadius = dofRadius;
 
-	qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "originUniform"), 1, origin);
-	qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "axisUniform"), 3, (GLfloat*)axes);
-
+	qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofJitterUniform"), 1, fbo.fishEyeData.dofJitter3D);
+	qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofFocusUniform"), fbo.fishEyeData.dofFocus);
+	qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofRadiusUniform"), fbo.fishEyeData.dofRadius);
 	return qtrue;
 #endif
 }

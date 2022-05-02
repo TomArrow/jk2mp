@@ -464,8 +464,13 @@ static void SetFinalProjection( void ) {
 	dx += eyeJitter[0];
 	dy += eyeJitter[1];
 
-	vec3_t jitterOrigin = { dx,dy,0 };
-	R_FrameBuffer_ActivateFisheye(jitterOrigin, backEnd.viewParms.ori.axis);//Doesn't work. Needs fixing.
+	if (r_fboFishEye->integer) {
+
+		vec3_t jitterOrigin = { dx,dy,0 };
+		float dofRadius = shotData.dofRadius, dofFocus = shotData.dofFocus;
+		R_MME_ClampDof(&dofFocus, &dofRadius);
+		R_FrameBuffer_ActivateFisheye(jitterOrigin, dofFocus, dofRadius);//Doesn't work. Needs fixing.
+	}
 
 	xmin += dx; xmax += dx;
 	ymin += dy; ymax += dy;
@@ -802,7 +807,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			}
 
 			qglLoadMatrixf( backEnd.ori.modelMatrix ); 
-			//R_FrameBuffer_ActivateFisheye(backEnd.refdef.vieworg, backEnd.refdef.viewaxis);
 
 			//
 			// change depthrange if needed
@@ -842,7 +846,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 	// go back to the world modelview matrix
 	qglLoadMatrixf( backEnd.viewParms.world.modelMatrix );
-	//R_FrameBuffer_ActivateFisheye(backEnd.viewParms.world.origin, backEnd.viewParms.world.axis);
 	if ( depthRange ) {
 		qglDepthRange (0, 1);
 	}

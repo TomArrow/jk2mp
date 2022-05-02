@@ -506,6 +506,10 @@ qboolean R_MME_JitterOrigin( float *x, float *y ) {
 	*x = 0;
 	*y = 0;
 
+	if (r_fboFishEye->integer) {
+		return qfalse; // Handled elsewhere.
+	}
+
 
 	if (tr.captureIsActive && passData.quickJitter) {
 		int i = passData.quickJitterIndex;
@@ -559,6 +563,7 @@ void R_MME_JitterView( float *pixels, float *eyes ) {
 		R_MME_ClampDof(&focus, &radius);
 		scale = r_znear->value / focus;
 		scale *= radius * R_MME_FocusScale(focus);
+		if (r_fboFishEye->integer) scale = 1.0f;
 		if (mme_dofQuickRandom->integer == 3 && passData.superRandomDofJitterControl.superRandomPotentialJitterPositions) {
 			superRandomDofJitterControl_t* srJControl = &passData.superRandomDofJitterControl;
 
@@ -588,6 +593,7 @@ void R_MME_JitterView( float *pixels, float *eyes ) {
 		R_MME_ClampDof(&focus, &radius);
 		scale = r_znear->value / focus;
 		scale *= radius * R_MME_FocusScale(focus);;
+		if (r_fboFishEye->integer) scale = 1.0f;
 		eyes[0] = scale * passData.jitter[i][0];
 		eyes[1] = scale * passData.jitter[i][1];
 	}
