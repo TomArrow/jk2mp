@@ -300,6 +300,7 @@ typedef struct {
 	qboolean				textureEnvAddAvailable;
 	qboolean				textureFilterAnisotropicAvailable;
 	qboolean				clampToEdgeAvailable;
+	qboolean				tesselationShaderAvailable;
 	qboolean				geometryShaderEXTAvailable;
 	qboolean				geometryShaderARBAvailable;
 	qboolean				depthMapFloat; // GPU supports float depth maps - GL_ARB_depth_buffer_float

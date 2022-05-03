@@ -1228,25 +1228,25 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="hdrpq-fragment.glsl">
-      <Filter>Renderer\glsl</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="hdrpq-vertex.glsl">
-      <Filter>Renderer\glsl</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="fisheye-vertex.glsl">
-      <Filter>Renderer\glsl</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="fisheye-fragment.glsl">
-      <Filter>Renderer\glsl</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="fisheye-geom.glsl">
-      <Filter>Renderer\glsl</Filter>
-    </CopyFileToFolders>
-  </ItemGroup>
-  <ItemGroup>
     <Text Include="jpeg-9a\CMakeLists.txt">
       <Filter>Renderer\jpeg files</Filter>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="glsl\hdrpq-vertex.glsl">
+      <Filter>Renderer\glsl</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="glsl\fisheye-fragment.glsl">
+      <Filter>Renderer\glsl</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="glsl\fisheye-geom.glsl">
+      <Filter>Renderer\glsl</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="glsl\fisheye-vertex.glsl">
+      <Filter>Renderer\glsl</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="glsl\hdrpq-fragment.glsl">
+      <Filter>Renderer\glsl</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>

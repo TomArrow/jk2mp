@@ -781,11 +781,11 @@ void R_FrameBuffer_Init( void ) {
 		flags = FB_FLOAT16;
 		fbo.colorSpaceConv = R_FrameBufferCreate(width, height, flags);
 		fbo.colorSpaceConvResult = R_FrameBufferCreate(width, height, flags);
-		hdrPqShader = new R_GLSL("hdrpq-vertex.glsl","","hdrpq-fragment.glsl",qfalse);
+		hdrPqShader = new R_GLSL("glsl/hdrpq-vertex.glsl","","","","glsl/hdrpq-fragment.glsl",qfalse);
 		if (!hdrPqShader->IsWorking()) {
 			ri.Printf(PRINT_WARNING, "WARNING: HDR PQ Shader could not be compiled. HDR conversion disabled.\n");
 		}
-		fishEyeShader = new R_GLSL("fisheye-vertex.glsl","fisheye-geom.glsl","fisheye-fragment.glsl", qfalse);
+		fishEyeShader = new R_GLSL("glsl/fisheye-vertex.glsl", "", "","glsl/fisheye-geom.glsl","glsl/fisheye-fragment.glsl", qfalse);
 		if (!fishEyeShader->IsWorking()) {
 			ri.Printf(PRINT_WARNING, "WARNING: Fisheye shader could not be compiled. Fisheye mode not available.\n");
 		}

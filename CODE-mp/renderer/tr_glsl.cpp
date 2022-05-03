@@ -3,7 +3,7 @@
 #include <string>
 #include <fstream>
 
-R_GLSL::R_GLSL(char* filenameVertexShader, char* filenameGeometryShader, char* filenameFragmentShader, qboolean noFragment) {
+R_GLSL::R_GLSL(char* filenameVertexShader, char* filenameTesselationControlShader, char* filenameTesselationEvaluationShader, char* filenameGeometryShader, char* filenameFragmentShader, qboolean noFragment) {
 
 	bool doGeometryShader = strlen(filenameGeometryShader) && glConfig.geometryShaderARBAvailable;
 

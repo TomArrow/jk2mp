@@ -759,25 +759,35 @@
     <ClInclude Include="zlib\zutil.h" />
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="hdrpq-fragment.glsl">
+    <CopyFileToFolders Include="glsl\fisheye-fragment.glsl">
       <DeploymentContent>true</DeploymentContent>
       <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|x64'">$(OutDir)/glsl</DestinationFolders>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="hdrpq-vertex.glsl">
+    <CopyFileToFolders Include="glsl\fisheye-geom.glsl">
       <DeploymentContent>true</DeploymentContent>
       <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|x64'">$(OutDir)/glsl</DestinationFolders>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="fisheye-fragment.glsl">
+    <CopyFileToFolders Include="glsl\fisheye-vertex.glsl">
       <DeploymentContent>true</DeploymentContent>
       <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|x64'">$(OutDir)/glsl</DestinationFolders>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="fisheye-vertex.glsl">
+    <CopyFileToFolders Include="glsl\hdrpq-fragment.glsl">
       <DeploymentContent>true</DeploymentContent>
       <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|x64'">$(OutDir)/glsl</DestinationFolders>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="fisheye-geom.glsl">
+    <CopyFileToFolders Include="glsl\hdrpq-vertex.glsl">
       <DeploymentContent>true</DeploymentContent>
       <FileType>Document</FileType>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|x64'">$(OutDir)/glsl</DestinationFolders>
     </CopyFileToFolders>
     <None Include="win32\qe3.ico" />
   </ItemGroup>

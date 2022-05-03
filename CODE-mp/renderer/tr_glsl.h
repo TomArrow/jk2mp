@@ -12,7 +12,7 @@ public:
 	bool IsWorking() {
 		return isWorking;
 	};
-	R_GLSL(char* filenameVertexShader, char* filenameGeometryShader, char* filenameFragmentShader, qboolean noFragment);
+	R_GLSL(char* filenameVertexShader, char* filenameTesselationControlShader, char* filenameTesselationEvaluationShader, char* filenameGeometryShader, char* filenameFragmentShader, qboolean noFragment);
 private:
 	GLuint shaderId;
 	bool isWorking;

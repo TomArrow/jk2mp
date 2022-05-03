@@ -1371,12 +1371,19 @@ static void GLW_InitExtensions( void )
 		ri.Printf( PRINT_ALL, "...found GL_ARB_geometry_shader4\n" );
 	}
 
-	// GL_ARB_geometry_shader4
+	// GL_EXT_geometry_shader4
 	glConfig.geometryShaderEXTAvailable = qfalse;
 	if ( strstr( glConfig.extensions_string, "GL_EXT_geometry_shader4" ) )
 	{
 		glConfig.geometryShaderEXTAvailable = qtrue;
 		ri.Printf( PRINT_ALL, "...found GL_EXT_geometry_shader4\n" );
+	}
+	// GL_ARB_geometry_shader4
+	glConfig.tesselationShaderAvailable = qfalse;
+	if ( strstr( glConfig.extensions_string, "GL_ARB_tessellation_shader" ) )
+	{
+		glConfig.tesselationShaderAvailable = qtrue;
+		ri.Printf( PRINT_ALL, "...found GL_ARB_tessellation_shader\n" );
 	}
 
 

@@ -897,6 +897,9 @@ extern void (APIENTRY* dllClearDepth)(GLclampd depth);
 #define     GL_COMPILE_STATUS       0x8B81
 #define     GL_LINK_STATUS          0x8B82
 
+#define     GL_TESS_EVALUATION_SHADER   0x8E87
+#define     GL_TESS_CONTROL_SHADER      0x8E88
+
 #define     GL_GEOMETRY_SHADER_ARB          0x8DD9
 #define     GL_GEOMETRY_VERTICES_OUT_ARB    0x8DDA
 #define     GL_GEOMETRY_INPUT_TYPE_ARB      0x8DDB
