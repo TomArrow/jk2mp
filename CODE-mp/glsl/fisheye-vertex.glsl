@@ -25,7 +25,7 @@ float calcDofFactor(float pointDistance, float dofFocus){
 	return abs(pointDistance-dofFocus);// /pointDistance;
 }
 
-void equirectangular(){
+vec4 equirect_getPos(vec3 pointVec){
 
   float pi =radians(180);
 
@@ -33,9 +33,6 @@ void equirectangular(){
   axis[0] = vec3(0.0,0.0,-1.0);
   axis[1] = vec3(-1.0,0.0,0.0);
   axis[2] = vec3(0.0,1.0,0.0);
-
-  vec4 correctPos = gl_ModelViewMatrix * gl_Vertex;
-  vec3 pointVec = -correctPos.xyz;
 
   float distance = length(pointVec);
 
@@ -74,7 +71,16 @@ void equirectangular(){
   outputPos.y = yAngle;
   outputPos.z = 1.0-1.0/distance;
   outputPos.w= 1.0;
-  gl_Position = outputPos;
+
+  return outputPos;
+}
+
+void equirectangular(){
+
+
+  vec4 correctPos = gl_ModelViewMatrix * gl_Vertex;
+  vec3 pointVec = -correctPos.xyz;
+  gl_Position = equirect_getPos(pointVec);
 
   gl_TexCoord[0] = gl_MultiTexCoord0;
 

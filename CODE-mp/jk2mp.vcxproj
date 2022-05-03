@@ -789,6 +789,8 @@
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|Win32'">$(OutDir)/glsl</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|x64'">$(OutDir)/glsl</DestinationFolders>
     </CopyFileToFolders>
+    <None Include="glsl\fisheye-tessellation-control.glsl" />
+    <None Include="glsl\fisheye-tessellation-evaluation.glsl" />
     <None Include="win32\qe3.ico" />
   </ItemGroup>
   <ItemGroup>

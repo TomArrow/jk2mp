@@ -1221,6 +1221,12 @@
     <None Include="win32\qe3.ico">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="glsl\fisheye-tessellation-control.glsl">
+      <Filter>Renderer\glsl</Filter>
+    </None>
+    <None Include="glsl\fisheye-tessellation-evaluation.glsl">
+      <Filter>Renderer\glsl</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="win32\winquake.rc">
