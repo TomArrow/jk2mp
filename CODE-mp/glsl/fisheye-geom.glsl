@@ -1,6 +1,6 @@
 // Geometry Shader
-  #extension GL_ARB_geometry_shader4 : enable
-  //in float realDepth[3];
+#extension GL_ARB_geometry_shader4 : enable
+//in float realDepth[3];
 float realDepth[3]; in vec4 color[3];
 out vec4 vertColor;
 

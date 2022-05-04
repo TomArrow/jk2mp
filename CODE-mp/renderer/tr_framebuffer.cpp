@@ -125,6 +125,7 @@ typedef struct {
 	vec3_t dofJitter3D;
 	float dofFocus;
 	float dofRadius;
+	qboolean tessellationActive;
 } fishEyeData_t;
 
 static struct {
@@ -153,8 +154,26 @@ extern float drift;
 
 R_GLSL* hdrPqShader;
 R_GLSL* fishEyeShader;
+R_GLSL* fishEyeShaderTess;
 //GLuint tmpPBOtexture;
 
+
+qboolean R_FrameBuffer_FishEyeSetUniforms() {
+#ifdef HAVE_GLES
+	//TODO
+	return qfalse;
+#else
+	if (!fishEyeShader->IsWorking())
+		return qfalse;
+
+	qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofJitterUniform"), 1, fbo.fishEyeData.dofJitter3D);
+	qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofFocusUniform"), fbo.fishEyeData.dofFocus);
+	qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofRadiusUniform"), fbo.fishEyeData.dofRadius);
+
+	return qtrue;
+
+#endif
+}
 qboolean R_FrameBuffer_TempDeactivateFisheye() {
 #ifdef HAVE_GLES
 	//TODO
@@ -191,13 +210,11 @@ static qboolean R_FrameBuffer_ReactivateFisheye() {
 
 	if (fbo.fishEyeTempDisabled) {
 
-		qglUseProgram(fishEyeShader->ShaderId());
+		qglUseProgram(fbo.fishEyeData.tessellationActive ? fishEyeShaderTess->ShaderId(): fishEyeShader->ShaderId());
 		fbo.fishEyeActive = qtrue;
 
-		qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofJitterUniform"), 1, fbo.fishEyeData.dofJitter3D);
-		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofFocusUniform"), fbo.fishEyeData.dofFocus);
-		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofRadiusUniform"), fbo.fishEyeData.dofRadius);
-
+		R_FrameBuffer_FishEyeSetUniforms();
+		
 		fbo.fishEyeTempDisabled = qfalse;
 		return qtrue;
 	}
@@ -222,16 +239,15 @@ qboolean R_FrameBuffer_ActivateFisheye(vec_t* dofJitter3D, float dofFocus, float
 		return qfalse;
 	}
 
-	qglUseProgram(fishEyeShader->ShaderId());
+	qglUseProgram(fbo.fishEyeData.tessellationActive ? fishEyeShaderTess->ShaderId() : fishEyeShader->ShaderId());
 	fbo.fishEyeActive = qtrue;
 
 	VectorCopy(dofJitter3D, fbo.fishEyeData.dofJitter3D);
 	fbo.fishEyeData.dofFocus = dofFocus;
 	fbo.fishEyeData.dofRadius = dofRadius;
+	
+	R_FrameBuffer_FishEyeSetUniforms();
 
-	qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofJitterUniform"), 1, fbo.fishEyeData.dofJitter3D);
-	qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofFocusUniform"), fbo.fishEyeData.dofFocus);
-	qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofRadiusUniform"), fbo.fishEyeData.dofRadius);
 	return qtrue;
 #endif
 }
@@ -250,7 +266,87 @@ qboolean R_FrameBuffer_DeactivateFisheye() {
 	return qtrue;
 #endif
 }
+qboolean R_FrameBuffer_FishEyeActivateTessellation() {
+#ifdef HAVE_GLES
+	//TODO
+	return qfalse;
+#else
+	if (!fishEyeShader->IsWorking())
+		return qfalse;
 
+	if (!fishEyeShaderTess->IsWorking())
+		return qfalse;
+
+	if (fbo.fishEyeData.tessellationActive) {
+		// Already active
+	}
+	else {
+
+		fbo.fishEyeData.tessellationActive = qtrue;
+		R_FrameBuffer_TempDeactivateFisheye();
+		R_FrameBuffer_ReactivateFisheye();
+	}
+
+	return qtrue;
+#endif
+}
+qboolean R_FrameBuffer_FishEyeDeactivateTessellation() {
+#ifdef HAVE_GLES
+	//TODO
+	return qfalse;
+#else
+	if (!fishEyeShader->IsWorking())
+		return qfalse;
+
+	if (!fishEyeShaderTess->IsWorking())
+		return qfalse;
+
+	if (!fbo.fishEyeData.tessellationActive) {
+		// Already inactive
+	}
+	else {
+
+		fbo.fishEyeData.tessellationActive = qfalse;
+		R_FrameBuffer_TempDeactivateFisheye();
+		R_FrameBuffer_ReactivateFisheye();
+	}
+
+	return qtrue;
+#endif
+}
+
+static GLenum fishEyeProcessGLMode(GLenum mode) {
+	if (!fbo.fishEyeActive) return mode;
+
+	if (mode == GL_TRIANGLES) { // Tessellation only for triangles rn
+		if (R_FrameBuffer_FishEyeActivateTessellation()) {
+			qglPatchParameteri(GL_PATCH_VERTICES,3);
+			return GL_PATCHES;
+		}
+		else {
+			return mode;
+		}
+	}
+	else {
+		R_FrameBuffer_FishEyeDeactivateTessellation();
+		return mode;
+	}
+}
+
+static void APIENTRY fishEyeDrawArrays(GLenum mode, GLint first, GLsizei count)
+{
+	dllDrawArraysReal(fishEyeProcessGLMode(mode), first, count);
+}
+
+static void APIENTRY fishEyeDrawElements(GLenum mode, GLsizei count, GLenum type, const void* indices)
+{
+	dllDrawElementsReal(fishEyeProcessGLMode(mode), count, type, indices);
+}
+
+static void APIENTRY fishEyeBegin(GLenum mode)
+{
+	dllBeginReal(fishEyeProcessGLMode(mode));
+}
 
 
 
@@ -658,6 +754,7 @@ void R_FrameBuffer_Init( void ) {
 	GLenum tmp;
 
 	fbo.fishEyeActive = qfalse;
+	fbo.fishEyeData.tessellationActive = qfalse;
 
 	memset( &fbo, 0, sizeof( fbo ) );
 	r_fbo = ri.Cvar_Get( "r_fbo", "0", CVAR_ARCHIVE | CVAR_LATCH);
@@ -785,9 +882,24 @@ void R_FrameBuffer_Init( void ) {
 		if (!hdrPqShader->IsWorking()) {
 			ri.Printf(PRINT_WARNING, "WARNING: HDR PQ Shader could not be compiled. HDR conversion disabled.\n");
 		}
-		fishEyeShader = new R_GLSL("glsl/fisheye-vertex.glsl", "", "","glsl/fisheye-geom.glsl","glsl/fisheye-fragment.glsl", qfalse);
+	}
+	if (r_fboFishEye->integer) {
+
+		fishEyeShader = new R_GLSL("glsl/fisheye-vertex.glsl", "", "", "glsl/fisheye-geom.glsl", "glsl/fisheye-fragment.glsl", qfalse);
 		if (!fishEyeShader->IsWorking()) {
 			ri.Printf(PRINT_WARNING, "WARNING: Fisheye shader could not be compiled. Fisheye mode not available.\n");
+		}
+		else {
+			fishEyeShaderTess = new R_GLSL("glsl/fisheye-vertex.glsl", "glsl/fisheye-tessellation-control.glsl", "glsl/fisheye-tessellation-evaluation.glsl", "glsl/fisheye-geom.glsl", "glsl/fisheye-fragment.glsl", qfalse);
+			if (!fishEyeShaderTess->IsWorking()) {
+				ri.Printf(PRINT_WARNING, "WARNING: Fisheye shader with tessellation could not be compiled. Fisheye mode will not use hardware tessellation and will require tessellated maps instead.\n");
+			}
+			else {
+				// Ok, we want tessellation. Let's intercept all drawing calls and convert them into GL_PATCHES calls if they are GL_TRIANGLES (or maybe later some other types we wanna support)
+				qglBegin = dllBegin = fishEyeBegin;
+				qglDrawArrays = dllDrawArrays = fishEyeDrawArrays;
+				qglDrawElements = dllDrawElements = fishEyeDrawElements;
+			}
 		}
 	}
 

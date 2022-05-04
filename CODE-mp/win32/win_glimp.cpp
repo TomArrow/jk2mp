@@ -1845,6 +1845,7 @@ static void GLW_InitExtensions( void )
 		qglGetShaderInfoLog = (void (APIENTRY*) (GLuint, GLsizei, GLsizei*, GLchar*)) qwglGetProcAddress("glGetShaderInfoLog");
 
 		qglProgramParameteri = (void (APIENTRY*) (GLuint, GLenum, GLint)) qwglGetProcAddress("glProgramParameteri");
+		qglPatchParameteri = (void (APIENTRY*) (GLenum, GLint)) qwglGetProcAddress("glPatchParameteri");
 	}
 #endif
 }

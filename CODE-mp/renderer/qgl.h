@@ -885,11 +885,20 @@ extern void (APIENTRYP qglGetShaderiv) (GLuint, GLenum, GLint*);
 extern void (APIENTRYP qglGetShaderInfoLog) (GLuint, GLsizei, GLsizei*, GLchar*);
 
 extern void (APIENTRYP qglProgramParameteri) (GLuint, GLenum, GLint);
+extern void (APIENTRYP qglPatchParameteri) (GLenum, GLint);
 
 // Added support for GL_NV_depth_buffer_float
 extern void (APIENTRY* dllDepthRange)(GLclampd zNear, GLclampd zFar); // So we can overwrite it.
 extern void (APIENTRY* dllDepthRangeReal)(GLclampd zNear, GLclampd zFar); // So we can overwrite it.
 extern void (APIENTRY* dllClearDepth)(GLclampd depth);
+
+// Need special handling for tessellation... ugly af but what can I do. If using tessellation I need to overwrite these and replace with GL_PATCHES and make some calls etc.
+extern void (APIENTRY* dllBegin)(GLenum mode);
+extern void (APIENTRY* dllBeginReal)(GLenum mode);
+extern void (APIENTRY* dllDrawElements)(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
+extern void (APIENTRY* dllDrawElementsReal)(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
+extern void (APIENTRY* dllDrawArrays)(GLenum mode, GLint first, GLsizei count);
+extern void (APIENTRY* dllDrawArraysReal)(GLenum mode, GLint first, GLsizei count);
 
 #define     GL_FRAGMENT_SHADER      0x8B30
 #define     GL_VERTEX_SHADER        0x8B31
@@ -897,9 +906,42 @@ extern void (APIENTRY* dllClearDepth)(GLclampd depth);
 #define     GL_COMPILE_STATUS       0x8B81
 #define     GL_LINK_STATUS          0x8B82
 
+// Tessellation shader related stuff.
+#define	    GL_PATCHES                                         0xE
+#define	    GL_PATCH_VERTICES                                  0x8E72
+#define	    GL_PATCH_DEFAULT_INNER_LEVEL                       0x8E73
+#define	    GL_PATCH_DEFAULT_OUTER_LEVEL                       0x8E74
+#define	    GL_TESS_CONTROL_OUTPUT_VERTICES                    0x8E75
+#define	    GL_TESS_GEN_MODE                                   0x8E76
+#define	    GL_TESS_GEN_SPACING                                0x8E77
+#define	    GL_TESS_GEN_VERTEX_ORDER                           0x8E78
+#define	    GL_TESS_GEN_POINT_MODE                             0x8E79
+#define	    GL_ISOLINES                                        0x8E7A
+#define	    GL_FRACTIONAL_ODD                                  0x8E7B
+#define	    GL_FRACTIONAL_EVEN                                 0x8E7C
+#define	    GL_MAX_PATCH_VERTICES                              0x8E7D
+#define	    GL_MAX_TESS_GEN_LEVEL                              0x8E7E
+#define	    GL_MAX_TESS_CONTROL_UNIFORM_COMPONENTS             0x8E7F
+#define	    GL_MAX_TESS_EVALUATION_UNIFORM_COMPONENTS          0x8E80
+#define	    GL_MAX_TESS_CONTROL_TEXTURE_IMAGE_UNITS            0x8E81
+#define	    GL_MAX_TESS_EVALUATION_TEXTURE_IMAGE_UNITS         0x8E82
+#define	    GL_MAX_TESS_CONTROL_OUTPUT_COMPONENTS              0x8E83
+#define	    GL_MAX_TESS_PATCH_COMPONENTS                       0x8E84
+#define	    GL_MAX_TESS_CONTROL_TOTAL_OUTPUT_COMPONENTS        0x8E85
+#define	    GL_MAX_TESS_EVALUATION_OUTPUT_COMPONENTS           0x8E86
+#define	    GL_MAX_TESS_CONTROL_UNIFORM_BLOCKS                 0x8E89
+#define	    GL_MAX_TESS_EVALUATION_UNIFORM_BLOCKS              0x8E8A
+#define	    GL_MAX_TESS_CONTROL_INPUT_COMPONENTS               0x886C
+#define 	GL_MAX_TESS_EVALUATION_INPUT_COMPONENTS            0x886D
+#define	    GL_MAX_COMBINED_TESS_CONTROL_UNIFORM_COMPONENTS    0x8E1E
+#define	    GL_MAX_COMBINED_TESS_EVALUATION_UNIFORM_COMPONENTS 0x8E1F
+#define	    GL_UNIFORM_BLOCK_REFERENCED_BY_TESS_CONTROL_SHADER     0x84F0
+#define	    GL_UNIFORM_BLOCK_REFERENCED_BY_TESS_EVALUATION_SHADER  0x84F1
 #define     GL_TESS_EVALUATION_SHADER   0x8E87
 #define     GL_TESS_CONTROL_SHADER      0x8E88
+// Tessellation shader related stuff end.
 
+// Geometry shader related stuff
 #define     GL_GEOMETRY_SHADER_ARB          0x8DD9
 #define     GL_GEOMETRY_VERTICES_OUT_ARB    0x8DDA
 #define     GL_GEOMETRY_INPUT_TYPE_ARB      0x8DDB

@@ -3,13 +3,18 @@
 #include <string>
 #include <fstream>
 
-R_GLSL::R_GLSL(char* filenameVertexShader, char* filenameTesselationControlShader, char* filenameTesselationEvaluationShader, char* filenameGeometryShader, char* filenameFragmentShader, qboolean noFragment) {
+R_GLSL::R_GLSL(char* filenameVertexShader, char* filenameTessellationControlShader, char* filenameTessellationEvaluationShader, char* filenameGeometryShader, char* filenameFragmentShader, qboolean noFragment) {
 
 	bool doGeometryShader = strlen(filenameGeometryShader) && glConfig.geometryShaderARBAvailable;
+
+	// No point doing the tessellation if we don't have a geometry shader, since there's no way to take advantage of the improved subdivision then
+	bool doTessellationShader = doGeometryShader && glConfig.tesselationShaderAvailable && strlen(filenameTessellationControlShader) && strlen(filenameTessellationEvaluationShader);
 
 	//shaderId =
 	const char* vertexText;
 	const char* geometryText;
+	const char* tessellationControlText;
+	const char* tessellationEvaluationText;
 	const char* fragmentText;
 	bool success = true;
 	try {
@@ -17,6 +22,10 @@ R_GLSL::R_GLSL(char* filenameVertexShader, char* filenameTesselationControlShade
 		fragmentText = (new std::string(std::istreambuf_iterator<char>(std::ifstream(filenameFragmentShader).rdbuf()), std::istreambuf_iterator<char>()))->c_str();
 		if (doGeometryShader) {
 			geometryText = (new std::string(std::istreambuf_iterator<char>(std::ifstream(filenameGeometryShader).rdbuf()), std::istreambuf_iterator<char>()))->c_str();
+		}
+		if (doTessellationShader) {
+			tessellationControlText = (new std::string(std::istreambuf_iterator<char>(std::ifstream(filenameTessellationControlShader).rdbuf()), std::istreambuf_iterator<char>()))->c_str();
+			tessellationEvaluationText = (new std::string(std::istreambuf_iterator<char>(std::ifstream(filenameTessellationEvaluationShader).rdbuf()), std::istreambuf_iterator<char>()))->c_str();
 		}
 	}
 	catch (...) {
@@ -56,6 +65,26 @@ R_GLSL::R_GLSL(char* filenameVertexShader, char* filenameTesselationControlShade
 		}
 	}
 
+	GLuint tessellationControlShaderId;
+	GLuint tessellationEvaluationShaderId;
+	if (doTessellationShader) {
+		tessellationControlShaderId = qglCreateShader(GL_TESS_CONTROL_SHADER);
+		ri.Printf(PRINT_WARNING, "DEBUG: Tessellation control shader id is %d.\n", (int)tessellationControlShaderId);
+		qglShaderSource(tessellationControlShaderId, 1, &tessellationControlText, NULL);
+		qglCompileShader(tessellationControlShaderId);
+		if (hasErrored(tessellationControlShaderId, filenameTessellationControlShader, false)) {
+			success = false;
+		}
+
+		tessellationEvaluationShaderId = qglCreateShader(GL_TESS_EVALUATION_SHADER);
+		ri.Printf(PRINT_WARNING, "DEBUG: Tessellation evaluation shader id is %d.\n", (int)tessellationEvaluationShaderId);
+		qglShaderSource(tessellationEvaluationShaderId, 1, &tessellationEvaluationText, NULL);
+		qglCompileShader(tessellationEvaluationShaderId);
+		if (hasErrored(tessellationEvaluationShaderId, filenameTessellationEvaluationShader, false)) {
+			success = false;
+		}
+	}
+
 	GLuint fragmentShaderId = qglCreateShader(GL_FRAGMENT_SHADER);
 	ri.Printf(PRINT_WARNING, "DEBUG: Fragment shader id is %d.\n", (int)fragmentShaderId);
 	qglShaderSource(fragmentShaderId, 1, &fragmentText, NULL);
@@ -67,6 +96,10 @@ R_GLSL::R_GLSL(char* filenameVertexShader, char* filenameTesselationControlShade
 	shaderId = qglCreateProgram();
 	ri.Printf(PRINT_WARNING, "DEBUG: Program shader id is %d.\n", (int)shaderId);
 	qglAttachShader(shaderId, vertexShaderId);
+	if (doTessellationShader) {
+		qglAttachShader(shaderId, tessellationControlShaderId);
+		qglAttachShader(shaderId, tessellationEvaluationShaderId);
+	}
 	if (doGeometryShader) {
 		qglAttachShader(shaderId, geometryShaderId);
 		qglProgramParameteri(shaderId, GL_GEOMETRY_VERTICES_OUT_ARB, 6);
@@ -81,6 +114,13 @@ R_GLSL::R_GLSL(char* filenameVertexShader, char* filenameTesselationControlShade
 		success = false;
 	}
 
+	if (doGeometryShader) {
+		qglDeleteShader(geometryShaderId);
+	}
+	if (doTessellationShader) {
+		qglDeleteShader(tessellationControlShaderId);
+		qglDeleteShader(tessellationEvaluationShaderId);
+	}
 	qglDeleteShader(vertexShaderId);
 	qglDeleteShader(fragmentShaderId);
 
