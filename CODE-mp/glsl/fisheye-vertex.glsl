@@ -4,6 +4,11 @@ uniform float dofRadiusUniform;
 
 out vec3 debugColor;
 out vec4 color;
+out vec4 texCoord;
+out vec4 colorVertex;
+
+out vec4 geomTexCoord;
+
 out float realDepth;float angleOnPlane(vec3 point, vec3 axis1, vec3 axis2)
 {
 
@@ -85,8 +90,11 @@ void equirectangular()
 	gl_Position = vec4(pointVec, 1.0);
 
 	gl_TexCoord[0] = gl_MultiTexCoord0;
+	texCoord = gl_MultiTexCoord0;
+	geomTexCoord = gl_MultiTexCoord0;
 
 	color = gl_Color;
+	colorVertex = gl_Color;
 }
 
 void main(void)

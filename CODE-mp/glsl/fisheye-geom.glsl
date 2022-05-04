@@ -4,6 +4,8 @@
 float realDepth[3]; in vec4 color[3];
 out vec4 vertColor;
 
+in vec4 geomTexCoord[3];
+
 uniform vec3 dofJitterUniform;
 uniform float dofFocusUniform;
 uniform float dofRadiusUniform;
@@ -111,6 +113,7 @@ void main()
 		{
 			gl_Position = positions[i];
 			gl_TexCoord[0] = gl_TexCoordIn[i][0];
+			gl_TexCoord[0] = geomTexCoord[i];
 			vertColor = color[i];
 			EmitVertex();
 		}
@@ -128,6 +131,7 @@ void main()
 			}
 			gl_Position = thisPosition;
 			gl_TexCoord[0] = gl_TexCoordIn[i][0];
+			gl_TexCoord[0] = geomTexCoord[i];
 			vertColor = color[i];
 			EmitVertex();
 		}
@@ -141,6 +145,7 @@ void main()
 			}
 			gl_Position = thisPosition;
 			gl_TexCoord[0] = gl_TexCoordIn[i][0];
+			gl_TexCoord[0] = geomTexCoord[i];
 			vertColor = color[i];
 			EmitVertex();
 		}

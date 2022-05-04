@@ -1,7 +1,12 @@
 #version 410 core
 #extension GL_ARB_tessellation_shader : enable
 
-layout(vertices = 3) out;
+layout(vertices = 4) out;
+
+in vec4 texCoord[];
+in vec4 colorVertex[];
+out vec4 vertexTexCoord[];
+out vec4 colorTCS[];
 
 void main()
 {
@@ -18,8 +23,12 @@ void main()
 	// Uhm. Let's just be crude and put the last point in between two other points.
 	// TODO: Make the extra point go on the longest line.
 	gl_out[gl_InvocationID].gl_Position = 0.5*gl_in[1].gl_Position + 0.5*gl_in[2].gl_Position;
+	vertexTexCoord[gl_InvocationID] = texCoord[1]*0.5+texCoord[2]*0.5;
+	colorTCS[gl_InvocationID] = colorVertex[1]*0.5+colorVertex[2]*0.5;
  } else {
 	
 	gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+	vertexTexCoord[gl_InvocationID] = texCoord[gl_InvocationID];
+	colorTCS[gl_InvocationID] = colorVertex[gl_InvocationID];
  }
 }
