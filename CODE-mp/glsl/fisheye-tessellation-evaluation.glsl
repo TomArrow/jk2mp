@@ -1,7 +1,8 @@
 #version 410 core
 //#extension GL_ARB_tessellation_shader : enable
 
-layout(quads, equal_spacing, ccw) in;
+//layout(quads, equal_spacing, ccw) in;
+layout(triangles, equal_spacing, ccw) in;
 
 out vec4 color;
 
