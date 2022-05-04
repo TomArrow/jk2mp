@@ -1,7 +1,7 @@
 #version 410 core
 #extension GL_ARB_tessellation_shader : enable
 
-layout(vertices = 4) out;
+layout(vertices = 3) out;
 
 in vec4 texCoord[];
 in vec4 colorVertex[];
@@ -10,13 +10,15 @@ out vec4 colorTCS[];
 
 void main()
 {
- gl_TessLevelOuter[0] = 2.0;
- gl_TessLevelOuter[1] = 2.0;
- gl_TessLevelOuter[2] = 2.0;
- gl_TessLevelOuter[3] = 2.0;
 
- gl_TessLevelInner[0] = 2.0;
- gl_TessLevelInner[1] = 2.0;
+
+ /*gl_TessLevelOuter[0] = 1.0;
+ gl_TessLevelOuter[1] = 2.0;
+ gl_TessLevelOuter[2] = 3.0;
+ gl_TessLevelOuter[3] = 4.0;
+
+ gl_TessLevelInner[0] = 1.0;
+ gl_TessLevelInner[1] = 1.0;
  
  if(gl_in.length() == 3 && 3== gl_InvocationID){
 	// I think we're getting triangles. But we wanna output quads.
@@ -30,5 +32,26 @@ void main()
 	gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
 	vertexTexCoord[gl_InvocationID] = texCoord[gl_InvocationID];
 	colorTCS[gl_InvocationID] = colorVertex[gl_InvocationID];
- }
+ }*/
+
+ 
+	if(gl_InvocationID==0){
+		
+		float maxSideLength = 50;
+
+		float maxLevel = 1.0;
+		for(int i=0;i<3;i++){
+			float sideLength = length(gl_in[i].gl_Position-gl_in[(i+1)%3].gl_Position);
+			float tessLevelHere = max(1,ceil(sideLength/maxSideLength));
+			gl_TessLevelOuter[(i+2)%3] = tessLevelHere;
+			maxLevel = max(maxLevel,tessLevelHere);
+		}
+
+		//int vertCount = gl_in.length();
+		gl_TessLevelInner[0] = maxLevel;
+
+	}
+	gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+	vertexTexCoord[gl_InvocationID] = texCoord[gl_InvocationID];
+	colorTCS[gl_InvocationID] = colorVertex[gl_InvocationID];
 }
