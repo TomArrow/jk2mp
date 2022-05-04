@@ -41,8 +41,10 @@ void main()
 
 		float maxLevel = 1.0;
 		for(int i=0;i<3;i++){
+			float closestDistance = min(min(length(gl_in[i].gl_Position.xyz),length(gl_in[(i+1)%3].gl_Position.xyz)),min(length(gl_in[i].gl_Position.xz),length(gl_in[(i+1)%3].gl_Position.xz)));
+			float maxSideLengthHere = max(closestDistance/300.0*maxSideLength,5);
 			float sideLength = length(gl_in[i].gl_Position-gl_in[(i+1)%3].gl_Position);
-			float tessLevelHere = max(1,ceil(sideLength/maxSideLength));
+			float tessLevelHere = max(1,ceil(sideLength/maxSideLengthHere));
 			gl_TessLevelOuter[(i+2)%3] = tessLevelHere;
 			maxLevel = max(maxLevel,tessLevelHere);
 		}
