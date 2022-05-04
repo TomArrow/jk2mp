@@ -19,7 +19,7 @@ float angleOnPlane(vec3 point, vec3 axis1, vec3 axis2)
 
 vec3 getPerpendicularAxis(vec3 point, vec3 mainAxis)
 {
-	return point - dot(point, mainAxis) *mainAxis;
+	return normalize(point - dot(point, mainAxis) *mainAxis);
 }
 
 void setDebugColor(float x, float y, float z)
