@@ -46,6 +46,10 @@
 
 //#pragma once
 
+#ifdef RELDEBUG
+#pragma optimize("", off)
+#endif
+
 #include "tr_local.h"
 #include "tr_glsl.h"
 
@@ -138,7 +142,7 @@ static struct {
 	frameBufferData_t *colorSpaceConvResult;
 	std::vector<doubleFrameBufferData_t> rollingShutterBuffers;
 	qboolean fishEyeActive;
-	qboolean fishEyeTempDisabled;
+	int fishEyeTempDisabled;
 	int screenWidth, screenHeight;
 	fishEyeData_t fishEyeData;
 } fbo;
@@ -158,7 +162,7 @@ R_GLSL* fishEyeShaderTess;
 //GLuint tmpPBOtexture;
 
 
-qboolean R_FrameBuffer_FishEyeSetUniforms() {
+qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 #ifdef HAVE_GLES
 	//TODO
 	return qfalse;
@@ -166,39 +170,60 @@ qboolean R_FrameBuffer_FishEyeSetUniforms() {
 	if (!fishEyeShader->IsWorking())
 		return qfalse;
 
-	qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofJitterUniform"), 1, fbo.fishEyeData.dofJitter3D);
-	qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofFocusUniform"), fbo.fishEyeData.dofFocus);
-	qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofRadiusUniform"), fbo.fishEyeData.dofRadius);
+	if (tess) {
+
+		qglUniform3fv(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "dofJitterUniform"), 1, fbo.fishEyeData.dofJitter3D);
+		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "dofFocusUniform"), fbo.fishEyeData.dofFocus);
+		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "dofRadiusUniform"), fbo.fishEyeData.dofRadius);
+
+		if (fbo.fishEyeData.tessellationActive) {
+
+			qglPatchParameteri(GL_PATCH_VERTICES, 3);
+		}
+	}
+	else {
+		qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofJitterUniform"), 1, fbo.fishEyeData.dofJitter3D);
+		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofFocusUniform"), fbo.fishEyeData.dofFocus);
+		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofRadiusUniform"), fbo.fishEyeData.dofRadius);
+	}
 
 	return qtrue;
 
 #endif
 }
-qboolean R_FrameBuffer_TempDeactivateFisheye() {
+qboolean R_FrameBuffer_TempDeactivateFisheye(qboolean glfinish = qtrue) {
 #ifdef HAVE_GLES
 	//TODO
 	return qfalse;
 #else
-	if (!fishEyeShader->IsWorking())
+	if (!fishEyeShader || !fishEyeShader->IsWorking())
 		return qfalse;
 
-	if (fbo.fishEyeActive) {
-		fbo.fishEyeTempDisabled = qtrue;
+	if (fbo.fishEyeActive || fbo.fishEyeTempDisabled > 0) {
+		fbo.fishEyeTempDisabled++;
+		if (glfinish) {
+			// We need this because when using those complex shaders things get really weird if we deactivate the shader and dont call glFinish before.
+			// Stuff like image just never refreshing, image flickering back and forth betweeen an earlier and later one. Just weird shit.
+			qglFinish(); 
+		}
 		qglUseProgram(0);
 		fbo.fishEyeActive = qfalse;
 		return qtrue;
 	}
+	//else if (fbo.fishEyeTempDisabled > 0) {
+	//	fbo.fishEyeTempDisabled++;
+	//}
 
-	return qfalse;
+	return qtrue;
 
 #endif
 }
 static qboolean R_FrameBuffer_ReactivateFisheye() {
-#ifdef HAVE_GLES
+#ifdef HAVE_GLES 
 	//TODO
 	return qfalse;
 #else
-	if (!fishEyeShader->IsWorking())
+	if (!fishEyeShader || !fishEyeShader->IsWorking())
 		return qfalse;
 
 	if (!r_fboFishEye->integer) {
@@ -208,18 +233,21 @@ static qboolean R_FrameBuffer_ReactivateFisheye() {
 		return qfalse;
 	}
 
-	if (fbo.fishEyeTempDisabled) {
+	if (fbo.fishEyeTempDisabled > 0) {
 
-		qglUseProgram(fbo.fishEyeData.tessellationActive ? fishEyeShaderTess->ShaderId(): fishEyeShader->ShaderId());
-		fbo.fishEyeActive = qtrue;
+		if (fbo.fishEyeTempDisabled-- == 1) {
 
-		R_FrameBuffer_FishEyeSetUniforms();
-		
-		fbo.fishEyeTempDisabled = qfalse;
-		return qtrue;
+			qglUseProgram(fbo.fishEyeData.tessellationActive ? fishEyeShaderTess->ShaderId() : fishEyeShader->ShaderId());
+			fbo.fishEyeActive = qtrue;
+
+			R_FrameBuffer_FishEyeSetUniforms(fbo.fishEyeData.tessellationActive);
+
+			return qtrue;
+		}
+
 	}
 
-	return qfalse;
+	return qtrue;
 
 #endif
 }
@@ -229,7 +257,7 @@ qboolean R_FrameBuffer_ActivateFisheye(vec_t* dofJitter3D, float dofFocus, float
 	//TODO
 	return qfalse;
 #else
-	if (!fishEyeShader->IsWorking())
+	if (!fishEyeShader || !fishEyeShader->IsWorking())
 		return qfalse;
 
 	if (!r_fboFishEye->integer) {
@@ -246,7 +274,7 @@ qboolean R_FrameBuffer_ActivateFisheye(vec_t* dofJitter3D, float dofFocus, float
 	fbo.fishEyeData.dofFocus = dofFocus;
 	fbo.fishEyeData.dofRadius = dofRadius;
 	
-	R_FrameBuffer_FishEyeSetUniforms();
+	R_FrameBuffer_FishEyeSetUniforms(fbo.fishEyeData.tessellationActive);
 
 	return qtrue;
 #endif
@@ -257,11 +285,12 @@ qboolean R_FrameBuffer_DeactivateFisheye() {
 	//TODO
 	return qfalse;
 #else
-	if (!fishEyeShader->IsWorking())
+	if (!fishEyeShader || !fishEyeShader->IsWorking())
 		return qfalse;
 
 	qglUseProgram(0);
 	fbo.fishEyeActive = qfalse;
+	//fbo.fishEyeTempDisabled = 0;
 
 	return qtrue;
 #endif
@@ -320,7 +349,6 @@ static GLenum fishEyeProcessGLMode(GLenum mode) {
 
 	if (mode == GL_TRIANGLES) { // Tessellation only for triangles rn
 		if (R_FrameBuffer_FishEyeActivateTessellation()) {
-			qglPatchParameteri(GL_PATCH_VERTICES,3);
 			return GL_PATCHES;
 		}
 		else {
@@ -363,7 +391,7 @@ void R_SetGL2DSize (int width, int height) {
 	qglOrtho (0, width, height, 0, 0, 1);
 	qglMatrixMode(GL_MODELVIEW);
     qglLoadIdentity ();
-	R_FrameBuffer_DeactivateFisheye();
+	//R_FrameBuffer_DeactivateFisheye();
 }
 
 void R_DrawQuad( GLuint tex, int width, int height) {
@@ -537,7 +565,7 @@ static int CreateTextureBuffer( int width, int height, GLenum internalFormat, GL
 
 	qglGenTextures( 1, (GLuint *)&ret );
 	qglBindTexture(	GL_TEXTURE_2D, ret );
-	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, superSample == 1 ?  GL_NEAREST : (r_fboSuperSampleMipMap->integer ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR) );
+	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, superSample == 1 ?  GL_NEAREST : (r_fboSuperSampleMipMap->integer && superSample != 1 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR) );
 	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
@@ -755,6 +783,7 @@ void R_FrameBuffer_Init( void ) {
 
 	fbo.fishEyeActive = qfalse;
 	fbo.fishEyeData.tessellationActive = qfalse;
+	fbo.fishEyeTempDisabled = 0;
 
 	memset( &fbo, 0, sizeof( fbo ) );
 	r_fbo = ri.Cvar_Get( "r_fbo", "0", CVAR_ARCHIVE | CVAR_LATCH);
@@ -1234,7 +1263,7 @@ qboolean R_FrameBuffer_ApplyExposure( ) { // really kinda useless unless you wan
 
 	//R_FrameBuffer_GenerateMainMipMaps();
 	R_FrameBuffer_TempDeactivateFisheye();
-
+	
 	// First copy image into exposure FBO and apply exposure
 	qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.exposure->fbo);
 	qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
@@ -1258,10 +1287,11 @@ qboolean R_FrameBuffer_ApplyExposure( ) { // really kinda useless unless you wan
 		VectorMultiply(tr.mmeFBOImageTint,tint,tint);
 	}
 	qglColor4f(tint[0], tint[1], tint[2], 1.0f);
-	GL_State(/*GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO |*/ GLS_DEPTHTEST_DISABLE);
+	//GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO | GLS_DEPTHTEST_DISABLE);
+	GL_State( GLS_DEPTHTEST_DISABLE);
 	R_SetGL2DSize(glConfig.vidWidth*superSampleMultiplier, glConfig.vidHeight * superSampleMultiplier);
 	R_DrawQuad(fbo.main->color, glConfig.vidWidth * superSampleMultiplier, glConfig.vidHeight * superSampleMultiplier);
-
+	
 	// Now copy it back
 	qglBindFramebuffer( GL_FRAMEBUFFER_EXT, fbo.main->fbo );
 	qglDrawBuffer( GL_COLOR_ATTACHMENT0_EXT );
@@ -1270,7 +1300,7 @@ qboolean R_FrameBuffer_ApplyExposure( ) { // really kinda useless unless you wan
 	R_SetGL2DSize( glConfig.vidWidth * superSampleMultiplier, glConfig.vidHeight * superSampleMultiplier);
 	R_DrawQuad(	fbo.exposure->color, glConfig.vidWidth * superSampleMultiplier, glConfig.vidHeight * superSampleMultiplier);
 	mipMapsAlreadyGeneratedThisFrame = qfalse;
-
+	
 
 	R_FrameBuffer_ReactivateFisheye();
 
@@ -1290,7 +1320,6 @@ void R_FrameBuffer_EndFrame( void ) {
 	if ( !fbo.main ) {
 		return;
 	}
-
 
 	R_FrameBuffer_TempDeactivateFisheye();
 
@@ -1342,3 +1371,7 @@ void R_FrameBuffer_Shutdown( void ) {
 
 	}
 }
+
+#ifdef RELDEBUG
+#pragma optimize("", on)
+#endif
