@@ -265,10 +265,10 @@ void CL_Record_f( void ) {
 		return;
 	}
 
-	if ( NET_IsLocalAddress( clc.serverAddress ) && !Cvar_VariableValue( "g_synchronousClients" ) ) {
-		Com_Printf ("The server must have 'g_synchronousClients 1' set for demos\n");
-		return;
-	}
+	//if ( NET_IsLocalAddress( clc.serverAddress ) && !Cvar_VariableValue( "g_synchronousClients" ) ) { // Who cares
+	//	Com_Printf ("The server must have 'g_synchronousClients 1' set for demos\n");
+	//	return;
+	//}
 
 	if ( Cmd_Argc() == 2 ) {
 		s = Cmd_Argv(1);

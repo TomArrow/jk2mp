@@ -312,7 +312,7 @@ qboolean R_FrameBuffer_FishEyeActivateTessellation() {
 	else {
 
 		fbo.fishEyeData.tessellationActive = qtrue;
-		R_FrameBuffer_TempDeactivateFisheye();
+		R_FrameBuffer_TempDeactivateFisheye(qfalse);
 		R_FrameBuffer_ReactivateFisheye();
 	}
 
@@ -336,7 +336,7 @@ qboolean R_FrameBuffer_FishEyeDeactivateTessellation() {
 	else {
 
 		fbo.fishEyeData.tessellationActive = qfalse;
-		R_FrameBuffer_TempDeactivateFisheye();
+		R_FrameBuffer_TempDeactivateFisheye(qfalse);
 		R_FrameBuffer_ReactivateFisheye();
 	}
 
