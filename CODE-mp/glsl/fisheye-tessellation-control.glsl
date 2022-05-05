@@ -62,7 +62,7 @@ void main()
  }*/
 
  
-	if(gl_InvocationID==0){
+	/*if(gl_InvocationID==0){
 		
 		float maxSideLength = 50;
 
@@ -87,7 +87,7 @@ void main()
 			maxLevel = max(maxLevel,tessLevelHere);
 		}
 
-		/*if(anyDistanceShorterThanSideLength){
+		*//*if(anyDistanceShorterThanSideLength){
 			// This *should* apply mostly to very big close by triangles.
 			// For those, make a more elaborate calculation from closest point to triangle.
 			float trueDistance = distanceToTriangle();
@@ -98,13 +98,45 @@ void main()
 				// TODO Problem: How does this guarantee consistent tessellation at edges? Hmm.
 				gl_TessLevelOuter[i] = max(gl_TessLevelOuter[i],tessLevel);
 			}
-		}*/
+		}*//*
 
 		//int vertCount = gl_in.length();
 		gl_TessLevelInner[0] = maxLevel;
 
+	}*/
+
+	// Attempt to have more multithreading.
+	float maxSideLength = 50;
+	int i = gl_InvocationID;
+	vec3 pointA = gl_in[i].gl_Position.xyz;
+	vec3 pointB = gl_in[(i+1)%3].gl_Position.xyz;
+	//float closestDistance = min(min(length(gl_in[i].gl_Position.xyz),length(gl_in[(i+1)%3].gl_Position.xyz)),min(length(gl_in[i].gl_Position.xz),length(gl_in[(i+1)%3].gl_Position.xz)));
+	float closestDistance =min(length(pointA),length(pointB));
+	float sideLength = length(pointA-pointB);
+	if(closestDistance < sideLength){
+		//anyDistanceShorterThanSideLength = true;
+		closestDistance = distanceToSide(vec3(0,0,0),pointA,pointB);
 	}
+	float maxSideLengthHere = max(closestDistance/300.0*maxSideLength,5);
+	//longestSide = max(longestSide,sideLength);
+	float tessLevelHere = max(1,ceil(sideLength/maxSideLengthHere));
+	gl_TessLevelOuter[(i+2)%3] = tessLevelHere;
+	//maxLevel = max(maxLevel,tessLevelHere);
+
+
+
 	gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
 	vertexTexCoord[gl_InvocationID] = texCoord[gl_InvocationID];
 	colorTCS[gl_InvocationID] = colorVertex[gl_InvocationID];
-}
+
+
+	
+	barrier();
+
+
+	if(gl_InvocationID == 0){
+
+		gl_TessLevelInner[0] = max(max(gl_TessLevelOuter[0],gl_TessLevelOuter[1]),gl_TessLevelOuter[2]);
+	}
+
+	}
