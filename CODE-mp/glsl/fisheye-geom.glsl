@@ -1,4 +1,4 @@
-#version 410
+#version 400 compatibility
 
 // Geometry Shader
 #extension GL_ARB_geometry_shader4 : enable
