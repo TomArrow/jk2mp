@@ -47,7 +47,7 @@
 //#pragma once
 
 #ifdef RELDEBUG
-#pragma optimize("", off)
+//#pragma optimize("", off)
 #endif
 
 #include "tr_local.h"
@@ -1373,5 +1373,5 @@ void R_FrameBuffer_Shutdown( void ) {
 }
 
 #ifdef RELDEBUG
-#pragma optimize("", on)
+//#pragma optimize("", on)
 #endif
