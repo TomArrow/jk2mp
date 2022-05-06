@@ -69,6 +69,7 @@ cvar_t *r_convertToHDR;
 cvar_t *r_floatBuffer;
 cvar_t *r_fbo;
 cvar_t *r_fboFishEye;
+cvar_t *r_fboFishEyeTessellate;
 cvar_t *r_fboExposure;
 cvar_t *r_fboCompensateSkyTint;
 cvar_t *r_fboSuperSample;
@@ -129,6 +130,8 @@ typedef struct {
 	vec3_t dofJitter3D;
 	float dofFocus;
 	float dofRadius;
+	float fovX;
+	float fovY;
 	qboolean tessellationActive;
 } fishEyeData_t;
 
@@ -170,11 +173,28 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 	if (!fishEyeShader->IsWorking())
 		return qfalse;
 
+	fbo.screenWidth = glMMEConfig.glWidth;
+	fbo.screenHeight = glMMEConfig.glHeight;
+
+	int width = r_fboWidth->integer;
+	int height = r_fboHeight->integer;
+	//Illegal width/height use original opengl one
+	if (width <= 0 || height <= 0) {
+		width = fbo.screenWidth;
+		height = fbo.screenHeight;
+	}
+
 	if (tess) {
 
 		qglUniform3fv(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "dofJitterUniform"), 1, fbo.fishEyeData.dofJitter3D);
 		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "dofFocusUniform"), fbo.fishEyeData.dofFocus);
 		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "dofRadiusUniform"), fbo.fishEyeData.dofRadius);
+		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "fishEyeModeUniform"), r_fboFishEye->integer);
+		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "fovXUniform"), fbo.fishEyeData.fovX);
+		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "fovYUniform"), fbo.fishEyeData.fovY);
+		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "pixelWidthUniform"), width*superSampleMultiplier);
+		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "pixelHeightUniform"), height * superSampleMultiplier);
+
 
 		if (fbo.fishEyeData.tessellationActive) {
 
@@ -185,6 +205,11 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofJitterUniform"), 1, fbo.fishEyeData.dofJitter3D);
 		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofFocusUniform"), fbo.fishEyeData.dofFocus);
 		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofRadiusUniform"), fbo.fishEyeData.dofRadius);
+		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "fishEyeModeUniform"), r_fboFishEye->integer);
+		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "fovXUniform"), fbo.fishEyeData.fovX);
+		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "fovYUniform"), fbo.fishEyeData.fovY);
+		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "pixelWidthUniform"), width * superSampleMultiplier);
+		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "pixelHeightUniform"), height * superSampleMultiplier);
 	}
 
 	return qtrue;
@@ -252,7 +277,7 @@ static qboolean R_FrameBuffer_ReactivateFisheye() {
 #endif
 }
 
-qboolean R_FrameBuffer_ActivateFisheye(vec_t* dofJitter3D, float dofFocus, float dofRadius) {
+qboolean R_FrameBuffer_ActivateFisheye(vec_t* dofJitter3D, float dofFocus, float dofRadius, float fovX, float fovY) {
 #ifdef HAVE_GLES
 	//TODO
 	return qfalse;
@@ -273,7 +298,9 @@ qboolean R_FrameBuffer_ActivateFisheye(vec_t* dofJitter3D, float dofFocus, float
 	VectorCopy(dofJitter3D, fbo.fishEyeData.dofJitter3D);
 	fbo.fishEyeData.dofFocus = dofFocus;
 	fbo.fishEyeData.dofRadius = dofRadius;
-	
+	fbo.fishEyeData.fovX = fovX;
+	fbo.fishEyeData.fovY = fovY;
+
 	R_FrameBuffer_FishEyeSetUniforms(fbo.fishEyeData.tessellationActive);
 
 	return qtrue;
@@ -347,7 +374,7 @@ qboolean R_FrameBuffer_FishEyeDeactivateTessellation() {
 static GLenum fishEyeProcessGLMode(GLenum mode) {
 	if (!fbo.fishEyeActive) return mode;
 
-	if (mode == GL_TRIANGLES) { // Tessellation only for triangles rn
+	if (r_fboFishEyeTessellate->integer && mode == GL_TRIANGLES) { // Tessellation only for triangles rn
 		if (R_FrameBuffer_FishEyeActivateTessellation()) {
 			return GL_PATCHES;
 		}
@@ -788,6 +815,7 @@ void R_FrameBuffer_Init( void ) {
 	memset( &fbo, 0, sizeof( fbo ) );
 	r_fbo = ri.Cvar_Get( "r_fbo", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboFishEye = ri.Cvar_Get( "r_fboFishEye", "0", CVAR_ARCHIVE | CVAR_LATCH);
+	r_fboFishEyeTessellate = ri.Cvar_Get( "r_fboFishEyeTessellate", "1", CVAR_ARCHIVE);
 	r_fboDepthBits = ri.Cvar_Get( "r_fboDepthBits", "32", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboDepthPacked = ri.Cvar_Get( "r_fboDepthPacked", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboStencilWhenNotPacked = ri.Cvar_Get( "r_fboStencilWhenNotPacked", "1", CVAR_ARCHIVE | CVAR_LATCH);
@@ -998,6 +1026,9 @@ void R_FrameBuffer_StartFrame( void ) {
 	qglClampColor(GL_CLAMP_FRAGMENT_COLOR_ARB,GL_FALSE);
 	qglClampColor(GL_CLAMP_READ_COLOR_ARB,GL_FALSE);
 	usedFloat = qfalse;
+
+	r_fboFishEyeTessellate = ri.Cvar_Get("r_fboFishEyeTessellate", "1", CVAR_ARCHIVE); // Updated on every frame.
+
 #endif
 }
 

@@ -2095,7 +2095,7 @@ void R_FrameBuffer_RollingShutterFlipDoubleBuffer(int bufferIndex);
 qboolean R_FrameBuffer_Blur(float scale, int frame, int total);
 qboolean R_FrameBuffer_ApplyExposure();
 qboolean R_FrameBuffer_HDRConvert(HDRConvertSource source= HDRCONVSOURCE_MAINFBO, int param=0);
-qboolean R_FrameBuffer_ActivateFisheye(vec_t* dofJitter3D, float dofFocus, float dofRadius);
+qboolean R_FrameBuffer_ActivateFisheye(vec_t* dofJitter3D, float dofFocus, float dofRadius, float fovX,float fovY);
 qboolean R_FrameBuffer_DeactivateFisheye();
 qboolean R_FrameBuffer_StartHDRRead();
 qboolean R_FrameBuffer_EndHDRRead();

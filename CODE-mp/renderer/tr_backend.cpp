@@ -469,7 +469,7 @@ static void SetFinalProjection( void ) {
 		vec3_t jitterOrigin = { dx,dy,0 };
 		float dofRadius = shotData.dofRadius, dofFocus = shotData.dofFocus;
 		R_MME_ClampDof(&dofFocus, &dofRadius);
-		R_FrameBuffer_ActivateFisheye(jitterOrigin, dofFocus, dofRadius);//Doesn't work. Needs fixing.
+		R_FrameBuffer_ActivateFisheye(jitterOrigin, dofFocus, dofRadius, backEnd.viewParms.fovX, backEnd.viewParms.fovY);//Doesn't work. Needs fixing.
 	}
 
 	xmin += dx; xmax += dx;
