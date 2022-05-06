@@ -1,3 +1,5 @@
+#version 400 compatibility
+
 uniform vec3 dofJitterUniform;
 uniform float dofFocusUniform;
 uniform float dofRadiusUniform;

@@ -1,3 +1,4 @@
+#version 400 compatibility
 
 uniform sampler2D text_in;
 

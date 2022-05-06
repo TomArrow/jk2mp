@@ -1,4 +1,4 @@
-#version 410 core
+#version 400 compatibility
 //#extension GL_ARB_tessellation_shader : enable
 
 //layout(quads, equal_spacing, ccw) in;

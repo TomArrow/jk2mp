@@ -1,3 +1,4 @@
+#version 400 compatibility
 
 uniform sampler2D text_in;
 
@@ -13,11 +14,11 @@ void main(void)
 	const float c1 = 107.0f / 128.0f;
 	const float c2 = 2413.0f / 128.0f;
 	const float c3 = 2392.0f / 128.0f;
-	const vec3 m1vec = m1.xxx;
-	const vec3 m2vec = m2.xxx;
-	const vec3 c1vec = c1.xxx;
-	const vec3 c2vec = c2.xxx;
-	const vec3 c3vec = c3.xxx;
+	const vec3 m1vec = vec3(m1);
+	const vec3 m2vec = vec3(m2);
+	const vec3 c1vec = vec3(c1);
+	const vec3 c2vec = vec3(c2);
+	const vec3 c3vec = vec3(c3);
 	const vec3 charMult = vec3(255.0f,255.0f,255.0f);
 	const vec3 castAdd = vec3(0.5f,0.5f,0.5f);
 

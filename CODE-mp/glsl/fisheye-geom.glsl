@@ -1,3 +1,5 @@
+#version 410
+
 // Geometry Shader
 #extension GL_ARB_geometry_shader4 : enable
 //in float realDepth[3];
@@ -5,6 +7,8 @@ float realDepth[3]; in vec4 color[3];
 out vec4 vertColor;
 
 in vec4 geomTexCoord[3];
+
+in vec4 gl_TexCoordIn[3][1];
 
 uniform vec3 dofJitterUniform;
 uniform float dofFocusUniform;
