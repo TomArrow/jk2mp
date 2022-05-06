@@ -764,42 +764,70 @@
       <FileType>Document</FileType>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|Win32'">$(OutDir)/glsl</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|x64'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)/glsl</DestinationFolders>
     </CopyFileToFolders>
     <CopyFileToFolders Include="glsl\fisheye-geom.glsl">
       <DeploymentContent>true</DeploymentContent>
       <FileType>Document</FileType>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|Win32'">$(OutDir)/glsl</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|x64'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)/glsl</DestinationFolders>
     </CopyFileToFolders>
     <CopyFileToFolders Include="glsl\fisheye-vertex.glsl">
       <DeploymentContent>true</DeploymentContent>
       <FileType>Document</FileType>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|Win32'">$(OutDir)/glsl</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|x64'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)/glsl</DestinationFolders>
     </CopyFileToFolders>
     <CopyFileToFolders Include="glsl\hdrpq-fragment.glsl">
       <DeploymentContent>true</DeploymentContent>
       <FileType>Document</FileType>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|Win32'">$(OutDir)/glsl</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|x64'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)/glsl</DestinationFolders>
     </CopyFileToFolders>
     <CopyFileToFolders Include="glsl\hdrpq-vertex.glsl">
       <DeploymentContent>true</DeploymentContent>
       <FileType>Document</FileType>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|Win32'">$(OutDir)/glsl</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|x64'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)/glsl</DestinationFolders>
     </CopyFileToFolders>
     <CopyFileToFolders Include="glsl\fisheye-tessellation-control.glsl">
       <FileType>Document</FileType>
       <DeploymentContent>true</DeploymentContent>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|Win32'">$(OutDir)/glsl</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|x64'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)/glsl</DestinationFolders>
     </CopyFileToFolders>
     <CopyFileToFolders Include="glsl\fisheye-tessellation-evaluation.glsl">
       <FileType>Document</FileType>
       <DeploymentContent>true</DeploymentContent>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|Win32'">$(OutDir)/glsl</DestinationFolders>
       <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='ReleaseWithDebug|x64'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)/glsl</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)/glsl</DestinationFolders>
     </CopyFileToFolders>
     <None Include="win32\qe3.ico" />
   </ItemGroup>
