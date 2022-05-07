@@ -276,36 +276,26 @@ void fisheye(){
 	for (int i = 0; i < 3; i++)
 	{
 		originalPositions3[i] = gl_PositionIn[i].xyz;
-		//preFisheye2DPos[i].z = 1;
-		//vec2 preFishEye2DPosHere;
 		positions[i] = fisheye_getPos(gl_PositionIn[i].xyz, i);
-		//preFisheye2DPos[i] = vec3(preFishEye2DPosHere,-1);
 		positions3[i] = positions[i].xyz;
 		postFisheye2DPos[i] = vec3( positions[i].xy,-1);
 	}
 
 	// Some attempt to get rid of artifacts...
-	//float longestSide = max(max(length(gl_PositionIn[0].xyz-gl_PositionIn[1].xyz),length(gl_PositionIn[1].xyz-gl_PositionIn[2].xyz)),length(gl_PositionIn[2].xyz-gl_PositionIn[0].xyz));
 	float longestSidePost = max(max(length(postFisheye2DPos[0].xyz-postFisheye2DPos[1].xyz),length(postFisheye2DPos[1].xyz-postFisheye2DPos[2].xyz)),length(postFisheye2DPos[2].xyz-postFisheye2DPos[0].xyz));
-	//float closestPoint = min(min(length(gl_PositionIn[0].xyz),length(gl_PositionIn[1].xyz)),length(gl_PositionIn[2].xyz));
-	//float relativeLongestSide = longestSide * 100/closestPoint;
-	//float sizeRatio = longestSidePost / relativeLongestSide;
+
 
 	for (int i = 0; i < 3; i++)
 	{
 		if (realDepth[i] > 0) inBack++;
-		//if (positions[i].x <= 0) someLeft = true;
-		//if (positions[i].x > 0) someRight = true;
 	}
 
-
-	float originalSign = getNormalSign(vec3(0,0,0),originalPositions3);
-	//float original2DSign = getNormalSign(vec3(0,0,0),preFisheye2DPos);
-	float newSign = getNormalSign(vec3(0,0,0),positions3);
-	//float new2DSign = getNormalSign(vec3(0,0,0),postFisheye2DPos);
+	
+	//float originalSign = getNormalSign(vec3(0,0,0),originalPositions3);
+	//float newSign = getNormalSign(vec3(0,0,0),positions3);
 
 	//setDebugColor(longestSidePost/10,sizeRatio,relativeLongestSide/100);
-	bool wrappedAround = originalSign != newSign;// || original2DSign != new2DSign;
+	bool wrappedAround = false;// originalSign != newSign;// || original2DSign != new2DSign;
 
 	if (!(wrappedAround || (longestSidePost > 1.0))) // The longest side thing feels like a dirty hack. But it kidna works. And can be further improved with better TCS I think.
 	{
