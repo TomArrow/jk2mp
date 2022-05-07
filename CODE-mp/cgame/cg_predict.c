@@ -405,7 +405,8 @@ void CG_InterpolatePlayerState( qboolean grabAngles ) {
 
 
 	// TODO: What about this? not in jamme
-	cg.predictedTimeFrac = f * (next->ps.commandTime - prev->ps.commandTime);
+	//cg.predictedTimeFrac = f * (next->ps.commandTime - prev->ps.commandTime);
+	cg.predictedTimeFrac = f * (nextps->commandTime - curps->commandTime);
 }
 
 /*

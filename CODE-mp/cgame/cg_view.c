@@ -8,6 +8,10 @@
 	#include "cg_lights.h"
 #endif
 
+#ifdef RELDEBUG
+#pragma optimize("", off)
+#endif
+
 #define MASK_CAMERACLIP (MASK_SOLID|CONTENTS_PLAYERCLIP)
 #define CAMERA_SIZE	4
 
@@ -318,14 +322,14 @@ static void CG_ResetThirdPersonViewDamp(void)
 	trace_t trace;
 
 	// Cap the pitch within reasonable limits
-	if (cameraFocusAngles[PITCH] > 89.0)
+	/*if (cameraFocusAngles[PITCH] > 89.0)
 	{
 		cameraFocusAngles[PITCH] = 89.0;
 	}
 	else if (cameraFocusAngles[PITCH] < -89.0)
 	{
 		cameraFocusAngles[PITCH] = -89.0;
-	}
+	}*/
 
 	AngleVectors(cameraFocusAngles, camerafwd, NULL, cameraup);
 
@@ -486,7 +490,7 @@ static void CG_UpdateThirdPersonCameraDamp(void)
 		pitch = Q_fabs(cameraFocusAngles[PITCH]);
 
 		// The higher the pitch, the larger the factor, so as you look up, it damps a lot less.
-		pitch /= 89.0;	
+		pitch /= 115.0f;
 		dampfactor = (1.0-cg_thirdPersonCameraDamp.value)*(pitch*pitch);
 
 		dampfactor += cg_thirdPersonCameraDamp.value;
@@ -514,7 +518,7 @@ static void CG_UpdateThirdPersonCameraDamp(void)
 			float	invdtime;
 			float	timeadjfactor;
 			float	codampfactor;
-			int		simulationtime;
+			float		simulationtime;
 			float	physicstime;
 
 			// use physics time to get a real velocity
@@ -522,7 +526,7 @@ static void CG_UpdateThirdPersonCameraDamp(void)
 			physicstime += cg.predictedTimeFrac - cameraLastTimeFrac;
 			if (physicstime <= 0.0f)
 				return;
-			simulationtime = 1000 / mov_camerafps.integer;
+			simulationtime = 1000.0f / mov_camerafps.value;
 			dtime = physicstime / simulationtime;
 			invdtime = simulationtime / physicstime;
 			timeadjfactor = powf(dampfactor, dtime);
@@ -723,8 +727,8 @@ static void CG_OffsetThirdPersonView( void )
 	VectorCopy(cameraCurLoc, cg.refdef.vieworg);
 
 	// I commented these 2 out because it fixed an issue but uhm ... idk WHY it fixed the issue...
-	//cameraLastTime = cg.predictedPlayerState.commandTime;
-	//cameraLastTimeFrac = cg.predictedTimeFrac;
+	cameraLastTime = cg.predictedPlayerState.commandTime;
+	cameraLastTimeFrac = cg.predictedTimeFrac;
 }
 
 
@@ -1976,3 +1980,6 @@ void CheckCameraLocation( vec3_t OldeyeOrigin ) {
 }
 //[/TrueView]
 
+#ifdef RELDEBUG
+#pragma optimize("", on)
+#endif

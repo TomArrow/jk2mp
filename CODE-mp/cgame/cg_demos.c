@@ -223,7 +223,15 @@ static int demoSetupView( void) {
 				VectorCopy( cent->lerpOrigin, demo.viewOrigin );
 				VectorCopy( cent->lerpAngles, demo.viewAngles );
 			}
-			demo.viewFov = cg_fov.value;
+			if(cg_distanceAwareFov.value){
+				vec3_t charCameraDistance;
+				VectorSubtract(cg.predictedPlayerState.origin, demo.viewOrigin, charCameraDistance);
+				float fullyCorrectedFovDelta =  cg_fov.value * cg_thirdPersonRange.value / VectorLength(charCameraDistance) - cg_fov.value;
+				demo.viewFov = cg_fov.value + fullyCorrectedFovDelta* cg_distanceAwareFov.value;
+			}
+			else {
+				demo.viewFov = cg_fov.value;
+			}
 		} else {
 			memset( &cg.refdef, 0, sizeof(refdef_t));
 			AngleVectors( demo.chase.angles, forward, 0, 0 );
