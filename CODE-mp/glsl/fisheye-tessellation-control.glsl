@@ -38,6 +38,8 @@ float distanceToTriangle(){
 void main()
 {
 
+// TODO Different/expanded algo for fisheye mode 1. Because needs potentially more subdiv in the back than in front etc.
+
 
  /*gl_TessLevelOuter[0] = 1.0;
  gl_TessLevelOuter[1] = 2.0;
