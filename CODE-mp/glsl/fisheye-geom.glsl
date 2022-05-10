@@ -195,7 +195,7 @@ void equirect(){
 // Real fisheye stuff
 //
 //
-vec4 fisheye_getPos(vec3 pointVec, int iter/*, inout vec2 preFishEye2DPos*/)
+vec4 fisheye_getPos(vec3 pointVec, int iter, inout vec2 fovless2DPos)
 {
 
 	float pi = radians(180);
@@ -227,34 +227,16 @@ vec4 fisheye_getPos(vec3 pointVec, int iter/*, inout vec2 preFishEye2DPos*/)
 	float angleFromCenter = angleOnPlane(pointVec, -axis[0].xyz, perpendicularRotatedAxisToPoint)/pi; // Distance from center, basically.
 	vec2 pseudoAngleOnXYplane = vec2(dot(pointVec, -axis[1].xyz),dot(pointVec, axis[2].xyz));
 
-	//preFishEye2DPos = pseudoAngleOnXYplane;
 
 	pseudoAngleOnXYplane = normalize(pseudoAngleOnXYplane);
 
-	//float widthSign = sign(dot(pointVec,-axis[1].xyz));
-	//angleFromCenter = depth <= 0 ? angleFromCenter : widthSign *(1.0 + (1.0 - abs(xAngle)));
 
 	vec2 position = pseudoAngleOnXYplane*angleFromCenter;
+	fovless2DPos = position;
 	float positionX = -position.x*360.0/fovXUniform/2.0;
 	//float positionY = -position.y*360.0/fovYUniform/2.0; // TODO do a proper fix to make it use the fovY so it will be correct underwater etc. It's calculated in a weird way tho.
 	float positionY = -position.y*360.0/fovXUniform/pixelHeightUniform*pixelWidthUniform/2.0;
 
-	/*
-
-	float xAngle = angleOnPlane(pointVec, -axis[1].xyz, axis[0].xyz) / pi;
-
-	float yAngle = angleOnPlane(pointVec, axis[2].xyz, perpendicularZAxisToPoint) / pi;
-
-	xAngle -= 0.5;
-	xAngle *= 2;
-	float widthSign = sign(xAngle);
-	xAngle = depth <= 0 ? xAngle : widthSign *(1.0 + (1.0 - abs(xAngle)));
-	xAngle *= 0.5;
-
-	yAngle -= 0.5;
-	yAngle *= 2;
-	float heightSign = sign(yAngle);
-	*/
 	outputPos.x = positionX;
 	outputPos.y = positionY;
 	outputPos.z = 1.0 - 1.0 / distance;
@@ -276,9 +258,10 @@ void fisheye(){
 	for (int i = 0; i < 3; i++)
 	{
 		originalPositions3[i] = gl_PositionIn[i].xyz;
-		positions[i] = fisheye_getPos(gl_PositionIn[i].xyz, i);
+		positions[i] = fisheye_getPos(gl_PositionIn[i].xyz, i,postFisheye2DPos[i].xy);
 		positions3[i] = positions[i].xyz;
-		postFisheye2DPos[i] = vec3( positions[i].xy,-1);
+		//postFisheye2DPos[i] = vec3( positions[i].xy,-1);
+		postFisheye2DPos[i].z = -1;
 	}
 
 	// Some attempt to get rid of artifacts...
@@ -297,7 +280,7 @@ void fisheye(){
 	//setDebugColor(longestSidePost/10,sizeRatio,relativeLongestSide/100);
 	bool wrappedAround = false;// originalSign != newSign;// || original2DSign != new2DSign;
 
-	if (!(wrappedAround || (longestSidePost > 1.0))) // The longest side thing feels like a dirty hack. But it kidna works. And can be further improved with better TCS I think.
+	if (!(wrappedAround || (longestSidePost > 1.0f))) // The longest side thing feels like a dirty hack. But it kidna works. And can be further improved with better TCS I think.
 	{
 		for (int i = 0; i < 3; i++)
 		{
