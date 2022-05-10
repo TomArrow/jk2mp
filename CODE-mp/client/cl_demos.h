@@ -25,6 +25,10 @@ typedef struct {
 } demoString_t;
 
 typedef struct {
+	// To check if the frame is already cached, in which case don't redo the work. Is an ugly workaround. Fix someday.
+	int			frameNumber; 
+	int			filePosAfter;
+
 	int			serverTime;
 	playerState_t clients[MAX_CLIENTS];
 	byte		clientData[MAX_CLIENTS];
@@ -46,7 +50,7 @@ typedef struct {
 	int				messageNum, lastMessageNum;
 } demoConvert_t;
 
-#define FRAME_BUF_SIZE 20
+#define FRAME_BUF_SIZE 200
 typedef struct {
 	fileHandle_t		fileHandle;
 	char				fileName[MAX_QPATH];

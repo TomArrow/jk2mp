@@ -684,17 +684,27 @@ static void demoPlayForwardFrame( demoPlay_t *play ) {
 		return;
 	}
 	play->lastFrame = qfalse;
-	play->filePos += 4;
-	FS_Read( &blockSize, 4, play->fileHandle );
-	blockSize = LittleLong( blockSize );
-	FS_Read( demoBuffer, blockSize, play->fileHandle );
-	play->filePos += blockSize;
-	MSG_Init( &msg, demoBuffer, sizeof(demoBuffer) );
-	MSG_BeginReading( &msg );
-	msg.cursize = blockSize;
+
 	play->frame = &play->storageFrame[(play->frameNumber + 1 + FRAME_BUF_SIZE) % FRAME_BUF_SIZE];
 	play->nextFrame = &play->storageFrame[(play->frameNumber + 2 + FRAME_BUF_SIZE) % FRAME_BUF_SIZE];
-	demoFrameUnpack( &msg, play->frame, play->nextFrame );
+
+	if (play->nextFrame->frameNumber != play->frameNumber || play->frameNumber == 0) { // Don't parse if it is already parsed. This is an ugly patchwork to some ugly commandsmooth behavior to improve performance. TODO improve someday.
+		play->filePos += 4;
+		FS_Read(&blockSize, 4, play->fileHandle);
+		blockSize = LittleLong(blockSize);
+		FS_Read(demoBuffer, blockSize, play->fileHandle);
+		play->filePos += blockSize;
+		MSG_Init(&msg, demoBuffer, sizeof(demoBuffer));
+		MSG_BeginReading(&msg);
+		msg.cursize = blockSize;
+		demoFrameUnpack(&msg, play->frame, play->nextFrame);
+		play->nextFrame->frameNumber = play->frameNumber; // Is this correct? Or do I have to do +1 too? I guess it doesn't really matter, does it?
+		play->nextFrame->filePosAfter = play->filePos;
+	}
+	else {
+		play->filePos = play->nextFrame->filePosAfter;
+		FS_Seek(play->fileHandle, play->filePos, FS_SEEK_SET);
+	}
 	play->frameNumber++;
 }
 
