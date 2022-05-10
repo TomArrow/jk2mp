@@ -4,6 +4,10 @@
 #include "cg_lights.h"
 #include "../game/bg_saga.h"
 
+#ifdef RELDEBUG
+//#pragma optimize("", off)
+#endif
+
 demoMain_t demo;
 
 extern void CG_DamageBlendBlob( void );
@@ -223,15 +227,15 @@ static int demoSetupView( void) {
 				VectorCopy( cent->lerpOrigin, demo.viewOrigin );
 				VectorCopy( cent->lerpAngles, demo.viewAngles );
 			}
-			if(cg_distanceAwareFov.value){
+			/*if(cg_distanceAwareFov.value){
 				vec3_t charCameraDistance;
 				VectorSubtract(cg.predictedPlayerState.origin, demo.viewOrigin, charCameraDistance);
 				float fullyCorrectedFovDelta =  cg_fov.value * cg_thirdPersonRange.value / VectorLength(charCameraDistance) - cg_fov.value;
 				demo.viewFov = cg_fov.value + fullyCorrectedFovDelta* cg_distanceAwareFov.value;
 			}
-			else {
+			else {*/
 				demo.viewFov = cg_fov.value;
-			}
+			//}
 		} else {
 			memset( &cg.refdef, 0, sizeof(refdef_t));
 			AngleVectors( demo.chase.angles, forward, 0, 0 );
@@ -280,6 +284,7 @@ static int demoSetupView( void) {
 			vec3_t targetOrigin;
 			chaseEntityOrigin( targetCent, targetOrigin );
 			//Find distance betwene plane of camera and this target
+			// TODO: For fisheye make this be the actual distance to the target and see if it also behaves correctly with stuff behind camera (since fisheye mode can see behind)
 			demo.viewFocus = DotProduct( cg.refdef.viewaxis[0], targetOrigin ) - DotProduct( cg.refdef.viewaxis[0], cg.refdef.vieworg  );
 			demo.dof.focus = demo.viewFocusOld = demo.viewFocus;
 		} else {
@@ -1478,3 +1483,8 @@ qboolean CG_DemosConsoleCommand( void ) {
 	}
 	return qtrue;
 }
+
+
+#ifdef RELDEBUG
+//#pragma optimize("", on)
+#endif

@@ -9,7 +9,7 @@
 #endif
 
 #ifdef RELDEBUG
-#pragma optimize("", off)
+//#pragma optimize("", off)
 #endif
 
 #define MASK_CAMERACLIP (MASK_SOLID|CONTENTS_PLAYERCLIP)
@@ -1064,6 +1064,18 @@ qboolean CG_CalcFOVFromX( float fov_x )
 	return (inwater);
 }
 
+inline float CG_DistanceAwareFovScale(float cgFov) {
+	if (cg_distanceAwareFov.value) {
+		vec3_t charCameraDistance;
+		VectorSubtract(cg.predictedPlayerState.origin, cg.refdef.vieworg, charCameraDistance);
+		float fullyCorrectedFovDelta = cgFov * cg_thirdPersonRange.value / VectorLength(charCameraDistance) - cgFov;
+		return cgFov + fullyCorrectedFovDelta * cg_distanceAwareFov.value;
+	}
+	else {
+		return cgFov;
+	}
+}
+
 /*
 ====================
 CG_CalcFov
@@ -1102,6 +1114,8 @@ static int CG_CalcFov( void ) {
 		cgFov = cg_fov.value;
 	}
 	//[/TrueView]
+
+	cgFov = CG_DistanceAwareFovScale(cgFov);
 
 	if (cgFov < 1)
 		cgFov = 1;
@@ -1981,5 +1995,5 @@ void CheckCameraLocation( vec3_t OldeyeOrigin ) {
 //[/TrueView]
 
 #ifdef RELDEBUG
-#pragma optimize("", on)
+//#pragma optimize("", on)
 #endif
