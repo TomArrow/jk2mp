@@ -1347,7 +1347,7 @@ void CG_DemoDismembermentEvent( centity_t *cent, vec3_t position ) {
 
 #ifdef GIB
 				// Gib on explosive deaths
-				if (meansOfDeath == MOD_FLECHETTE ||
+				if (meansOfDeath == MOD_FLECHETTE || // TODO: Is this really exhaustive?
 					meansOfDeath == MOD_FLECHETTE_ALT_SPLASH ||
 					meansOfDeath == MOD_ROCKET ||
 					meansOfDeath == MOD_ROCKET_SPLASH ||

@@ -30,9 +30,11 @@ void Cam_DrawClientNames(void) //FIXME: draw entitynums
 			if (cam_specEnt.integer != -1) {
 				skipNumber = cam_shownamesIncludePlayer.integer ? -1 : cam_specEnt.integer;
 			}
-			CG_Trace(&trace, cg.refdef.vieworg, NULL, NULL, cent->lerpOrigin, skipNumber, CONTENTS_SOLID | CONTENTS_PLAYERCLIP | CONTENTS_BODY | CONTENTS_CORPSE);
+			if (!cam_shownames3D.integer) { // Why waste time on traces when we're drawing in 3d anyway
+				CG_Trace(&trace, cg.refdef.vieworg, NULL, NULL, cent->lerpOrigin, skipNumber, CONTENTS_SOLID | CONTENTS_PLAYERCLIP | CONTENTS_BODY | CONTENTS_CORPSE);
+			}
 
-			if (trace.entityNum == i || (cam_shownames3D.integer && skipNumber != i))
+			if ((!cam_shownames3D.integer && trace.entityNum == i) || (cam_shownames3D.integer && skipNumber != i))
 			{
 				float x, y;
 				vec3_t org;
