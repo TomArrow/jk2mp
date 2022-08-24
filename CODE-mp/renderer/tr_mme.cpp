@@ -759,25 +759,103 @@ qboolean R_MME_TakeShot( void ) {
 	doGamma = (qboolean)(( mme_screenShotGamma->integer || (tr.overbrightBits > 0) ) && (glConfig.deviceSupportsGamma ));
 	R_MME_CheckCvars();
 
+	if (!shotBufPermInitialized) {
+#ifdef CAPTURE_FLOAT
+		shotBufPerm = (byte*)ri.Hunk_AllocateTempMemory(pixelCount * 5 * 4);
+#else
+		shotBufPerm = (byte*)ri.Hunk_AllocateTempMemory(pixelCount * 5);
+#endif
+		shotBufPermInitialized = true;
+	}
+
+
 	//Special early version using the framebuffer
-/*	if ( mme_saveShot->integer && blurControl->totalFrames > 0 &&
+	if ( mme_saveShot->integer && blurControl->totalFrames > 0 &&
 		R_FrameBuffer_Blur( blurControl->Float[ blurControl->totalIndex ], blurControl->totalIndex, blurControl->totalFrames ) ) {
 		float fps;
 		byte *shotBuf;
 		if ( ++(blurControl->totalIndex) < blurControl->totalFrames ) 
 			return qtrue;
 		blurControl->totalIndex = 0;
-		shotBuf = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 3 );
-		R_MME_MultiShot( shotBuf );
-		if ( doGamma ) 
-			R_GammaCorrect( shotBuf, pixelCount * 3 );
+		//shotBuf = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 3 );
+		//R_MME_MultiShot( shotBufPerm );
+		//if ( doGamma ) 
+		//	R_GammaCorrect( shotBuf, pixelCount * 3 );
 
-		fps = shotData.fps / ( blurControl->totalFrames );
-		audio = ri.S_MMEAviImport(inSound, &sizeSound);
-		R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, fps, shotBuf, audio, sizeSound, inSound );
-		ri.Hunk_FreeTempMemory( shotBuf );
+		R_MME_FlushMultiThreading();
+		R_MME_MultiShot(shotBufPerm);
+
+		bool dither = true;
+
+		std::lock_guard<std::mutex> guard(saveShotThreadMutex);
+		int totalFramesCount = blurControl->totalFrames;
+		saveShotThread = new std::thread([&, dither, pixelCount, totalFramesCount] {
+			qboolean audio = qfalse, audioTaken = qfalse;
+			int sizeSound = 0;
+			byte inSound[MME_SAMPLERATE] = { 0 };
+
+#ifdef CAPTURE_FLOAT
+
+
+
+			float* asFloatBuffer = (float*)shotBufPerm;
+			if (dither) {
+
+				// Floyd-Steinberg dither
+				float oldPixel = 0.0f, newPixel = 0.0f, quantError = 0.0f;
+				int stride = glConfig.vidWidth * 3;
+
+				for (int i = 0; i < pixelCount * 3; i++) {
+
+					oldPixel = asFloatBuffer[i]; // Important note: shader adds 0.5 for the rounded casting. keep in mind.
+					newPixel = 0.5f + (float)(int)std::clamp(oldPixel, 0.5f, 255.5f);
+					shotBufPerm[i] = newPixel;
+					// Can we just remove the 0.5 stuff altogether if we add 0.5f to newpixel on generation?
+					// oldPixel-0.5f-newPixel == oldPixel - (newPixel+0.5f)? == oldPixel - newPixel - 0.5f. yup, seems so.
+					quantError = oldPixel - newPixel;
+					asFloatBuffer[i + 3] += quantError * 7.0f / 16.0f; // This is the pixel to the right
+					asFloatBuffer[i + stride - 3] += quantError * 3.0f / 16.0f; // This is the pixel to the left in lower row
+					asFloatBuffer[i + stride] += quantError * 5.0f / 16.0f; // This is the pixel to below
+					asFloatBuffer[i + stride + 3] += quantError * 1.0f / 16.0f; // This is the pixel to below, to the right
+
+					// Normally we'd increase the buffer size because the bottom row of the dithering needs extra space
+					// but the shotbuffer is already 5*pixelCount because it was meant to account for depth and whatnot?
+				}
+			}
+			else {
+
+				for (int i = 0; i < pixelCount; i++) {
+
+					shotBufPerm[i * 3 + 0] = asFloatBuffer[i * 3 + 0];
+					shotBufPerm[i * 3 + 1] = asFloatBuffer[i * 3 + 1];
+					shotBufPerm[i * 3 + 2] = asFloatBuffer[i * 3 + 2];
+				}
+			}
+
+#endif
+
+			shotData.main.type = mmeShotTypeBGR;
+
+			if (!audioTaken)
+				audio = ri.S_MMEAviImport(inSound, &sizeSound);
+
+			audioTaken = qtrue;
+
+			//fps = shotData.fps / (blurControl->totalFrames);
+			int outputFps = shotData.fps / (totalFramesCount);
+			R_MME_SaveShot(&shotData.main, glConfig.vidWidth, glConfig.vidHeight, outputFps, shotBufPerm, audio, sizeSound, inSound);
+
+			//delete shotDataThreadCopy;
+		});
+
+
+
+		//
+		//audio = ri.S_MMEAviImport(inSound, &sizeSound);
+		//R_MME_SaveShot( &shotData.main, glConfig.vidWidth, glConfig.vidHeight, fps, shotBuf, audio, sizeSound, inSound );
+		//ri.Hunk_FreeTempMemory( shotBuf );
 		return qtrue;
-	}*/
+	}
 
 	/* Test if we need to do blurred shots */
 	if ( blurControl->totalFrames > 0 ) {
@@ -905,14 +983,7 @@ qboolean R_MME_TakeShot( void ) {
 		
 		
 		//byte *shotBuf = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 5 );
-		if (!shotBufPermInitialized) {
-#ifdef CAPTURE_FLOAT
-			shotBufPerm = (byte*)ri.Hunk_AllocateTempMemory(pixelCount * 5*4);
-#else
-			shotBufPerm = (byte*)ri.Hunk_AllocateTempMemory(pixelCount * 5);
-#endif
-			shotBufPermInitialized = true;
-		}
+		
 		//byte *shotBuf = (byte *)ri.Hunk_AllocateTempMemory( pixelCount * 5 );
 
 		bool hdrConversionDone = false;
