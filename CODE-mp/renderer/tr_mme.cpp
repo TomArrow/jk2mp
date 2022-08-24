@@ -22,11 +22,9 @@ static char *workAlign = 0;
 static int workSize, workUsed;
 static qboolean allocFailed = qfalse;
 
-static struct {
-	mmeBlurControl_t control;
-	mmeBlurBlock_t shot, depth, stencil;
-	float	jitter[BLURMAX][2];
-} blurData;
+
+
+blurData_t blurData;
 
 
 

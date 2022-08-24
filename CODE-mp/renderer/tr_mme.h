@@ -25,7 +25,9 @@ typedef struct {
 #define AVI_HEADER_SIZE	2048
 #define AVI_MAX_FILES	1000
 
-#define BLURMAX 2048
+
+
+#define BLURMAX 8192
 
 
 
@@ -81,6 +83,12 @@ typedef struct {
 	int		count;
 	mmeBlurControl_t *control;
 } mmeBlurBlock_t;
+
+typedef struct {
+	mmeBlurControl_t control;
+	mmeBlurBlock_t shot, depth, stencil;
+	float	jitter[BLURMAX][2];
+} blurData_t;
 
 //void R_MME_GetShot( void* output, int rollingShutterFactor=1, int rollingShutterProgress = 0, int rollingShutterPixels=1,int rollingShutterBufferIndex =0 );
 void R_MME_GetShot( void* output, int rollingShutterFactor, int rollingShutterProgress , int rollingShutterPixels,int rollingShutterBufferIndex  );

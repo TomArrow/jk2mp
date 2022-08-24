@@ -50,6 +50,7 @@ typedef struct {
 static mmeWav_t mmeSound;
 
 extern shotData_t shotData;
+extern blurData_t blurData;
 
 /*
 =================================================================================
@@ -201,7 +202,11 @@ void S_MMEADMMetaCreate(std::string filename,bw64::Bw64Writer* writer, std::stri
 
 	long long minBlockDuration = 0; // We set this according to fps so as not to bloat the ADM metadata in slow capturing modes like rolling shutter
 	if (shotData.fps) { // I hope it's (still?) set here
-		double timeInSeconds = 1.0/shotData.fps;
+		float outputFps = shotData.fps;
+		if (blurData.control.totalFrames) {
+			outputFps /= (float)blurData.control.totalFrames;
+		}
+		double timeInSeconds = 1.0/ outputFps;
 		minBlockDuration= (long long)(0.5 + timeInSeconds * 1000000000.0);
 		// In short, we don't necessarily want more than one position update per frame. What's the point after all? There's interpolation anyway.
 	}
