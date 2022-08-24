@@ -63,6 +63,43 @@ void R_MME_GetShot( void* output, int rollingShutterFactor,int rollingShutterPro
 #endif
 }
 
+// Non rolling shutter version
+void R_MME_GetShot( void* output ) {
+#ifdef JEDIACADEMY_GLOW
+
+#ifdef CAPTURE_FLOAT
+	int multiplier = 4;
+#else
+	int multiplier = 1;
+#endif	
+	
+	{
+		
+		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[0]);
+		
+		// map the PBO to process its data by CPU
+#ifdef CAPTURE_FLOAT
+		R_FrameBuffer_HDRConvert(HDRCONVSOURCE_MAINFBO);
+		R_FrameBuffer_StartHDRRead();
+		qglReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_BGR_EXT, GL_FLOAT, 0);
+		R_FrameBuffer_EndHDRRead();
+#endif
+			 
+
+		GLubyte* ptr = (GLubyte*)qglMapBufferARB(GL_PIXEL_PACK_BUFFER_ARB, GL_READ_ONLY_ARB);
+		if (ptr) {
+			memcpy(output, ptr, glConfig.vidHeight * glConfig.vidWidth * 3 * multiplier);
+			qglUnmapBufferARB(GL_PIXEL_PACK_BUFFER_ARB);
+		}
+		// back to conventional pixel operation
+		qglBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
+	}
+
+#else
+	qglReadPixels( 0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_RGB, GL_UNSIGNED_BYTE, output ); 
+#endif
+}
+
 void R_MME_GetDepth( byte *output ) {
 	float focusStart, focusEnd, focusMul;
 	float zBase, zAdd, zRange;

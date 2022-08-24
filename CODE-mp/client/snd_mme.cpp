@@ -19,6 +19,7 @@
 #define MME_LOOPCHANNELS 128
 
 extern	cvar_t	*mme_saveWav;
+extern	cvar_t* mme_rollingShutterEnabled;
 extern	cvar_t* mme_rollingShutterPixels;
 extern	cvar_t* mme_rollingShutterMultiplier;
 extern glconfig_t	glConfig;
@@ -518,7 +519,9 @@ void S_MMERecord( const char *baseName, float deltaTime ) {
 
 	mmeRollingShutterInfo_t* rsInfo = R_MME_GetRollingShutterInfo();
 	//int rollingShutterFactor = glConfig.vidHeight* rollingShutterSuperSampleMultiplier / mme_rollingShutterPixels->integer;
-	deltaTime = deltaTime / rsInfo->captureFpsMultiplier;
+	if (rsInfo->rollingShutterEnabled) {
+		deltaTime /= rsInfo->captureFpsMultiplier;
+	}
 	//for (int i = 0; i < pboRollingShutterProgresses.size(); i++) {
 	//	if (pboRollingShutterProgresses[i] == 0) { // This is the first rolling shutter line/block of lines captured
 			

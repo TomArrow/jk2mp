@@ -968,6 +968,8 @@ void R_FrameBuffer_Init( void ) {
 
 void R_FrameBuffer_CreateRollingShutterBuffers(int width, int height, int flags) {
 
+	if (!mme_rollingShutterEnabled->integer) return;
+
 	mmeRollingShutterInfo_t* rsInfo = R_MME_GetRollingShutterInfo();
 
 	//int bufferCountNeededForRollingshutter = (int)(ceil(mme_rollingShutterMultiplier->value) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
@@ -1097,7 +1099,7 @@ qboolean R_FrameBuffer_HDRConvert(HDRConvertSource source, int param) {
 		//qglFinish();
 	}
 	else if(source == HDRCONVSOURCE_MAINFBO) {
-		
+		/*
 		R_FrameBuffer_GenerateMainMipMaps();
 
 		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.colorSpaceConv->fbo);
@@ -1117,7 +1119,24 @@ qboolean R_FrameBuffer_HDRConvert(HDRConvertSource source, int param) {
 		GL_State(GLS_DEPTHTEST_DISABLE);
 		qglUseProgram(hdrPqShader->ShaderId());
 		R_DrawQuad(fbo.colorSpaceConv->color, glConfig.vidWidth, glConfig.vidHeight);
+		qglUseProgram(0);*/
+		
+		R_FrameBuffer_GenerateMainMipMaps();
+
+		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.colorSpaceConvResult->fbo);
+		qglDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+		//The color used to blur add this frame
+		qglColor4f(1, 1, 1, 1);
+		GL_State(GLS_DEPTHTEST_DISABLE);
+
+		R_SetGL2DSize(glConfig.vidWidth, glConfig.vidHeight);
+		qglUseProgram(hdrPqShader->ShaderId());
+		R_DrawQuad(fbo.main->color, glConfig.vidWidth, glConfig.vidHeight);
 		qglUseProgram(0);
+
+		qglBindFramebuffer(GL_FRAMEBUFFER_EXT, fbo.main->fbo);
+		qglReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
+		
 	}
 
 	R_FrameBuffer_ReactivateFisheye();

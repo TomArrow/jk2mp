@@ -1366,6 +1366,7 @@ extern cvar_t	*mme_saveShot;
 extern cvar_t	*mme_saveAEKeyframes;
 extern cvar_t	*mme_saveDepth;
 extern cvar_t	* mme_saveADM;
+extern cvar_t	*mme_rollingShutterEnabled;
 extern cvar_t	*mme_rollingShutterBlur;
 extern cvar_t	*mme_rollingShutterPixels;
 extern cvar_t	*mme_rollingShutterMultiplier;

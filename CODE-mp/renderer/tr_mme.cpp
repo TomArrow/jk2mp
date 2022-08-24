@@ -112,14 +112,15 @@ cvar_t	*mme_depthFocus;
 cvar_t	*mme_depthRange;
 cvar_t	*mme_saveOverwrite;
 cvar_t	*mme_saveShot;
-cvar_t	* mme_saveAEKeyframes;
+cvar_t	*mme_saveAEKeyframes;
 cvar_t	*mme_saveStencil;
 cvar_t	*mme_saveDepth;
-cvar_t	* mme_saveADM;
+cvar_t	*mme_saveADM;
+cvar_t  *mme_rollingShutterEnabled;
 cvar_t  *mme_rollingShutterBlur;
 cvar_t  *mme_rollingShutterPixels;
 cvar_t  *mme_rollingShutterMultiplier;
-cvar_t  * mme_mvShaderLoadOrder;
+cvar_t  *mme_mvShaderLoadOrder;
 
 
 #ifdef JEDIACADEMY_GLOW
@@ -161,27 +162,30 @@ void R_MME_FakeAdvanceFrames(int count) {
 
 	mmeRollingShutterInfo_t* rsInfo = R_MME_GetRollingShutterInfo();
 
-	for (int c = 0; c < count; c++) {
+	if (rsInfo->rollingShutterEnabled) {
 
-		//int rollingShutterFactor = glConfig.vidHeight*rollingShutterSuperSampleMultiplier / mme_rollingShutterPixels->integer;
+		for (int c = 0; c < count; c++) {
 
-		for (int i = 0; i < rollingShutterBufferCount; i++) {
+			//int rollingShutterFactor = glConfig.vidHeight*rollingShutterSuperSampleMultiplier / mme_rollingShutterPixels->integer;
 
-			int& rollingShutterProgress = pboRollingShutterProgresses[i];
-			float& hereDrift = pboRollingShutterDrifts[i];
+			for (int i = 0; i < rollingShutterBufferCount; i++) {
 
-			rollingShutterProgress++;
-			if (rollingShutterProgress == rsInfo->rollingShutterFactor) {
-				//R_FrameBuffer_RollingShutterFlipDoubleBuffer(i);
-				//rollingShutterProgress = 0;
-				rollingShutterProgress = -progressOvershoot; // Since the rolling shutter multiplier can be a non-integer, sometimes we have to pause rendering frames for a little. Imagine if the rolling shutter is half the shutter speed. Then half the time we're not actually recording anything.
-				hereDrift += drift;
-				while (hereDrift > 1.0f) { // Drift has reached one frame (or rather one line) of duration. Adjust to keep sync with audio.
-					rollingShutterProgress -= 1;
-					hereDrift -= 1.0f;
+				int& rollingShutterProgress = pboRollingShutterProgresses[i];
+				float& hereDrift = pboRollingShutterDrifts[i];
+
+				rollingShutterProgress++;
+				if (rollingShutterProgress == rsInfo->rollingShutterFactor) {
+					//R_FrameBuffer_RollingShutterFlipDoubleBuffer(i);
+					//rollingShutterProgress = 0;
+					rollingShutterProgress = -progressOvershoot; // Since the rolling shutter multiplier can be a non-integer, sometimes we have to pause rendering frames for a little. Imagine if the rolling shutter is half the shutter speed. Then half the time we're not actually recording anything.
+					hereDrift += drift;
+					while (hereDrift > 1.0f) { // Drift has reached one frame (or rather one line) of duration. Adjust to keep sync with audio.
+						rollingShutterProgress -= 1;
+						hereDrift -= 1.0f;
+					}
 				}
-			}
 
+			}
 		}
 	}
 }
@@ -190,6 +194,7 @@ mmeRollingShutterInfo_t* R_MME_GetRollingShutterInfo() {
 
 	static mmeRollingShutterInfo_t rsInfo;
 
+	rsInfo.rollingShutterEnabled = (qboolean)mme_rollingShutterEnabled->integer;
 	rsInfo.rollingShutterPixels = mme_rollingShutterPixels->integer;
 	rsInfo.rollingShutterMultiplier = mme_rollingShutterMultiplier->value;
 	rsInfo.bufferCountNeededForRollingshutter = (int)(ceil(rsInfo.rollingShutterMultiplier) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
@@ -448,39 +453,41 @@ static void R_MME_CheckCvars( void ) {
 			
 			// Unify this fps calculation code somewhere. UGLY.
 			// Also TODO make this work with normal mme_blurFrames
-			//int rollingShutterPixels = mme_rollingShutterPixels->integer;
-			//float rollingShutterMultiplier = mme_rollingShutterMultiplier->value;
-			//int bufferCountNeededForRollingshutter = (int)(ceil(rollingShutterMultiplier) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
-			//int rollingShutterFactor = glConfig.vidHeight*rollingShutterSuperSampleMultiplier / rollingShutterPixels;
-			float captureFPS = shotData.fps * rsInfo->captureFpsMultiplier;
-			float blurDuration = mme_rollingShutterBlur->value * (1.0f / shotData.fps);
-			int blurFrames = (int)(blurDuration * captureFPS);
+			if (rsInfo->rollingShutterEnabled) {
+				float captureFPS = shotData.fps * rsInfo->captureFpsMultiplier;
+				float blurDuration = mme_rollingShutterBlur->value * (1.0f / shotData.fps);
+				int blurFrames = (int)(blurDuration * captureFPS);
 
-			if (blurFrames != passData.quickJitterTotalCount || mme_dofMask->modified || mme_dofQuickRandom->modified || mme_dofMaskInvert->modified) {
-				passData.quickJitterTotalCount = blurFrames;
-				if (passData.quickJitter) {
-					delete[] passData.quickJitter;
-					passData.quickJitter = NULL;
-				}
-				passData.quickJitter = new float[blurFrames * 2];
-				passData.quickJitterIndex = 0;
+				if (blurFrames != passData.quickJitterTotalCount || mme_dofMask->modified || mme_dofQuickRandom->modified || mme_dofMaskInvert->modified) {
+					passData.quickJitterTotalCount = blurFrames;
+					if (passData.quickJitter) {
+						delete[] passData.quickJitter;
+						passData.quickJitter = NULL;
+					}
+					passData.quickJitter = new float[blurFrames * 2];
+					passData.quickJitterIndex = 0;
 
-				bool dofMaskLoaded = false;
-				superRandomDofJitterControl_t* srJControl = &passData.superRandomDofJitterControl;
-				if (strlen(mme_dofMask->string)) {
-					dofMaskLoaded = R_MME_LoadDOFMask(passData.quickJitter, blurFrames, mme_dofMask->string, srJControl);
-				}
-				if (!dofMaskLoaded) {
-					R_MME_ClearSuperRandomJitter(srJControl);
-					R_MME_JitterTable(passData.quickJitter, blurFrames);
-				}
-				if (mme_dofQuickRandom->integer) {
+					bool dofMaskLoaded = false;
+					superRandomDofJitterControl_t* srJControl = &passData.superRandomDofJitterControl;
+					if (strlen(mme_dofMask->string)) {
+						dofMaskLoaded = R_MME_LoadDOFMask(passData.quickJitter, blurFrames, mme_dofMask->string, srJControl);
+					}
+					if (!dofMaskLoaded) {
+						R_MME_ClearSuperRandomJitter(srJControl);
+						R_MME_JitterTable(passData.quickJitter, blurFrames);
+					}
+					if (mme_dofQuickRandom->integer) {
 
-					std::random_device rd;
-					std::mt19937 g(rd());
-					std::shuffle((uint64_t*)&passData.quickJitter[0], (uint64_t*)&passData.quickJitter[blurFrames * 2], g);
+						std::random_device rd;
+						std::mt19937 g(rd());
+						std::shuffle((uint64_t*)&passData.quickJitter[0], (uint64_t*)&passData.quickJitter[blurFrames * 2], g);
+					}
 				}
 			}
+			else if (false) {
+				// Make this for mme_blurframes.
+			}
+			
 		}
 
 	}
@@ -683,6 +690,7 @@ int R_MME_MultiPassNext( ) {
 	return 0;
 }
 
+// Non rolling shutter version
 static void R_MME_MultiShot( byte * target ) {
 	if ( !passData.control.totalFrames ) {
 		//Com_Printf("GetShot");
@@ -909,127 +917,194 @@ qboolean R_MME_TakeShot( void ) {
 
 		bool hdrConversionDone = false;
 
-		for (int i = 0; i < rollingShutterBufferCount; i++) {
+		if (!rsInfo->rollingShutterEnabled) {
+			R_MME_FlushMultiThreading();
+			R_MME_MultiShot(shotBufPerm);
 
-			int& rollingShutterProgress = pboRollingShutterProgresses[i];
-			float& hereDrift = pboRollingShutterDrifts[i];
+			bool dither = true;
 
-			// For example 1.0 * 1080/9.8 = 110.20408163265306122448979591837
-			//int rsBlurFrameCount = (int)(mme_rollingShutterBlur->value*(float)rsInfo->rollingShutterFactor/mme_rollingShutterMultiplier->value);
-			int rsBlurFrameCount = (int)(mme_rollingShutterBlur->value*rsInfo->captureFpsMultiplier);
-			float intensityMultiplier = 1.0f / (float)rsBlurFrameCount;
-
-			//if(rollingShutterProgress >= 0){ // the later pbos have negative offsets because they start capturing later
-			if(rollingShutterProgress >= -rsBlurFrameCount){ // the later pbos have negative offsets because they start capturing later. We also make use of this for blur as far as possible.
-				
-
-				int rollingShutterProgressReversed = rsInfo->rollingShutterFactor - rollingShutterProgress - 1;
-
-				// 1. Check lines we can write into the current frame.
-				//		In short, we can write from the current block up to rsBlurFrameCount blocks to the future,
-				//		long as we don't shoot into the next picture.
-				int howManyBlocks = min(rsBlurFrameCount, rsInfo->rollingShutterFactor-rollingShutterProgress);
-				int negativeOffset = mme_rollingShutterPixels->integer *(howManyBlocks - 1); // Opengl is from bottom up, so we gotta move things around...
-				R_FrameBuffer_RollingShutterCapture(i, mme_rollingShutterPixels->integer* rollingShutterProgressReversed- negativeOffset, mme_rollingShutterPixels->integer* howManyBlocks, true, false, intensityMultiplier);
-
-				// 2. Check lines we can write into the next frame
-				//		This applies basically only if our blur multiplier is bigger than  ceil(rollingshuttermultiplier)-rollingshuttermultiplier.
-				int preProgressOvershootFrames = rsBlurFrameCount -progressOvershoot;
-				if (preProgressOvershootFrames > 0) {
-					// Possible that we write some.
-					int framesLeftToWrite = rsInfo->rollingShutterFactor - rollingShutterProgress;
-					if (framesLeftToWrite <= preProgressOvershootFrames) { // Otherwise too early.
-						int blockOffset = preProgressOvershootFrames - framesLeftToWrite - rsBlurFrameCount;
-						int blockOffsetReversed = rsInfo->rollingShutterFactor - blockOffset - 1;
-						int howManyBlocks = min(rsBlurFrameCount, rsInfo->rollingShutterFactor - blockOffset);
-						int negativeOffset = mme_rollingShutterPixels->integer * (howManyBlocks - 1); // Opengl is from bottom up, so we gotta move things around...
-						R_FrameBuffer_RollingShutterCapture(i, mme_rollingShutterPixels->integer* blockOffsetReversed- negativeOffset, mme_rollingShutterPixels->integer* howManyBlocks, true, true, intensityMultiplier);
-					}
-				}
-
-
-				//R_FrameBuffer_RollingShutterCapture(i, mme_rollingShutterPixels->integer* rollingShutterProgressReversed, mme_rollingShutterPixels->integer,true,false);
-				 
-
-				if (rollingShutterProgress == rsInfo->rollingShutterFactor-1){
-
-					R_MME_FlushMultiThreading();
-					R_MME_MultiShot(shotBufPerm, rsInfo->rollingShutterFactor, rollingShutterProgress, mme_rollingShutterPixels->integer, i);
-
-					bool dither = true;
-
-					std::lock_guard<std::mutex> guard(saveShotThreadMutex);
-					saveShotThread = new std::thread([&, dither,pixelCount]{
-						qboolean audio=qfalse, audioTaken = qfalse;
-						int sizeSound = 0;
-						byte inSound[MME_SAMPLERATE] = { 0 };
+			std::lock_guard<std::mutex> guard(saveShotThreadMutex);
+			saveShotThread = new std::thread([&, dither, pixelCount] {
+				qboolean audio = qfalse, audioTaken = qfalse;
+				int sizeSound = 0;
+				byte inSound[MME_SAMPLERATE] = { 0 };
 
 #ifdef CAPTURE_FLOAT
 
 
 
-						float* asFloatBuffer = (float*)shotBufPerm;
-						if (dither) {
+				float* asFloatBuffer = (float*)shotBufPerm;
+				if (dither) {
 
-							// Floyd-Steinberg dither
-							float oldPixel = 0.0f, newPixel = 0.0f, quantError = 0.0f;
-							int stride = glConfig.vidWidth * 3;
+					// Floyd-Steinberg dither
+					float oldPixel = 0.0f, newPixel = 0.0f, quantError = 0.0f;
+					int stride = glConfig.vidWidth * 3;
 
-							for (int i = 0; i < pixelCount * 3; i++) {
+					for (int i = 0; i < pixelCount * 3; i++) {
 
-								oldPixel = asFloatBuffer[i]; // Important note: shader adds 0.5 for the rounded casting. keep in mind.
-								newPixel = 0.5f + (float)(int)std::clamp(oldPixel, 0.5f, 255.5f);
-								shotBufPerm[i] = newPixel;
-								// Can we just remove the 0.5 stuff altogether if we add 0.5f to newpixel on generation?
-								// oldPixel-0.5f-newPixel == oldPixel - (newPixel+0.5f)? == oldPixel - newPixel - 0.5f. yup, seems so.
-								quantError = oldPixel - newPixel;
-								asFloatBuffer[i + 3] += quantError * 7.0f / 16.0f; // This is the pixel to the right
-								asFloatBuffer[i + stride - 3] += quantError * 3.0f / 16.0f; // This is the pixel to the left in lower row
-								asFloatBuffer[i + stride] += quantError * 5.0f / 16.0f; // This is the pixel to below
-								asFloatBuffer[i + stride + 3] += quantError * 1.0f / 16.0f; // This is the pixel to below, to the right
+						oldPixel = asFloatBuffer[i]; // Important note: shader adds 0.5 for the rounded casting. keep in mind.
+						newPixel = 0.5f + (float)(int)std::clamp(oldPixel, 0.5f, 255.5f);
+						shotBufPerm[i] = newPixel;
+						// Can we just remove the 0.5 stuff altogether if we add 0.5f to newpixel on generation?
+						// oldPixel-0.5f-newPixel == oldPixel - (newPixel+0.5f)? == oldPixel - newPixel - 0.5f. yup, seems so.
+						quantError = oldPixel - newPixel;
+						asFloatBuffer[i + 3] += quantError * 7.0f / 16.0f; // This is the pixel to the right
+						asFloatBuffer[i + stride - 3] += quantError * 3.0f / 16.0f; // This is the pixel to the left in lower row
+						asFloatBuffer[i + stride] += quantError * 5.0f / 16.0f; // This is the pixel to below
+						asFloatBuffer[i + stride + 3] += quantError * 1.0f / 16.0f; // This is the pixel to below, to the right
 
-								// Normally we'd increase the buffer size because the bottom row of the dithering needs extra space
-								// but the shotbuffer is already 5*pixelCount because it was meant to account for depth and whatnot?
-							}
-						}
-						else {
+						// Normally we'd increase the buffer size because the bottom row of the dithering needs extra space
+						// but the shotbuffer is already 5*pixelCount because it was meant to account for depth and whatnot?
+					}
+				}
+				else {
 
-							for (int i = 0; i < pixelCount; i++) {
+					for (int i = 0; i < pixelCount; i++) {
 
-								shotBufPerm[i * 3 + 0] = asFloatBuffer[i * 3 + 0];
-								shotBufPerm[i * 3 + 1] = asFloatBuffer[i * 3 + 1];
-								shotBufPerm[i * 3 + 2] = asFloatBuffer[i * 3 + 2];
-							}
-						}
+						shotBufPerm[i * 3 + 0] = asFloatBuffer[i * 3 + 0];
+						shotBufPerm[i * 3 + 1] = asFloatBuffer[i * 3 + 1];
+						shotBufPerm[i * 3 + 2] = asFloatBuffer[i * 3 + 2];
+					}
+				}
 
 #endif
 
-						shotData.main.type = mmeShotTypeBGR;
+				shotData.main.type = mmeShotTypeBGR;
 
-						if (!audioTaken)
-							audio = ri.S_MMEAviImport(inSound, &sizeSound);
+				if (!audioTaken)
+					audio = ri.S_MMEAviImport(inSound, &sizeSound);
 
-						audioTaken = qtrue;
+				audioTaken = qtrue;
 
-						R_MME_SaveShot(&shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBufPerm, audio, sizeSound, inSound);
-						
-						//delete shotDataThreadCopy;
-					});
+				R_MME_SaveShot(&shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBufPerm, audio, sizeSound, inSound);
 
+				//delete shotDataThreadCopy;
+			});
+		}
+		else {
+
+			for (int i = 0; i < rollingShutterBufferCount; i++) {
+
+				int& rollingShutterProgress = pboRollingShutterProgresses[i];
+				float& hereDrift = pboRollingShutterDrifts[i];
+
+				// For example 1.0 * 1080/9.8 = 110.20408163265306122448979591837
+				//int rsBlurFrameCount = (int)(mme_rollingShutterBlur->value*(float)rsInfo->rollingShutterFactor/mme_rollingShutterMultiplier->value);
+				int rsBlurFrameCount = (int)(mme_rollingShutterBlur->value * rsInfo->captureFpsMultiplier);
+				float intensityMultiplier = 1.0f / (float)rsBlurFrameCount;
+
+				//if(rollingShutterProgress >= 0){ // the later pbos have negative offsets because they start capturing later
+				if (rollingShutterProgress >= -rsBlurFrameCount) { // the later pbos have negative offsets because they start capturing later. We also make use of this for blur as far as possible.
+
+
+					int rollingShutterProgressReversed = rsInfo->rollingShutterFactor - rollingShutterProgress - 1;
+
+					// 1. Check lines we can write into the current frame.
+					//		In short, we can write from the current block up to rsBlurFrameCount blocks to the future,
+					//		long as we don't shoot into the next picture.
+					int howManyBlocks = min(rsBlurFrameCount, rsInfo->rollingShutterFactor - rollingShutterProgress);
+					int negativeOffset = mme_rollingShutterPixels->integer * (howManyBlocks - 1); // Opengl is from bottom up, so we gotta move things around...
+					R_FrameBuffer_RollingShutterCapture(i, mme_rollingShutterPixels->integer * rollingShutterProgressReversed - negativeOffset, mme_rollingShutterPixels->integer * howManyBlocks, true, false, intensityMultiplier);
+
+					// 2. Check lines we can write into the next frame
+					//		This applies basically only if our blur multiplier is bigger than  ceil(rollingshuttermultiplier)-rollingshuttermultiplier.
+					int preProgressOvershootFrames = rsBlurFrameCount - progressOvershoot;
+					if (preProgressOvershootFrames > 0) {
+						// Possible that we write some.
+						int framesLeftToWrite = rsInfo->rollingShutterFactor - rollingShutterProgress;
+						if (framesLeftToWrite <= preProgressOvershootFrames) { // Otherwise too early.
+							int blockOffset = preProgressOvershootFrames - framesLeftToWrite - rsBlurFrameCount;
+							int blockOffsetReversed = rsInfo->rollingShutterFactor - blockOffset - 1;
+							int howManyBlocks = min(rsBlurFrameCount, rsInfo->rollingShutterFactor - blockOffset);
+							int negativeOffset = mme_rollingShutterPixels->integer * (howManyBlocks - 1); // Opengl is from bottom up, so we gotta move things around...
+							R_FrameBuffer_RollingShutterCapture(i, mme_rollingShutterPixels->integer * blockOffsetReversed - negativeOffset, mme_rollingShutterPixels->integer * howManyBlocks, true, true, intensityMultiplier);
+						}
+					}
+
+
+					//R_FrameBuffer_RollingShutterCapture(i, mme_rollingShutterPixels->integer* rollingShutterProgressReversed, mme_rollingShutterPixels->integer,true,false);
+
+
+					if (rollingShutterProgress == rsInfo->rollingShutterFactor - 1) {
+
+						R_MME_FlushMultiThreading();
+						R_MME_MultiShot(shotBufPerm, rsInfo->rollingShutterFactor, rollingShutterProgress, mme_rollingShutterPixels->integer, i);
+
+						bool dither = true;
+
+						std::lock_guard<std::mutex> guard(saveShotThreadMutex);
+						saveShotThread = new std::thread([&, dither, pixelCount] {
+							qboolean audio = qfalse, audioTaken = qfalse;
+							int sizeSound = 0;
+							byte inSound[MME_SAMPLERATE] = { 0 };
+
+#ifdef CAPTURE_FLOAT
+
+
+
+							float* asFloatBuffer = (float*)shotBufPerm;
+							if (dither) {
+
+								// Floyd-Steinberg dither
+								float oldPixel = 0.0f, newPixel = 0.0f, quantError = 0.0f;
+								int stride = glConfig.vidWidth * 3;
+
+								for (int i = 0; i < pixelCount * 3; i++) {
+
+									oldPixel = asFloatBuffer[i]; // Important note: shader adds 0.5 for the rounded casting. keep in mind.
+									newPixel = 0.5f + (float)(int)std::clamp(oldPixel, 0.5f, 255.5f);
+									shotBufPerm[i] = newPixel;
+									// Can we just remove the 0.5 stuff altogether if we add 0.5f to newpixel on generation?
+									// oldPixel-0.5f-newPixel == oldPixel - (newPixel+0.5f)? == oldPixel - newPixel - 0.5f. yup, seems so.
+									quantError = oldPixel - newPixel;
+									asFloatBuffer[i + 3] += quantError * 7.0f / 16.0f; // This is the pixel to the right
+									asFloatBuffer[i + stride - 3] += quantError * 3.0f / 16.0f; // This is the pixel to the left in lower row
+									asFloatBuffer[i + stride] += quantError * 5.0f / 16.0f; // This is the pixel to below
+									asFloatBuffer[i + stride + 3] += quantError * 1.0f / 16.0f; // This is the pixel to below, to the right
+
+									// Normally we'd increase the buffer size because the bottom row of the dithering needs extra space
+									// but the shotbuffer is already 5*pixelCount because it was meant to account for depth and whatnot?
+								}
+							}
+							else {
+
+								for (int i = 0; i < pixelCount; i++) {
+
+									shotBufPerm[i * 3 + 0] = asFloatBuffer[i * 3 + 0];
+									shotBufPerm[i * 3 + 1] = asFloatBuffer[i * 3 + 1];
+									shotBufPerm[i * 3 + 2] = asFloatBuffer[i * 3 + 2];
+								}
+							}
+
+#endif
+
+							shotData.main.type = mmeShotTypeBGR;
+
+							if (!audioTaken)
+								audio = ri.S_MMEAviImport(inSound, &sizeSound);
+
+							audioTaken = qtrue;
+
+							R_MME_SaveShot(&shotData.main, glConfig.vidWidth, glConfig.vidHeight, shotData.fps, shotBufPerm, audio, sizeSound, inSound);
+
+							//delete shotDataThreadCopy;
+						});
+
+					}
 				}
-			}
-			rollingShutterProgress++;
-			if (rollingShutterProgress == rsInfo->rollingShutterFactor) {
-				R_FrameBuffer_RollingShutterFlipDoubleBuffer(i);
-				//rollingShutterProgress = 0;
-				rollingShutterProgress = -progressOvershoot; // Since the rolling shutter multiplier can be a non-integer, sometimes we have to pause rendering frames for a little. Imagine if the rolling shutter is half the shutter speed. Then half the time we're not actually recording anything.
-				hereDrift += drift;
-				while (hereDrift > 1.0f) { // Drift has reached one frame (or rather one line) of duration. Adjust to keep sync with audio.
-					rollingShutterProgress -= 1;
-					hereDrift -= 1.0f;
+				rollingShutterProgress++;
+				if (rollingShutterProgress == rsInfo->rollingShutterFactor) {
+					R_FrameBuffer_RollingShutterFlipDoubleBuffer(i);
+					//rollingShutterProgress = 0;
+					rollingShutterProgress = -progressOvershoot; // Since the rolling shutter multiplier can be a non-integer, sometimes we have to pause rendering frames for a little. Imagine if the rolling shutter is half the shutter speed. Then half the time we're not actually recording anything.
+					hereDrift += drift;
+					while (hereDrift > 1.0f) { // Drift has reached one frame (or rather one line) of duration. Adjust to keep sync with audio.
+						rollingShutterProgress -= 1;
+						hereDrift -= 1.0f;
+					}
 				}
-			}
 
+			}
 		}
 		//ri.Hunk_FreeTempMemory( shotBuf );
 	}
@@ -1457,6 +1532,7 @@ void R_MME_Init(void) {
 	mme_saveAEKeyframes = ri.Cvar_Get ( "mme_saveAEKeyframes", "1", CVAR_ARCHIVE );
 	mme_workMegs = ri.Cvar_Get ( "mme_workMegs", "128", CVAR_LATCH | CVAR_ARCHIVE );
 
+	mme_rollingShutterEnabled = ri.Cvar_Get ( "mme_rollingShutterEnabled", "1", CVAR_LATCH | CVAR_ARCHIVE ); // float. like rollingshuttermultiplier.
 	mme_rollingShutterBlur = ri.Cvar_Get ( "mme_rollingShutterBlur", "0.5", CVAR_LATCH | CVAR_ARCHIVE ); // float. like rollingshuttermultiplier.
 	mme_rollingShutterPixels = ri.Cvar_Get ( "mme_rollingShutterPixels", "1", CVAR_LATCH | CVAR_ARCHIVE );
 	mme_rollingShutterMultiplier = ri.Cvar_Get ( "mme_rollingShutterMultiplier", "1", CVAR_LATCH | CVAR_ARCHIVE );

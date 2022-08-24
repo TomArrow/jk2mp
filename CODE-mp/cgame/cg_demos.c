@@ -481,7 +481,11 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	captureFrame = (qboolean) (demo.capture.active && !demo.play.paused);
 	if ( captureFrame ) {
 		trap_MME_BlurInfo( &blurTotal, &blurIndex );
-		captureFPS = mov_captureFPS.value*rsInfo->captureFpsMultiplier;
+		//captureFPS = mov_captureFPS.value*rsInfo->captureFpsMultiplier;
+		captureFPS = mov_captureFPS.value;
+		if (rsInfo->rollingShutterEnabled) {
+			captureFPS *= rsInfo->captureFpsMultiplier;
+		}
 		//captureFPS = mov_captureFPS.value*(float)rollingShutterFactor/ mme_rollingShutterMultiplier;
 		//captureFPS = mov_captureFPS.value*(float)rollingShutterFactor/ (float)bufferCountNeededForRollingshutter; // Wrong. Must get frames at correct speed for rolling shutter.
 		if ( blurTotal > 0) {
@@ -860,7 +864,11 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	if (captureFrame) {
 		char fileName[MAX_OSPATH];
 		Com_sprintf( fileName, sizeof( fileName ), "capture/%s/%s", mme_demoFileName.string, mov_captureName.string );
-		trap_MME_Capture( fileName, captureFPS/rsInfo->captureFpsMultiplier, demo.viewFocus, demo.viewRadius);
+		float captureOutputFPS = captureFPS;
+		if (rsInfo->rollingShutterEnabled) {
+			captureOutputFPS /= rsInfo->captureFpsMultiplier;
+		}
+		trap_MME_Capture( fileName, captureOutputFPS, demo.viewFocus, demo.viewRadius);
 	} else {
 		if (demo.editType && !cg.playerCent)
 			demoDrawCrosshair();
@@ -1053,7 +1061,10 @@ static void demoSeekSyncCommand_f(void) {
 		//int rollingShutterFactor = cgs.glconfig.vidHeight / mme_rollingShutterPixels;
 		//float captureFPS = fps * (float)rollingShutterFactor / mme_rollingShutterMultiplier;
 		mmeRollingShutterInfo_t* rsInfo = trap_MME_GetRollingShutterInfo();
-		float captureFPS = fps * rsInfo->captureFpsMultiplier;
+		float captureFPS = fps;
+		if (rsInfo->rollingShutterEnabled) {
+			captureFPS *= rsInfo->captureFpsMultiplier;
+		}
 
 		int frameAdvanceCount = 0;
 		while (((float)demo.play.time + demo.play.fraction) < desiredTime) {

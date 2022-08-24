@@ -2141,6 +2141,7 @@ typedef enum {
 
 // rolling shutter stuff
 typedef struct {
+	qboolean rollingShutterEnabled;
 	int rollingShutterFactor;
 	int	rollingShutterSuperSampleMultiplier;
 	int rollingShutterPixels;
