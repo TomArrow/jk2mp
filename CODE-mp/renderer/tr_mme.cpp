@@ -194,7 +194,7 @@ mmeRollingShutterInfo_t* R_MME_GetRollingShutterInfo() {
 
 	static mmeRollingShutterInfo_t rsInfo;
 
-	rsInfo.rollingShutterEnabled = (qboolean)mme_rollingShutterEnabled->integer;
+	rsInfo.rollingShutterEnabled = (qboolean)(mme_rollingShutterEnabled->integer && !mme_blurFrames->integer && !mme_dofFrames->integer); // RS is not compatible with those, it does its own thing.
 	rsInfo.rollingShutterPixels = mme_rollingShutterPixels->integer;
 	rsInfo.rollingShutterMultiplier = mme_rollingShutterMultiplier->value;
 	rsInfo.bufferCountNeededForRollingshutter = (int)(ceil(rsInfo.rollingShutterMultiplier) + 0.5f); // ceil bc if value is 1.1 we need 2 buffers. +.5 to avoid float issues..
@@ -453,11 +453,21 @@ static void R_MME_CheckCvars( void ) {
 			
 			// Unify this fps calculation code somewhere. UGLY.
 			// Also TODO make this work with normal mme_blurFrames
+			int blurFrames = 0;
+			qboolean doit = qfalse;
 			if (rsInfo->rollingShutterEnabled) {
 				float captureFPS = shotData.fps * rsInfo->captureFpsMultiplier;
 				float blurDuration = mme_rollingShutterBlur->value * (1.0f / shotData.fps);
-				int blurFrames = (int)(blurDuration * captureFPS);
+				blurFrames = (int)(blurDuration * captureFPS);
+				doit = qtrue;
+			}
+			else if (blurControl->totalFrames) {
+				// Make this for mme_blurframes.
+				blurFrames = blurControl->totalFrames;
+				doit = qtrue;
+			}
 
+			if(doit){
 				if (blurFrames != passData.quickJitterTotalCount || mme_dofMask->modified || mme_dofQuickRandom->modified || mme_dofMaskInvert->modified) {
 					passData.quickJitterTotalCount = blurFrames;
 					if (passData.quickJitter) {
@@ -483,9 +493,6 @@ static void R_MME_CheckCvars( void ) {
 						std::shuffle((uint64_t*)&passData.quickJitter[0], (uint64_t*)&passData.quickJitter[blurFrames * 2], g);
 					}
 				}
-			}
-			else if (false) {
-				// Make this for mme_blurframes.
 			}
 			
 		}

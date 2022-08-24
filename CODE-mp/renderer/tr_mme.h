@@ -25,7 +25,7 @@ typedef struct {
 #define AVI_HEADER_SIZE	2048
 #define AVI_MAX_FILES	1000
 
-#define BLURMAX 256
+#define BLURMAX 2048
 
 
 
