@@ -17,7 +17,7 @@ qboolean ntModDetected = qfalse;
 
 #define MIN_DEDICATED_COMHUNKMEGS 4//1 //We need more than 1 for VMs when we are also using temporary hunk memory for bot nav functions
 #define MIN_COMHUNKMEGS 64 //NOTE: Was 56
-#define DEF_COMHUNKMEGS "64"
+#define DEF_COMHUNKMEGS "128"
 //#define DEF_COMZONEMEGS "16"
 
 int		com_argc;
@@ -2537,8 +2537,8 @@ void Com_Init( char *commandLine ) {
 		//
 		// init commands and vars
 		//
-		com_maxfps = Cvar_Get ("com_maxfps", "125", CVAR_ARCHIVE);
-		com_blood = Cvar_Get ("com_blood", "1", CVAR_ARCHIVE);
+		com_maxfps = Cvar_Get ("com_maxfps", "0", CVAR_ARCHIVE);
+		com_blood = Cvar_Get ("com_blood", "2", CVAR_ARCHIVE);
 
 		com_developer = Cvar_Get ("developer", "0", CVAR_TEMP );
 		com_logfile = Cvar_Get ("logfile", "0", CVAR_TEMP );
@@ -2567,7 +2567,7 @@ void Com_Init( char *commandLine ) {
 		com_noErrorInterrupt = Cvar_Get( "com_noErrorInterrupt", "0", 0 );
 	#endif
 
-		com_affinity = Cvar_Get ("com_affinity", "1", CVAR_ARCHIVE);
+		com_affinity = Cvar_Get ("com_affinity", "0", CVAR_ARCHIVE);
 
 		if ( com_dedicated->integer ) {
 			if ( !com_viewlog->integer ) {

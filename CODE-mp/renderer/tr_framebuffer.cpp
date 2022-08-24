@@ -813,10 +813,10 @@ void R_FrameBuffer_Init( void ) {
 	fbo.fishEyeTempDisabled = 0;
 
 	memset( &fbo, 0, sizeof( fbo ) );
-	r_fbo = ri.Cvar_Get( "r_fbo", "0", CVAR_ARCHIVE | CVAR_LATCH);
+	r_fbo = ri.Cvar_Get( "r_fbo", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboFishEye = ri.Cvar_Get( "r_fboFishEye", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboFishEyeTessellate = ri.Cvar_Get( "r_fboFishEyeTessellate", "1", CVAR_ARCHIVE);
-	r_fboDepthBits = ri.Cvar_Get( "r_fboDepthBits", "32", CVAR_ARCHIVE | CVAR_LATCH);
+	r_fboDepthBits = ri.Cvar_Get( "r_fboDepthBits", "32f", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboDepthPacked = ri.Cvar_Get( "r_fboDepthPacked", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboStencilWhenNotPacked = ri.Cvar_Get( "r_fboStencilWhenNotPacked", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboExposure = ri.Cvar_Get("r_fboExposure", "1.0", CVAR_ARCHIVE);
@@ -824,7 +824,7 @@ void R_FrameBuffer_Init( void ) {
 	r_fboSuperSample = ri.Cvar_Get( "r_fboSuperSample", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_fboSuperSampleMipMap = ri.Cvar_Get( "r_fboSuperSampleMipMap", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboRollingShutterSuperSample = ri.Cvar_Get("r_fboRollingShutterSuperSample", "0", CVAR_ARCHIVE | CVAR_LATCH);
-	r_fboBlur = ri.Cvar_Get( "r_fboBlur", "0", CVAR_ARCHIVE | CVAR_LATCH);	
+	r_fboBlur = ri.Cvar_Get( "r_fboBlur", "2", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_fboWidth = ri.Cvar_Get( "r_fboWidth", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_fboHeight = ri.Cvar_Get( "r_fboHeight", "0", CVAR_ARCHIVE | CVAR_LATCH);	
 	r_glDepthClamp = ri.Cvar_Get( "r_glDepthClamp", "1", CVAR_ARCHIVE | CVAR_LATCH);

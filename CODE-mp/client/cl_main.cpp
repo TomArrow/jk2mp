@@ -2596,10 +2596,10 @@ void CL_Init( void ) {
 //	Cvar_Get ("headmodel", "kyle/default", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("team_model", "kyle/default", CVAR_USERINFO | CVAR_ARCHIVE );
 //	Cvar_Get ("team_headmodel", "kyle/default", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("forcepowers", "7-1-032330000000001333", CVAR_USERINFO | CVAR_ARCHIVE );
+	Cvar_Get ("forcepowers", "6-2-030000000000000300", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("g_redTeam", "Empire", CVAR_SERVERINFO | CVAR_ARCHIVE);
 	Cvar_Get ("g_blueTeam", "Rebellion", CVAR_SERVERINFO | CVAR_ARCHIVE);
-	Cvar_Get ("color1",  "4", CVAR_USERINFO | CVAR_ARCHIVE );
+	Cvar_Get ("color1",  "3", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("color2", "5", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("handicap", "100", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("teamtask", "0", CVAR_USERINFO );

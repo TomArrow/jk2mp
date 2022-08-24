@@ -881,7 +881,7 @@ void R_Register( void )
 	// latched and archived variables
 	//
 	r_allowExtensions = ri.Cvar_Get( "r_allowExtensions", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	r_ext_compressed_textures = ri.Cvar_Get( "r_ext_compress_textures", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_ext_compressed_textures = ri.Cvar_Get( "r_ext_compress_textures", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ext_compressed_lightmaps = ri.Cvar_Get( "r_ext_compress_lightmaps", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ext_preferred_tc_method = ri.Cvar_Get( "r_ext_preferred_tc_method", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ext_gamma_control = ri.Cvar_Get( "r_ext_gamma_control", "1", CVAR_ARCHIVE | CVAR_LATCH );
@@ -961,7 +961,7 @@ void R_Register( void )
 	r_gammaLegacy = ri.Cvar_Get("r_gammaLegacy", "0", CVAR_ARCHIVE);
 	r_gammaLegacyPrecision = ri.Cvar_Get("r_gammaLegacyPrecision", "2", CVAR_ARCHIVE);
 	r_gammaSrgbLightvalues = ri.Cvar_Get("r_gammaSrgbLightvalues", "1", CVAR_ARCHIVE);
-	r_HUDBrightness = ri.Cvar_Get("r_HUDBrightness", "1.0", CVAR_ARCHIVE);
+	r_HUDBrightness = ri.Cvar_Get("r_HUDBrightness", "0.5", CVAR_ARCHIVE);
 
 	r_hideMissingModels = ri.Cvar_Get("r_hideMissingModels", "1", CVAR_ARCHIVE);
 
@@ -1096,8 +1096,8 @@ extern qboolean Sys_LowPhysicalMemory();
 	ri.Cmd_AddCommand( "modelist", R_ModeList_f );
 	ri.Cmd_AddCommand( "modelcacheinfo", RE_RegisterModels_Info_f);
 
-	r_fontSharpness = ri.Cvar_Get("r_fontSharpness", "0", CVAR_ARCHIVE);
-	r_font3DBrightness = ri.Cvar_Get("r_font3DBrightness", "1.0", CVAR_ARCHIVE);
+	r_fontSharpness = ri.Cvar_Get("r_fontSharpness", "3", CVAR_ARCHIVE);
+	r_font3DBrightness = ri.Cvar_Get("r_font3DBrightness", "2", CVAR_ARCHIVE);
 }
 
 #ifdef G2_COLLISION_ENABLED

@@ -1562,7 +1562,7 @@ void R_MME_Init(void) {
 	mme_jpegQuality = ri.Cvar_Get ("mme_jpegQuality", "90", CVAR_ARCHIVE);
 	mme_jpegDownsampleChroma = ri.Cvar_Get ("mme_jpegDownsampleChroma", "0", CVAR_ARCHIVE);
 	mme_jpegOptimizeHuffman = ri.Cvar_Get ("mme_jpegOptimizeHuffman", "1", CVAR_ARCHIVE);
-	mme_screenShotFormat = ri.Cvar_Get ("mme_screenShotFormat", "png", CVAR_ARCHIVE);
+	mme_screenShotFormat = ri.Cvar_Get ("mme_screenShotFormat", "avi", CVAR_ARCHIVE);
 	mme_screenShotGamma = ri.Cvar_Get ("mme_screenShotGamma", "0", CVAR_ARCHIVE);
 	mme_screenShotAlpha = ri.Cvar_Get ("mme_screenShotAlpha", "0", CVAR_ARCHIVE);
 	mme_tgaCompression = ri.Cvar_Get ("mme_tgaCompression", "1", CVAR_ARCHIVE);
@@ -1577,7 +1577,7 @@ void R_MME_Init(void) {
 	mme_skyColor = ri.Cvar_Get( "mme_skyColor", "0", CVAR_CHEAT );
 	mme_skyTint = ri.Cvar_Get( "mme_skyTint", "0", CVAR_CHEAT );
 	mme_fboImageTint = ri.Cvar_Get( "mme_fboImageTint", "0", CVAR_CHEAT );
-	mme_cinNoClamp = ri.Cvar_Get( "mme_cinNoClamp", "0", CVAR_ARCHIVE);
+	mme_cinNoClamp = ri.Cvar_Get( "mme_cinNoClamp", "1", CVAR_ARCHIVE);
 	mme_renderWidth = ri.Cvar_Get( "mme_renderWidth", "0", CVAR_LATCH | CVAR_ARCHIVE );
 	mme_renderHeight = ri.Cvar_Get( "mme_renderHeight", "0", CVAR_LATCH | CVAR_ARCHIVE );
 
@@ -1590,10 +1590,10 @@ void R_MME_Init(void) {
 	mme_dofFrames = ri.Cvar_Get ( "mme_dofFrames", "0", CVAR_ARCHIVE );
 	mme_dofRadius = ri.Cvar_Get ( "mme_dofRadius", "2", CVAR_ARCHIVE );
 	mme_dofQuick = ri.Cvar_Get ( "mme_dofQuick", "1", CVAR_ARCHIVE );
-	mme_dofQuickRandom = ri.Cvar_Get ( "mme_dofQuickRandom", "3", CVAR_ARCHIVE ); 
+	mme_dofQuickRandom = ri.Cvar_Get ( "mme_dofQuickRandom", "0", CVAR_ARCHIVE ); 
 	mme_dofQuickRandomMod = ri.Cvar_Get ( "mme_dofQuickRandomMod", "0.2", CVAR_ARCHIVE );
 	mme_dofMaskInvert = ri.Cvar_Get ( "mme_dofMaskInvert", "0", CVAR_ARCHIVE );
-	mme_dofMask = ri.Cvar_Get ( "mme_dofMask", "gfx/bokeh/circle", CVAR_ARCHIVE );
+	mme_dofMask = ri.Cvar_Get ( "mme_dofMask", "gfx/bokeh/pentagon_s", CVAR_ARCHIVE );
 
 	mme_cpuSSE2 = ri.Cvar_Get ( "mme_cpuSSE2", "0", CVAR_ARCHIVE );
 	mme_pbo = ri.Cvar_Get ( "mme_pbo", "1", CVAR_ARCHIVE );
@@ -1609,9 +1609,9 @@ void R_MME_Init(void) {
 	mme_workMegs = ri.Cvar_Get ( "mme_workMegs", "128", CVAR_LATCH | CVAR_ARCHIVE );
 
 	mme_rollingShutterEnabled = ri.Cvar_Get ( "mme_rollingShutterEnabled", "1", CVAR_LATCH | CVAR_ARCHIVE ); // float. like rollingshuttermultiplier.
-	mme_rollingShutterBlur = ri.Cvar_Get ( "mme_rollingShutterBlur", "0.5", CVAR_LATCH | CVAR_ARCHIVE ); // float. like rollingshuttermultiplier.
+	mme_rollingShutterBlur = ri.Cvar_Get ( "mme_rollingShutterBlur", "1", CVAR_LATCH | CVAR_ARCHIVE ); // float. like rollingshuttermultiplier.
 	mme_rollingShutterPixels = ri.Cvar_Get ( "mme_rollingShutterPixels", "1", CVAR_LATCH | CVAR_ARCHIVE );
-	mme_rollingShutterMultiplier = ri.Cvar_Get ( "mme_rollingShutterMultiplier", "1", CVAR_LATCH | CVAR_ARCHIVE );
+	mme_rollingShutterMultiplier = ri.Cvar_Get ( "mme_rollingShutterMultiplier", "9.8", CVAR_LATCH | CVAR_ARCHIVE );
 	mme_mvShaderLoadOrder = ri.Cvar_Get ( "mme_mvShaderLoadOrder", "1", CVAR_LATCH | CVAR_ARCHIVE );
 
 	mme_worldShader->modified = qtrue;
