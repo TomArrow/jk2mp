@@ -457,6 +457,17 @@ static qboolean chaseNextTarget( int *oldTarget ) {
 	return qfalse;
 }
 
+extern int GetClientNumFromText(char* thisPlayer);
+static qboolean chaseFollowTarget( int *oldTarget, char* searchString ) {
+	int i, old = *oldTarget;
+	int clientNumTry = GetClientNumFromText(searchString);
+	if (clientNumTry != -1 && demoTargetEntity(clientNumTry)) {
+		*oldTarget = clientNumTry;
+		return qtrue;
+	}
+	return qfalse;
+}
+
 static void chaseInterpolate( int time, float timeFraction, vec3_t origin, vec3_t angles, float *distance, int *target ) {
 	float	lerp;
 	int		times[4];
@@ -691,6 +702,8 @@ void demoChaseCommand_f(void) {
 		chasePrevTarget( &demo.chase.target );
 	} else if (!Q_stricmp(cmd, "targetNext")) {
 		chaseNextTarget( &demo.chase.target );
+	} else if (!Q_stricmp(cmd, "targetFollow")) {
+		chaseFollowTarget( &demo.chase.target, CG_Argv(2));
 	} else if (!Q_stricmp(cmd, "target")) {
 		float *angles, *origin, *distance;
 		int *target;
@@ -792,6 +805,7 @@ void demoChaseCommand_f(void) {
 		Com_Printf("chase clear, clear all chase points. (Use with caution...)\n" );
 		Com_Printf("chase lock, lock the view to chase track or free moving.\n" );
 		Com_Printf("chase target, Clear/Set the target currently being aimed at.\n" );
+		Com_Printf("chase targetFollow [0-31 or playername searchstring], follow a particular player.\n" );
 		Com_Printf("chase targetNext/Prev, Go the next or previous player.\n" );
 		Com_Printf("chase shift time, move time indexes of chase points by certain amount.\n" );
 		Com_Printf("chase next/prev, go to time index of next or previous point.\n" );

@@ -1408,6 +1408,82 @@ static void CG_ParseOverride( char *overrideString ) {
 	}
 }
 
+int GetClientNumFromText(char* thisPlayer) {
+	const char* tmpConfigString;
+	int tmpConfigStringMaxLength;
+	int clientNumHere = -1;
+	int pstrlen = strlen(thisPlayer);
+	if (!pstrlen) return clientNumHere;
+	if (pstrlen <= 2 && isdigit(thisPlayer[0]) && (pstrlen == 1 || isdigit(thisPlayer[1]))) {
+		// It's a number. ClientNum. Just parse it.
+		clientNumHere = atoi(thisPlayer);
+
+		//tmpConfigString = CG_ConfigString(CS_PLAYERS+ clientNumHere);
+
+	}
+	else {
+		char noColorsString[MAX_INFO_VALUE];
+
+		
+		Q_strncpyz(noColorsString, thisPlayer, sizeof(noColorsString));
+		Q_StripColorNew(noColorsString);
+
+		int colorStrippedMatches = 0;
+		int caseInsensitiveMatches = 0;
+		int matches = 0;
+
+		int colorStrippedMatch = 0;
+		int caseInsensitiveMatch = 0;
+		int match = 0;
+
+		// Find matching player name
+		for (int c = 0; c < MAX_CLIENTS; c++) {
+
+			char noColorsStringCompare[MAX_INFO_VALUE];
+
+			tmpConfigString = CG_ConfigString(CS_PLAYERS+ c);
+			char* nameHere = Info_ValueForKey(tmpConfigString, "n");
+
+			Q_strncpyz(noColorsStringCompare, nameHere, sizeof(noColorsStringCompare));
+			Q_StripColorNew(noColorsStringCompare);
+
+			if (strstr(nameHere, thisPlayer)) {
+				match = c;
+				matches++;
+			}
+			if (Q_stristr(nameHere, thisPlayer)) {
+				caseInsensitiveMatch = c;
+				caseInsensitiveMatches++;
+			}
+			if (Q_stristr(noColorsStringCompare, noColorsString)) {
+				colorStrippedMatch = c;
+				colorStrippedMatches++;
+			}
+		}
+
+		if (matches >= 1) {
+			clientNumHere = match;
+		}
+		else {
+			// No match. Try case insensitive
+			if (caseInsensitiveMatches >= 1) {
+				clientNumHere = caseInsensitiveMatch;
+			}
+			else {
+				// No match, try without colors
+				if (colorStrippedMatches >= 1) {
+					clientNumHere = colorStrippedMatch;
+				}
+				else {
+					// Not found
+				}
+			}
+		}
+	}
+	return clientNumHere;
+}
+
+
 
 void CG_ClientOverride_f(void) {
 	int argc = trap_Argc();
@@ -1486,14 +1562,23 @@ void CG_ClientOverride_f(void) {
 		clientEnd = MAX_CLIENTS - 1;
 		CG_ParseOverride( cgs.playerOverride );
 	} else {
-		line = strstr( buf, "-" );
-		if ( line ) {
-			*line++ = 0;
-			clientStart = atoi ( buf );
-			clientEnd = atoi( line );
-		} else {
-			clientStart = clientEnd = atoi ( buf );
+		int clientNumTry = GetClientNumFromText(buf); // TA: Some more sophisticated finding of client based on name.
+
+		if (clientNumTry != -1) {
+			clientStart = clientEnd = clientNumTry;
 		}
+		else {
+			line = strstr(buf, "-");
+			if (line) {
+				*line++ = 0;
+				clientStart = atoi(buf);
+				clientEnd = atoi(line);
+			}
+			else {
+				clientStart = clientEnd = atoi(buf);
+			}
+		}
+		
 		if (clientStart < 0 || clientStart >= MAX_CLIENTS ) {
 			CG_Printf("Illegal clientnum %d", clientStart);
 			return;
