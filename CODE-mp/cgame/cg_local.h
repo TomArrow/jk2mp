@@ -1,5 +1,8 @@
 // Copyright (C) 1999-2000 Id Software, Inc.
 //
+#ifndef CG_LOCAL_H
+#define CG_LOCAL_H
+
 #include "../game/q_shared.h"
 #include "tr_types.h"
 #include "../game/bg_public.h"
@@ -2699,3 +2702,6 @@ vec3_t gCGFallVector;
 #define movMaskMissiles		0x004
 #define movMaskItems		0x008
 #define movMaskFlags		0x010
+
+
+#endif

@@ -2625,6 +2625,7 @@ CG_CheckEvents
 */
 void CG_CheckEvents( centity_t *cent ) {
 	// check for event-only entities
+
 	if ( cent->currentState.eType > ET_EVENTS ) {
 		if ( cent->previousEvent ) {
 			return;	// already fired

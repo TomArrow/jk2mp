@@ -1,6 +1,9 @@
 // Copyright (C) 1999-2000 Id Software, Inc.
 //
 
+#ifndef CG_PUBLIC_H
+#define CG_PUBLIC_H
+
 
 #define	CMD_BACKUP			64	
 #define	CMD_MASK			(CMD_BACKUP - 1)
@@ -433,3 +436,5 @@ typedef struct
 #define	MAX_CG_SHARED_BUFFER_SIZE		2048
 
 //----------------------------------------------
+
+#endif

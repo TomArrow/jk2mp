@@ -1,6 +1,6 @@
-#include "cg_local.h"
-//#include "cg_demos.h"
 
+#include "cg_demos.h"
+#include "cg_local.h"
 camera_t cam;
 
 void Cam_Draw2d(void)
@@ -29,6 +29,9 @@ void Cam_DrawClientNames(void) //FIXME: draw entitynums
 			int skipNumber = cam_shownamesIncludePlayer.integer ? -1 : cg.snap->ps.clientNum;
 			if (cam_specEnt.integer != -1) {
 				skipNumber = cam_shownamesIncludePlayer.integer ? -1 : cam_specEnt.integer;
+			}
+			if (demo.chase.target != -1) {
+				skipNumber = cam_shownamesIncludePlayer.integer ? -1 : demo.chase.target;
 			}
 			if (!cam_shownames3D.integer) { // Why waste time on traces when we're drawing in 3d anyway
 				CG_Trace(&trace, cg.refdef.vieworg, NULL, NULL, cent->lerpOrigin, skipNumber, CONTENTS_SOLID | CONTENTS_PLAYERCLIP | CONTENTS_BODY | CONTENTS_CORPSE);
