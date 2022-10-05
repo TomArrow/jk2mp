@@ -2433,7 +2433,8 @@ image_t	*R_FindImageFile( const char *name, qboolean mipmap, qboolean allowPicmi
 R_CreateDlightImage
 ================
 */
-#define	DLIGHT_SIZE	16
+#define	DLIGHT_REFERENCE_SIZE	16
+#define	DLIGHT_SIZE	1024
 static void R_CreateDlightImage( void ) {
 	int		width, height;
 	//byte	*pic;
@@ -2445,8 +2446,11 @@ static void R_CreateDlightImage( void ) {
 		Z_Free(picWrap.ptr);
 	} else { // if we dont get a successful load
 		int		x,y;
-		byte	data[DLIGHT_SIZE][DLIGHT_SIZE][4];
-		int		b;
+		//float	data[DLIGHT_SIZE][DLIGHT_SIZE][4];
+		float*	data = new float[DLIGHT_SIZE*DLIGHT_SIZE*4];
+		float		b;
+
+		constexpr float multiplier = 4000.0f * (DLIGHT_SIZE / DLIGHT_REFERENCE_SIZE) * (DLIGHT_SIZE / DLIGHT_REFERENCE_SIZE); // Not sure this is entirely correct
 
 		// make a centered inverse-square falloff blob for dynamic lighting
 		for (x=0 ; x<DLIGHT_SIZE ; x++) {
@@ -2455,21 +2459,27 @@ static void R_CreateDlightImage( void ) {
 
 				d = ( DLIGHT_SIZE/2 - 0.5f - x ) * ( DLIGHT_SIZE/2 - 0.5f - x ) +
 					( DLIGHT_SIZE/2 - 0.5f - y ) * ( DLIGHT_SIZE/2 - 0.5f - y );
-				b = 4000 / d;
-				if (b > 255) {
-					b = 255;
+				b = multiplier / d;
+				if (b > 1024) { // Do something about clamping less? completely removing it leads to... not nice results.
+					b = 1024;
 				} else if ( b < 75 ) {
 					b = 0;
 				}
-				data[y][x][0] = 
-				data[y][x][1] = 
-				data[y][x][2] = b;
-				data[y][x][3] = 255;			
+
+				//data[y][x][0] = 
+				//data[y][x][1] = 
+				//data[y][x][2] = b/255.0f;
+				//data[y][x][3] = 255.0f;		
+				data[y * DLIGHT_SIZE * 4 + x * 4 + 0] =
+				data[y * DLIGHT_SIZE * 4 + x * 4 + 1] =
+				data[y * DLIGHT_SIZE * 4 + x * 4 + 2] =  b/255.0f;
+				data[y * DLIGHT_SIZE * 4 + x * 4 + 3] = 1.0f;
 			}
 		}
 		picWrap.ptr = (byte*)data;
-		picWrap.bpc = BPC_8BIT;
+		picWrap.bpc = BPC_32FLOAT;
 		tr.dlightImage = R_CreateImage("*dlight", &picWrap, DLIGHT_SIZE, DLIGHT_SIZE, qfalse, qfalse, qfalse, GL_CLAMP );
+		delete[] data;
 	}
 }
 
