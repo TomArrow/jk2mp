@@ -1905,8 +1905,15 @@ Ghoul2 Insert End
 
 	// register the inline models
 	cgs.numInlineModels = trap_CM_NumInlineModels();
+
+	// Considering the cgame module doesn't make use of the ~ 2 mb memory pool in BG we can safely allocate some of it
+	// for the inline models instead of having them hardcoded to 256. In a QVM the qhandle_t should be 4 byte and the
+	// vec3_t should be 12 byte. For 256 models that's barely 4 kb.
+	cgs.inlineDrawModel = (qhandle_t*)BG_Alloc(cgs.numInlineModels * sizeof(qhandle_t));
+	cgs.inlineModelMidpoints = (vec3_t*)BG_Alloc(cgs.numInlineModels * sizeof(vec3_t));
+
 	for ( i = 1 ; i < cgs.numInlineModels ; i++ ) {
-		char	name[10];
+		char	name[16];
 		vec3_t			mins, maxs;
 		int				j;
 
