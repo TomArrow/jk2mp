@@ -6336,6 +6336,37 @@ void CG_G2Animated( centity_t *cent )
 	legs.renderfx = renderfx;
 	VectorCopy (legs.origin, legs.oldorigin);	// don't positionally lerp at all
 
+	// Hack for facial animations stored in apos.trDuration from single player demos
+	if (cent->currentState.apos.trDuration) {
+		animation_t* anim = NULL;
+		int faceAnim = cent->currentState.apos.trDuration & ~(1 << 16);
+		qboolean blinking = (cent->currentState.apos.trDuration & (1 << 16)) >> 16;
+		if (demo15detected)
+			anim = &bgGlobalAnimations15[faceAnim];
+		else
+			anim = &bgGlobalAnimations[faceAnim];
+		trap_G2API_SetBoneAnim(cent->ghoul2, 0, "face", anim->firstFrame, anim->firstFrame+anim->numFrames-1, BONE_ANIM_OVERRIDE_LOOP, 1.0f, cg.time, -1, 150);
+		
+		vec3_t	desiredAngles = { 0 };
+		int blendTime = 80;
+		qboolean bWink = qfalse;
+
+		if (blinking)
+		{
+			desiredAngles[YAW] = -50;
+			if (/*!in_camera&& */ random() > 0.95f)
+			{
+				bWink = qtrue;
+				blendTime /= 3;
+			}
+		}
+		trap_G2API_SetBoneAngles(cent->ghoul2,0,"leye", desiredAngles,BONE_ANGLES_POSTMULT, POSITIVE_Y, POSITIVE_Z, POSITIVE_X, NULL, blendTime, cg.time);
+		
+
+		if (!bWink)
+			trap_G2API_SetBoneAngles(cent->ghoul2, 0, "reye", desiredAngles, BONE_ANGLES_POSTMULT, POSITIVE_Y, POSITIVE_Z, POSITIVE_X, NULL, blendTime, cg.time);
+	}
+
 	CG_G2AnimEntAngles( cent, legs.axis, rootAngles );
 
 	if (cent->currentState.eFlags & EF_DEAD)
