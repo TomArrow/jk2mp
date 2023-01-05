@@ -2508,7 +2508,7 @@ Ghoul2 Insert End
 		CG_Speaker( cent );
 		break;
 	case ET_GRAPPLE: //An entity that wants to be able to use ghoul2 humanoid anims. Like a player, but not.
-		if (!demo15detected)
+		//if (!demo15detected) // We will allow for 1.02 too.
 			CG_G2Animated( cent );
 		break;
 	case ET_TEAM:
