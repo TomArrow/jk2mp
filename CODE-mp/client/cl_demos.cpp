@@ -1059,6 +1059,7 @@ qboolean demoPlay( const char *fileName, qboolean del) {
 		clc.newDemoPlayer = qtrue;
 		clc.serverMessageSequence = 0;
 		clc.lastExecutedServerCommand = 0;
+		clc.submodelBypass = qtrue; // Always true for playing demos.
 		Com_Printf("Opened %s, which has %d seconds and %d frames\n", fileName, (play->endTime - play->startTime) / 1000, play->totalFrames );
 		Con_Close();
 		

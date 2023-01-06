@@ -60,6 +60,8 @@ typedef struct {
 	int				gameClientSize;		// will be > sizeof(playerState_t) due to game private data
 
 	int				restartTime;
+
+	qboolean		submodelBypass;
 } server_t;
 
 
@@ -376,5 +378,9 @@ void SV_ClipToEntity( trace_t *trace, const vec3_t start, const vec3_t mins, con
 void SV_Netchan_Transmit( client_t *client, msg_t *msg);	//int length, const byte *data );
 void SV_Netchan_TransmitNextFragment( netchan_t *chan );
 qboolean SV_Netchan_Process( client_t *client, msg_t *msg );
+
+
+qboolean SV_MVAPI_EnableSubmodelBypass(qboolean enable);
+
 
 #endif // SERVER_H_INC

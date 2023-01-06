@@ -3077,6 +3077,10 @@ Ghoul2 Insert End
 	trap_S_ClearLoopingSounds( qtrue );
 
 	CG_Set2DRatio();
+
+	// Inform the engine that we support more than 256 submodels
+	// TA: Actually don't care. This is Jomme. We'll just activate it serverside whenever a demo is played, otherwise controlled by game.
+	//trap_CG_MVAPI_EnableSubmodelBypass(qtrue);
 }
 
 /*

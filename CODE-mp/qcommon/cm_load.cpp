@@ -99,6 +99,8 @@ void CMod_LoadShaders( lump_t *l )
 CMod_LoadSubmodels
 =================
 */
+#include "../server/server.h"
+#include "../client/client.h"
 void CMod_LoadSubmodels( lump_t *l ) {
 	dmodel_t	*in;
 	cmodel_t	*out;
@@ -115,9 +117,12 @@ void CMod_LoadSubmodels( lump_t *l ) {
 	cm.cmodels = (struct cmodel_s *)Hunk_Alloc( count * sizeof( *cm.cmodels ), h_high );
 	cm.numSubModels = count;
 
-	if (count > MAX_SUBMODELS) {
+	//cm.capsuleModelHandle = MAX(254, count); // At least 254 (CAPSULE_MODEL_HANDLE) in case some legacy cgame module violates the api
+	//cm.boxModelHandle = MAX(255, count + 1); // At least 255 (BOX_MODEL_HANDLE) in case some legacy cgame module violates the api
+
+	if (count > MAX_SUBMODELS && !(sv.submodelBypass || clc.submodelBypass)) {
 		//Com_Error( ERR_DROP, "MAX_SUBMODELS exceeded" );  //TriForce: SP Fix
-		count = MAX_SUBMODELS - 1; //TriForce: SP Fix
+		//count = MAX_SUBMODELS - 1; //TriForce: SP Fix // Hmm we cant do this maybe because sv.submodelBypass isnt set here yet! Game is init'd after map loading. what do?
 	}
 
 	for ( i=0 ; i<count ; i++, in++, out++)

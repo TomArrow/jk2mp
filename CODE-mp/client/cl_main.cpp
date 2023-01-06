@@ -598,6 +598,7 @@ void CL_PlayDemo_f( void ) {
 
 	cls.state = CA_CONNECTED;
 	clc.demoplaying = qtrue;
+	clc.submodelBypass = qtrue; // Always true for playing demos.
 	Q_strncpyz( cls.servername, Cmd_Argv(1), sizeof( cls.servername ) );
 
 	// read demo messages until connected

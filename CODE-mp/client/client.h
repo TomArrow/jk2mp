@@ -126,6 +126,8 @@ typedef struct {
 	entityState_t	parseEntities[MAX_PARSE_ENTITIES];
 
 	char			*mSharedMemory;
+
+	qboolean		submodelBypass;
 } clientActive_t;
 
 extern	clientActive_t		cl;
@@ -204,6 +206,7 @@ typedef struct {
 	netchan_t	netchan;
 
 	float		aviDemoRemain;		// Used for accurate fps recording
+	qboolean	submodelBypass;
 } clientConnection_t;
 
 extern	clientConnection_t clc;

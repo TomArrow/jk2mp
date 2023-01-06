@@ -932,3 +932,9 @@ void trap_G2API_CollisionDetect (
 /*
 Ghoul2 Insert End
 */
+
+
+qboolean trap_G_MVAPI_EnableSubmodelBypass(qboolean enable)
+{
+	return syscall(G_MVAPI_ENABLE_SUBMODELBYPASS, enable);
+}

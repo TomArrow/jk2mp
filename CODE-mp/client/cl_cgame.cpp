@@ -1,5 +1,6 @@
 // cl_cgame.c  -- client system interaction with client game
 
+#include "../qcommon/cm_local.h"
 #include "client.h"
 
 #include "../game/botlib.h"
@@ -461,6 +462,11 @@ void CL_CM_LoadMap( const char *mapname ) {
 	int		checksum;
 
 	CM_LoadMap( mapname, qtrue, &checksum );
+
+	// If the cgame module didn't announce it can handle it we want to abort now
+	//if (CM_NumInlineModels() > MAX_SUBMODELS && !clc.submodelBypass) {
+	//	Com_Error(ERR_DROP, "MAX_SUBMODELS exceeded");
+	//}
 }
 
 /*

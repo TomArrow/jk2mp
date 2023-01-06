@@ -1271,3 +1271,4 @@ qboolean	trap_ROFF_Play( int entID, int roffID, qboolean doTranslation );
 qboolean	trap_ROFF_Purge_Ent( int entID );
 
 
+qboolean	trap_G_MVAPI_EnableSubmodelBypass(qboolean enable);  // Level: 4

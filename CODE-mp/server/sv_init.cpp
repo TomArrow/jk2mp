@@ -2,6 +2,7 @@
 #include "server.h"
 
 #include "../game/q_shared.h"
+#include "../qcommon/cm_local.h"
 /*
 Ghoul2 Insert Start
 */
@@ -599,6 +600,11 @@ Ghoul2 Insert End
 
 	// load and spawn all other entities
 	SV_InitGameProgs();
+
+	// If the game module didn't announce it can handle it we want to abort now
+	//if (CM_NumInlineModels() > MAX_SUBMODELS && !sv.submodelBypass) {
+	//	Com_Error(ERR_DROP, "MAX_SUBMODELS exceeded");
+	//}
 
 	// don't allow a map_restart if game is modified
 	sv_gametype->modified = qfalse;

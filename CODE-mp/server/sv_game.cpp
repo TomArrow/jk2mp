@@ -1015,6 +1015,8 @@ int SV_GameSystemCalls( int *args ) {
 #endif
 		return 0;
 	
+	case G_MVAPI_ENABLE_SUBMODELBYPASS:
+		return SV_MVAPI_EnableSubmodelBypass((qboolean)!!args[1]);
 	default:
 		Com_Error( ERR_DROP, "Bad game system trap: %i", args[0] );
 	}
@@ -1035,6 +1037,8 @@ void SV_ShutdownGameProgs( void ) {
 	VM_Call( gvm, GAME_SHUTDOWN, qfalse );
 	VM_Free( gvm );
 	gvm = NULL;
+
+	sv.submodelBypass = qfalse;
 }
 
 /*
@@ -1132,3 +1136,13 @@ qboolean SV_GameCommand( void ) {
 	return (qboolean)VM_Call( gvm, GAME_CONSOLE_COMMAND );
 }
 
+
+/*
+====================
+SV_MVAPI_EnableSubmodelBypass
+====================
+*/
+qboolean SV_MVAPI_EnableSubmodelBypass(qboolean enable) {
+	sv.submodelBypass = enable;
+	return sv.submodelBypass;
+}
