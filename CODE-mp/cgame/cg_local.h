@@ -210,7 +210,7 @@ typedef struct timedPlayerState_s {
 	playerState_t ps;
 } timedPlayerState_t;
 
-#define MAX_STATE_HISTORY 8
+#define MAX_STATE_HISTORY 32
 typedef struct playerHistory_s {
 	int		nextSlot;
 	timedEntityState_t	states[MAX_STATE_HISTORY];

@@ -134,17 +134,21 @@ void CG_AddToHistory(int serverTime, entityState_t* state, centity_t* cent) {
 			}
 		}
 	}
-	else {
+	else { 
 		// command time unknown
 #ifdef _DEBUG
-		Com_Printf("commandTime unknown for client %d\n", state->number);
+		if (state->eType != ET_MOVER) { // How would a mover have a command time? Makes no sense?
+			Com_Printf("commandTime unknown for client %d\n", state->number);
+		}
 		tstate->time = serverTime;
 #endif
 	}
 	if ((cent->stateHistory.nextSlot % MAX_STATE_HISTORY) == (cent->currentStateHistory % MAX_STATE_HISTORY) && cent->currentStateHistory < cent->stateHistory.nextSlot) {
 		// buffer overflowed, force advance
 #ifdef _DEBUG
-		Com_Printf("centity buffer overflow for client %d\n", state->number);
+		if (state->eType != ET_MOVER) { // Well, currentstatehistory is only really manually advanced for clients so... this is always gonna get called for the "movers"
+			Com_Printf("centity buffer overflow for client %d\n", state->number);
+		}
 #endif
 		cent->currentStateHistory = cent->stateHistory.nextSlot - MAX_STATE_HISTORY + 1;
 	}
