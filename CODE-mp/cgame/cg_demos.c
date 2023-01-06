@@ -405,6 +405,12 @@ void demoProcessSnapShots(qboolean hadSkip) {
 			cent->interpolate = qfalse;
 			cent->currentValid = qtrue;
 			CG_AddToHistory(snap->serverTime, state, cent);
+
+			// modelindex is transfered as signed 8-bit integer (byte), making submodels > 127 appear as negative numbers on the client.
+			// As a negative modelindex isn't valid for SOLID_BMODEL and leads to errors let's try to compensate the modelindex here if the server tells us to.
+			if (cent->currentState.solid == SOLID_BMODEL && cent->currentState.modelindex < 0 && cgs.mvsdk_svFlags & MVSDK_SVFLAG_SUBMODEL_WORKAROUND) {
+				cent->currentState.modelindex += 256;
+			}
 			if (cent->currentState.eType > ET_EVENTS)
 				cent->previousEvent = 1;
 			else 
@@ -613,6 +619,9 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 		cg.oldTimeFraction = cg.timeFraction;
 		CG_InitLocalEntities();
 		CG_InitMarkPolys();
+
+		MV_LoadSettings(CG_ConfigString(CS_MVSDK));
+
 		CG_ClearParticles ();
 		CG_Clear2DTintsTimes();
 		trap_FX_Reset();

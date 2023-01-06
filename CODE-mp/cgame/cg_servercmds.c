@@ -684,6 +684,9 @@ static void CG_MapRestart( void ) {
 
 	CG_InitLocalEntities();
 	CG_InitMarkPolys();
+
+	MV_LoadSettings(CG_ConfigString(CS_MVSDK));
+
 	CG_ClearParticles ();
 	CG_KillCEntityInstances();
 
