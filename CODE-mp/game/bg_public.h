@@ -42,6 +42,13 @@
 
 #define MAX_CLIENT_SCORE_SEND 20
 
+// mvsdk_svFlags
+#define MVSDK_SVFLAG_BBOX                   (1)             // Set by the server in mvsdk_svFlags to signal bbox data in time2
+#define MVSDK_SVFLAG_SUBMODEL_WORKAROUND    (1 << 1)        // Set by the server in mvsdk_svFlags to signal that negative submodels are most likely net-overflows and not intentional
+
+// mvsdk_cgFlags
+#define MVSDK_CGFLAG_SUBMODEL_WORKAROUND    (1)             // Set by the client in mvsdk_cgFlags to inform the server that it has a workaround for up to 255 submodels (instead of default 127)
+
 //
 // config strings are a general means of communicating variable length strings
 // from the server to all connected clients.
@@ -70,6 +77,8 @@
 #define CS_FLAGSTATUS			23		// string indicating flag status in CTF
 #define CS_SHADERSTATE			24
 #define CS_BOTINFO				25
+
+#define CS_MVSDK				26		// CS for mvsdk specific configuration
 
 #define	CS_ITEMS				27		// string of 0's and 1's that tell which items are present
 

@@ -120,6 +120,8 @@ vmCvar_t	g_saberDmgDelay_Wound;
 
 vmCvar_t	g_saberDebugPrint;
 
+vmCvar_t	g_submodelWorkaround;
+
 vmCvar_t	g_austrian;
 
 int gDuelist1 = -1;
@@ -267,6 +269,13 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_saberDebugPrint, "g_saberDebugPrint", "0", CVAR_CHEAT, 0, qfalse  },
 
 	{ &g_austrian, "g_austrian", "0", CVAR_ARCHIVE, 0, qfalse  },
+
+	// g_submodelWorkaround is technically just setting a flag for mvsdk clients to apply the clientside workaround
+	// The cvar might seem more appropriate on cgame, but defaulting it to "0" on the client would make the workaround hardly usable
+	// and defaulting it to "1" on the the client might lead to mappers not realising they exceeded basejk limits when testing their maps.
+	// So we have a cvar in the game module to let servers enable the clientside workaround for bigger maps, defaulting to "0".
+	// Clients supporting the workaround are going to inform the server about it in their userinfo, no matter what this cvar is set to.
+	{ &g_submodelWorkaround, "g_submodelWorkaround", "1", CVAR_ARCHIVE | CVAR_LATCH, 0, qtrue }, // I personally set it to 1 because this is jomme :) I only play demos
 };
 
 // bk001129 - made static to avoid aliasing
@@ -453,6 +462,8 @@ void G_RegisterCvars( void ) {
 	}
 
 	level.warmupModificationCount = g_warmup.modificationCount;
+
+	MV_UpdateSvFlags();
 }
 
 /*
@@ -480,6 +491,11 @@ void G_UpdateCvars( void ) {
 				if (cv->teamShader) {
 					remapped = qtrue;
 				}
+
+				// mvsdk_svFlags
+				if (cv->vmCvar == &g_submodelWorkaround) {
+					MV_UpdateSvFlags();
+				}
 			}
 		}
 	}
@@ -487,6 +503,54 @@ void G_UpdateCvars( void ) {
 	if (remapped) {
 		G_RemapTeamShaders();
 	}
+}
+
+/*
+=================
+MV_UpdateMvsdkConfigstring
+
+=================
+*/
+void MV_UpdateMvsdkConfigstring(char* key, char* value)
+{
+	char csString[MAX_INFO_STRING];
+
+	trap_GetConfigstring(CS_MVSDK, csString, sizeof(csString));
+	Info_SetValueForKey(csString, key, value);
+	trap_SetConfigstring(CS_MVSDK, csString);
+}
+
+/*
+=================
+MV_UpdateSvFlags
+
+Called when registering cvars and updating specific cvars and updates the mvsdk_svFlags according to the current settings
+=================
+*/
+void MV_UpdateSvFlags(void)
+{
+	// mvsdk_svFlags - Used to inform clients about additional mvsdk serverside-features or the compatibility to clientside-features
+	static int lastValue = 0;
+	int intValue = 0;
+
+	// Check for the features and determine the flags
+	if (level.bboxEncoding)           intValue |= MVSDK_SVFLAG_BBOX;
+	if (g_submodelWorkaround.integer) intValue |= MVSDK_SVFLAG_SUBMODEL_WORKAROUND;
+
+	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// !!! Forks of MVSDK should NOT modify the mvsdk_svFlags                              !!!
+	// !!! Removal, replacement or adding of new flags might lead to incompatibilities     !!!
+	// !!! Forks should define their own infostring, but they can send it through CS_MVSDK !!!
+	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+	// Check if we have to update anything or if we can return already
+	if (intValue == lastValue) return;
+
+	// Update the configstring
+	MV_UpdateMvsdkConfigstring("mvsdk_svFlags", va("%i", intValue));
+
+	// Remember the old value
+	lastValue = intValue;
 }
 
 /*
@@ -2491,3 +2555,45 @@ const char *G_GetStripEdString(char *refSection, char *refName)
 	return text;
 }
 
+
+/*
+================
+MV_BBoxToTime2
+This function uses an entity state's time2 value to encode the missing 3 bbox values that are not encoded by trap_LinkEntity already.
+This function is supposed to be called for solid entities with a non-symmetric bbox after the entity was linked.
+================
+*/
+void MV_BBoxToTime2(gentity_t* ent)
+{
+	int maxs1, mins0, mins1;
+
+	// Only do this if the entity is solid (same condition as in the engine when calling trap_LinkEntity)
+	if (!(ent->r.contents & (CONTENTS_SOLID | CONTENTS_BODY)))
+		return;
+
+	if (!level.bboxEncoding)
+	{ // Okay, from now on we're encoding maxs[1], mins[0] and mins[1] in s.time2; let the clients know about it
+		level.bboxEncoding = qtrue;
+		MV_UpdateSvFlags();
+	}
+
+	// When we call trap_LinkEntity the engine encodes maxs[0], mins[2] and maxs[2] as r.solid
+	// However as that's not enough to properly predict bboxes on the client we additionally encode
+	// the missing three values (maxs[1], mins[0] and mins[1]) as s.time2 for mvsdk clients to use in
+	// prediction. The values are encoded similar to the way the engine encodes them (>= 1).
+
+	maxs1 = ent->r.maxs[1];
+	if (maxs1 < 1) maxs1 = 1;
+	if (maxs1 > 255) maxs1 = 255;
+
+	mins0 = -(ent->r.mins[0]);
+	if (mins0 < 1) mins0 = 1;
+	if (mins0 > 255) mins0 = 255;
+
+	mins1 = -(ent->r.mins[1]);
+	if (mins1 < 1) mins1 = 1;
+	if (mins1 > 255) mins1 = 255;
+
+	// Encode the values for prediction
+	ent->s.time2 = (mins1 << 16) | (mins0 << 8) | maxs1;
+}

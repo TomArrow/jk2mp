@@ -441,42 +441,46 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 	}
 
 	//TriForce: SP Fix
-	if (ent->model && ent->model[0] == '*')
-	{
-		int      j;
-		int      k;
-		char   modelNum[16];
+	if (!g_submodelWorkaround.integer || g_submodelWorkaround.integer == 1) {
 
-		k = 0;
-
-		memset(modelNum, 0, sizeof(modelNum));
-
-		for (j = 1; j < strlen(ent->model); j++)
+		int maxModels = g_submodelWorkaround.integer == 1 ? 256 : 127;
+		if (ent->model && ent->model[0] == '*')
 		{
-			modelNum[k] = ent->model[j];
-			k++;
+			int      j;
+			int      k;
+			char   modelNum[16];
+
+			k = 0;
+
+			memset(modelNum, 0, sizeof(modelNum));
+
+			for (j = 1; j < strlen(ent->model); j++)
+			{
+				modelNum[k] = ent->model[j];
+				k++;
+			}
+
+			if (atoi(modelNum) > maxModels)
+			{
+				G_FreeEntity(ent);
+				return;
+			}
 		}
 
-		if (atoi(modelNum) > 127)
+
+		if (Q_stricmp(ent->classname, "target_speaker") == 0)
 		{
-			G_FreeEntity(ent);
-			return;
+			if (ent->spawnflags & 1 || ent->spawnflags & 8)
+			{
+				G_FreeEntity(ent);
+				return;
+			}
 		}
-	}
 
-
-	if (Q_stricmp(ent->classname, "target_speaker") == 0)
-	{
-		if (ent->spawnflags & 1 || ent->spawnflags & 8)
+		if (Q_stricmp(ent->classname, "func_usable") == 0)
 		{
-			G_FreeEntity(ent);
-			return;
+			G_ParseField("spawnflags", "8", ent);
 		}
-	}
-
-	if (Q_stricmp(ent->classname, "func_usable") == 0)
-	{
-		G_ParseField("spawnflags", "8", ent);
 	}
 	//TriForce: SP Fix
 

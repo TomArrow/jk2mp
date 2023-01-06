@@ -513,6 +513,9 @@ typedef struct {
 	int			bodyQueIndex;			// dead bodies
 	gentity_t	*bodyQue[BODY_QUEUE_SIZE];
 	int			portalSequence;
+
+	// MVSDK
+	qboolean	bboxEncoding;
 } level_locals_t;
 
 
@@ -805,6 +808,11 @@ void QDECL G_Printf( const char *fmt, ... );
 void QDECL G_Error( const char *fmt, ... );
 const char *G_GetStripEdString(char *refSection, char *refName);
 
+void MV_UpdateMvsdkConfigstring(char* key, char* value);
+void MV_UpdateSvFlags(void);
+
+void MV_BBoxToTime2(gentity_t* ent);
+
 //
 // g_client.c
 //
@@ -1037,6 +1045,8 @@ extern	vmCvar_t	g_saberDmgDelay_Wound;
 extern	vmCvar_t	g_saberDebugPrint;
 
 extern	vmCvar_t	g_austrian;
+
+extern	vmCvar_t	g_submodelWorkaround;
 
 void	trap_Printf( const char *fmt );
 void	trap_Error( const char *fmt );

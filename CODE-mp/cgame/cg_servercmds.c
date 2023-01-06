@@ -487,7 +487,15 @@ static void CG_ConfigStringModified( void ) {
 	{
 		CG_SetLightstyle(num - CS_LIGHT_STYLES);
 	}
-		
+	else {
+		switch (num) {
+		case CS_MVSDK:
+			MV_LoadSettings(str);
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 
