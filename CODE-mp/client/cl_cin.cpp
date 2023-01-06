@@ -896,7 +896,9 @@ static void RoQReset() {
 	if (currentHandle < 0) return;
 
 	Sys_EndStreamedFile(cinTable[currentHandle].iFile);
-	FS_FOpenFileRead (cinTable[currentHandle].fileName, &cinTable[currentHandle].iFile, qtrue);
+	//FS_FOpenFileRead (cinTable[currentHandle].fileName, &cinTable[currentHandle].iFile, qtrue);
+	FS_Seek(cinTable[currentHandle].iFile, 0, FS_SEEK_SET);
+	//FS_Read(cin.file, 16, cinTable[currentHandle].iFile);
 	// let the background thread start reading ahead
 	Sys_BeginStreamedFile( cinTable[currentHandle].iFile, 0x10000 );
 	Sys_StreamedRead (cin.file, 16, 1, cinTable[currentHandle].iFile);

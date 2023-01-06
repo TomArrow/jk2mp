@@ -406,11 +406,19 @@ void demoProcessSnapShots(qboolean hadSkip) {
 			cent->currentValid = qtrue;
 			CG_AddToHistory(snap->serverTime, state, cent);
 
-			// modelindex is transfered as signed 8-bit integer (byte), making submodels > 127 appear as negative numbers on the client.
-			// As a negative modelindex isn't valid for SOLID_BMODEL and leads to errors let's try to compensate the modelindex here if the server tells us to.
-			if (cent->currentState.solid == SOLID_BMODEL && cent->currentState.modelindex < 0 && cgs.mvsdk_svFlags & MVSDK_SVFLAG_SUBMODEL_WORKAROUND) {
-				cent->currentState.modelindex += 256;
+			if (cent->currentState.solid == SOLID_BMODEL && cent->currentState.time2 && cgs.mvsdk_svFlags & MVSDK_SVFLAG_SUBMODEL_TIME2)
+				// As a negative modelindex isn't valid for SOLID_BMODEL and leads to errors let's try to compensate the modelindex here if the server tells us to.
+			{ // If the entity is a SOLID_BMODEL, has a time2 value != 0 and the server has set the MVSDK_SVFLAGS_SUBMODEL_TIME2 value use the time2 value as modelindex,
+				if (cent->currentState.solid == SOLID_BMODEL && cent->currentState.modelindex < 0 && cgs.mvsdk_svFlags & MVSDK_SVFLAG_SUBMODEL_WORKAROUND) cent->currentState.modelindex += 256;
+				// because the server wants to use a modelindex that doesn't fit into 8 bits.
+				cent->currentState.modelindex = cent->currentState.time2;
 			}
+			else if (cent->currentState.solid == SOLID_BMODEL && cent->currentState.modelindex < 0 && cgs.mvsdk_svFlags & MVSDK_SVFLAG_SUBMODEL_WORKAROUND)
+			{ // modelindex is transfered as signed 8-bit integer (byte), making submodels > 127 appear as negative numbers on the client.
+			  // As a negative modelindex isn't valid for SOLID_BMODEL and leads to errors let's try to compensate the modelindex here if the server tells us to.
+				cent->currentState.modelindex &= 0xFF;
+			}
+
 			if (cent->currentState.eType > ET_EVENTS)
 				cent->previousEvent = 1;
 			else 

@@ -516,6 +516,7 @@ typedef struct {
 
 	// MVSDK
 	qboolean	bboxEncoding;
+	qboolean	modelindexTime2;
 } level_locals_t;
 
 
@@ -812,6 +813,7 @@ void MV_UpdateMvsdkConfigstring(char* key, char* value);
 void MV_UpdateSvFlags(void);
 
 void MV_BBoxToTime2(gentity_t* ent);
+void MV_ModelindexToTime2(gentity_t* ent);
 
 //
 // g_client.c

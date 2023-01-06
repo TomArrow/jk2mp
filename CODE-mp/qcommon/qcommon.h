@@ -496,7 +496,7 @@ issues.
 // number of id paks that will never be autodownloaded from base
 #define NUM_ID_PAKS		9
 
-#define	MAX_FILE_HANDLES	64
+#define	MAX_FILE_HANDLES	256
 
 qboolean FS_CopyFileAbsolute(char *fromOSPath, char *toOSPath);
 

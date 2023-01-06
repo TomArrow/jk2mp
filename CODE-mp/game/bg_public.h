@@ -45,9 +45,14 @@
 // mvsdk_svFlags
 #define MVSDK_SVFLAG_BBOX                   (1)             // Set by the server in mvsdk_svFlags to signal bbox data in time2
 #define MVSDK_SVFLAG_SUBMODEL_WORKAROUND    (1 << 1)        // Set by the server in mvsdk_svFlags to signal that negative submodels are most likely net-overflows and not intentional
+#define MVSDK_SVFLAG_SUBMODEL_TIME2         (1 << 2)        // Set by the server in mvsdk_svFlags to signal that the actual modelindex is stored in time2 to exceed the 8 bit modelindex limit
 
 // mvsdk_cgFlags
 #define MVSDK_CGFLAG_SUBMODEL_WORKAROUND    (1)             // Set by the client in mvsdk_cgFlags to inform the server that it has a workaround for up to 255 submodels (instead of default 127)
+#define MVSDK_CGFLAG_SUBMODEL_TIME2         (1 << 1)        // Set by the client in mvsdk_cgFlags to inform the server that it is capable of reading modelindexes >= 255 from time2
+
+// mv_clflags
+#define MV_CLFLAG_SUBMODEL_NOLIMIT          (1)             // Set by the engine in mv_clFlags to inform the server that the client engine is willing to drop the MAX_SUBMODEL limit if the server sets the flag for passing modelindex through time2.
 
 //
 // config strings are a general means of communicating variable length strings

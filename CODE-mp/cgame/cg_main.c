@@ -2784,6 +2784,7 @@ void MV_UpdateCgFlags(void)
 
 	// Check for the features and determine the flags
 	intValue |= MVSDK_CGFLAG_SUBMODEL_WORKAROUND;
+	intValue |= MVSDK_CGFLAG_SUBMODEL_TIME2;
 
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// !!! Forks of MVSDK should NOT modify the mvsdk_cgFlags                          !!!
