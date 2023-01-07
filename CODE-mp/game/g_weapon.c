@@ -3347,8 +3347,8 @@ void emplaced_gun_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 
 void SP_emplaced_gun( gentity_t *ent )
 {
-	//char name[] = "models/map_objects/imp_mine/turret_chair.glm";
-	char name[] = "models/map_objects/mp/turret_chair.glm";
+	char name[] = "models/map_objects/imp_mine/turret_chair.glm";
+	//char name[] = "models/map_objects/mp/turret_chair.glm";
 	vec3_t down;
 	trace_t tr;
 
