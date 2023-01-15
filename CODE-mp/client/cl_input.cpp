@@ -418,7 +418,7 @@ void CL_KeyMove( usercmd_t *cmd ) {
 		cmd->buttons &= ~BUTTON_WALKING;
 	} else {
 		cmd->buttons |= BUTTON_WALKING;
-		movespeed = 46;
+		movespeed = 15;//46; // This is jomme. We wanna do really fine camera adjustments
 	}
 
 	forward = 0;

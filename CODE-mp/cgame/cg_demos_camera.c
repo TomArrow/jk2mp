@@ -182,7 +182,7 @@ static qboolean cameraOriginAt( int time, float timeFraction, vec3_t origin ) {
 		return qfalse;
 
 	if ( demo.camera.smoothPos == posLinear ) {
-		float t = searchLen / match[1]->len ;
+		float t = match[1]->len ? searchLen / match[1]->len : 0;
 		posGet( t, demo.camera.smoothPos, control, origin );
 		return qtrue;
 	} 
