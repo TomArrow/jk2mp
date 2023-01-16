@@ -410,6 +410,7 @@ typedef enum {
 
 //doesn't do anything
 #define	EF_AWARD_GAUNTLET	0x00000040		// draw a gauntlet sprite
+#define EF_RAG					(1<<6)		// (now it does? from jka - TA) ragdoll him even if he's alive
 
 #define	EF_NODRAW			0x00000080		// may have an event, but no model (unspawned items)
 #define	EF_FIRING			0x00000100		// for lightning gun
@@ -1066,6 +1067,49 @@ typedef struct
 
 extern saberMoveData_t	saberMoveData[LS_MOVE_MAX];
 extern saberMoveData_t	saberMoveData15[LS_MOVE_MAX];
+
+// given a boltmatrix, return in vec a normalised vector for the axis requested in flags
+static ID_INLINE void BG_GiveMeVectorFromMatrix(mdxaBone_t* boltMatrix, int flags, vec3_t vec)
+{
+	switch (flags)
+	{
+	case ORIGIN:
+		vec[0] = boltMatrix->matrix[0][3];
+		vec[1] = boltMatrix->matrix[1][3];
+		vec[2] = boltMatrix->matrix[2][3];
+		break;
+	case POSITIVE_Y:
+		vec[0] = boltMatrix->matrix[0][1];
+		vec[1] = boltMatrix->matrix[1][1];
+		vec[2] = boltMatrix->matrix[2][1];
+		break;
+	case POSITIVE_X:
+		vec[0] = boltMatrix->matrix[0][0];
+		vec[1] = boltMatrix->matrix[1][0];
+		vec[2] = boltMatrix->matrix[2][0];
+		break;
+	case POSITIVE_Z:
+		vec[0] = boltMatrix->matrix[0][2];
+		vec[1] = boltMatrix->matrix[1][2];
+		vec[2] = boltMatrix->matrix[2][2];
+		break;
+	case NEGATIVE_Y:
+		vec[0] = -boltMatrix->matrix[0][1];
+		vec[1] = -boltMatrix->matrix[1][1];
+		vec[2] = -boltMatrix->matrix[2][1];
+		break;
+	case NEGATIVE_X:
+		vec[0] = -boltMatrix->matrix[0][0];
+		vec[1] = -boltMatrix->matrix[1][0];
+		vec[2] = -boltMatrix->matrix[2][0];
+		break;
+	case NEGATIVE_Z:
+		vec[0] = -boltMatrix->matrix[0][2];
+		vec[1] = -boltMatrix->matrix[1][2];
+		vec[2] = -boltMatrix->matrix[2][2];
+		break;
+	}
+}
 
 qboolean BG_LegalizedForcePowers(char *powerOut, int maxRank, qboolean freeSaber, int teamForce, int gametype, int fpDisabled);
 

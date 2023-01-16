@@ -220,6 +220,9 @@ int vmMain( int command, int arg0, int arg1, int arg2, int arg3, int arg4, int a
 		C_Trace();
 		return 0;
 
+	case CG_RAG_CALLBACK:
+		return CG_RagCallback(arg0);
+
 	case CG_GET_ORIGIN:
 		VectorCopy(cg_entities[arg0].currentState.pos.trBase, (float *)arg1);
 		return 0;
@@ -296,6 +299,131 @@ static void C_Trace(void)
 	TCGTrace	*td = (TCGTrace *)cg.sharedBuffer;
 
 	CG_Trace(&td->mResult, td->mStart, td->mMins, td->mMaxs, td->mEnd, td->mSkipNumber, td->mMask);
+}
+
+static void CG_DebugBoxLines(vec3_t mins, vec3_t maxs, int duration)
+{
+	vec3_t start;
+	vec3_t end;
+	vec3_t vert;
+
+	float x = maxs[0] - mins[0];
+	float y = maxs[1] - mins[1];
+
+	start[2] = maxs[2];
+	vert[2] = mins[2];
+
+	vert[0] = mins[0];
+	vert[1] = mins[1];
+	start[0] = vert[0];
+	start[1] = vert[1];
+	CG_TestLine(start, vert, duration, 0x00000ff, 1);
+
+	vert[0] = mins[0];
+	vert[1] = maxs[1];
+	start[0] = vert[0];
+	start[1] = vert[1];
+	CG_TestLine(start, vert, duration, 0x00000ff, 1);
+
+	vert[0] = maxs[0];
+	vert[1] = mins[1];
+	start[0] = vert[0];
+	start[1] = vert[1];
+	CG_TestLine(start, vert, duration, 0x00000ff, 1);
+
+	vert[0] = maxs[0];
+	vert[1] = maxs[1];
+	start[0] = vert[0];
+	start[1] = vert[1];
+	CG_TestLine(start, vert, duration, 0x00000ff, 1);
+
+	// top of box
+	VectorCopy(maxs, start);
+	VectorCopy(maxs, end);
+	start[0] -= x;
+	CG_TestLine(start, end, duration, 0x00000ff, 1);
+	end[0] = start[0];
+	end[1] -= y;
+	CG_TestLine(start, end, duration, 0x00000ff, 1);
+	start[1] = end[1];
+	start[0] += x;
+	CG_TestLine(start, end, duration, 0x00000ff, 1);
+	CG_TestLine(start, maxs, duration, 0x00000ff, 1);
+	// bottom of box
+	VectorCopy(mins, start);
+	VectorCopy(mins, end);
+	start[0] += x;
+	CG_TestLine(start, end, duration, 0x00000ff, 1);
+	end[0] = start[0];
+	end[1] += y;
+	CG_TestLine(start, end, duration, 0x00000ff, 1);
+	start[1] = end[1];
+	start[0] -= x;
+	CG_TestLine(start, end, duration, 0x00000ff, 1);
+	CG_TestLine(start, mins, duration, 0x00000ff, 1);
+}
+
+//handle ragdoll callbacks, for events and debugging -rww
+static int CG_RagCallback(int callType)
+{
+	switch (callType)
+	{
+	case RAG_CALLBACK_DEBUGBOX:
+	{
+		ragCallbackDebugBox_t* callData = (ragCallbackDebugBox_t*)cg.sharedBuffer;
+
+		CG_DebugBoxLines(callData->mins, callData->maxs, callData->duration);
+	}
+	break;
+	case RAG_CALLBACK_DEBUGLINE:
+	{
+		ragCallbackDebugLine_t* callData = (ragCallbackDebugLine_t*)cg.sharedBuffer;
+
+		CG_TestLine(callData->start, callData->end, callData->time, callData->color, callData->radius);
+	}
+	break;
+	case RAG_CALLBACK_BONESNAP:
+	{
+		ragCallbackBoneSnap_t* callData = (ragCallbackBoneSnap_t*)cg.sharedBuffer;
+		centity_t* cent = &cg_entities[callData->entNum];
+		int snapSound = trap_S_RegisterSound(va("sound/player/bodyfall_human%i.wav", Q_irand(1, 3)));
+
+		trap_S_StartSound(cent->lerpOrigin, callData->entNum, CHAN_AUTO, snapSound);
+	}
+	case RAG_CALLBACK_BONEIMPACT:
+		break;
+	case RAG_CALLBACK_BONEINSOLID:
+#if 0
+	{
+		ragCallbackBoneInSolid_t* callData = (ragCallbackBoneInSolid_t*)cg.sharedBuffer;
+
+		if (callData->solidCount > 16)
+		{ //don't bother if we're just tapping into solidity, we'll probably recover on our own
+			centity_t* cent = &cg_entities[callData->entNum];
+			vec3_t slideDir;
+
+			VectorSubtract(cent->lerpOrigin, callData->bonePos, slideDir);
+			VectorAdd(cent->ragOffsets, slideDir, cent->ragOffsets);
+
+			cent->hasRagOffset = qtrue;
+		}
+	}
+#endif
+	break;
+	case RAG_CALLBACK_TRACELINE:
+	{
+		ragCallbackTraceLine_t* callData = (ragCallbackTraceLine_t*)cg.sharedBuffer;
+
+		CG_Trace(&callData->tr, callData->start, callData->mins, callData->maxs,
+			callData->end, callData->ignore, callData->mask);
+	}
+	break;
+	default:
+		Com_Error(ERR_DROP, "Invalid callType in CG_RagCallback");
+		break;
+	}
+
+	return 0;
 }
 
 static void C_GetBoltPos(void)
@@ -493,6 +621,8 @@ vmCvar_t	cg_zoomFov;
 vmCvar_t	cg_swingAngles;
 
 vmCvar_t	cg_oldPainSounds;
+
+vmCvar_t	cg_ragDoll;
 
 #ifdef G2_COLLISION_ENABLED
 vmCvar_t	cg_saberModelTraceEffect;
@@ -789,6 +919,8 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cg_swingAngles, "cg_swingAngles", "1", NULL, 0 },
 
 	{ &cg_oldPainSounds, "cg_oldPainSounds", "0", NULL, CVAR_ARCHIVE },
+
+	{ &cg_ragDoll, "broadsword", "0", 0 },
 
 #ifdef G2_COLLISION_ENABLED
 	{ &cg_saberModelTraceEffect, "cg_saberModelTraceEffect", "0", NULL, 0 },

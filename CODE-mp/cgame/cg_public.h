@@ -272,7 +272,32 @@ Ghoul2 Insert End
 	CG_R_FONT_DRAWSTRING_3D,
 	CG_MME_GETROLLINGSHUTTERINFO,
 
-	CG_MVAPI_ENABLE_SUBMODELBYPASS
+	CG_MVAPI_ENABLE_SUBMODELBYPASS,
+
+	// JKA stuff
+	CG_G2_GETBONEANIM,
+	CG_RAG_CALLBACK,
+	/*
+	//rww - RAGDOLL_BEGIN
+	*/
+	CG_G2_SETRAGDOLL,
+	CG_G2_ANIMATEG2MODELS,
+	/*
+		//rww - RAGDOLL_END
+	*/
+
+	//additional ragdoll options -rww
+	CG_G2_RAGPCJCONSTRAINT,
+	CG_G2_RAGPCJGRADIENTSPEED,
+	CG_G2_RAGEFFECTORGOAL,
+	CG_G2_GETRAGBONEPOS,
+	CG_G2_RAGEFFECTORKICK,
+	CG_G2_RAGFORCESOLVE,
+
+	//rww - ik move method, allows you to specify a bone and move it to a world point (within joint constraints)
+	//by using the majority of gil's existing bone angling stuff from the ragdoll code.
+	CG_G2_SETBONEIKSTATE,
+	CG_G2_IKMOVE,
 } cgameImport_t;
 
 
@@ -434,6 +459,55 @@ typedef struct
 	vec3_t			angles;				// input
 	vec3_t			modelScale;			// input
 } TCGPositionOnBolt;
+
+
+//ragdoll callback structs -rww
+#define RAG_CALLBACK_NONE				0
+#define RAG_CALLBACK_DEBUGBOX			1
+typedef struct ragCallbackDebugBox_s {
+	vec3_t			mins;
+	vec3_t			maxs;
+	int				duration;
+} ragCallbackDebugBox_t;
+
+#define RAG_CALLBACK_DEBUGLINE			2
+typedef struct ragCallbackDebugLine_s {
+	vec3_t			start;
+	vec3_t			end;
+	int				time;
+	int				color;
+	int				radius;
+} ragCallbackDebugLine_t;
+
+#define RAG_CALLBACK_BONESNAP			3
+typedef struct ragCallbackBoneSnap_s {
+	char			boneName[128]; //name of the bone in question
+	int				entNum; //index of entity who owns the bone in question
+} ragCallbackBoneSnap_t;
+
+#define RAG_CALLBACK_BONEIMPACT			4
+typedef struct ragCallbackBoneImpact_s {
+	char			boneName[128]; //name of the bone in question
+	int				entNum; //index of entity who owns the bone in question
+} ragCallbackBoneImpact_t;
+
+#define RAG_CALLBACK_BONEINSOLID		5
+typedef struct ragCallbackBoneInSolid_s {
+	vec3_t			bonePos; //world coordinate position of the bone
+	int				entNum; //index of entity who owns the bone in question
+	int				solidCount; //higher the count, the longer we've been in solid (the worse off we are)
+} ragCallbackBoneInSolid_t;
+
+#define RAG_CALLBACK_TRACELINE			6
+typedef struct ragCallbackTraceLine_s {
+	trace_t			tr;
+	vec3_t			start;
+	vec3_t			end;
+	vec3_t			mins;
+	vec3_t			maxs;
+	int				ignore;
+	int				mask;
+} ragCallbackTraceLine_t;
 
 #define	MAX_CG_SHARED_BUFFER_SIZE		2048
 

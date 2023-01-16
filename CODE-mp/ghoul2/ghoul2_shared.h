@@ -12,6 +12,9 @@ Ghoul2 Insert Start
 #include <map>
 #pragma warning (pop)
 using namespace std;
+
+#include "../renderer/tr_local.h"
+
 /*
 Ghoul2 Insert End
 */
@@ -64,6 +67,70 @@ struct  boneInfo_t
 	int			boneBlendStart;	// time bone angle blend with normal animation began
 	int			lastTime;		// this does not go across the network
 	mdxaBone_t	newMatrix;		// This is the lerped matrix that Ghoul2 uses on the client side - does not go across the network
+
+	//rww - RAGDOLL_BEGIN
+	int			lastTimeUpdated;  // if non-zero this is all intialized
+	int			lastContents;
+	vec3_t		lastPosition;
+	vec3_t		velocityEffector;
+	vec3_t		lastAngles;
+	vec3_t		minAngles;
+	vec3_t		maxAngles;
+	vec3_t		currentAngles;
+	vec3_t		anglesOffset;
+	vec3_t		positionOffset;
+	float		radius;
+	float		weight;   // current radius cubed
+	int			ragIndex;
+	vec3_t		velocityRoot;		// I am really tired of recomiling the whole game to add a param here
+	int			ragStartTime;
+	int			firstTime;
+	int			firstCollisionTime;
+	int			restTime;
+	int			RagFlags;
+	int			DependentRagIndexMask;
+	mdxaBone_t	originalTrueBoneMatrix;
+	mdxaBone_t	parentTrueBoneMatrix;			// figure I will need this sooner or later
+	mdxaBone_t	parentOriginalTrueBoneMatrix;	// figure I will need this sooner or later
+	vec3_t		originalOrigin;
+	vec3_t		originalAngles;
+	vec3_t		lastShotDir;
+	mdxaBone_t* basepose;
+	mdxaBone_t* baseposeInv;
+	mdxaBone_t* baseposeParent;
+	mdxaBone_t* baseposeInvParent;
+	int			parentRawBoneIndex;
+	mdxaBone_t	ragOverrideMatrix;	// figure I will need this sooner or later
+
+	mdxaBone_t	extraMatrix;	// figure I will need this sooner or later
+	vec3_t		extraVec1;		// I am really tired of recomiling the whole game to add a param here
+	float		extraFloat1;
+	int			extraInt1;
+
+	vec3_t		ikPosition;
+	float		ikSpeed;
+
+	vec3_t		epVelocity; //velocity factor, can be set, and is also maintained by physics based on gravity, mass, etc.
+	float		epGravFactor; //gravity factor maintained by bone physics
+	int			solidCount; //incremented every time we try to move and are in solid - if we get out of solid, it is reset to 0
+	bool		physicsSettled; //true when the bone is on ground and finished bouncing, etc. but may still be pushed into solid by other bones
+	bool		snapped; //the bone is broken out of standard constraints
+
+	int			parentBoneIndex;
+
+	float		offsetRotation;
+
+	//user api overrides
+	float		overGradSpeed;
+
+	vec3_t		overGoalSpot;
+	bool		hasOverGoal;
+
+	mdxaBone_t	animFrameMatrix; //matrix for the bone in the desired settling pose -rww
+	int			hasAnimFrameMatrix;
+
+	int			airTime; //base is in air, be more quick and sensitive about collisions
+	//rww - RAGDOLL_END
 
 boneInfo_t():
 	boneNumber(-1),
@@ -152,6 +219,7 @@ typedef vector <pair<int,mdxaBone_t> > mdxaBone_v;
 #define		GHOUL2_NOMODEL	 0x004
 #define		GHOUL2_NEWORIGIN 0x008
 
+class CBoneCache;
 
 // NOTE order in here matters. We save out from mModelindex to mFlags, but not the STL vectors that are at the top or the bottom.
 class CGhoul2Info
@@ -171,6 +239,10 @@ public:
 	int				mNewOrigin;	// this contains the bolt index of the new origin for this model
 #ifdef _SOF2
 	int				mGoreSetTag;
+#else
+#ifdef _G2_GORE
+	int				mGoreSetTag;
+#endif
 #endif // _SOF2
 	qhandle_t		mModel;		// this and the next entries do NOT go across the network. They are for gameside access ONLY
 	char			mFileName[MAX_QPATH];
@@ -182,6 +254,17 @@ public:
 	int				*mTransformedVertsArray;	// used to create an array of pointers to transformed verts per surface for collision detection
 	mdxaBone_v		mTempBoneList;
 	int				mSkin;
+
+	//CBoneCache*		mBoneCache;
+
+	// these occasionally are not valid (like after a vid_restart)
+	// call the questionably efficient G2_SetupModelPointers(this) to insure validity
+	bool				mValid; // all the below are proper and valid
+	const model_s*		currentModel;
+	int					currentModelSize;
+	const model_s*		animModel;
+	int					currentAnimModelSize;
+	const mdxaHeader_t* aHeader;
 
 	CGhoul2Info():
 	mModelindex(-1),

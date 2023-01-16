@@ -150,7 +150,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>ALLOWRELPATHSDEBUG;NDEBUG;_HAS_STD_BYTE=0;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;DYNAMIC_LINK_GL;BOTLIB;WIN32;_DEBUG;_WINDOWS;_JK2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_G2_GORE;ALLOWRELPATHSDEBUG;NDEBUG;_HAS_STD_BYTE=0;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;DYNAMIC_LINK_GL;BOTLIB;WIN32;_DEBUG;_WINDOWS;_JK2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.;..;./jpeg-9a;./jpeg-9a/include;../../../freetype/freetype2/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -181,7 +181,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_HAS_STD_BYTE=0;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;DYNAMIC_LINK_GL;BOTLIB;WIN32;_DEBUG;_WINDOWS;_JK2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_G2_GORE;_HAS_STD_BYTE=0;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;DYNAMIC_LINK_GL;BOTLIB;WIN32;_DEBUG;_WINDOWS;_JK2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.;..;../../../freetype/freetype2/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -209,7 +209,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_HAS_STD_BYTE=0;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;DYNAMIC_LINK_GL;_WIN32;NDEBUG;WIN32;_WINDOWS;BOTLIB;_JK2;_JK2MP;FINAL_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_G2_GORE;_HAS_STD_BYTE=0;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;DYNAMIC_LINK_GL;_WIN32;NDEBUG;WIN32;_WINDOWS;BOTLIB;_JK2;_JK2MP;FINAL_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <WholeProgramOptimization>false</WholeProgramOptimization>
@@ -252,7 +252,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>RELDEBUG;ALLOWRELPATHSDEBUG;noSMALLAVIDEBUG;_HAS_STD_BYTE=0;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;DYNAMIC_LINK_GL;_WIN32;NDEBUG;WIN32;_WINDOWS;BOTLIB;_JK2;_JK2MP;FINAL_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_G2_GORE;RELDEBUG;ALLOWRELPATHSDEBUG;noSMALLAVIDEBUG;_HAS_STD_BYTE=0;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;DYNAMIC_LINK_GL;_WIN32;NDEBUG;WIN32;_WINDOWS;BOTLIB;_JK2;_JK2MP;FINAL_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <WholeProgramOptimization>false</WholeProgramOptimization>
@@ -295,7 +295,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_HAS_STD_BYTE=0;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;DYNAMIC_LINK_GL;_WIN32;NDEBUG;WIN32;_WINDOWS;BOTLIB;_JK2;_JK2MP;FINAL_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_G2_GORE;_HAS_STD_BYTE=0;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;DYNAMIC_LINK_GL;_WIN32;NDEBUG;WIN32;_WINDOWS;BOTLIB;_JK2;_JK2MP;FINAL_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <WholeProgramOptimization>false</WholeProgramOptimization>
@@ -336,7 +336,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_HAS_STD_BYTE=0;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;DYNAMIC_LINK_GL;_WIN32;NDEBUG;WIN32;_WINDOWS;BOTLIB;_JK2;_JK2MP;FINAL_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_G2_GORE;_HAS_STD_BYTE=0;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;DYNAMIC_LINK_GL;_WIN32;NDEBUG;WIN32;_WINDOWS;BOTLIB;_JK2;_JK2MP;FINAL_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <WholeProgramOptimization>false</WholeProgramOptimization>
@@ -438,6 +438,7 @@
     <ClCompile Include="ghoul2\G2_API.cpp" />
     <ClCompile Include="ghoul2\G2_bolts.cpp" />
     <ClCompile Include="ghoul2\G2_bones.cpp" />
+    <ClCompile Include="ghoul2\G2_gore.cpp" />
     <ClCompile Include="ghoul2\G2_misc.cpp" />
     <ClCompile Include="ghoul2\G2_surfaces.cpp" />
     <ClCompile Include="jpeg-9a\jaricom.c" />

@@ -2,7 +2,14 @@
 
 #include "ghoul2_shared.h"
 
+//rww - RAGDOLL_BEGIN
+class CRagDollUpdateParams;
+//rww - RAGDOLL_END
+
 class CMiniHeap;
+
+extern mdxaBone_t		worldMatrix;
+extern mdxaBone_t		worldMatrixInv;
 
 // internal surface calls  G2_surfaces.cpp
 qboolean	G2_SetSurfaceOnOff (const char *fileName, surfaceInfo_v &slist, const char *surfaceName, const int offFlags);
@@ -21,6 +28,7 @@ qboolean	G2_Set_Bone_Angles(const char *fileName, boneInfo_v &blist, const char 
 							   const Eorientations up, const Eorientations left, const Eorientations forward, qhandle_t *modelList,
 							   const int modelIndex, const int blendTime, const int currentTime);
 qboolean	G2_Remove_Bone (const char *fileName, boneInfo_v &blist, const char *boneName);
+qboolean	G2_Remove_Bone(CGhoul2Info* ghlInfo, boneInfo_v& blist, const char* boneName); // JKA version for ragdoll
 qboolean	G2_Set_Bone_Anim(const char *fileName, boneInfo_v &blist, const char *boneName, const int startFrame, 
 							 const int endFrame, const int flags, const float animSpeed, const int currentTime, const float setFrame, const int blendTime);
 qboolean	G2_Get_Bone_Anim(const char *fileName, boneInfo_v &blist, const char *boneName, const int currentTime, 
@@ -31,6 +39,7 @@ qboolean	G2_IsPaused(const char *fileName, boneInfo_v &blist, const char *boneNa
 qboolean	G2_Stop_Bone_Anim(const char *fileName, boneInfo_v &blist, const char *boneName);
 qboolean	G2_Stop_Bone_Angles(const char *fileName, boneInfo_v &blist, const char *boneName);
 void		G2_Animate_Bone_List(CGhoul2Info_v &ghoul2, const int currentTime, const int index);
+void		G2_Animate_Bone_List(CGhoul2Info_v& ghoul2, const int currentTime, const int index, CRagDollUpdateParams* params); // Some kind of JKA variant I copied for ragdoll, don't ask me - TA
 void		G2_Init_Bone_List(boneInfo_v &blist);
 int			G2_Find_Bone_In_List(boneInfo_v &blist, const int boneNum);
 void		G2_RemoveRedundantBoneOverrides(boneInfo_v &blist, int *activeBones);
@@ -67,6 +76,7 @@ void		G2_LoadGhoul2Model(CGhoul2Info_v &ghoul2, char *buffer);
 
 // internal bolt calls. G2_bolts.cpp
 int			G2_Add_Bolt(const char *fileName, boltInfo_v &bltlist, surfaceInfo_v &slist, const char *boneName);
+int			G2_Add_Bolt(CGhoul2Info* ghlInfo, boltInfo_v &bltlist, surfaceInfo_v &slist, const char *boneName); // That's how JKA does it? For ragdoll experiments.
 qboolean	G2_Remove_Bolt (boltInfo_v &bltlist, int index);
 void		G2_Init_Bolt_List(boltInfo_v &bltlist);
 int			G2_Find_Bolt_Bone_Num(boltInfo_v &bltlist, const int boneNum);
@@ -111,6 +121,27 @@ qboolean	G2API_RemoveBolt(CGhoul2Info *ghlInfo, const int index);
 int			G2API_AddBolt(CGhoul2Info_v *ghoul2, const int modelIndex, const char *boneName);
 int			G2API_AddBoltSurfNum(CGhoul2Info *ghlInfo, const int surfIndex);
 void		G2API_SetBoltInfo(CGhoul2Info_v *ghoul2, int modelIndex, int boltInfo);
+
+class CRagDollUpdateParams;
+class CRagDollParams;
+
+void		G2API_AbsurdSmoothing(CGhoul2Info_v& ghoul2, qboolean status);
+
+void		G2API_SetRagDoll(CGhoul2Info_v& ghoul2, CRagDollParams* parms);
+void		G2API_ResetRagDoll(CGhoul2Info_v& ghoul2);
+void		G2API_AnimateG2Models(CGhoul2Info_v& ghoul2, int AcurrentTime, CRagDollUpdateParams* params);
+
+qboolean	G2API_RagPCJConstraint(CGhoul2Info_v& ghoul2, const char* boneName, vec3_t min, vec3_t max);
+qboolean	G2API_RagPCJGradientSpeed(CGhoul2Info_v& ghoul2, const char* boneName, const float speed);
+qboolean	G2API_RagEffectorGoal(CGhoul2Info_v& ghoul2, const char* boneName, vec3_t pos);
+qboolean	G2API_GetRagBonePos(CGhoul2Info_v& ghoul2, const char* boneName, vec3_t pos, vec3_t entAngles, vec3_t entPos, vec3_t entScale);
+qboolean	G2API_RagEffectorKick(CGhoul2Info_v& ghoul2, const char* boneName, vec3_t velocity);
+qboolean	G2API_RagForceSolve(CGhoul2Info_v& ghoul2, qboolean force);
+
+qboolean	G2API_SetBoneIKState(CGhoul2Info_v& ghoul2, int time, const char* boneName, int ikState, sharedSetBoneIKStateParams_t* params);
+qboolean	G2API_IKMove(CGhoul2Info_v& ghoul2, int time, sharedIKMoveParams_t* params);
+
+
 qboolean	G2API_AttachG2Model(CGhoul2Info_v *ghoul2From, int modelFrom, CGhoul2Info_v *ghoul2To, int toBoltIndex, int toModel);
 qboolean	G2API_DetachG2Model(CGhoul2Info *ghlInfo);
 qboolean	G2API_AttachEnt(int *boltInfo, CGhoul2Info *ghlInfoTo, int toBoltIndex, int entNum, int toModelNum);
@@ -140,6 +171,8 @@ char		*G2API_GetGLAName(CGhoul2Info_v *ghoul2, int modelIndex);
 qboolean	G2API_SetBoneAnglesMatrix(CGhoul2Info *ghlInfo, const char *boneName, const mdxaBone_t *matrix, const int flags,
 									  qhandle_t *modelList, int blendTime = 0, int currentTime = 0);
 qboolean	G2API_SetNewOrigin(CGhoul2Info_v *ghoul2, const int boltIndex);
+void		G2API_SetTime(int currentTime, int clock);
+int			G2API_GetTime(int argTime);
 int			G2API_GetBoneIndex(CGhoul2Info *ghlInfo, const char *boneName);
 qboolean	G2API_StopBoneAnglesIndex(CGhoul2Info *ghlInfo, const int index);
 qboolean	G2API_StopBoneAnimIndex(CGhoul2Info *ghlInfo, const int index);

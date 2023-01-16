@@ -833,6 +833,12 @@ qboolean trap_G2API_SetBoneAnim(void *ghoul2, const int modelIndex, const char *
 	return syscall(CG_G2_PLAYANIM, ghoul2, modelIndex, boneName, startFrame, endFrame, flags, PASSFLOAT(animSpeed), currentTime, PASSFLOAT(setFrame), blendTime);
 }
 
+qboolean trap_G2API_GetBoneAnim(void* ghoul2, const char* boneName, const int currentTime, float* currentFrame,
+	int* startFrame, int* endFrame, int* flags, float* animSpeed, int* modelList, const int modelIndex)
+{
+	return syscall(CG_G2_GETBONEANIM, ghoul2, boneName, currentTime, currentFrame, startFrame, endFrame, flags, animSpeed, modelList, modelIndex);
+}
+
 void trap_G2API_GetGLAName(void *ghoul2, int modelIndex, char *fillBuf)
 {
 	syscall(CG_G2_GETGLANAME, ghoul2, modelIndex, fillBuf);
@@ -887,6 +893,63 @@ qboolean trap_G2API_SetNewOrigin(void *ghoul2, const int boltIndex)
 {
 	return syscall(CG_G2_SETNEWORIGIN, ghoul2, boltIndex);
 }
+
+
+
+//rww - RAGDOLL_BEGIN
+void trap_G2API_SetRagDoll(void* ghoul2, sharedRagDollParams_t* params)
+{
+	syscall(CG_G2_SETRAGDOLL, ghoul2, params);
+}
+
+void trap_G2API_AnimateG2Models(void* ghoul2, int time, sharedRagDollUpdateParams_t* params)
+{
+	syscall(CG_G2_ANIMATEG2MODELS, ghoul2, time, params);
+}
+//rww - RAGDOLL_END
+
+//additional ragdoll options -rww
+qboolean trap_G2API_RagPCJConstraint(void* ghoul2, const char* boneName, vec3_t min, vec3_t max) //override default pcj bonee constraints
+{
+	return syscall(CG_G2_RAGPCJCONSTRAINT, ghoul2, boneName, min, max);
+}
+
+qboolean trap_G2API_RagPCJGradientSpeed(void* ghoul2, const char* boneName, const float speed) //override the default gradient movespeed for a pcj bone
+{
+	return syscall(CG_G2_RAGPCJGRADIENTSPEED, ghoul2, boneName, PASSFLOAT(speed));
+}
+
+qboolean trap_G2API_RagEffectorGoal(void* ghoul2, const char* boneName, vec3_t pos) //override an effector bone's goal position (world coordinates)
+{
+	return syscall(CG_G2_RAGEFFECTORGOAL, ghoul2, boneName, pos);
+}
+
+qboolean trap_G2API_GetRagBonePos(void* ghoul2, const char* boneName, vec3_t pos, vec3_t entAngles, vec3_t entPos, vec3_t entScale) //current position of said bone is put into pos (world coordinates)
+{
+	return syscall(CG_G2_GETRAGBONEPOS, ghoul2, boneName, pos, entAngles, entPos, entScale);
+}
+
+qboolean trap_G2API_RagEffectorKick(void* ghoul2, const char* boneName, vec3_t velocity) //add velocity to a rag bone
+{
+	return syscall(CG_G2_RAGEFFECTORKICK, ghoul2, boneName, velocity);
+}
+
+qboolean trap_G2API_RagForceSolve(void* ghoul2, qboolean force) //make sure we are actively performing solve/settle routines, if desired
+{
+	return syscall(CG_G2_RAGFORCESOLVE, ghoul2, force);
+}
+
+qboolean trap_G2API_SetBoneIKState(void* ghoul2, int time, const char* boneName, int ikState, sharedSetBoneIKStateParams_t* params)
+{
+	return syscall(CG_G2_SETBONEIKSTATE, ghoul2, time, boneName, ikState, params);
+}
+
+qboolean trap_G2API_IKMove(void* ghoul2, int time, sharedIKMoveParams_t* params)
+{
+	return syscall(CG_G2_IKMOVE, ghoul2, time, params);
+}
+
+
 
 void trap_CG_RegisterSharedMemory(char *memory)
 {

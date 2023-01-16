@@ -312,6 +312,12 @@ typedef struct centity_s {
 	int				teamPowerEffectTime;
 	qboolean		teamPowerType; //0 regen, 1 heal, 2 drain, 3 absorb
 
+	qboolean		isRagging;
+	qboolean		ownerRagging;
+	int				overridingBones;
+
+	qboolean		ikStatus;
+
 	struct {
 		qboolean cut[DISM_TOTAL];  //limbs cut off //DISM_*
 		int deathtime;    //timepoint of death
@@ -1775,6 +1781,8 @@ extern	vmCvar_t		cg_swingAngles;
 
 extern	vmCvar_t		cg_oldPainSounds;
 
+extern	vmCvar_t		cg_ragDoll;
+
 #ifdef G2_COLLISION_ENABLED
 extern	vmCvar_t		cg_saberModelTraceEffect;
 #endif
@@ -2676,10 +2684,27 @@ qboolean	trap_G2API_SetBoneAngles(void *ghoul2, int modelIndex, const char *bone
 void		trap_G2API_GetGLAName(void *ghoul2, int modelIndex, char *fillBuf);
 qboolean	trap_G2API_SetBoneAnim(void *ghoul2, const int modelIndex, const char *boneName, const int startFrame, const int endFrame,
 							  const int flags, const float animSpeed, const int currentTime, const float setFrame , const int blendTime );
+qboolean	trap_G2API_GetBoneAnim(void* ghoul2, const char* boneName, const int currentTime, float* currentFrame, int* startFrame,
+								int* endFrame, int* flags, float* animSpeed, int* modelList, const int modelIndex);
 
 qboolean	trap_G2API_SetRootSurface(void *ghoul2, const int modelIndex, const char *surfaceName);
 qboolean	trap_G2API_SetSurfaceOnOff(void *ghoul2, const char *surfaceName, const int flags);
 qboolean	trap_G2API_SetNewOrigin(void *ghoul2, const int boltIndex);
+
+
+void		trap_G2API_SetRagDoll(void* ghoul2, sharedRagDollParams_t* params);
+void		trap_G2API_AnimateG2Models(void* ghoul2, int time, sharedRagDollUpdateParams_t* params);
+
+//additional ragdoll options -rww
+qboolean	trap_G2API_RagPCJConstraint(void* ghoul2, const char* boneName, vec3_t min, vec3_t max); //override default pcj bonee constraints
+qboolean	trap_G2API_RagPCJGradientSpeed(void* ghoul2, const char* boneName, const float speed); //override the default gradient movespeed for a pcj bone
+qboolean	trap_G2API_RagEffectorGoal(void* ghoul2, const char* boneName, vec3_t pos); //override an effector bone's goal position (world coordinates)
+qboolean	trap_G2API_GetRagBonePos(void* ghoul2, const char* boneName, vec3_t pos, vec3_t entAngles, vec3_t entPos, vec3_t entScale); //current position of said bone is put into pos (world coordinates)
+qboolean	trap_G2API_RagEffectorKick(void* ghoul2, const char* boneName, vec3_t velocity); //add velocity to a rag bone
+qboolean	trap_G2API_RagForceSolve(void* ghoul2, qboolean force); //make sure we are actively performing solve/settle routines, if desired
+
+qboolean	trap_G2API_SetBoneIKState(void* ghoul2, int time, const char* boneName, int ikState, sharedSetBoneIKStateParams_t* params);
+qboolean	trap_G2API_IKMove(void* ghoul2, int time, sharedIKMoveParams_t* params);
 
 void		CG_Init_CG(void);
 void		CG_Init_CGents(void);

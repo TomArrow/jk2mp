@@ -27,6 +27,8 @@ Ghoul2 Insert Start
 	#include "../ghoul2/G2_local.h"
 #endif
 
+#include "../ghoul2/G2_gore.h"
+
 #include "../qcommon/strip.h"
 
 #ifdef G2_COLLISION_ENABLED
@@ -1095,6 +1097,16 @@ Ghoul2 Insert Start
 	case CG_G2_PLAYANIM:
 		return G2API_SetBoneAnim((CGhoul2Info_v *)args[1], args[2], (const char *)VMA(3), args[4], args[5],
 								args[6], VMF(7), args[8], VMF(9), args[10]);
+	
+	case CG_G2_GETBONEANIM:
+	{
+		CGhoul2Info_v& g2 = *((CGhoul2Info_v*)args[1]);
+		int modelIndex = args[10];
+
+		return G2API_GetBoneAnim(&g2[modelIndex], (const char*)VMA(2), args[3], (float*)VMA(4), (int*)VMA(5),
+			(int*)VMA(6), (int*)VMA(7), (float*)VMA(8), (int*)VMA(9));
+	}
+
 	case CG_G2_GETGLANAME:
 		//	return (int)G2API_GetGLAName(*((CGhoul2Info_v *)VMA(1)), args[2]);
 		{
@@ -1188,6 +1200,86 @@ Ghoul2 Insert End
 
 	case CG_SP_REGISTER:
 		return !!SP_Register((const char *)VMA(1),SP_REGISTER_CLIENT);
+
+
+	case CG_G2_SETRAGDOLL:
+	{
+		//Convert the info in the shared structure over to the class-based version.
+		sharedRagDollParams_t* rdParamst = (sharedRagDollParams_t*)VMA(2);
+		CRagDollParams rdParams;
+
+		if (!rdParamst)
+		{
+			G2API_ResetRagDoll(*((CGhoul2Info_v*)args[1]));
+			return 0;
+		}
+
+		VectorCopy(rdParamst->angles, rdParams.angles);
+		VectorCopy(rdParamst->position, rdParams.position);
+		VectorCopy(rdParamst->scale, rdParams.scale);
+		VectorCopy(rdParamst->pelvisAnglesOffset, rdParams.pelvisAnglesOffset);
+		VectorCopy(rdParamst->pelvisPositionOffset, rdParams.pelvisPositionOffset);
+
+		rdParams.fImpactStrength = rdParamst->fImpactStrength;
+		rdParams.fShotStrength = rdParamst->fShotStrength;
+		rdParams.me = rdParamst->me;
+
+		rdParams.startFrame = rdParamst->startFrame;
+		rdParams.endFrame = rdParamst->endFrame;
+
+		rdParams.collisionType = rdParamst->collisionType;
+		rdParams.CallRagDollBegin = rdParamst->CallRagDollBegin;
+
+		rdParams.RagPhase = (CRagDollParams::ERagPhase)rdParamst->RagPhase;
+		rdParams.effectorsToTurnOff = (CRagDollParams::ERagEffector)rdParamst->effectorsToTurnOff;
+
+		G2API_SetRagDoll(*((CGhoul2Info_v*)args[1]), &rdParams);
+	}
+	return 0;
+	break;
+	case CG_G2_ANIMATEG2MODELS:
+	{
+		sharedRagDollUpdateParams_t* rduParamst = (sharedRagDollUpdateParams_t*)VMA(3);
+		CRagDollUpdateParams rduParams;
+
+		if (!rduParamst)
+		{
+			return 0;
+		}
+
+		VectorCopy(rduParamst->angles, rduParams.angles);
+		VectorCopy(rduParamst->position, rduParams.position);
+		VectorCopy(rduParamst->scale, rduParams.scale);
+		VectorCopy(rduParamst->velocity, rduParams.velocity);
+
+		rduParams.me = rduParamst->me;
+		rduParams.settleFrame = rduParamst->settleFrame;
+
+		G2API_AnimateG2Models(*((CGhoul2Info_v*)args[1]), args[2], &rduParams);
+	}
+	return 0;
+	break;
+
+	//additional ragdoll options -rww
+	case CG_G2_RAGPCJCONSTRAINT:
+		return G2API_RagPCJConstraint(*((CGhoul2Info_v*)args[1]), (const char*)VMA(2), (float*)VMA(3), (float*)VMA(4));
+	case CG_G2_RAGPCJGRADIENTSPEED:
+		return G2API_RagPCJGradientSpeed(*((CGhoul2Info_v*)args[1]), (const char*)VMA(2), VMF(3));
+	case CG_G2_RAGEFFECTORGOAL:
+		return G2API_RagEffectorGoal(*((CGhoul2Info_v*)args[1]), (const char*)VMA(2), (float*)VMA(3));
+	case CG_G2_GETRAGBONEPOS:
+		return G2API_GetRagBonePos(*((CGhoul2Info_v*)args[1]), (const char*)VMA(2), (float*)VMA(3), (float*)VMA(4), (float*)VMA(5), (float*)VMA(6));
+	case CG_G2_RAGEFFECTORKICK:
+		return G2API_RagEffectorKick(*((CGhoul2Info_v*)args[1]), (const char*)VMA(2), (float*)VMA(3));
+	case CG_G2_RAGFORCESOLVE:
+		return G2API_RagForceSolve(*((CGhoul2Info_v*)args[1]), (qboolean)args[2]);
+
+	case CG_G2_SETBONEIKSTATE:
+		return G2API_SetBoneIKState(*((CGhoul2Info_v*)args[1]), args[2], (const char*)VMA(3), args[4], (sharedSetBoneIKStateParams_t*)VMA(5));
+	case CG_G2_IKMOVE:
+		return G2API_IKMove(*((CGhoul2Info_v*)args[1]), args[2], (sharedIKMoveParams_t*)VMA(3));
+
+
 
 	case CG_SET_SHARED_BUFFER:
 		cl.mSharedMemory = ((char *)VMA(1));

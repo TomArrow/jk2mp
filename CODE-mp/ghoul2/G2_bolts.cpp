@@ -117,10 +117,10 @@ int G2_Add_Bolt_Surf_Num(const char *fileName, boltInfo_v &bltlist, surfaceInfo_
 
 }
 
-int G2_Add_Bolt(const char *fileName, boltInfo_v &bltlist, surfaceInfo_v &slist, const char *boneName)
+int G2_Add_Bolt_Real(model_t* mod_m, model_t* mod_a, boltInfo_v &bltlist, surfaceInfo_v &slist, const char *boneName)
 {
-	model_t		*mod_m = R_GetModelByHandle(RE_RegisterModel(fileName)); 
-	model_t		*mod_a = R_GetModelByHandle(mod_m->mdxm->animIndex); 
+	//model_t		*mod_m = R_GetModelByHandle(RE_RegisterModel(fileName)); 
+	//model_t		*mod_a = R_GetModelByHandle(mod_m->mdxm->animIndex); 
 	int					i, x, surfNum = -1;
 	mdxaSkel_t			*skel;
 	mdxaSkelOffsets_t	*offsets;
@@ -227,6 +227,20 @@ int G2_Add_Bolt(const char *fileName, boltInfo_v &bltlist, surfaceInfo_v &slist,
 	bltlist.push_back(tempBolt);
 	return bltlist.size()-1;
 
+}
+
+int G2_Add_Bolt(const char* fileName, boltInfo_v& bltlist, surfaceInfo_v& slist, const char* boneName)
+{
+	model_t* mod_m = R_GetModelByHandle(RE_RegisterModel(fileName));
+	model_t* mod_a = R_GetModelByHandle(mod_m->mdxm->animIndex);
+	return G2_Add_Bolt_Real(mod_m,mod_a,bltlist,slist,boneName);
+}
+int G2_Add_Bolt(CGhoul2Info* ghlInfo, boltInfo_v& bltlist, surfaceInfo_v& slist, const char* boneName)
+{
+	assert(ghlInfo && ghlInfo->mValid);
+	model_t* mod_m = (model_t*)ghlInfo->currentModel;
+	model_t* mod_a = (model_t*)ghlInfo->animModel;
+	return G2_Add_Bolt_Real(mod_m,mod_a,bltlist,slist,boneName);
 }
 
 // Given a model handle, and a bone name, we want to remove this bone from the bone override list

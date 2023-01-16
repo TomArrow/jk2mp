@@ -21,8 +21,15 @@
 
 #include <set>
 
-extern mdxaBone_t		worldMatrix;
-extern mdxaBone_t		worldMatrixInv;
+extern vm_t* gvm;
+extern vm_t* currentVM; //Yeah. So very wrong.
+
+qboolean G2_SetupModelPointers(CGhoul2Info* ghlInfo);
+qboolean G2_SetupModelPointers(CGhoul2Info_v& ghoul2);
+qboolean G2_TestModelPointers(CGhoul2Info* ghlInfo);
+
+//extern mdxaBone_t		worldMatrix;
+//extern mdxaBone_t		worldMatrixInv;
 
 set<CGhoul2Info_v *>	OkLetsFixTheLeaksTheEasyWay[2];
 
@@ -70,6 +77,40 @@ public:
 static EasyCleaner TheEasyCleaner;
 
 
+//rww - RAGDOLL_BEGIN
+#define NUM_G2T_TIME (2)
+static int G2TimeBases[NUM_G2T_TIME];
+
+void G2API_SetTime(int currentTime, int clock)
+{
+	assert(clock >= 0 && clock < NUM_G2T_TIME);
+#if G2_DEBUG_TIME
+	ri.Printf(PRINT_ALL, "Set Time: before c%6d  s%6d", G2TimeBases[1], G2TimeBases[0]);
+#endif
+	G2TimeBases[clock] = currentTime;
+	if (G2TimeBases[1] > G2TimeBases[0] + 200)
+	{
+		G2TimeBases[1] = 0; // use server time instead
+		return;
+	}
+#if G2_DEBUG_TIME
+	ri.Printf(PRINT_ALL, " after c%6d  s%6d\n", G2TimeBases[1], G2TimeBases[0]);
+#endif
+}
+
+int	G2API_GetTime(int argTime) // this may or may not return arg depending on ghoul2_time cvar
+{
+	int ret = G2TimeBases[1];
+	if (!ret)
+	{
+		ret = G2TimeBases[0];
+	}
+
+	return ret;
+}
+//rww - RAGDOLL_END
+
+
 // this is the ONLY function to read entity states directly
 void G2API_CleanGhoul2Models(CGhoul2Info_v **ghoul2Ptr)
 {
@@ -88,6 +129,23 @@ void G2API_CleanGhoul2Models(CGhoul2Info_v **ghoul2Ptr)
 		}
 		*ghoul2Ptr = NULL;
 	}	
+}
+
+extern qboolean Com_TheHunkMarkHasBeenMade(void);
+extern qboolean ShaderHashTableExists(void);
+qboolean G2_ShouldRegisterServer(void)
+{
+	if (currentVM && currentVM == gvm)
+	{
+		if (com_cl_running && com_cl_running->integer &&
+			Com_TheHunkMarkHasBeenMade() && ShaderHashTableExists())
+		{ //if the hunk has been marked then we are now loading client assets so don't load on server.
+			return qfalse;
+		}
+
+		return qtrue;
+	}
+	return qfalse;
 }
 
 qhandle_t G2API_PrecacheGhoul2Model(const char *fileName)
@@ -375,6 +433,11 @@ qboolean G2API_RemoveGhoul2Model(CGhoul2Info_v **ghlRemove, const int modelIndex
 	return qtrue;
 }
 
+//rww - RAGDOLL_BEGIN
+#define		GHOUL2_RAG_STARTED						0x0010
+#define		GHOUL2_RAG_FORCESOLVE					0x1000		//api-override, determine if ragdoll should be forced to continue solving even if it thinks it is settled
+//rww - RAGDOLL_END
+
 qboolean G2API_SetBoneAnimIndex(CGhoul2Info *ghlInfo, const int index, const int AstartFrame, const int AendFrame, const int flags, const float animSpeed, const int currentTime, const float AsetFrame, const int blendTime)
 {
 	int endFrame=AendFrame;
@@ -657,7 +720,230 @@ qboolean G2API_StopBoneAngles(CGhoul2Info *ghlInfo, const char *boneName)
 	return qfalse;
 }
 
-qboolean G2API_RemoveBone(CGhoul2Info *ghlInfo, const char *boneName)
+//rww - RAGDOLL_BEGIN
+class CRagDollParams;
+void G2_SetRagDoll(CGhoul2Info_v& ghoul2V, CRagDollParams* parms);
+void G2API_SetRagDoll(CGhoul2Info_v& ghoul2, CRagDollParams* parms)
+{
+	G2_SetRagDoll(ghoul2, parms);
+}
+
+void G2_ResetRagDoll(CGhoul2Info_v& ghoul2V);
+void G2API_ResetRagDoll(CGhoul2Info_v& ghoul2)
+{
+	G2_ResetRagDoll(ghoul2);
+}
+//rww - RAGDOLL_END
+
+qboolean G2API_RemoveBone(CGhoul2Info* ghlInfo, const char* boneName) // This is the JKA variant of the function... idk if this is good, some places describe it as slower... 
+{
+	if (G2_SetupModelPointers(ghlInfo)) // This one is the difference. The other just checks for if(ghlInfo).
+	{
+		// ensure we flush the cache
+		ghlInfo->mSkelFrameNum = 0;
+		return G2_Remove_Bone(ghlInfo, ghlInfo->mBlist, boneName);
+	}
+	return qfalse;
+}
+
+//rww - RAGDOLL_BEGIN
+#ifdef _DEBUG
+extern int ragTraceTime;
+extern int ragSSCount;
+extern int ragTraceCount;
+#endif
+
+void G2API_AnimateG2Models(CGhoul2Info_v& ghoul2, int AcurrentTime, CRagDollUpdateParams* params)
+{
+	int model;
+	int currentTime = G2API_GetTime(AcurrentTime);
+
+#ifdef _DEBUG
+	ragTraceTime = 0;
+	ragSSCount = 0;
+	ragTraceCount = 0;
+#endif
+
+	// Walk the list and find all models that are active
+	for (model = 0; model < ghoul2.size(); model++)
+	{
+		if (ghoul2[model].mModel)
+		{
+			G2_Animate_Bone_List(ghoul2, currentTime, model, params);
+		}
+	}
+#ifdef _DEBUG
+	/*
+	if (ragTraceTime)
+	{
+		Com_Printf("Rag trace time: %i (%i STARTSOLID, %i TOTAL)\n", ragTraceTime, ragSSCount, ragTraceCount);
+	}
+	*/
+
+	//keep sane limits here, if it gets too slow an assert is proper.
+//	assert(ragTraceTime < 150);
+//	assert(ragTraceCount < 1500);
+#endif
+}
+//rww - RAGDOLL_END
+
+int G2_Find_Bone_Rag(CGhoul2Info* ghlInfo, boneInfo_v& blist, const char* boneName);
+#define RAG_PCJ						(0x00001)
+#define RAG_EFFECTOR				(0x00100)
+
+static inline boneInfo_t* G2_GetRagBoneConveniently(CGhoul2Info_v& ghoul2, const char* boneName)
+{
+	assert(ghoul2.size());
+	CGhoul2Info* ghlInfo = &ghoul2[0];
+
+	if (!(ghlInfo->mFlags & GHOUL2_RAG_STARTED))
+	{ //can't do this if not in ragdoll
+		return NULL;
+	}
+
+	int boneIndex = G2_Find_Bone_Rag(ghlInfo, ghlInfo->mBlist, boneName);
+
+	if (boneIndex < 0)
+	{ //bad bone specification
+		return NULL;
+	}
+
+	boneInfo_t* bone = &ghlInfo->mBlist[boneIndex];
+
+	if (!(bone->flags & BONE_ANGLES_RAGDOLL))
+	{ //only want to return rag bones
+		return NULL;
+	}
+
+	return bone;
+}
+
+qboolean G2API_RagPCJConstraint(CGhoul2Info_v& ghoul2, const char* boneName, vec3_t min, vec3_t max)
+{
+	boneInfo_t* bone = G2_GetRagBoneConveniently(ghoul2, boneName);
+
+	if (!bone)
+	{
+		return qfalse;
+	}
+
+	if (!(bone->RagFlags & RAG_PCJ))
+	{ //this function is only for PCJ bones
+		return qfalse;
+	}
+
+	VectorCopy(min, bone->minAngles);
+	VectorCopy(max, bone->maxAngles);
+
+	return qtrue;
+}
+
+qboolean G2API_RagPCJGradientSpeed(CGhoul2Info_v& ghoul2, const char* boneName, const float speed)
+{
+	boneInfo_t* bone = G2_GetRagBoneConveniently(ghoul2, boneName);
+
+	if (!bone)
+	{
+		return qfalse;
+	}
+
+	if (!(bone->RagFlags & RAG_PCJ))
+	{ //this function is only for PCJ bones
+		return qfalse;
+	}
+
+	bone->overGradSpeed = speed;
+
+	return qtrue;
+}
+
+qboolean G2API_RagEffectorGoal(CGhoul2Info_v& ghoul2, const char* boneName, vec3_t pos)
+{
+	boneInfo_t* bone = G2_GetRagBoneConveniently(ghoul2, boneName);
+
+	if (!bone)
+	{
+		return qfalse;
+	}
+
+	if (!(bone->RagFlags & RAG_EFFECTOR))
+	{ //this function is only for effectors
+		return qfalse;
+	}
+
+	if (!pos)
+	{ //go back to none in case we have one then
+		bone->hasOverGoal = false;
+	}
+	else
+	{
+		VectorCopy(pos, bone->overGoalSpot);
+		bone->hasOverGoal = true;
+	}
+	return qtrue;
+}
+
+qboolean G2API_GetRagBonePos(CGhoul2Info_v& ghoul2, const char* boneName, vec3_t pos, vec3_t entAngles, vec3_t entPos, vec3_t entScale)
+{ //do something?
+	return qfalse;
+}
+
+qboolean G2API_RagEffectorKick(CGhoul2Info_v& ghoul2, const char* boneName, vec3_t velocity)
+{
+	boneInfo_t* bone = G2_GetRagBoneConveniently(ghoul2, boneName);
+
+	if (!bone)
+	{
+		return qfalse;
+	}
+
+	if (!(bone->RagFlags & RAG_EFFECTOR))
+	{ //this function is only for effectors
+		return qfalse;
+	}
+
+	bone->epVelocity[2] = 0;
+	VectorAdd(bone->epVelocity, velocity, bone->epVelocity);
+	bone->physicsSettled = false;
+
+	return qtrue;
+}
+
+qboolean G2API_RagForceSolve(CGhoul2Info_v& ghoul2, qboolean force)
+{
+	assert(ghoul2.size());
+	CGhoul2Info* ghlInfo = &ghoul2[0];
+
+	if (!(ghlInfo->mFlags & GHOUL2_RAG_STARTED))
+	{ //can't do this if not in ragdoll
+		return qfalse;
+	}
+
+	if (force)
+	{
+		ghlInfo->mFlags |= GHOUL2_RAG_FORCESOLVE;
+	}
+	else
+	{
+		ghlInfo->mFlags &= ~GHOUL2_RAG_FORCESOLVE;
+	}
+
+	return qtrue;
+}
+
+qboolean G2_SetBoneIKState(CGhoul2Info_v& ghoul2, int time, const char* boneName, int ikState, sharedSetBoneIKStateParams_t* params);
+qboolean G2API_SetBoneIKState(CGhoul2Info_v& ghoul2, int time, const char* boneName, int ikState, sharedSetBoneIKStateParams_t* params)
+{
+	return G2_SetBoneIKState(ghoul2, time, boneName, ikState, params);
+}
+
+qboolean G2_IKMove(CGhoul2Info_v& ghoul2, int time, sharedIKMoveParams_t* params);
+qboolean G2API_IKMove(CGhoul2Info_v& ghoul2, int time, sharedIKMoveParams_t* params)
+{
+	return G2_IKMove(ghoul2, time, params);
+}
+
+/*qboolean G2API_RemoveBone(CGhoul2Info* ghlInfo, const char* boneName)
 {
 	if (ghlInfo)
 	{
@@ -666,7 +952,7 @@ qboolean G2API_RemoveBone(CGhoul2Info *ghlInfo, const char *boneName)
  		return G2_Remove_Bone(ghlInfo->mFileName, ghlInfo->mBlist, boneName);
 	}
 	return qfalse;
-}
+}*/
 
 void G2API_AnimateG2Models(CGhoul2Info_v *ghoul2, float speedVar)
 {
@@ -1370,3 +1656,119 @@ void G2API_AddSkinGore(CGhoul2Info_v &ghoul2,SSkinGoreData &gore)
 	}
 }
 #endif // _SOF2
+
+#define G2ERROR(exp,m)		((void)0) //rwwFIXMEFIXME: This is because I'm lazy.
+#define G2WARNING(exp,m)     ((void)0)
+#define G2NOTE(exp,m)     ((void)0)
+#define G2ANIM(ghlInfo,m) ((void)0)
+
+
+qboolean G2_SetupModelPointers(CGhoul2Info* ghlInfo) // returns true if the model is properly set up
+{
+#ifdef G2_PERFORMANCE_ANALYSIS
+	G2PerformanceTimer_G2_SetupModelPointers.Start();
+#endif
+	G2ERROR(ghlInfo, "NULL ghlInfo");
+	if (!ghlInfo)
+	{
+		return qfalse;
+	}
+
+	//	if (ghlInfo->mValid && ghlInfo->currentModel)
+	if (0)
+	{ //rww - Why are we bothering with all this? We can't change models like this anyway.
+	  //This function goes over 200k on the precision timer (in debug, but still), so I'm
+	  //cutting it off here because it gets called constantly.
+#ifdef G2_PERFORMANCE_ANALYSIS
+		G2Time_G2_SetupModelPointers += G2PerformanceTimer_G2_SetupModelPointers.End();
+#endif
+		return qtrue;
+	}
+
+	ghlInfo->mValid = false;
+
+	//	G2WARNING(ghlInfo->mModelindex != -1,"Setup request on non-used info slot?");
+	if (ghlInfo->mModelindex != -1)
+	{
+		G2ERROR(ghlInfo->mFileName[0], "empty ghlInfo->mFileName");
+
+		// RJ - experimental optimization!
+		if (!ghlInfo->mModel || 1)
+		{
+			if ((com_dedicated && com_dedicated->integer) ||
+				(G2_ShouldRegisterServer())) //supreme hackery!
+			{
+				ghlInfo->mModel = RE_RegisterServerModel(ghlInfo->mFileName);
+			}
+			else
+			{
+				ghlInfo->mModel = RE_RegisterModel(ghlInfo->mFileName);
+			}
+			ghlInfo->currentModel = R_GetModelByHandle(ghlInfo->mModel);
+		}
+
+		G2ERROR(ghlInfo->currentModel, va("NULL Model (glm) %s", ghlInfo->mFileName));
+		if (ghlInfo->currentModel)
+		{
+			G2ERROR(ghlInfo->currentModel->mdxm, va("Model has no mdxm (glm) %s", ghlInfo->mFileName));
+			if (ghlInfo->currentModel->mdxm)
+			{
+				if (ghlInfo->currentModelSize)
+				{
+					if (ghlInfo->currentModelSize != ghlInfo->currentModel->mdxm->ofsEnd)
+					{
+						Com_Error(ERR_DROP, "Ghoul2 model was reloaded and has changed, map must be restarted.\n");
+					}
+				}
+				ghlInfo->currentModelSize = ghlInfo->currentModel->mdxm->ofsEnd;
+				G2ERROR(ghlInfo->currentModelSize, va("Zero sized Model? (glm) %s", ghlInfo->mFileName));
+
+				ghlInfo->animModel = R_GetModelByHandle(ghlInfo->currentModel->mdxm->animIndex);
+				G2ERROR(ghlInfo->animModel, va("NULL Model (gla) %s", ghlInfo->mFileName));
+				if (ghlInfo->animModel)
+				{
+					ghlInfo->aHeader = ghlInfo->animModel->mdxa;
+					G2ERROR(ghlInfo->aHeader, va("Model has no mdxa (gla) %s", ghlInfo->mFileName));
+					if (ghlInfo->aHeader)
+					{
+						if (ghlInfo->currentAnimModelSize)
+						{
+							if (ghlInfo->currentAnimModelSize != ghlInfo->aHeader->ofsEnd)
+							{
+								Com_Error(ERR_DROP, "Ghoul2 model was reloaded and has changed, map must be restarted.\n");
+							}
+						}
+						ghlInfo->currentAnimModelSize = ghlInfo->aHeader->ofsEnd;
+						G2ERROR(ghlInfo->currentAnimModelSize, va("Zero sized Model? (gla) %s", ghlInfo->mFileName));
+						ghlInfo->mValid = true;
+					}
+				}
+			}
+		}
+	}
+	if (!ghlInfo->mValid)
+	{
+		ghlInfo->currentModel = 0;
+		ghlInfo->currentModelSize = 0;
+		ghlInfo->animModel = 0;
+		ghlInfo->currentAnimModelSize = 0;
+		ghlInfo->aHeader = 0;
+	}
+
+#ifdef G2_PERFORMANCE_ANALYSIS
+	G2Time_G2_SetupModelPointers += G2PerformanceTimer_G2_SetupModelPointers.End();
+#endif
+	return (qboolean)ghlInfo->mValid;
+}
+
+qboolean G2_SetupModelPointers(CGhoul2Info_v& ghoul2) // returns true if any model is properly set up
+{
+	bool ret = false;
+	int i;
+	for (i = 0; i < ghoul2.size(); i++)
+	{
+		qboolean r = G2_SetupModelPointers(&ghoul2[i]);
+		ret = ret || r;
+	}
+	return (qboolean)ret;
+}

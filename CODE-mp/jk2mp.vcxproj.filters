@@ -764,6 +764,9 @@
     <ClCompile Include="client\cl_demos_cut.cpp">
       <Filter>Client</Filter>
     </ClCompile>
+    <ClCompile Include="ghoul2\G2_gore.cpp">
+      <Filter>Ghoul2</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="client\client.h">

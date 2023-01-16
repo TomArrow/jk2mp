@@ -2400,6 +2400,8 @@ int CL_ScaledMilliseconds(void) {
 CL_InitRef
 ============
 */
+static qboolean CGVMLoaded(void) { return (qboolean)cls.cgameStarted; }
+static char* GetSharedMemory(void) { return cl.mSharedMemory; }
 void CL_InitRef( void ) {
 	refimport_t	ri;
 	refexport_t	*ret;
@@ -2452,6 +2454,13 @@ void CL_InitRef( void ) {
 
 	//mme
 	ri.S_MMEAviImport = S_MMEAviImport;
+
+	// JKA Rag doll stuff
+	// g2 data access
+	ri.GetSharedMemory = GetSharedMemory;
+	// (c)g vm callbacks
+	ri.CGVMLoaded = CGVMLoaded;
+	// JKA Rag doll stuff END
 
 	ret = GetRefAPI( REF_API_VERSION, &ri );
 

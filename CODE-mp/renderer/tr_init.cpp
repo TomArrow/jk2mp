@@ -207,6 +207,22 @@ int		max_polyverts;
 
 cvar_t	*r_modelpoolmegs;
 
+
+cvar_t* broadsword = 0;
+cvar_t* broadsword_kickbones = 0;
+cvar_t* broadsword_kickorigin = 0;
+cvar_t* broadsword_playflop = 0;
+cvar_t* broadsword_dontstopanim = 0;
+cvar_t* broadsword_waitforshot = 0;
+cvar_t* broadsword_smallbbox = 0;
+cvar_t* broadsword_extra1 = 0;
+cvar_t* broadsword_extra2 = 0;
+
+cvar_t* broadsword_effcorr = 0;
+cvar_t* broadsword_ragtobase = 0;
+cvar_t* broadsword_dircap = 0;
+
+
 cvar_t* r_drawAllAreas;
 
 cvar_t* r_convertModelBones;
@@ -1053,6 +1069,19 @@ void R_Register( void )
 
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%d", MAX_POLYS), 0);
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%d", MAX_POLYVERTS), 0);
+
+	broadsword = ri.Cvar_Get("broadsword", "0", NULL);
+	broadsword_kickbones = ri.Cvar_Get("broadsword_kickbones", "1", NULL);
+	broadsword_kickorigin = ri.Cvar_Get("broadsword_kickorigin", "1", NULL);
+	broadsword_dontstopanim = ri.Cvar_Get("broadsword_dontstopanim", "0", NULL);
+	broadsword_waitforshot = ri.Cvar_Get("broadsword_waitforshot", "0", NULL);
+	broadsword_playflop = ri.Cvar_Get("broadsword_playflop", "1", NULL);
+	broadsword_smallbbox = ri.Cvar_Get("broadsword_smallbbox", "0", NULL);
+	broadsword_extra1 = ri.Cvar_Get("broadsword_extra1", "0", NULL);
+	broadsword_extra2 = ri.Cvar_Get("broadsword_extra2", "0", NULL);
+	broadsword_effcorr = ri.Cvar_Get("broadsword_effcorr", "1", NULL);
+	broadsword_ragtobase = ri.Cvar_Get("broadsword_ragtobase", "2", NULL);
+	broadsword_dircap = ri.Cvar_Get("broadsword_dircap", "64", NULL);
 
 	r_convertModelBones = ri.Cvar_Get("r_convertModelBones", "1", CVAR_ARCHIVE);
 	r_loadSkinsJKA = ri.Cvar_Get("r_loadSkinsJKA", "1", CVAR_ARCHIVE);

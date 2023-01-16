@@ -190,6 +190,12 @@ typedef struct {
 	int (*CM_PointContents)( const vec3_t p, clipHandle_t model );
 
 	qboolean (*S_MMEAviImport)(byte *out, int *size);
+	
+	// JKA RRag doll stuff?:
+	// g2 data access
+	char* (*GetSharedMemory)					(void); // cl.mSharedMemory
+	// (c)g vm callbacks
+	qboolean(*CGVMLoaded)						(void);
 } refimport_t;
 
 
