@@ -35,7 +35,11 @@ HGLRC ( WINAPI * qwglCreateLayerContext)(HDC, int);
 BOOL  ( WINAPI * qwglDeleteContext)(HGLRC);
 HGLRC ( WINAPI * qwglGetCurrentContext)(VOID);
 HDC   ( WINAPI * qwglGetCurrentDC)(VOID);
+//#ifdef _WIN64
+//FARPROC  ( WINAPI * qwglGetProcAddress)(LPCSTR);
+//#else
 PROC  ( WINAPI * qwglGetProcAddress)(LPCSTR);
+//#endif
 BOOL  ( WINAPI * qwglMakeCurrent)(HDC, HGLRC);
 BOOL  ( WINAPI * qwglShareLists)(HGLRC, HGLRC);
 BOOL  ( WINAPI * qwglUseFontBitmaps)(HDC, DWORD, DWORD, DWORD);
@@ -3614,7 +3618,11 @@ qboolean QGL_Init( const char *dllname )
 	qwglGetCurrentContext        = (struct HGLRC__ *(__stdcall *)(void))GPA( "wglGetCurrentContext" );
 	qwglGetCurrentDC             = (struct HDC__ *(__stdcall *)(void))GPA( "wglGetCurrentDC" );
 	qwglGetLayerPaletteEntries   = (int (__stdcall *)(struct HDC__ *,int,int,int,unsigned long *))GPA( "wglGetLayerPaletteEntries" );
+#ifdef _WIN64
+	qwglGetProcAddress           = (INT_PTR (__stdcall *(__stdcall *)(const char *))(void))GPA( "wglGetProcAddress" );
+#else
 	qwglGetProcAddress           = (int (__stdcall *(__stdcall *)(const char *))(void))GPA( "wglGetProcAddress" );
+#endif
 	qwglMakeCurrent              = (int (__stdcall *)(struct HDC__ *,struct HGLRC__ *))GPA( "wglMakeCurrent" );
 	qwglRealizeLayerPalette      = (int (__stdcall *)(struct HDC__ *,int,int))GPA( "wglRealizeLayerPalette" );
 	qwglSetLayerPaletteEntries   = (int (__stdcall *)(struct HDC__ *,int,int,int,const unsigned long *))GPA( "wglSetLayerPaletteEntries" );

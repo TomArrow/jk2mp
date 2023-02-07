@@ -746,7 +746,7 @@ returns angle normalized to the range [0 <= angle < 360]
 */
 static float Value360 = 360.0f;
 float AngleNormalize360 ( float angle ) {
-#if defined (_MSC_VER)
+#if defined (_MSC_VER) && !defined(_WIN64)
     __asm	fld Value360
     __asm	fld angle
     __asm	fprem
@@ -770,7 +770,7 @@ returns angle normalized to the range [-180 < angle <= 180]
 =================
 */
 float AngleNormalize180 ( float angle ) {
-#if defined (_MSC_VER)
+#if defined (_MSC_VER) && !defined(_WIN64)
 	__asm	fld	Value360
 	__asm	fld angle
 	__asm	fprem1
@@ -875,7 +875,7 @@ int BoxOnPlaneSide2 (vec3_t emins, vec3_t emaxs, struct cplane_s *p)
 
 ==================
 */
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) || defined(_WIN64)
 
 int BoxOnPlaneSide (vec3_t emins, vec3_t emaxs, struct cplane_s *p)
 {

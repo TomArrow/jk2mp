@@ -652,10 +652,12 @@ qboolean ServerLoadMDXA( model_t *mod, void *buffer, const char *mod_name, qbool
 	int					size;
 
 #ifndef _M_IX86
+#ifndef _WIN64
 	int					j, k, i;
 	int					frameSize;
 	mdxaFrame_t			*cframe;
 	mdxaSkel_t			*boneInfo;
+#endif
 #endif
 
  	pinmodel = (mdxaHeader_t *)buffer;
@@ -706,6 +708,7 @@ qboolean ServerLoadMDXA( model_t *mod, void *buffer, const char *mod_name, qbool
 	}
 
 #ifndef _M_IX86
+#ifndef _WIN64
 
 	//
 	// optimisation, we don't bother doing this for standard intel case since our data's already in that format...
@@ -745,6 +748,7 @@ qboolean ServerLoadMDXA( model_t *mod, void *buffer, const char *mod_name, qbool
 		}
 	}
 #endif
+#endif
 	return qtrue;
 }
 
@@ -764,6 +768,7 @@ qboolean ServerLoadMDXM( model_t *mod, void *buffer, const char *mod_name, qbool
 	mdxmSurfHierarchy_t	*surfInfo;
 
 #ifndef _M_IX86
+#ifndef _WIN64
 	int					k;
 	int					frameSize;
 	mdxmTag_t			*tag;
@@ -771,6 +776,7 @@ qboolean ServerLoadMDXM( model_t *mod, void *buffer, const char *mod_name, qbool
 	mdxmVertex_t		*v;
  	mdxmFrame_t			*cframe;
 	int					*boneRef;
+#endif
 #endif
     
 	pinmodel= (mdxmHeader_t *)buffer;
@@ -885,6 +891,7 @@ qboolean ServerLoadMDXM( model_t *mod, void *buffer, const char *mod_name, qbool
 
 			// register the shaders
 #ifndef _M_IX86
+#ifndef _WIN64
 //
 // optimisation, we don't bother doing this for standard intel case since our data's already in that format...
 //
@@ -929,6 +936,7 @@ qboolean ServerLoadMDXM( model_t *mod, void *buffer, const char *mod_name, qbool
 				}
 				v = (mdxmVertex_t *)&v->weights[/*v->numWeights*/surf->maxVertBoneWeights];
 			}
+#endif
 #endif
 
 			// find the next surface

@@ -305,7 +305,11 @@ The module is making a system call
 
 extern bool RicksCrazyOnServer;
 
+#ifdef _WIN64
+intptr_t SV_GameSystemCalls(intptr_t* args) {
+#else
 int SV_GameSystemCalls( int *args ) {
+#endif
 	switch( args[0] ) {
 	case G_PRINT:
 		Com_Printf( "%s", VMA(1) );

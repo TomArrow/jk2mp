@@ -65,7 +65,21 @@ extern const float floatColorsScaleFactor;
 
 #endif
 
+/*
+#if defined(ARCH_ARM32) && !defined __LCC__
+#define idarm32	1
+#else
+#define idarm32	0
+#endif
+*/
+
 // this is the define for determining if we have an asm version of a C function
+#if __x86_64__ || __ppc64__ || _WIN64  && !defined __LCC__
+#define idx64	1
+#else
+#define idx64	0
+#endif
+
 #if (defined _M_IX86 || defined __i386__) && !defined __sun__  && !defined __LCC__
 #define id386	1
 #else
@@ -77,7 +91,6 @@ extern const float floatColorsScaleFactor;
 #else
 #define idppc	0
 #endif
-
 // for windows fastcall option
 
 #define	QDECL
@@ -101,12 +114,16 @@ float	FloatSwap (const float *f);
 #define	CPUSTRING	"win-x86"
 #elif defined _M_ALPHA
 #define	CPUSTRING	"win-AXP"
+#elif _WIN64 || __x86_64__ || __ppc64__
+#define	CPUSTRING	"win-x64"
 #endif
 #else
 #ifdef _M_IX86
 #define	CPUSTRING	"win-x86-debug"
 #elif defined _M_ALPHA
 #define	CPUSTRING	"win-AXP-debug"
+#elif _WIN64 || __x86_64__ || __ppc64__
+#define	CPUSTRING	"win-x64-debug"
 #endif
 #endif
 

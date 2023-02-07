@@ -497,7 +497,26 @@ nextInstruction2:
 				*(int *)&image[ programStack + 4 ] = -1 - programCounter;
 
 //VM_LogSyscalls( (int *)&image[ programStack + 4 ] );
+#ifdef _WIN64
+				{
+					// the vm has ints on the stack, we expect
+					// pointers so we might have to convert it
+					if (sizeof(intptr_t) != sizeof(int)) {
+						intptr_t argarr[MAX_VMSYSCALL_ARGS];
+						int* imagePtr = (int*)&image[programStack];
+						for (size_t i = 0; i < ARRAY_LEN(argarr); ++i) {
+							argarr[i] = *(++imagePtr);
+						}
+						r = vm->systemCall(argarr);
+					}
+					else {
+						intptr_t* argptr = (intptr_t*)&image[programStack + 4];
+						r = vm->systemCall(argptr);
+					}
+				}
+#else
 				r = vm->systemCall( (int *)&image[ programStack + 4 ] );
+#endif
 
 #ifdef DEBUG_VM
 				// this is just our stack frame pointer, only needed

@@ -796,7 +796,11 @@ CL_UISystemCalls
 The ui module is making a system call
 ====================
 */
+#ifdef _WIN64
+intptr_t CL_UISystemCalls(intptr_t* args) {
+#else
 int CL_UISystemCalls( int *args ) {
+#endif
 	switch( args[0] ) {
 	case UI_ERROR:
 		Com_Error( ERR_DROP, "%s", VMA(1) );

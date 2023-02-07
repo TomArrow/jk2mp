@@ -1,3 +1,4 @@
+
 // vm.c -- virtual machine
 
 /*
@@ -213,7 +214,11 @@ void VM_LoadSymbols( vm_t *vm ) {
 		return;
 	}
 
+#ifdef _WIN64
+	numInstructions = vm->instructionCount;
+#else
 	numInstructions = vm->instructionPointersLength >> 2;
+#endif
 
 	// parse the symbols
 	text_p = mapfile;
@@ -304,7 +309,11 @@ Dlls will call this directly
  
 ============
 */
+#ifdef _WIN64
+intptr_t QDECL VM_DllSyscall( intptr_t arg, ... ) {
+#else
 int QDECL VM_DllSyscall( int arg, ... ) {
+#endif
 #if ((defined __linux__) && (defined __powerpc__))
   // rcg010206 - see commentary above
   int args[16];
@@ -342,7 +351,11 @@ vm_t *VM_Restart( vm_t *vm ) {
 	// DLL's can't be restarted in place
 	if ( vm->dllHandle ) {
 		char	name[MAX_QPATH];
+#ifdef _WIN64
+	    intptr_t			(*systemCall)( intptr_t *parms );
+#else
 	    int			(*systemCall)( int *parms );
+#endif
 		
 		systemCall = vm->systemCall;	
 		Q_strncpyz( name, vm->name, sizeof( name ) );
@@ -412,8 +425,13 @@ it will attempt to load as a system dll
 
 #define	STACK_SIZE	0x20000
 
+#ifdef _WIN64
+vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *), 
+				vmInterpret_t interpret ) {
+#else
 vm_t *VM_Create( const char *module, int (*systemCalls)(int *), 
 				vmInterpret_t interpret ) {
+#endif
 	vm_t		*vm;
 	vmHeader_t	*header;
 	int			length;
@@ -515,8 +533,13 @@ vm_t *VM_Create( const char *module, int (*systemCalls)(int *),
 	}
 
 	// allocate space for the jump targets, which will be filled in by the compile/prep functions
+#ifdef _WIN64
+	vm->instructionCount = header->instructionCount;
+	vm->instructionPointers = (intptr_t*)Hunk_Alloc(vm->instructionCount * sizeof(*vm->instructionPointers), h_high);
+#else
 	vm->instructionPointersLength = header->instructionCount * 4;
 	vm->instructionPointers = (int *)Hunk_Alloc( vm->instructionPointersLength, h_high );
+#endif
 
 	// copy or compile the instructions
 	vm->codeLength = header->codeLength;
@@ -780,7 +803,11 @@ void VM_VmInfo_f( void ) {
 			Com_Printf( "interpreted\n" );
 		}
 		Com_Printf( "    code length : %7i\n", vm->codeLength );
+#ifdef _WIN64
+		Com_Printf("    table length: %7i\n", vm->instructionCount * 4);
+#else
 		Com_Printf( "    table length: %7i\n", vm->instructionPointersLength );
+#endif
 		Com_Printf( "    data length : %7i\n", vm->dataMask + 1 );
 	}
 }
@@ -813,3 +840,5 @@ int	VM_CallCompiled( vm_t *vm, int *args ) {
 
 void VM_Compile( vm_t *vm, vmHeader_t *header ) {}
 #endif // DLL_ONLY
+
+

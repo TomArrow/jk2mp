@@ -1221,6 +1221,9 @@
     <None Include="win32\qe3.ico">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="win32\q3asm.asm">
+      <Filter>Win32</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="win32\winquake.rc">

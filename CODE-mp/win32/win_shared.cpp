@@ -86,11 +86,53 @@ int Sys_Milliseconds (void)
 	return sys_curtime;
 }
 
+#if defined(_WIN64)
+// from ioq3 requires sse
+// i do not care about processors without sse
+// TA: I copied this from jk2mv. EEeh I think this is kind of a mess... eeeh. Just assume it doesnt really work for now.
+#ifdef __GNUC__
+#if idx64
+#define EAX "%%rax"
+#define EBX "%%rbx"
+#define ESP "%%rsp"
+#define EDI "%%rdi"
+#else
+#define EAX "%%eax"
+#define EBX "%%ebx"
+#define ESP "%%esp"
+#define EDI "%%edi"
+#endif
+
+static unsigned char ssemask[16] __attribute__((aligned(16))) = {
+	"\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00"
+};
+
+void Sys_SnapVector(vec3_t vec) {
+	__asm__ volatile
+		(
+			"movaps (%0), %%xmm1\n"
+			"movups (%1), %%xmm0\n"
+			"movaps %%xmm0, %%xmm2\n"
+			"andps %%xmm1, %%xmm0\n"
+			"andnps %%xmm2, %%xmm1\n"
+			"cvtps2dq %%xmm0, %%xmm0\n"
+			"cvtdq2ps %%xmm0, %%xmm0\n"
+			"orps %%xmm1, %%xmm0\n"
+			"movups %%xmm0, (%1)\n"
+			:
+	: "r" (ssemask), "r" (vec)
+		: "memory", "%xmm0", "%xmm1", "%xmm2"
+		);
+
+}
+#endif
+#elif defined(_WIN32)
 /*
 ================
 Sys_SnapVector
 ================
 */
+#if 0 // Replaced with the q3asm.assm thing
 void Sys_SnapVector( float *v )
 {
 	int i;
@@ -118,6 +160,11 @@ void Sys_SnapVector( float *v )
 	*v = myftol(*v);
 	*/
 }
+#endif
+#endif
+
+
+
 
 
 /*
@@ -134,6 +181,8 @@ void Sys_SnapVector( float *v )
 **
 ** --------------------------------------------------------------------------------
 */
+// 2023-07-02 TA: Commented this out. It's not used anywhere and doesn't compile on x64
+/*
 static void CPUID( int func, unsigned regs[4] )
 {
 	unsigned regEAX, regEBX, regECX, regEDX;
@@ -277,7 +326,6 @@ static int IsWIL( void )
 
 }
 
-
 static int IsMMX( void )
 {
 	unsigned regs[4];
@@ -291,6 +339,7 @@ static int IsMMX( void )
 	return qfalse;
 }
 
+*/
 int Sys_GetProcessorId( void )
 {
 #if defined _M_ALPHA
@@ -384,7 +433,7 @@ int Sys_GetPhysicalMemory( void )
    return( (int)(MemoryStatus.dwTotalPhys / (1024 * 1024)) + 1 );
 
 } 
-
+#ifndef _WIN64
 int Sys_GetCPUSpeedOld()
 {
 	timeBeginPeriod(1);
@@ -593,3 +642,4 @@ int Sys_GetCPUSpeed()
 
 	return norm_freq;
 }
+#endif

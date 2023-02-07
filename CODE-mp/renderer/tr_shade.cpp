@@ -414,6 +414,15 @@ inline int VectorToInt(vec3_t vec)
 {
 	int			tmp, retval;
 
+#ifdef _WIN64
+
+	/// UUUUh... Gotta do a non ASM version of this
+	// I dont even know what the original does :/
+	// I guess just treats it as byte array?
+	byte* bytePtr = (byte*)&retval;
+	VectorCopy(vec,bytePtr);
+
+#else 
 #ifdef _WIN32
 	_asm
 	{
@@ -452,6 +461,7 @@ inline int VectorToInt(vec3_t vec)
 	    : "=a"(retval)
 	    : "m"(vec[0]), "m"(vec[1]), "m"(vec[2]), "m"(tmp), "a"(0xff00)
 	);
+#endif
 #endif
 	return(retval);
 }

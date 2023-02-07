@@ -507,7 +507,11 @@ The cgame module is making a system call
 #define	VMA(x) VM_ArgPtr(args[x])
 #define	VMF(x)	((float *)args)[x]
 extern bool RicksCrazyOnServer;
+#ifdef _WIN64
+intptr_t CL_CgameSystemCalls( intptr_t *args ) {
+#else
 int CL_CgameSystemCalls( int *args ) {
+#endif
 	float evalValue;
 	char* text;
 	switch( args[0] ) {

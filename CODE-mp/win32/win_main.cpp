@@ -403,11 +403,20 @@ Used to load a development dll instead of a virtual machine
 */
 extern std::string		FS_BuildOSPath( const char *base, const char *game, const char *qpath );
 
+#ifdef _WIN64
+void* QDECL Sys_LoadDll(const char* name, intptr_t (QDECL** entryPoint)(int, ...),
+	intptr_t (QDECL* systemcalls)(intptr_t, ...)) {
+#else
 void * QDECL Sys_LoadDll( const char *name, int (QDECL **entryPoint)(int, ...),
 				  int (QDECL *systemcalls)(int, ...) ) {
+#endif
 	static int	lastWarning = 0;
 	HINSTANCE	libHandle;
+#ifdef _WIN64
+	void	(QDECL *dllEntry)( intptr_t (QDECL *syscallptr)(intptr_t, ...) );
+#else 
 	void	(QDECL *dllEntry)( int (QDECL *syscallptr)(int, ...) );
+#endif
 	char	*basepath;
 	char	*cdpath;
 	char	*gamedir;
@@ -468,8 +477,13 @@ void * QDECL Sys_LoadDll( const char *name, int (QDECL **entryPoint)(int, ...),
 	}
 //#endif
 
+#ifdef _WIN64
+	dllEntry = (void (QDECL*)(intptr_t (QDECL*)(intptr_t, ...)))GetProcAddress(libHandle, "dllEntry");
+	*entryPoint = (intptr_t(QDECL*)(int, ...))GetProcAddress(libHandle, "vmMain");
+#else
 	dllEntry = ( void (QDECL *)( int (QDECL *)( int, ... ) ) )GetProcAddress( libHandle, "dllEntry" ); 
 	*entryPoint = (int (QDECL *)(int,...))GetProcAddress( libHandle, "vmMain" );
+#endif
 	if ( !*entryPoint || !dllEntry ) {
 		FreeLibrary( libHandle );
 		return NULL;
@@ -1037,7 +1051,9 @@ void Sys_Init( void ) {
 	Com_Printf( "%s\n", Cvar_VariableString( "sys_cpustring" ) );
 
 	Cvar_Set( "username", Sys_GetCurrentUser() );
+#ifndef _WIN64
 	Cvar_SetValue( "sys_cpuspeed", Sys_GetCPUSpeed() );
+#endif
 	Cvar_SetValue( "sys_memory", Sys_GetPhysicalMemory() );
 
 	IN_Init();		// FIXME: not in dedicated?

@@ -2436,8 +2436,8 @@ Com_UpdateProcessCoresAffinity
 //smod feature
 static void Com_SetProcessCoresAffinity() {
 #ifdef _WIN32
-	DWORD	processMask;
-	DWORD	systemMask;
+	DWORD_PTR	processMask;
+	DWORD_PTR	systemMask;
 	int		dev = Cvar_VariableValue("developer");
 
 	// get current affinity for
