@@ -42,6 +42,7 @@ local.properties
 *.sln.docstates
 
 # Build results
+x64/
 [Dd]ebug/
 !CODE-mp/boost/preprocessor/debug
 [Rr]elease/

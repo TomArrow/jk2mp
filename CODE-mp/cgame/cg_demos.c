@@ -287,6 +287,7 @@ static int demoSetupView( void) {
 			// TODO: For fisheye make this be the actual distance to the target and see if it also behaves correctly with stuff behind camera (since fisheye mode can see behind)
 			demo.viewFocus = DotProduct( cg.refdef.viewaxis[0], targetOrigin ) - DotProduct( cg.refdef.viewaxis[0], cg.refdef.vieworg  );
 			demo.dof.focus = demo.viewFocusOld = demo.viewFocus;
+			demo.viewRadius = demo.dof.radius = CG_Cvar_Get("mme_dofRadius");
 		} else {
 			demo.dof.focus = demo.viewFocus = demo.viewFocusOld;
 		}
