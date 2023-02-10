@@ -1447,7 +1447,7 @@ void QDECL Com_sprintf( char *dest, int size, const char *fmt, ...) {
 	va_end (argptr);
 	if (len >= size) {
 		Com_Printf ("Com_sprintf: overflow of %i in %i\n", len, size);
-#ifdef	_DEBUG
+#if defined(_DEBUG) && !defined(_WIN64)
 		__asm {
 			int 3;
 		}

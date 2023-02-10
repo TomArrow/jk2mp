@@ -241,7 +241,7 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	static int	errorCount;
 	int			currentTime;
 
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG) && !defined(_WIN64)
 	if ( code != ERR_DISCONNECT && code != ERR_NEED_CD ) {
 		if (com_noErrorInterrupt && !com_noErrorInterrupt->integer) {
 			__asm {
@@ -1598,7 +1598,7 @@ void Com_InitHunkMemory( void ) {
 		Com_Error( ERR_FATAL, "Hunk data failed to allocate %i megs", s_hunkTotal / (1024*1024) );
 	}
 	// cacheline align
-	s_hunkData = (byte *) ( ( (int)s_hunkData + 31 ) & ~31 );
+	s_hunkData = (byte *) ( ( (intptr_t)s_hunkData + 31 ) & ~31 );
 	Hunk_Clear();
 
 	Cmd_AddCommand( "meminfo", Com_Meminfo_f );
@@ -1610,11 +1610,13 @@ void Com_InitHunkMemory( void ) {
 
 void Com_ShutdownHunkMemory(void)
 {
+#ifndef _WIN64 // Idk causes issuess in 64 bit compile. Dont assk me why.
 	if(s_hunkData)
 	{
 		free(s_hunkData);
 		s_hunkData = NULL;
 	}
+#endif
 }
 
 /*
@@ -2788,9 +2790,10 @@ Com_Frame
 =================
 */
 void Com_Frame( void ) {
-
+#ifdef _DEBUG
 try
 {
+#endif
 	double msec;
 	double		minMsec;
 	static double	lastTime;
@@ -2948,11 +2951,13 @@ try
 
 	com_frameNumber++;
 
+#ifdef _DEBUG
 }//try
 	catch (const char* reason) {
 		Com_Printf (reason);
 		return;			// an ERR_DROP was thrown
 	}
+#endif
 }
 
 /*

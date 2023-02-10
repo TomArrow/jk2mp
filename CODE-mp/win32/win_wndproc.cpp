@@ -20,7 +20,11 @@ static cvar_t		*r_fullscreen;
 
 #define VID_NUM_MODES ( sizeof( vid_modes ) / sizeof( vid_modes[0] ) )
 
+#ifdef _WIN64
+LRESULT WINAPI MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+#else
 LONG WINAPI MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+#endif
 
 static qboolean s_alttab_disabled;
 
@@ -300,7 +304,11 @@ main window procedure
 #define MK_BUTTON4L		0x0020
 #define MK_BUTTON4R		0x0040
 
+#ifdef _WIN64
+LRESULT WINAPI MainWndProc (
+#else
 LONG WINAPI MainWndProc (
+#endif
     HWND    hWnd,
     UINT    uMsg,
     WPARAM  wParam,

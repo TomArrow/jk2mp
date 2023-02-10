@@ -2697,7 +2697,11 @@ static void FS_AddGameDirectory( const char *path, const char *dir ) {
 		sorted[i] = pakfiles[i];
 	}
 
+#ifdef _WIN64
+	qsort( sorted, numfiles, sizeof(size_t), paksort );
+#else
 	qsort( sorted, numfiles, 4, paksort );
+#endif
 
 	for ( i = 0 ; i < numfiles ; i++ ) {
 		pakfile = FS_BuildOSPath( path, dir, sorted[i] );

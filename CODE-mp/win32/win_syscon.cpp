@@ -61,7 +61,11 @@ typedef struct
 
 static WinConData s_wcd;
 
+#ifdef _WIN64
+static LRESULT WINAPI ConWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+#else
 static LONG WINAPI ConWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+#endif
 {
 	const char *cmdString;
 	static qboolean s_timePolarity;
@@ -187,7 +191,11 @@ static LONG WINAPI ConWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 extern	void CompleteCommand( void ) ;
 
+#ifdef _WIN64
+LRESULT WINAPI InputLineWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+#else
 LONG WINAPI InputLineWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+#endif
 {
 	char inputBuffer[1024];
 

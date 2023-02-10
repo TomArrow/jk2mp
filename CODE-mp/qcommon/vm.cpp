@@ -16,6 +16,37 @@ and one exported function: Perform
 #include "vm_local.h"
 
 
+
+
+
+#ifdef _WIN64
+/*
+=================
+VM_BlockCopy
+Executes a block copy operation within currentVM data space
+=================
+*/
+void VM_BlockCopy(unsigned int dest, unsigned int src, size_t n)
+{
+	unsigned int dataMask = currentVM->dataMask;
+
+	if ((dest & dataMask) != dest
+		|| (src & dataMask) != src
+		|| ((dest + n) & dataMask) != dest + n
+		|| ((src + n) & dataMask) != src + n)
+	{
+		Com_Error(ERR_DROP, "OP_BLOCK_COPY out of range!");
+	}
+
+	Com_Memcpy(currentVM->dataBase + dest, currentVM->dataBase + src, n);
+}
+#endif
+
+
+
+
+
+
 vm_t	*currentVM = NULL; // bk001212
 vm_t	*lastVM    = NULL; // bk001212
 int		vm_debugLevel;
@@ -608,6 +639,55 @@ void VM_Clear(void) {
 	lastVM = NULL;
 }
 
+#ifdef _WIN64
+void* VM_ArgPtr(intptr_t intValue) {
+	// TA: Copying this here, was missing from jk2mmv code idk
+	// bk001220 - currentVM is missing on reconnect
+	if (currentVM == NULL)
+		return NULL;
+	if (currentVM->entryPoint) {
+		return (void*)intValue;
+	}
+	if (!intValue) {
+		return NULL;
+	}
+
+	// don't drop on overflow for compatibility reasons
+	intValue &= currentVM->dataMask;
+
+	// Disregarding integer overflows:
+	// if ( size < 0 || currentVM->dataMask < intValue + size - 1 )
+	//if ((uint32_t)size > (uint32_t)(currentVM->dataMask - intValue + 1)) {
+	//	Com_Error(ERR_DROP, "VM_ArgPtr: memory overflow in syscall %d (%s)", syscall, currentVM->name);
+	//}
+
+	return (void*)(currentVM->dataBase + intValue);
+}
+void* VM_ExplicitArgPtr(vm_t* vm, intptr_t intValue) {
+	// TA: Copying this here, was missing from jk2mmv code idk
+	// bk010124 - currentVM is missing on reconnect here as well?
+	if (currentVM == NULL)
+		return NULL;
+
+	if (vm->entryPoint) {
+		return (void*)intValue;
+	}
+	if (!intValue) {
+		return NULL;
+	}
+
+	// don't drop on overflow for compatibility reasons
+	intValue &= vm->dataMask;
+
+	// Disregarding integer overflows:
+	// if ( size < 0 || currentVM->dataMask < intValue + size - 1 )
+	//if ((uint32_t)size > (uint32_t)(currentVM->dataMask - intValue + 1)) {
+	//	Com_Error(ERR_DROP, "VM_ArgPtr: memory overflow in syscall %d (%s)", syscall, currentVM->name);
+	//}
+
+	return (void*)(vm->dataBase + intValue);
+}
+#else
 void *VM_ArgPtr( int intValue ) {
 	if ( !intValue ) {
 		return NULL;
@@ -623,24 +703,25 @@ void *VM_ArgPtr( int intValue ) {
 		return (void *)(currentVM->dataBase + (intValue & currentVM->dataMask));
 	}
 }
-
-void *VM_ExplicitArgPtr( vm_t *vm, int intValue ) {
-	if ( !intValue ) {
+void* VM_ExplicitArgPtr(vm_t* vm, int intValue) {
+	if (!intValue) {
 		return NULL;
 	}
 
 	// bk010124 - currentVM is missing on reconnect here as well?
-	if ( currentVM==NULL )
-	  return NULL;
+	if (currentVM == NULL)
+		return NULL;
 
 	//
-	if ( vm->entryPoint ) {
-		return (void *)(vm->dataBase + intValue);
+	if (vm->entryPoint) {
+		return (void*)(vm->dataBase + intValue);
 	}
 	else {
-		return (void *)(vm->dataBase + (intValue & vm->dataMask));
+		return (void*)(vm->dataBase + (intValue & vm->dataMask));
 	}
 }
+#endif
+
 
 
 /*

@@ -238,7 +238,11 @@ char **Sys_ListFiles( const char *directory, const char *extension, char *filter
 	char		**listCopy;
 	char		*list[MAX_FOUND_FILES];
 	struct _finddata_t findinfo;
+#ifdef _WIN64
+	intptr_t	findhandle;
+#else
 	int			findhandle;
+#endif
 	int			flag;
 	int			i;
 
@@ -427,7 +431,11 @@ void * QDECL Sys_LoadDll( const char *name, int (QDECL **entryPoint)(int, ...),
 #endif
 	char	filename[MAX_QPATH];
 
+#ifdef _WIN64
+	Com_sprintf( filename, sizeof( filename ), "%sx64.dll", name );
+#else
 	Com_sprintf( filename, sizeof( filename ), "%sx86.dll", name );
+#endif
 
 #if 0//def 0//NDEBUG
 	timestamp = Sys_Milliseconds();
@@ -919,6 +927,8 @@ are initialized
 #define OSR2_BUILD_NUMBER 1111
 #define WIN98_BUILD_NUMBER 1998
 
+intptr_t win_wndproc = 0;
+
 void Sys_Init( void ) {
 	int cpuid;
 
@@ -967,7 +977,11 @@ void Sys_Init( void ) {
 
 	// save out a couple things in rom cvars for the renderer to access
 	Cvar_Get( "win_hinstance", va("%i", (int)g_wv.hInstance), CVAR_ROM );
-	Cvar_Get( "win_wndproc", va("%i", (int)MainWndProc), CVAR_ROM );
+#ifdef _WIN64
+	win_wndproc = (intptr_t)MainWndProc;
+#else
+	Cvar_Get( "win_wndproc", va("%i", (intptr_t)MainWndProc), CVAR_ROM );
+#endif
 
 	//
 	// figure out our CPU

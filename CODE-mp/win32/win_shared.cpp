@@ -182,7 +182,7 @@ void Sys_SnapVector( float *v )
 ** --------------------------------------------------------------------------------
 */
 // 2023-07-02 TA: Commented this out. It's not used anywhere and doesn't compile on x64
-/*
+#ifndef _WIN64
 static void CPUID( int func, unsigned regs[4] )
 {
 	unsigned regEAX, regEBX, regECX, regEDX;
@@ -339,7 +339,7 @@ static int IsMMX( void )
 	return qfalse;
 }
 
-*/
+#endif
 int Sys_GetProcessorId( void )
 {
 #if defined _M_ALPHA

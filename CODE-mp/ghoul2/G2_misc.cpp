@@ -1517,7 +1517,7 @@ void *G2_FindSurface(void *mod_t, int index, int lod)
 	model_t	*mod = (model_t *)mod_t;
 
 	// point at first lod list
-	byte	*current = (byte*)((int)mod->mdxm + (int)mod->mdxm->ofsLODs);
+	byte	*current = (byte*)((size_t)mod->mdxm + (size_t)mod->mdxm->ofsLODs);
 	int i;
 
 	//walk the lods

@@ -301,7 +301,11 @@ The module is making a system call
 #define	VMA(x) VM_ArgPtr(args[x])
 #endif
 
+#ifdef _WIN64
+#define	VMF(x)	*(float *)&args[x]
+#else
 #define	VMF(x)	((float *)args)[x]
+#endif
 
 extern bool RicksCrazyOnServer;
 

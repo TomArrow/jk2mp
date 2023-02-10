@@ -4,7 +4,7 @@
  *
  *   Arithmetic computations (specification).
  *
- * Copyright (C) 1996-2021 by
+ * Copyright (C) 1996-2022 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -359,8 +359,8 @@ FT_BEGIN_HEADER
 
 #ifndef  FT_CONFIG_OPTION_NO_ASSEMBLER
 
-#if defined( __GNUC__ )                                          && \
-    ( __GNUC__ > 3 || ( __GNUC__ == 3 && __GNUC_MINOR__ >= 4 ) )
+#if defined( __clang__ ) || ( defined( __GNUC__ )                &&  \
+    ( __GNUC__ > 3 || ( __GNUC__ == 3 && __GNUC_MINOR__ >= 4 ) ) )
 
 #if FT_SIZEOF_INT == 4
 
@@ -372,9 +372,23 @@ FT_BEGIN_HEADER
 
 #endif
 
-#elif defined( _MSC_VER ) && ( _MSC_VER >= 1400 )
+#elif defined( _MSC_VER ) && _MSC_VER >= 1400
 
-#if FT_SIZEOF_INT == 4
+#if defined( _WIN32_WCE )
+
+#include <cmnintrin.h>
+#pragma intrinsic( _CountLeadingZeros )
+
+#define FT_MSB( x )  ( 31 - _CountLeadingZeros( x ) )
+
+#elif defined( _M_ARM64 ) || defined( _M_ARM )
+
+#include <intrin.h>
+#pragma intrinsic( _CountLeadingZeros )
+
+#define FT_MSB( x )  ( 31 - _CountLeadingZeros( x ) )
+
+#elif defined( _M_IX86 ) || defined( _M_AMD64 ) || defined( _M_IA64 )
 
 #include <intrin.h>
 #pragma intrinsic( _BitScanReverse )
@@ -390,9 +404,22 @@ FT_BEGIN_HEADER
     return (FT_Int32)where;
   }
 
-#define FT_MSB( x )  ( FT_MSB_i386( x ) )
+#define FT_MSB( x )  FT_MSB_i386( x )
 
 #endif
+
+#elif defined( __WATCOMC__ ) && defined( __386__ )
+
+  extern __inline FT_Int32
+  FT_MSB_i386( FT_UInt32  x );
+
+#pragma aux FT_MSB_i386 =     \
+  "bsr eax, eax"              \
+  parm [eax] nomemory         \
+  value [eax]                 \
+  modify exact [eax] nomemory;
+
+#define FT_MSB( x )  FT_MSB_i386( x )
 
 #elif defined( __DECC ) || defined( __DECCXX )
 

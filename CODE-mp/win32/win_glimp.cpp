@@ -758,7 +758,7 @@ static qboolean GLW_CreateWindow( int width, int height, int colorbits, qboolean
 		memset( &wc, 0, sizeof( wc ) );
 
 		wc.style         = 0;
-		wc.lpfnWndProc   = (WNDPROC) glw_state.wndproc;
+		wc.lpfnWndProc   = glw_state.wndproc;
 		wc.cbClsExtra    = 0;
 		wc.cbWndExtra    = 0;
 		wc.hInstance     = g_wv.hInstance;
@@ -1987,6 +1987,7 @@ static void GLW_StartOpenGL( void )
 ** to make sure that a functional OpenGL subsystem is operating
 ** when it returns to the ref.
 */
+extern intptr_t win_wndproc;
 void GLimp_Init( void )
 {
 	char	buf[MAX_STRING_CHARS];
@@ -2005,10 +2006,14 @@ void GLimp_Init( void )
 
 	// save off hInstance and wndproc
 	cv = ri.Cvar_Get( "win_hinstance", "", 0 );
-	sscanf( cv->string, "%i", (int *)&g_wv.hInstance );
+	sscanf( cv->string, "%i", (int *)&g_wv.hInstance ); 
 
+#ifdef _WIN64
+	glw_state.wndproc = (WNDPROC)win_wndproc;
+#else
 	cv = ri.Cvar_Get( "win_wndproc", "", 0 );
-	sscanf( cv->string, "%i", (int *)&glw_state.wndproc );
+	sscanf( cv->string, "%i", (intptr_t *)&glw_state.wndproc );
+#endif
 
 	r_allowSoftwareGL = ri.Cvar_Get( "r_allowSoftwareGL", "0", CVAR_LATCH );
 
