@@ -343,8 +343,6 @@ void R_MME_RegisterFont(const char *fontName, int pointSize, mmeFontInfo_t *font
 	// we also need to adjust the scale based on point size relative to 48 points as the ui scaling is based on a 48 point font
 	glyphScale *= 48.0f / pointSize;
 
-	// make sure the render thread is stopped
-	R_SyncRenderThread();
 
   //Check if we've already loaded this font/pointsize combination
 	freeTypeFont = freeTypeFontList;
@@ -355,6 +353,9 @@ void R_MME_RegisterFont(const char *fontName, int pointSize, mmeFontInfo_t *font
 		}
 		freeTypeFont = freeTypeFont->next;
 	}
+
+	// make sure the render thread is stopped
+	R_SyncRenderThread();
 
 	/* Didn't find it cached, go for the full render */
 	len = ri.FS_ReadFile(fontName, &faceData);

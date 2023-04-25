@@ -1410,6 +1410,14 @@ static void GLW_InitExtensions( void )
 		ri.Printf( PRINT_ALL, "...found GL_ARB_tessellation_shader\n" );
 	}
 
+	// WGL_ARB_context_flush_control
+	glConfig.contextFlushControlAvailable = qfalse;
+	if ( strstr( glConfig.extensions_string, "ARB_context_flush_control" ) || strstr( glConfig.extensions_string, "KHR_context_flush_control" ) )
+	{
+		glConfig.contextFlushControlAvailable = qtrue;
+		ri.Printf( PRINT_ALL, "...found KHR_context_flush_control\n" );
+	}
+
 
 	// WGL_EXT_swap_control
 	qwglSwapIntervalEXT = ( BOOL (WINAPI *)(int)) qwglGetProcAddress( "wglSwapIntervalEXT" );
