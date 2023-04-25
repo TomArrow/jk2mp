@@ -127,6 +127,7 @@ typedef struct {
 } doubleFrameBufferData_t;
 
 typedef struct {
+	vec3_t pixelJitter3D;
 	vec3_t dofJitter3D;
 	float dofFocus;
 	float dofRadius;
@@ -186,6 +187,7 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 
 	if (tess) {
 
+		qglUniform3fv(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "pixelJitterUniform"), 1, fbo.fishEyeData.pixelJitter3D);
 		qglUniform3fv(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "dofJitterUniform"), 1, fbo.fishEyeData.dofJitter3D);
 		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "dofFocusUniform"), fbo.fishEyeData.dofFocus);
 		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "dofRadiusUniform"), fbo.fishEyeData.dofRadius);
@@ -202,6 +204,7 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		}
 	}
 	else {
+		qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "pixelJitterUniform"), 1, fbo.fishEyeData.pixelJitter3D);
 		qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofJitterUniform"), 1, fbo.fishEyeData.dofJitter3D);
 		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofFocusUniform"), fbo.fishEyeData.dofFocus);
 		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofRadiusUniform"), fbo.fishEyeData.dofRadius);
@@ -277,7 +280,7 @@ static qboolean R_FrameBuffer_ReactivateFisheye() {
 #endif
 }
 
-qboolean R_FrameBuffer_ActivateFisheye(vec_t* dofJitter3D, float dofFocus, float dofRadius, float fovX, float fovY) {
+qboolean R_FrameBuffer_ActivateFisheye(vec_t* pixelJitter3D, vec_t* dofJitter3D, float dofFocus, float dofRadius, float fovX, float fovY) {
 #ifdef HAVE_GLES
 	//TODO
 	return qfalse;
@@ -296,6 +299,7 @@ qboolean R_FrameBuffer_ActivateFisheye(vec_t* dofJitter3D, float dofFocus, float
 	fbo.fishEyeActive = qtrue;
 
 	VectorCopy(dofJitter3D, fbo.fishEyeData.dofJitter3D);
+	VectorCopy(pixelJitter3D, fbo.fishEyeData.pixelJitter3D);
 	fbo.fishEyeData.dofFocus = dofFocus;
 	fbo.fishEyeData.dofRadius = dofRadius;
 	fbo.fishEyeData.fovX = fovX;

@@ -315,7 +315,7 @@ void S_StartSound(vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfxH
 		Com_Printf( "S_StartSound: Queue overflow, dropping\n");
 		return;
 	}
-	if ( sfxHandle <= 0 || sfxHandle >= sfxEntryCount) {
+	if ( sfxHandle < 0 || sfxHandle >= sfxEntryCount) {
 		Com_DPrintf( "S_StartSound: Illegal sfxhandle %d\n", sfxHandle );
 		return;
 	}

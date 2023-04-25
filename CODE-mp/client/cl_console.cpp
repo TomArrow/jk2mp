@@ -566,7 +566,7 @@ void Con_DrawNotify (void)
 			con.gameTimes[i % NUM_CON_TIMES] = 0;
 			continue;
 		}
-		if (time > con_notifytime->value*1000 && gameTime > con_notifytime->value * 1000)
+		if (time >= con_notifytime->value*1000 && gameTime >= con_notifytime->value * 1000)
 			continue;
 		text = con.text + (i % con.totallines)*con.linewidth;
 

@@ -94,6 +94,7 @@ cvar_t	*mme_blurJitter;
 
 cvar_t	*mme_dofFrames;
 cvar_t	*mme_dofRadius;
+cvar_t	*mme_forceNonFishEyeDistanceCalc;
 cvar_t	*mme_dofQuick;
 cvar_t	* mme_dofQuickRandom;
 cvar_t	* mme_dofQuickRandomMod;
@@ -1589,6 +1590,7 @@ void R_MME_Init(void) {
 
 	mme_dofFrames = ri.Cvar_Get ( "mme_dofFrames", "0", CVAR_ARCHIVE );
 	mme_dofRadius = ri.Cvar_Get ( "mme_dofRadius", "2", CVAR_ARCHIVE );
+	mme_forceNonFishEyeDistanceCalc = ri.Cvar_Get ( "mme_forceNonFishEyeDistanceCalc", "0", CVAR_ARCHIVE );
 	mme_dofQuick = ri.Cvar_Get ( "mme_dofQuick", "1", CVAR_ARCHIVE );
 	mme_dofQuickRandom = ri.Cvar_Get ( "mme_dofQuickRandom", "0", CVAR_ARCHIVE ); 
 	mme_dofQuickRandomMod = ri.Cvar_Get ( "mme_dofQuickRandomMod", "0.2", CVAR_ARCHIVE );

@@ -11,6 +11,7 @@ in vec4 geomTexCoord[3];
 
 in vec4 gl_TexCoordIn[3][1];
 
+uniform vec3 pixelJitterUniform;
 uniform vec3 dofJitterUniform;
 uniform float dofFocusUniform;
 uniform float dofRadiusUniform;
@@ -114,6 +115,11 @@ vec4 equirect_getPos(vec3 pointVec, int iter)
 	outputPos.y = yAngle;
 	outputPos.z = 1.0 - 1.0 / distance;
 	outputPos.w = 1.0;
+	
+	// This is pixel jitter. It's applied for atni-aliasing, hence it's the last step and applied onto actual screen coordinates
+	outputPos.x += pixelJitterUniform.x;
+	outputPos.y += pixelJitterUniform.y;
+	outputPos.z += pixelJitterUniform.z;
 
 	return outputPos;
 }
@@ -212,9 +218,21 @@ vec4 fisheye_getPos(vec3 pointVec, int iter, inout vec2 fovless2DPos)
 	// Apply DOF jitter
 	float dofFactor = calcDofFactor(distance, dofFocusUniform) *dofRadiusUniform *0.001;	// 0.001 to get it roughly in line with normal dof in mme. 
 	vec3 perpendicularXAxisToPoint = cross(axis[2].xyz, perpendicularZAxisToPoint);
-	pointVec.x += dofFactor* dot(dofJitterUniform, perpendicularXAxisToPoint);
-	pointVec.y += dofFactor* dot(dofJitterUniform, axis[2].xyz);
-	pointVec.z += dofFactor* dot(dofJitterUniform, perpendicularZAxisToPoint);
+	// old faulty way:
+	//pointVec.x += dofFactor* dot(dofJitterUniform, perpendicularXAxisToPoint);
+	//pointVec.y += dofFactor* dot(dofJitterUniform, axis[2].xyz);
+	//pointVec.z += dofFactor* dot(dofJitterUniform, perpendicularZAxisToPoint);
+	// This might still be wrong, not sure.  (yeah it doesnt angle vertically i think)
+	//pointVec += dofFactor * dofJitterUniform.x * perpendicularXAxisToPoint;
+	//pointVec += dofFactor * dofJitterUniform.y * axis[2].xyz;
+	//pointVec += dofFactor * dofJitterUniform.z * perpendicularZAxisToPoint;
+	// Hmm the getperpendicularaxis might actually not work if the two axes supplied are identical. Might result in Null vector. Do we just ignore that for now? Hmm
+	vec3 pointPseudoZAxis = normalize(pointVec);
+	vec3 pseudoYAxisToPoint = getPerpendicularAxis(axis[2].xyz, pointPseudoZAxis); 
+	vec3 pseudoXAxisToPoint = cross(pointPseudoZAxis,pseudoYAxisToPoint);
+	pointVec += dofFactor * dofJitterUniform.x * pseudoXAxisToPoint;
+	pointVec += dofFactor * dofJitterUniform.y * pseudoYAxisToPoint;
+	pointVec += dofFactor * dofJitterUniform.z * pointPseudoZAxis;
 
 	pointVec = normalize(pointVec);
 
@@ -241,6 +259,11 @@ vec4 fisheye_getPos(vec3 pointVec, int iter, inout vec2 fovless2DPos)
 	outputPos.y = positionY;
 	outputPos.z = 1.0 - 1.0 / distance;
 	outputPos.w = 1.0;
+
+	// This is pixel jitter. It's applied for atni-aliasing, hence it's the last step and applied onto actual screen coordinates
+	outputPos.x += pixelJitterUniform.x;
+	outputPos.y += pixelJitterUniform.y;
+	outputPos.z += pixelJitterUniform.z;
 
 	return outputPos;
 }
