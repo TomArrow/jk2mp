@@ -27,6 +27,30 @@ extern void WG_RestoreGamma( void );
 static qboolean GLW_CreateWindow( int width, int height, int colorbits, qboolean cdsFullscreen );
 
 
+//#define SPINWAIT
+
+#ifdef SPINWAIT
+#define DeclareEvent(a) volatile LONG a
+#define InitEvent(a) InterlockedExchange(&a,0)
+#define ResetEventWrap(a) InterlockedExchange(&a,0)
+#define SetEventWrap(a) InterlockedExchange(&a,1)
+#define WaitEventWrap(a) while(!InterlockedCompareExchange(&a,0,0)){}\
+((void)0)
+#elif defined(SPINWAIT2) // Just experiment. Doesn't work but was fun trying.
+#define DeclareEvent(a) volatile LONG a
+#define InitEvent(a) a=0
+#define ResetEventWrap(a) a=0
+#define SetEventWrap(a) a=1
+#define WaitEventWrap(a) while(!a){}\
+((void)0)
+#else
+#define DeclareEvent(a) HANDLE a
+#define InitEvent(a) a = CreateEvent(NULL,TRUE,FALSE,NULL)
+#define ResetEventWrap(a) ResetEvent(a)
+#define SetEventWrap(a) SetEvent(a)
+#define WaitEventWrap(a) WaitForSingleObject( a, INFINITE )
+#endif
+
 
 
 typedef enum {
@@ -2240,9 +2264,12 @@ SMP acceleration
 ===========================================================
 */
 
-HANDLE	renderCommandsEvent;
-HANDLE	renderCompletedEvent;
-HANDLE	renderActiveEvent;
+//HANDLE	renderCommandsEvent;
+//HANDLE	renderCompletedEvent;
+//HANDLE	renderActiveEvent;
+DeclareEvent(renderCommandsEvent);
+DeclareEvent(renderCompletedEvent);
+DeclareEvent(renderActiveEvent);
 
 void (*glimpRenderThread)( void );
 
@@ -2262,9 +2289,12 @@ HANDLE	renderThreadHandle;
 int		renderThreadId;
 qboolean GLimp_SpawnRenderThread( void (*function)( void ) ) {
 
-	renderCommandsEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
-	renderCompletedEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
-	renderActiveEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
+	//renderCommandsEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
+	//renderCompletedEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
+	//renderActiveEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
+	InitEvent(renderCommandsEvent);
+	InitEvent(renderCompletedEvent);
+	InitEvent(renderActiveEvent);
 
 	glimpRenderThread = function;
 
@@ -2293,31 +2323,33 @@ void *GLimp_RendererSleep( void ) {
 		wglErrors++;
 	}
 
-	ResetEvent( renderActiveEvent );
+	ResetEventWrap( renderActiveEvent );
 
 	// after this, the front end can exit GLimp_FrontEndSleep
-	SetEvent( renderCompletedEvent );
+	SetEventWrap( renderCompletedEvent );
 
-	WaitForSingleObject( renderCommandsEvent, INFINITE );
+	//WaitForSingleObject( renderCommandsEvent, INFINITE );
+	WaitEventWrap( renderCommandsEvent );
 
 	if ( !qwglMakeCurrent( glw_state.hDC, glw_state.hGLRC ) ) {
 		wglErrors++;
 	}
 
-	ResetEvent( renderCompletedEvent );
-	ResetEvent( renderCommandsEvent );
+	ResetEventWrap( renderCompletedEvent );
+	ResetEventWrap( renderCommandsEvent );
 
 	data = smpData;
 
 	// after this, the main thread can exit GLimp_WakeRenderer
-	SetEvent( renderActiveEvent );
+	SetEventWrap( renderActiveEvent );
 
 	return data;
 }
 
 
 void GLimp_FrontEndSleep( void ) {
-	WaitForSingleObject( renderCompletedEvent, INFINITE );
+	//WaitForSingleObject( renderCompletedEvent, INFINITE );
+	WaitEventWrap( renderCompletedEvent );
 
 	if ( !qwglMakeCurrent( glw_state.hDC, glw_state.hGLRC ) ) {
 		wglErrors++;
@@ -2333,8 +2365,9 @@ void GLimp_WakeRenderer( void *data ) {
 	}
 
 	// after this, the renderer can continue through GLimp_RendererSleep
-	SetEvent( renderCommandsEvent );
+	SetEventWrap( renderCommandsEvent );
 
-	WaitForSingleObject( renderActiveEvent, INFINITE );
+	//WaitForSingleObject( renderActiveEvent, INFINITE );
+	WaitEventWrap( renderActiveEvent );
 }
 
