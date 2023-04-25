@@ -1218,6 +1218,12 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
         return 0;
 	}
 
+#if 0//defined(_WIN64)
+	TIMECAPS timeCaps;
+	timeGetDevCaps(&timeCaps,sizeof(timeCaps));
+	timeBeginPeriod(timeCaps.wPeriodMin);
+#endif
+
 	g_wv.hInstance = hInstance;
 	Q_strncpyz( sys_cmdline, lpCmdLine, sizeof( sys_cmdline ) );
 
