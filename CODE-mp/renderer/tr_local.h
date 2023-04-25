@@ -8,6 +8,7 @@
 #include "../qcommon/qcommon.h"
 #include "tr_public.h"
 #include "qgl.h"
+#include "ghoul2/ghoul2_shared.h"
 
 #define GL_INDEX_TYPE		GL_UNSIGNED_INT
 typedef unsigned int glIndex_t;
@@ -1802,6 +1803,17 @@ CRenderableSurface():
 	boneList(0),
 	surfaceData(0)
 	{}
+
+~CRenderableSurface() {
+#if R_SMP
+	if (boneList) {
+		delete (mdxaBone_v*)boneList;
+	}
+	//if (surfaceData) {
+	//	delete surfaceData;
+	//}
+#endif
+}
 };
 
 void R_AddGhoulSurfaces( trRefEntity_t *ent );

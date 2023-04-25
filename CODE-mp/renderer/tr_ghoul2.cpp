@@ -1357,7 +1357,13 @@ void RenderSurfaces(CRenderSurface &RS)
 		{		// set the surface info to point at the where the transformed bone list is going to be for when the surface gets rendered out
 			CRenderableSurface *newSurf = new CRenderableSurface;
 			newSurf->surfaceData = surface;
+#if R_SMP
+			//newSurf->surfaceData = new mdxmSurface_t;
+			//memcpy(newSurf->surfaceData, surface, sizeof(mdxmSurface_t));
+			newSurf->boneList = new mdxaBone_v(RS.bonePtr);
+#else
 			newSurf->boneList = &RS.bonePtr;
+#endif
 			R_AddDrawSurf( (surfaceType_t *)newSurf, tr.shadowShader, 0, qfalse );
 		}
 
@@ -1369,7 +1375,13 @@ void RenderSurfaces(CRenderSurface &RS)
 		{		// set the surface info to point at the where the transformed bone list is going to be for when the surface gets rendered out
 			CRenderableSurface *newSurf = new CRenderableSurface;
 			newSurf->surfaceData = surface;
+#if R_SMP
+			//newSurf->surfaceData = new mdxmSurface_t;
+			//memcpy(newSurf->surfaceData, surface, sizeof(mdxmSurface_t));
+			newSurf->boneList = new mdxaBone_v(RS.bonePtr);
+#else
 			newSurf->boneList = &RS.bonePtr;
+#endif
 			R_AddDrawSurf( (surfaceType_t *)newSurf, tr.projectionShadowShader, 0, qfalse );
 		}
 
@@ -1378,7 +1390,13 @@ void RenderSurfaces(CRenderSurface &RS)
 		{		// set the surface info to point at the where the transformed bone list is going to be for when the surface gets rendered out
 			CRenderableSurface *newSurf = new CRenderableSurface;
 			newSurf->surfaceData = surface;
+#if R_SMP
+			//newSurf->surfaceData = new mdxmSurface_t;
+			//memcpy(newSurf->surfaceData,surface,sizeof(mdxmSurface_t));
+			newSurf->boneList = new mdxaBone_v(RS.bonePtr);
+#else
 			newSurf->boneList = &RS.bonePtr;
+#endif
 			R_AddDrawSurf( (surfaceType_t *)newSurf, shader, RS.fogNum, qfalse );
 		}
 	}
@@ -2173,12 +2191,13 @@ void RB_SurfaceGhoul( CRenderableSurface *surf ) {
 	// the glow is rendered _second_!!! If that changes, change this!
 	extern bool g_bRenderGlowingObjects;
 	extern bool g_bDynamicGlowSupported;
+	bool doDelete = false;
 	if ((!tess.shader->hasGlow || g_bRenderGlowingObjects || !g_bDynamicGlowSupported || !r_DynamicGlow->integer)
 	&& (!tr.capturingDofOrStereo || (tr.capturingDofOrStereo && tr.latestDofOrStereoFrame))) {
 #else
 	if (!tr.capturingDofOrStereo || (tr.capturingDofOrStereo && tr.latestDofOrStereoFrame)) {
 #endif
-		delete surf;
+		doDelete = true;
 	}
 	//
 	// deform the vertexes by the lerped bones
@@ -2248,6 +2267,10 @@ void RB_SurfaceGhoul( CRenderableSurface *surf ) {
 	}
 
 	tess.numVertexes += surface->numVerts;
+
+	if (doDelete) {
+		delete surf;
+	}
 }
 #endif // !DEDICATED
  

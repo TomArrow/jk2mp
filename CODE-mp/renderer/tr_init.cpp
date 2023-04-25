@@ -936,7 +936,11 @@ void R_Register( void )
 #else        
 //	r_smp = ri.Cvar_Get( "r_smp", "0", CVAR_ARCHIVE | CVAR_LATCH);
 #endif
+#if R_SMP
+	r_smp = ri.Cvar_Get("r_smp", "0", CVAR_ARCHIVE | CVAR_LATCH);
+#else
 	r_smp = ri.Cvar_Get( "r_smp", "0", CVAR_ROM);
+#endif
 	r_ignoreFastPath = ri.Cvar_Get( "r_ignoreFastPath", "1", CVAR_ARCHIVE | CVAR_LATCH );
 
 	//
