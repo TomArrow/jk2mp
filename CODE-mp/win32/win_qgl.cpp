@@ -31,6 +31,7 @@ BOOL (WINAPI * qwglDestroyPbufferARB) (HPBUFFERARB hPbuffer);
 
 BOOL  ( WINAPI * qwglCopyContext)(HGLRC, HGLRC, UINT);
 HGLRC ( WINAPI * qwglCreateContext)(HDC);
+HGLRC ( WINAPI * qwglCreateContextAttribsARB)(HDC hDC, HGLRC hShareContext, const int* attribList); // WGL_ARB_create_context if available
 HGLRC ( WINAPI * qwglCreateLayerContext)(HDC, int);
 BOOL  ( WINAPI * qwglDeleteContext)(HGLRC);
 HGLRC ( WINAPI * qwglGetCurrentContext)(VOID);

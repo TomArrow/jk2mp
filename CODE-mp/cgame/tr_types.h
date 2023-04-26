@@ -303,7 +303,8 @@ typedef struct {
 	qboolean				tesselationShaderAvailable;
 	qboolean				geometryShaderEXTAvailable;
 	qboolean				geometryShaderARBAvailable;
-	qboolean				contextFlushControlAvailable;
+	qboolean				wglCreateContextAttribsAvailable;
+	qboolean				wglContextFlushControlAvailable; // Relies on wglCreateContextAttribsAvailable actually
 	qboolean				depthMapFloat; // GPU supports float depth maps - GL_ARB_depth_buffer_float
 	qboolean				depthMapFloatNV; // GPU supports float depth maps (unclamped NVIDIA version) - GL_NV_depth_buffer_float
 	qboolean				depthMapFloatNVActive; // NV float depth map is activated.

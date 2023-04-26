@@ -223,6 +223,24 @@ extern void (APIENTRYP qglDebugMessageCallback) (DEBUGPROC callback, const void*
 #define WGL_MIPMAP_TEXTURE_ARB			   0x2074
 #define WGL_SAMPLES_ARB					   0x2042
 
+#define WGL_CONTEXT_MAJOR_VERSION_ARB           0x2091
+#define WGL_CONTEXT_MINOR_VERSION_ARB           0x2092
+#define WGL_CONTEXT_LAYER_PLANE_ARB             0x2093
+#define WGL_CONTEXT_FLAGS_ARB                   0x2094
+#define WGL_CONTEXT_PROFILE_MASK_ARB            0x9126
+#define WGL_CONTEXT_DEBUG_BIT_ARB               0x0001
+#define WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB  0x0002
+#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB        0x00000001
+#define WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB 0x00000002
+#define ERROR_INVALID_VERSION_ARB               0x2095
+#define ERROR_INVALID_PROFILE_ARB               0x2096
+#define WGL_CONTEXT_RELEASE_BEHAVIOR_ARB        0x2097
+#define WGL_CONTEXT_RELEASE_BEHAVIOR_NONE_ARB   0x0000
+#define WGL_CONTEXT_RELEASE_BEHAVIOR_FLUSH_ARB  0x2098
+// Context flush control related stuff
+
+
+
 
 //===========================================================================
 
@@ -819,6 +837,7 @@ extern BOOL (WINAPI * qwglDestroyPbufferARB) (HPBUFFERARB hPbuffer);
 
 extern BOOL  ( WINAPI * qwglCopyContext)(HGLRC, HGLRC, UINT);
 extern HGLRC ( WINAPI * qwglCreateContext)(HDC);
+extern HGLRC ( WINAPI * qwglCreateContextAttribsARB)(HDC hDC, HGLRC hShareContext, const int* attribList);
 extern HGLRC ( WINAPI * qwglCreateLayerContext)(HDC, int);
 extern BOOL  ( WINAPI * qwglDeleteContext)(HGLRC);
 extern HGLRC ( WINAPI * qwglGetCurrentContext)(VOID);

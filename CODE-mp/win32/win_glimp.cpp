@@ -24,10 +24,15 @@
 extern void WG_CheckHardwareGamma( void );
 extern void WG_RestoreGamma( void );
 
-static qboolean GLW_CreateWindow( int width, int height, int colorbits, qboolean cdsFullscreen );
-
+static qboolean GLW_CreateWindow( int width, int height, int colorbits, qboolean cdsFullscreen, qboolean show = qtrue);
+static void DestroyFakeWindow(void);
 
 //#define SPINWAIT
+
+// TODO:
+// Try these two things to fix r_smp performance:
+// 1. contextFlushControlAvailable, allow async when unbinding
+// 2. Avoid rebinding context outside of R_syncrenderthread. we're not making any opengl calls then really anyway. why switch context. pointless.
 
 #ifdef SPINWAIT
 #define DeclareEvent(a) volatile LONG a
@@ -128,6 +133,26 @@ static void GLW_ARB_InitExtensions( void ) {
 		qwglReleasePbufferDCARB			= (int (WINAPI *) (HPBUFFERARB hPbuffer, HDC hDC))qwglGetProcAddress( "wglReleasePbufferDCARB" );
 		qwglDestroyPbufferARB			= (BOOL (WINAPI *) (HPBUFFERARB hPbuffer))qwglGetProcAddress( "wglDestroyPbufferARB" );
 		qwglQueryPbufferARB				= (BOOL (WINAPI *) (HPBUFFERARB hPbuffer, int iAttribute, int *piValue))qwglGetProcAddress( "wglQueryPbufferARB" );
+	}
+
+	// WGL_ARB_context_flush_control
+	glConfig.wglCreateContextAttribsAvailable = qfalse;
+	if (strstr(wglExtensions_, "WGL_ARB_context_flush_control"))
+	{
+		// It says WGL_ARB_create_context_profile is required for OpenGL 3.2 and later but only for some attributes we don't currently need, see the extension docs.
+		// We only want this in order to use context_flush_control
+		qwglCreateContextAttribsARB = (HGLRC(WINAPI*)(HDC, HGLRC, const int*)) qwglGetProcAddress("wglCreateContextAttribsARB");
+		if (qwglCreateContextAttribsARB) {
+			glConfig.wglCreateContextAttribsAvailable = qtrue;
+			ri.Printf(PRINT_ALL, "...found KHR_context_flush_control\n");
+		}
+	}
+	// WGL_ARB_context_flush_control
+	glConfig.wglContextFlushControlAvailable = qfalse;
+	if (glConfig.wglCreateContextAttribsAvailable && strstr(wglExtensions_, "WGL_ARB_create_context"))
+	{
+		glConfig.wglContextFlushControlAvailable = qtrue;
+		ri.Printf(PRINT_ALL, "...found KHR_context_flush_control\n");
 	}
 }
 
@@ -253,7 +278,16 @@ chooseAgain:
 		if(!glw_state.pbuf.hDC)
 			goto skip_pbuffer;
 
-		glw_state.pbuf.hGLRC = qwglCreateContext( glw_state.pbuf.hDC );
+		if (glConfig.wglCreateContextAttribsAvailable && glConfig.wglContextFlushControlAvailable) {
+			int wglAttribs[3];
+			wglAttribs[0] = WGL_CONTEXT_RELEASE_BEHAVIOR_ARB;
+			wglAttribs[1] = WGL_CONTEXT_RELEASE_BEHAVIOR_NONE_ARB;
+			wglAttribs[2] = 0;
+			glw_state.pbuf.hGLRC = qwglCreateContextAttribsARB(glw_state.pbuf.hDC,NULL, wglAttribs);
+		}
+		else {
+			glw_state.pbuf.hGLRC = qwglCreateContext(glw_state.pbuf.hDC);
+		}
 		if(!glw_state.pbuf.hGLRC )
 			goto skip_pbuffer;
 			
@@ -601,7 +635,18 @@ static int GLW_MakeContext( PIXELFORMATDESCRIPTOR *pPFD )
 	if ( !glw_state.hGLRC )
 	{
 		ri.Printf( PRINT_ALL, "...creating GL context: " );
-		if ( ( glw_state.hGLRC = qwglCreateContext( glw_state.hDC ) ) == 0 )
+		
+		if (glConfig.wglCreateContextAttribsAvailable && glConfig.wglContextFlushControlAvailable) {
+			int wglAttribs[3];
+			wglAttribs[0] = WGL_CONTEXT_RELEASE_BEHAVIOR_ARB;
+			wglAttribs[1] = WGL_CONTEXT_RELEASE_BEHAVIOR_NONE_ARB;
+			wglAttribs[2] = 0;
+			glw_state.hGLRC = qwglCreateContextAttribsARB(glw_state.hDC, NULL, wglAttribs);
+		}
+		else {
+			glw_state.hGLRC = qwglCreateContext(glw_state.hDC);
+		}
+		if ( ( glw_state.hGLRC ) == 0 )
 		{
 			ri.Printf (PRINT_ALL, "failed\n");
 			if (r_multiSample->integer) {
@@ -764,7 +809,7 @@ static qboolean GLW_InitDriver( int colorbits )
 ** Responsible for creating the Win32 window and initializing the OpenGL driver.
 */
 #define	WINDOW_STYLE	(WS_OVERLAPPED|WS_BORDER|WS_CAPTION|WS_VISIBLE)
-static qboolean GLW_CreateWindow( int width, int height, int colorbits, qboolean cdsFullscreen )
+static qboolean GLW_CreateWindow( int width, int height, int colorbits, qboolean cdsFullscreen,qboolean show )
 {
 	RECT			r;
 	cvar_t			*vid_xpos, *vid_ypos;
@@ -879,9 +924,10 @@ static qboolean GLW_CreateWindow( int width, int height, int colorbits, qboolean
 		{
 			ri.Error (ERR_FATAL, "GLW_CreateWindow() - Couldn't create window");
 		}
-	
-		ShowWindow( g_wv.hWnd, SW_SHOW );
-		UpdateWindow( g_wv.hWnd );
+		if (show) {
+			ShowWindow(g_wv.hWnd, SW_SHOW);
+			UpdateWindow(g_wv.hWnd);
+		}
 		ri.Printf( PRINT_ALL, "...created window@%d,%d (%dx%d)\n", x, y, w, h );
 	}
 	else
@@ -891,15 +937,19 @@ static qboolean GLW_CreateWindow( int width, int height, int colorbits, qboolean
 
 	if ( !GLW_InitDriver( colorbits ) )
 	{
-		ShowWindow( g_wv.hWnd, SW_HIDE );
-		DestroyWindow( g_wv.hWnd );
+		if (show) {
+			ShowWindow(g_wv.hWnd, SW_HIDE);
+			DestroyWindow(g_wv.hWnd);
+		}
 		g_wv.hWnd = NULL;
 
 		return qfalse;
 	}
 
-	SetForegroundWindow( g_wv.hWnd );
-	SetFocus( g_wv.hWnd );
+	if (show) {
+		SetForegroundWindow(g_wv.hWnd);
+		SetFocus(g_wv.hWnd);
+	}
 
 	return qtrue;
 }
@@ -1311,8 +1361,45 @@ static void GLW_InitTextureCompression( void )
 /*
 ** GLW_InitExtensions
 */
-static void GLW_InitExtensions( void )
+static void GLW_InitExtensions( qboolean createFakeContext = qfalse )
 {
+	if (createFakeContext) {
+		GLW_CreateWindow(320,240,0,qfalse,qfalse);
+	}
+	
+	GLW_ARB_InitExtensions();
+
+	// get our config strings
+	const char* glstring;
+	glstring = (const char*)qglGetString(GL_VENDOR);
+	if (!glstring) {
+		glstring = "invalid driver";
+	}
+	Q_strncpyz(glConfig.vendor_string, glstring, sizeof(glConfig.vendor_string));
+	glstring = (const char*)qglGetString(GL_RENDERER);
+	if (!glstring) {
+		glstring = "invalid driver";
+	}
+	Q_strncpyz(glConfig.renderer_string, glstring, sizeof(glConfig.renderer_string));
+	glstring = (const char*)qglGetString(GL_VERSION);
+	if (!glstring) {
+		glstring = "invalid driver";
+	}
+	Q_strncpyz(glConfig.version_string, glstring, sizeof(glConfig.version_string));
+	glstring = (const char*)qglGetString(GL_EXTENSIONS);
+	if (!glstring) {
+		glstring = "invalid driver";
+	}
+	Q_strncpyz(glConfig.extensions_string, glstring, sizeof(glConfig.extensions_string));
+
+	// OpenGL driver constants
+	qglGetIntegerv(GL_MAX_TEXTURE_SIZE, &glConfig.maxTextureSize);
+	// stubbed or broken drivers may have reported 0...
+	if (glConfig.maxTextureSize <= 0)
+	{
+		glConfig.maxTextureSize = 0;
+	}
+
 	if ( !r_allowExtensions->integer )
 	{
 		ri.Printf( PRINT_ALL, "*** IGNORING OPENGL EXTENSIONS ***\n" );
@@ -1411,10 +1498,20 @@ static void GLW_InitExtensions( void )
 	}
 
 	// WGL_ARB_context_flush_control
-	glConfig.contextFlushControlAvailable = qfalse;
-	if ( strstr( glConfig.extensions_string, "ARB_context_flush_control" ) || strstr( glConfig.extensions_string, "KHR_context_flush_control" ) )
+	if ( strstr( glConfig.extensions_string, "WGL_ARB_context_flush_control" )  ) 
 	{
-		glConfig.contextFlushControlAvailable = qtrue;
+		// It says WGL_ARB_create_context_profile is required for OpenGL 3.2 and later but only for some attributes we don't currently need, see the extension docs.
+		// We only want this in order to use context_flush_control
+		qwglCreateContextAttribsARB = (HGLRC(WINAPI*)(HDC, HGLRC, const int*)) qwglGetProcAddress("wglCreateContextAttribsARB");
+		if (qwglCreateContextAttribsARB) {
+			glConfig.wglCreateContextAttribsAvailable = qtrue;
+			ri.Printf(PRINT_ALL, "...found KHR_context_flush_control\n");
+		}
+	}
+	// WGL_ARB_context_flush_control
+	if ( glConfig.wglCreateContextAttribsAvailable && strstr( glConfig.extensions_string, "WGL_ARB_create_context" ) )
+	{
+		glConfig.wglContextFlushControlAvailable = qtrue;
 		ri.Printf( PRINT_ALL, "...found KHR_context_flush_control\n" );
 	}
 
@@ -1880,6 +1977,10 @@ static void GLW_InitExtensions( void )
 		qglPatchParameteri = (void (APIENTRY*) (GLenum, GLint)) qwglGetProcAddress("glPatchParameteri");
 	}
 #endif
+
+	if (createFakeContext) {
+		DestroyFakeWindow();
+	}
 }
 
 /*
@@ -1944,6 +2045,8 @@ static qboolean GLW_LoadOpenGL( )
 	if ( QGL_Init( buffer ) ) 
 	{
 		cdsFullscreen = (qboolean)r_fullscreen->integer;
+
+		GLW_InitExtensions(qtrue); // Wanna do it here now instead in order to know if we have flush_control
 
 		// create the window and set up the context
 		if ( !GLW_StartDriverAndSetMode( r_mode->integer, r_colorbits->integer, cdsFullscreen ) )
@@ -2049,40 +2152,13 @@ void GLimp_Init( void )
 
 	r_allowSoftwareGL = ri.Cvar_Get( "r_allowSoftwareGL", "0", CVAR_LATCH );
 
+
+
+
 	// load appropriate DLL and initialize subsystem
 	GLW_StartOpenGL();
 
-	// get our config strings
-	const char* glstring;
-	glstring = (const char *)qglGetString (GL_VENDOR);
-	if (!glstring) {
-		glstring = "invalid driver";
-	}
-	Q_strncpyz( glConfig.vendor_string, glstring, sizeof( glConfig.vendor_string ) );
-	glstring = (const char *)qglGetString (GL_RENDERER);
-	if (!glstring) {
-		glstring = "invalid driver";
-	}
-	Q_strncpyz( glConfig.renderer_string, glstring, sizeof( glConfig.renderer_string ) );
-	glstring = (const char *)qglGetString (GL_VERSION);
-	if (!glstring) {
-		glstring = "invalid driver";
-	}
-	Q_strncpyz( glConfig.version_string, glstring, sizeof( glConfig.version_string ) );
-	glstring = (const char *)qglGetString (GL_EXTENSIONS);
-	if (!glstring) {
-		glstring = "invalid driver";
-	}
-	Q_strncpyz( glConfig.extensions_string, glstring, sizeof( glConfig.extensions_string ) );
-
-	// OpenGL driver constants
-	qglGetIntegerv( GL_MAX_TEXTURE_SIZE, &glConfig.maxTextureSize );
-	// stubbed or broken drivers may have reported 0...
-	if ( glConfig.maxTextureSize <= 0 ) 
-	{
-		glConfig.maxTextureSize = 0;
-	}
-	GLW_InitExtensions();
+	
 
 	//
 	// chipset specific configuration
@@ -2236,6 +2312,73 @@ void GLimp_Shutdown( void )
 
 	memset( &glConfig, 0, sizeof( glConfig ) );
 	memset( &glState, 0, sizeof( glState ) );
+}
+
+
+static void DestroyFakeWindow( void )
+{
+	int retVal;
+
+	// FIXME: Brian, we need better fallbacks from partially initialized failures
+	if ( !qwglMakeCurrent ) {
+		return;
+	}
+
+	ri.Printf( PRINT_ALL, "Closing fake window\n" );
+
+	// set current context to NULL
+	if ( qwglMakeCurrent )
+	{
+		retVal = qwglMakeCurrent( NULL, NULL ) != 0;
+	}
+
+	if ( glw_state.pbuf.hGLRC )
+	{
+		retVal = qwglDeleteContext( glw_state.pbuf.hGLRC ) != 0;
+		glw_state.pbuf.hGLRC = NULL;
+	}
+
+	if ( glw_state.pbuf.hDC )
+	{
+		retVal = qwglReleasePbufferDCARB( glw_state.pbuf.buffer, glw_state.pbuf.hDC ) != 0;
+		glw_state.pbuf.hDC = NULL;
+	}
+
+	if ( glw_state.pbuf.buffer )
+	{
+		retVal = qwglDestroyPbufferARB( glw_state.pbuf.buffer ) != 0;
+		glw_state.pbuf.buffer = NULL;
+	}
+
+	// delete HGLRC
+	if ( glw_state.hGLRC )
+	{
+		retVal = qwglDeleteContext( glw_state.hGLRC ) != 0;
+		glw_state.hGLRC = NULL;
+	}
+
+	// release DC
+	if ( glw_state.hDC )
+	{
+		retVal = ReleaseDC( g_wv.hWnd, glw_state.hDC ) != 0;
+		glw_state.hDC   = NULL;
+	}
+
+	// destroy window
+	if ( g_wv.hWnd )
+	{
+		DestroyWindow( g_wv.hWnd );
+		g_wv.hWnd = NULL;
+		glw_state.pixelFormatSet = qfalse;
+	}
+
+	// close the r_logFile
+	if ( glw_state.log_fp )
+	{
+		fclose( glw_state.log_fp );
+		glw_state.log_fp = 0;
+	}
+
 }
 
 /*
