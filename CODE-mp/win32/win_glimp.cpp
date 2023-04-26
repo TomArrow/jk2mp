@@ -27,7 +27,7 @@ extern void WG_RestoreGamma( void );
 static qboolean GLW_CreateWindow( int width, int height, int colorbits, qboolean cdsFullscreen, qboolean show = qtrue);
 static void DestroyFakeWindow(void);
 
-//#define SPINWAIT
+//#define SPINWAIT2
 
 // TODO:
 // Try these two things to fix r_smp performance:
@@ -2487,7 +2487,6 @@ void *GLimp_RendererSleep( void ) {
 	}
 
 	ResetEventWrap( renderCompletedEvent );
-	ResetEventWrap( renderCommandsEvent );
 
 	data = smpData;
 
@@ -2520,5 +2519,6 @@ void GLimp_WakeRenderer( void *data ) {
 
 	//WaitForSingleObject( renderActiveEvent, INFINITE );
 	WaitEventWrap( renderActiveEvent );
+	ResetEventWrap(renderCommandsEvent);
 }
 
