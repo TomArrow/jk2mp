@@ -506,7 +506,7 @@ static void CG_UpdateThirdPersonCameraDamp(void)
 	{	// No damping.
 		VectorCopy(cameraIdealLoc, cameraCurLoc);
 	}
-	else if (dampfactor>=0.0)
+	else if (dampfactor>0.0)
 	{	
 		dampfactor = 1.0-dampfactor;	// We must exponent the amount LEFT rather than the amount bled off
 
@@ -562,6 +562,9 @@ static void CG_UpdateThirdPersonCameraDamp(void)
 			VectorMA(cameraIdealLoc, -ratio, locdiff, cameraCurLoc);
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////
 		}
+	}
+	else {
+		
 	}
 
 	// Now we trace from the new target location to the new view location, to make sure there is nothing in the way.
