@@ -63,10 +63,13 @@ cvar_t		*s_maxSpeed; // maximum speed at which sounds can be played back when sp
 cvar_t		*s_minSpeed; // minimum speed at which soudns can be played back when speed aware audio is on.
 cvar_t		*s_musicVolume;
 cvar_t		*s_language;
+cvar_t		*s_lowQualityResample;
 
 cvar_t		*s_doppler;
 cvar_t		*s_dopplerSpeed;
 cvar_t		*s_dopplerFactor;
+
+cvar_t		*s_debugResample;
 
 cvar_t		*s_timescale;
 cvar_t		*s_forceScale;
@@ -119,12 +122,14 @@ void S_Init( void ) {
 	s_maxSpeed = Cvar_Get ("s_maxSpeed", "inf", CVAR_ARCHIVE);
 	s_minSpeed = Cvar_Get ("s_minSpeed", "0", CVAR_ARCHIVE);
 	s_musicVolume = Cvar_Get ("s_musicvolume", "0", CVAR_ARCHIVE);
+	s_lowQualityResample = Cvar_Get ("s_lowQualityResample", "0", CVAR_ARCHIVE);
 
 	s_language = Cvar_Get("s_language","english",CVAR_ARCHIVE | CVAR_NORESTART);
 
 	s_doppler = Cvar_Get ("s_doppler", "1", CVAR_ARCHIVE);
 	s_dopplerSpeed = Cvar_Get ("s_dopplerSpeed", "4000", CVAR_ARCHIVE);
 	s_dopplerFactor = Cvar_Get ("s_dopplerFactor", "1", CVAR_ARCHIVE);
+	s_debugResample = Cvar_Get ("s_debugResample", "0", CVAR_ARCHIVE);
 	s_timescale = Cvar_Get ("s_timescale", "1", CVAR_ARCHIVE);
 	s_attenuate = Cvar_Get ("s_attenuate", "1.7", CVAR_ARCHIVE);
 	s_playScale = 1.0f;

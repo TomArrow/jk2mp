@@ -226,7 +226,7 @@ static double mixShiftInverseMultiplier = 1/ mixShiftMultiplier;
 static double mixShiftDoubleMultiplier = mixShiftMultiplier* mixShiftMultiplier;
 static double mixShiftDoubleInverseMultiplier = 1/ mixShiftDoubleMultiplier;
 
-static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, short* outputADM = nullptr, int outputADMOffsetPerSample =0, vec3_t admPosition = nullptr,qboolean lowQuality = qfalse) {
+static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, int channelIndex, short* outputADM = nullptr, int outputADMOffsetPerSample =0, vec3_t admPosition = nullptr,qboolean lowQuality = qfalse) {
 	const mixSound_t *sound;
 	int i, leftVol, rightVol;
 	int64_t index, indexAdd, indexLeft;
@@ -290,15 +290,44 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output, s
 			ch->handle = 0;
 			ch->resampler = nullptr;
 		}
+
+		if (s_debugResample->integer >= 1) {
+			for (int i = 0; i < count; i++) {
+				if (resampleBuffer[i] == SHRT_MAX) {
+					Com_Printf("Resampler returned SHRT_MAX at position %d/%d, sample pos %d/%d, sound %s (%s), %d, soxr error %d, speed %f (S_MixChannel)\n", i + 1, count, ch->index >> MIX_SHIFT, sound->samples >> MIX_SHIFT, (sfxEntries + ch->handle)->name, ch->resampler->IsFinished() ? "finished" : "active", channelIndex, ch->resampler->GetError(), actualSpeed);
+				}
+				else if (resampleBuffer[i] == SHRT_MIN) {
+					Com_Printf("Resampler returned SHRT_MIN at position %d/%d, sample pos %d/%d, sound %s (%s), %d, soxr error %d, speed %f (S_MixChannel)\n", i + 1, count, ch->index >> MIX_SHIFT, sound->samples >> MIX_SHIFT, (sfxEntries + ch->handle)->name, ch->resampler->IsFinished() ? "finished" : "active", channelIndex, ch->resampler->GetError(), actualSpeed);
+				}
+			}
+		}
+
 	}
 	else {
-		size_t inputAdvance = ch->resampler->getSamples(actualSpeed, resampleBuffer, count, (short*)sound->data, sound->samples >> MIX_SHIFT, ch->index >> MIX_SHIFT, false);
 
-		ch->index += inputAdvance << MIX_SHIFT; // Need to move away from this weirdness at some point...
-		if ( /*ch->index >= sound->samples*/ ch->resampler->IsFinished()) { // End of sound reached.
+		if (count == 0 && s_debugResample->integer == 3) {
+			Com_Printf("Zero samples requested from resampler (S_MixChannel).\n");
+		}
+		if(count > 0){
+			size_t inputAdvance = ch->resampler->getSamples(actualSpeed, resampleBuffer, count, (short*)sound->data, sound->samples >> MIX_SHIFT, ch->index >> MIX_SHIFT, false);
 
-			ch->handle = 0;
-			ch->resampler = nullptr;
+			if (s_debugResample->integer >= 1) {
+				for (int i = 0; i < count; i++) {
+					if (resampleBuffer[i] == SHRT_MAX) {
+						Com_Printf("Resampler returned SHRT_MAX at position %d/%d, sample pos %d/%d, sound %s (%s), %d, soxr error %d, speed %f (S_MixChannel)\n", i+1, count, ch->index >> MIX_SHIFT, sound->samples >> MIX_SHIFT, (sfxEntries + ch->handle)->name, ch->resampler->IsFinished() ? "finished" : "active", channelIndex, ch->resampler->GetError(), actualSpeed);
+					}
+					else if (resampleBuffer[i] == SHRT_MIN) {
+						Com_Printf("Resampler returned SHRT_MIN at position %d/%d, sample pos %d/%d, sound %s (%s), %d, soxr error %d, speed %f (S_MixChannel)\n", i+1, count, ch->index >> MIX_SHIFT, sound->samples >> MIX_SHIFT, (sfxEntries + ch->handle)->name, ch->resampler->IsFinished() ? "finished" : "active", channelIndex, ch->resampler->GetError(), actualSpeed);
+					}
+				}
+			}
+
+			ch->index += inputAdvance << MIX_SHIFT; // Need to move away from this weirdness at some point...
+			if ( /*ch->index >= sound->samples*/ ch->resampler->IsFinished()) { // End of sound reached.
+
+				ch->handle = 0;
+				ch->resampler = nullptr;
+			}
 		}
 	}
 
@@ -396,7 +425,7 @@ skip_alloc:;
 	activeCount = 0;
 	short* admDisplacedPointer = outputADM;
 	mmeADMChannelInfo_t* displacedAdmChannelInfoArray = admChannelInfoArray;
-	channelIndex = 0; // For ADM
+	channelIndex = 0; // For ADM and debug
 	for (;channels>0;channels--, ch++, channelIndex++) {
 		if (ch->handle <= 0 )
 			continue;
@@ -463,7 +492,7 @@ skip_alloc:;
 			
 
 			vec3_t admPosition;
-			S_MixChannel(ch, speed, count, output, admDisplacedPointer, admTotalChannelCount, admPosition,lowQuality);
+			S_MixChannel(ch, speed, count, output, channelIndex, admDisplacedPointer, admTotalChannelCount, admPosition,lowQuality);
 			mmeADMBlock_t* currentBlock = &displacedAdmChannelInfoArray->objects.back().blocks.back();
 			VectorCopy(admPosition, currentBlock->position);
 
@@ -471,7 +500,7 @@ skip_alloc:;
 			//displacedAdmChannelInfoArray++;
 		}
 		else {
-			S_MixChannel(ch, speed, count, output, admDisplacedPointer, admTotalChannelCount,nullptr,lowQuality);
+			S_MixChannel(ch, speed, count, output, channelIndex, admDisplacedPointer, admTotalChannelCount,nullptr,lowQuality);
 		}
 	}
 
@@ -550,8 +579,23 @@ static void S_MixLoop( mixLoop_t *loop, const loopQueue_t *lq, int speed, int co
 
 	}
 	else {
-		size_t inputAdvance = loop->resampler->getSamples(actualSpeed, resampleBuffer, count, (short*)sound->data, sound->samples >> MIX_SHIFT, loop->index >> MIX_SHIFT, true);
-		loop->index += inputAdvance << MIX_SHIFT; // Need to move away from this weirdness at some point...
+		if (count == 0 && s_debugResample->integer == 3) {
+			Com_Printf("Zero samples requested from resampler (S_MixLoop).\n");
+		}
+		if(count > 0){
+			size_t inputAdvance = loop->resampler->getSamples(actualSpeed, resampleBuffer, count, (short*)sound->data, sound->samples >> MIX_SHIFT, loop->index >> MIX_SHIFT, true);
+			if (s_debugResample->integer >= 1) {
+				for (int i = 0; i < count; i++) {
+					if (resampleBuffer[i] == SHRT_MAX) {
+						Com_Printf("Resampler returned SHRT_MAX at position %d/%d, sound %s (%s), %d (S_MixLoop)\n",i+1, count, (sfxEntries + loop->handle)->name, loop->resampler->IsFinished() ? "finished" : "active", loop->index);
+					}
+					else if (resampleBuffer[i] == SHRT_MIN) {
+						Com_Printf("Resampler returned SHRT_MIN at position %d/%d, sound %s (%s), %d (S_MixLoop)\n", i+1, count, (sfxEntries + loop->handle)->name, loop->resampler->IsFinished() ? "finished" : "active", loop->index);
+					}
+				}
+			}
+			loop->index += inputAdvance << MIX_SHIFT; // Need to move away from this weirdness at some point...
+		}
 	}
 
 	

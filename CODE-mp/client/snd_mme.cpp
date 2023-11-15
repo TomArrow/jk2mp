@@ -495,8 +495,8 @@ void S_MMEUpdate(float scale) {
 			Com_Memset(mixTemp, 0, sizeof(int) * count * 2);
 			Com_Memset(mixTempADM.get(), 0, sizeof(short) * count * ADMchannelcount);
 			if (speed > 0) {
-				S_MixChannels(mmeSound.channels, MME_SNDCHANNELS, speed, count, mixTemp, mixTempADM.get(), ADMchannelcount, mmeSound.adm_channelInfo, mmeSound.admAbsoluteTime);
-				S_MixLoops(mmeSound.loops, MME_LOOPCHANNELS, speed, count, mixTemp, mixTempADM.get()+ MME_SNDCHANNELS, ADMchannelcount, mmeSound.adm_channelInfo+ MME_SNDCHANNELS, mmeSound.admAbsoluteTime);
+				S_MixChannels(mmeSound.channels, MME_SNDCHANNELS, speed, count, mixTemp, mixTempADM.get(), ADMchannelcount, mmeSound.adm_channelInfo, mmeSound.admAbsoluteTime,(qboolean)s_lowQualityResample->integer);
+				S_MixLoops(mmeSound.loops, MME_LOOPCHANNELS, speed, count, mixTemp, mixTempADM.get()+ MME_SNDCHANNELS, ADMchannelcount, mmeSound.adm_channelInfo+ MME_SNDCHANNELS, mmeSound.admAbsoluteTime, (qboolean)s_lowQualityResample->integer);
 				S_MixEffects(&mmeSound.effect, speed, count, mixTemp); //Todo make underwater stuff work with ADM.
 			}
 			S_MixClipOutput(count, mixTemp, mixClip, 0, MAXUPDATE - 1);

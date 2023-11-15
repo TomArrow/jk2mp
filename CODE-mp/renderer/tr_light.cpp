@@ -244,13 +244,13 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent, world_t* world) {
 			if (world->hdrLightGrid)
 			{
 				float* hdrData = world->hdrLightGrid + (gridPos * 6);
-				ent->ambientLight[0] += factor * hdrData[0] * 255.0f;
-				ent->ambientLight[1] += factor * hdrData[1] * 255.0f;
-				ent->ambientLight[2] += factor * hdrData[2] * 255.0f;
+				ent->ambientLight[0] += factor * hdrData[0] * r_LightBrightness->value * 255.0f;
+				ent->ambientLight[1] += factor * hdrData[1] * r_LightBrightness->value * 255.0f;
+				ent->ambientLight[2] += factor * hdrData[2] * r_LightBrightness->value * 255.0f;
 
-				ent->directedLight[0] += factor * hdrData[3] * 255.0f;
-				ent->directedLight[1] += factor * hdrData[4] * 255.0f;
-				ent->directedLight[2] += factor * hdrData[5] * 255.0f;
+				ent->directedLight[0] += factor * hdrData[3] * r_LightBrightness->value * 255.0f;
+				ent->directedLight[1] += factor * hdrData[4] * r_LightBrightness->value * 255.0f;
+				ent->directedLight[2] += factor * hdrData[5] * r_LightBrightness->value * 255.0f;
 			}
 			else
 			{
@@ -260,13 +260,13 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent, world_t* world) {
 					{
 						const byte	style = data->styles[j];
 
-						ent->ambientLight[0] += factor * data->ambientLight[j][0] * styleColors[style][0] / 255.0f;
-						ent->ambientLight[1] += factor * data->ambientLight[j][1] * styleColors[style][1] / 255.0f;
-						ent->ambientLight[2] += factor * data->ambientLight[j][2] * styleColors[style][2] / 255.0f;
+						ent->ambientLight[0] += factor * data->ambientLight[j][0] * styleColors[style][0] * r_LightBrightness->value / 255.0f;
+						ent->ambientLight[1] += factor * data->ambientLight[j][1] * styleColors[style][1] * r_LightBrightness->value / 255.0f;
+						ent->ambientLight[2] += factor * data->ambientLight[j][2] * styleColors[style][2] * r_LightBrightness->value / 255.0f;
 
-						ent->directedLight[0] += factor * data->directLight[j][0] * styleColors[style][0] / 255.0f;
-						ent->directedLight[1] += factor * data->directLight[j][1] * styleColors[style][1] / 255.0f;
-						ent->directedLight[2] += factor * data->directLight[j][2] * styleColors[style][2] / 255.0f;
+						ent->directedLight[0] += factor * data->directLight[j][0] * styleColors[style][0] * r_LightBrightness->value / 255.0f;
+						ent->directedLight[1] += factor * data->directLight[j][1] * styleColors[style][1] * r_LightBrightness->value / 255.0f;
+						ent->directedLight[2] += factor * data->directLight[j][2] * styleColors[style][2] * r_LightBrightness->value / 255.0f;
 					}
 					else
 					{
@@ -378,13 +378,13 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent, world_t* world) {
 			if (world->hdrLightGrid)
 			{
 				float* hdrData = world->hdrLightGrid + (gridPos * 6);
-				ent->ambientLight[0] += factor * hdrData[0] * 255.0f;
-				ent->ambientLight[1] += factor * hdrData[1] * 255.0f;
-				ent->ambientLight[2] += factor * hdrData[2] * 255.0f;
+				ent->ambientLight[0] += factor * hdrData[0] * r_LightBrightness->value * 255.0f;
+				ent->ambientLight[1] += factor * hdrData[1] * r_LightBrightness->value * 255.0f;
+				ent->ambientLight[2] += factor * hdrData[2] * r_LightBrightness->value * 255.0f;
 
-				ent->directedLight[0] += factor * hdrData[3] * 255.0f;
-				ent->directedLight[1] += factor * hdrData[4] * 255.0f;
-				ent->directedLight[2] += factor * hdrData[5] * 255.0f;
+				ent->directedLight[0] += factor * hdrData[3] * r_LightBrightness->value * 255.0f;
+				ent->directedLight[1] += factor * hdrData[4] * r_LightBrightness->value * 255.0f;
+				ent->directedLight[2] += factor * hdrData[5] * r_LightBrightness->value * 255.0f;
 			}
 			else
 			{
@@ -394,13 +394,13 @@ static void R_SetupEntityLightingGrid( trRefEntity_t *ent, world_t* world) {
 					{
 						const byte	style = data->styles[j];
 
-						ent->ambientLight[0] += factor * data->ambientLight[j][0] * styleColors[style][0] / 255.0f;
-						ent->ambientLight[1] += factor * data->ambientLight[j][1] * styleColors[style][1] / 255.0f;
-						ent->ambientLight[2] += factor * data->ambientLight[j][2] * styleColors[style][2] / 255.0f;
+						ent->ambientLight[0] += factor * data->ambientLight[j][0] * styleColors[style][0] * r_LightBrightness->value / 255.0f;
+						ent->ambientLight[1] += factor * data->ambientLight[j][1] * styleColors[style][1] * r_LightBrightness->value / 255.0f;
+						ent->ambientLight[2] += factor * data->ambientLight[j][2] * styleColors[style][2] * r_LightBrightness->value / 255.0f;
 
-						ent->directedLight[0] += factor * data->directLight[j][0] * styleColors[style][0] / 255.0f;
-						ent->directedLight[1] += factor * data->directLight[j][1] * styleColors[style][1] / 255.0f;
-						ent->directedLight[2] += factor * data->directLight[j][2] * styleColors[style][2] / 255.0f;
+						ent->directedLight[0] += factor * data->directLight[j][0] * styleColors[style][0] * r_LightBrightness->value / 255.0f;
+						ent->directedLight[1] += factor * data->directLight[j][1] * styleColors[style][1] * r_LightBrightness->value / 255.0f;
+						ent->directedLight[2] += factor * data->directLight[j][2] * styleColors[style][2] * r_LightBrightness->value / 255.0f;
 					}
 					else
 					{

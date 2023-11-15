@@ -132,6 +132,8 @@ cvar_t* r_gammaLegacy;
 cvar_t* r_gammaLegacyPrecision;
 cvar_t* r_gammaSrgbLightvalues;
 cvar_t* r_HUDBrightness;
+cvar_t* r_LightmapBrightness;
+cvar_t* r_LightBrightness;
 
 cvar_t* r_hideMissingModels;
 
@@ -966,6 +968,8 @@ void R_Register( void )
 	r_gammaLegacyPrecision = ri.Cvar_Get("r_gammaLegacyPrecision", "2", CVAR_ARCHIVE);
 	r_gammaSrgbLightvalues = ri.Cvar_Get("r_gammaSrgbLightvalues", "1", CVAR_ARCHIVE);
 	r_HUDBrightness = ri.Cvar_Get("r_HUDBrightness", "0.5", CVAR_ARCHIVE);
+	r_LightmapBrightness = ri.Cvar_Get("r_LightmapBrightness", "1.0", CVAR_ARCHIVE);
+	r_LightBrightness = ri.Cvar_Get("r_LightBrightness", "1.0", CVAR_ARCHIVE);
 
 	r_hideMissingModels = ri.Cvar_Get("r_hideMissingModels", "1", CVAR_ARCHIVE);
 

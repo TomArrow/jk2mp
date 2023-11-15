@@ -475,6 +475,9 @@ Ghoul2 Insert End
   int shaderStates[MAX_STATES_PER_SHADER];          // index to valid shader states
 
 	struct	shader_s	*next;
+
+
+	qboolean hasLightmapStage;
 } shader_t;
 
 typedef struct shaderState_s {
@@ -1258,6 +1261,8 @@ extern cvar_t* r_hdr;
 
 
 extern cvar_t* r_HUDBrightness;
+extern cvar_t* r_LightmapBrightness;
+extern cvar_t* r_LightBrightness;
 
 extern cvar_t* r_hideMissingModels; // don't draw the colorful RGB null axis
 

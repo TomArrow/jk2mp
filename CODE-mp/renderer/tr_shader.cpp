@@ -3259,6 +3259,8 @@ static shader_t *FinishShader( void ) {
 		}
 	}
 
+	shader.hasLightmapStage = hasLightmapStage;
+
 	// there are times when you will need to manually apply a sort to
 	// opaque alpha tested shaders that have later blend passes
 	if ( !shader.sort ) {

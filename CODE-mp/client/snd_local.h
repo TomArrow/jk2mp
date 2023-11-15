@@ -123,10 +123,13 @@ extern cvar_t	*s_maxSpeed;
 extern cvar_t	*s_minSpeed;
 extern cvar_t	*s_musicVolume;
 extern cvar_t	*s_khz;
+extern cvar_t	*s_lowQualityResample;
 
 extern cvar_t	*s_doppler;
 extern cvar_t	*s_dopplerSpeed;
 extern cvar_t	*s_dopplerFactor;
+
+extern cvar_t	* s_debugResample;
 
 extern cvar_t	*s_attenuate;
 

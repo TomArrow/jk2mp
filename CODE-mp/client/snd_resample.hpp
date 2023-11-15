@@ -26,8 +26,9 @@ class piecewiseResample {
 
 public:
 	bool IsFinished() { return isFinished; }
+	bool GetError() { return error; }
 	piecewiseResample(int channelCount = 1) {
-
+		//io_spec.flags |= SOXR_NO_DITHER;
 		soxrRef = soxr_create(1, 1, channelCount, &error, &io_spec, &q_spec, NULL);
 	}
 	~piecewiseResample() {
