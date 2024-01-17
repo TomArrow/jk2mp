@@ -69,6 +69,13 @@ localEntity_t	*CG_AllocLocalEntity( void ) {
 	le = cg_freeLocalEntities;
 	cg_freeLocalEntities = cg_freeLocalEntities->next;
 
+	if (le->refEntity.ghoul2) {
+		if (trap_G2_HaveWeGhoul2Models(le->refEntity.ghoul2))
+		{
+			trap_G2API_CleanGhoul2Models(&le->refEntity.ghoul2);
+		}
+	}
+
 	memset( le, 0, sizeof( *le ) );
 
 	// link into the active list

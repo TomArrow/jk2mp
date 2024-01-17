@@ -510,12 +510,15 @@ static void CG_General( centity_t *cent ) {
 	if (cent->currentState.modelGhoul2 >= G2_MODELPART_HEAD &&
 		cent->currentState.modelGhoul2 <= G2_MODELPART_RLEG &&
 		cent->currentState.modelindex < MAX_CLIENTS &&
-		cent->currentState.weapon == G2_MODEL_PART &&
-		!mov_dismember.integer)
+		cent->currentState.weapon == G2_MODEL_PART)
 	{ //special case for client limbs
 		centity_t *clEnt;
 		int dismember_settings = cg_dismember.integer;
 		
+		if (!mov_dismember.integer) {
+			return;
+		}
+
 		doNotSetModel = qtrue;
 
 		if (cent->currentState.modelindex >= 0 || demo15detected) {

@@ -672,6 +672,7 @@ vmCvar_t	mov_camerafps;
 
 vmCvar_t	mov_dismember;
 vmCvar_t	mov_dismemberCheckSegments;
+vmCvar_t	mov_gib;
 vmCvar_t	mov_forceNTdemo;
 
 vmCvar_t	mov_absorbVisibility;
@@ -814,7 +815,7 @@ static cvarTable_t cvarTable[] = { // bk001129
 
 	{ &cg_animBlend, "cg_animBlend", "1", NULL, 0 },
 
-	{ &cg_dismember, "cg_dismember", "0", NULL, CVAR_ARCHIVE },
+	{ &cg_dismember, "cg_dismember", "2", NULL, CVAR_ARCHIVE },
 
 	//jk2pro Client Cvars start (ported from eternaljk2mv)
 	//{ &cg_raceTimer, "cg_raceTimer", "3", 0 },
@@ -950,6 +951,7 @@ Ghoul2 Insert End
 	{ &mov_wallhack,		"mov_wallhack",			"0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_camerafps,		"mov_camerafps",		"125",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_dismember,		"mov_dismember",		"2",			NULL,	CVAR_ARCHIVE	},
+	{ &mov_gib,				"mov_gib",				"1",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_dismemberCheckSegments,		"mov_dismemberCheckSegments",		"10",			NULL,	CVAR_ARCHIVE	}, // How many segments is saber divided into to check for dismemberment? Higher segment count = more precise. Is increased if player's max saber length is higher than default.
 	{ &mov_forceNTdemo,		"mov_forceNTdemo",		"0",  CG_ForceNTDemo,	CVAR_ARCHIVE	},
 	{ &mov_absorbVisibility,"mov_absorbVisibility",	"0",			NULL,	CVAR_ARCHIVE	},

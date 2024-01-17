@@ -1391,7 +1391,8 @@ void CG_DemoDismembermentEvent( centity_t *cent, vec3_t position ) {
 
 #ifdef GIB
 				// Gib on explosive deaths
-				if (meansOfDeath == MOD_FLECHETTE || // TODO: Is this really exhaustive?
+				if (mov_gib.integer &&
+					(meansOfDeath == MOD_FLECHETTE || // TODO: Is this really exhaustive?
 					meansOfDeath == MOD_FLECHETTE_ALT_SPLASH ||
 					meansOfDeath == MOD_ROCKET ||
 					meansOfDeath == MOD_ROCKET_SPLASH ||
@@ -1401,7 +1402,7 @@ void CG_DemoDismembermentEvent( centity_t *cent, vec3_t position ) {
 					meansOfDeath == MOD_THERMAL_SPLASH ||
 					meansOfDeath == MOD_TRIP_MINE_SPLASH ||
 					meansOfDeath == MOD_TIMED_MINE_SPLASH ||
-					meansOfDeath == MOD_DET_PACK_SPLASH) {
+					meansOfDeath == MOD_DET_PACK_SPLASH)) {
 
 					int target = es->otherEntityNum;
 					//int attacker = es->otherEntityNum2;

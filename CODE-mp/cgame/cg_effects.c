@@ -1213,7 +1213,7 @@ Generated a bunch of gibs launching out from the bodies location
 void CG_GibPlayer(vec3_t playerOrigin, vec3_t baseVelocity) {
 	vec3_t	origin, velocity, normalUp;
 
-	if (!cg_blood.integer) {
+	if (!cg_blood.integer || !mov_gib.integer) {
 		return;
 	}
 	normalUp[0] = 1;
