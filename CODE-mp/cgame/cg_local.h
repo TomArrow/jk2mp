@@ -1613,7 +1613,7 @@ typedef struct {
 
 	int				levelStartTime;
 
-	int				scores1, scores2;		// from configstrings
+	int				scores1, scores2, scores3;		// from configstrings
 	int				jediMaster;
 	int				duelWinner;
 	int				duelist1;
@@ -1646,6 +1646,11 @@ Ghoul2 Insert End
 	vec3_t			*inlineModelMidpoints;
 
 	clientInfo_t	clientinfo[MAX_CLIENTS];
+
+	// We may wanna draw already disconnected players on the scoreboard. Remember their stuff and their disconnect times.
+	clientInfo_t	lastValidClientinfo[MAX_CLIENTS];
+	int				disconnectTime[MAX_CLIENTS];
+	score_t			lastValidScoreboardEntry[MAX_CLIENTS];
 
 	char			clientOverride[MAX_CLIENTS][MAX_INFO_STRING];
 	char			redOverride[MAX_INFO_STRING];
@@ -1770,6 +1775,16 @@ extern	vmCvar_t		cg_simpleItems;
 extern	vmCvar_t		cg_fov;
 extern	vmCvar_t		cg_distanceAwareFov;
 extern	vmCvar_t		cg_zoomFov;
+
+extern	vmCvar_t		cg_eternalScoreboard;
+extern	vmCvar_t		cg_colorScoreboard;
+extern	vmCvar_t		cg_smallScoreboard;
+extern	vmCvar_t		cg_drawScoreboardIcons;
+extern	vmCvar_t		cg_scoreboardDisconnectedPlayersDrawTime;
+extern	vmCvar_t		cg_drawScoresAlways;
+extern	vmCvar_t		cg_drawInventory;
+extern	vmCvar_t		cg_drawPowerUpIcons;
+extern	vmCvar_t		cg_drawFlagPowerupIcon;
 
 extern	vmCvar_t		cg_swingAngles;
 
@@ -2284,6 +2299,7 @@ void CG_DrawInformation( void );
 // cg_scoreboard.c
 //
 qboolean CG_DrawOldScoreboard( void );
+qboolean CG_DrawOldScoreboardEternal( void );
 void CG_DrawOldTourneyScoreboard( void );
 
 //

@@ -1052,6 +1052,9 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 	strings[5] = CG_ConfigString( clientNum + CS_PLAYERS );
 	if ( !strings[5][0] ) {
 		memset( ci, 0, sizeof( *ci ) );
+		if (!cgs.disconnectTime[clientNum]) {
+			cgs.disconnectTime[clientNum] = cg.time;
+		}
 		return;		// player just left
 	}
 	strings[0] = cgs.clientOverride[clientNum];
@@ -1286,6 +1289,10 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 		trap_G2API_CleanGhoul2Models(&ci->ghoul2Model);
 	}
 	*ci = newInfo;
+
+	cgs.disconnectTime[clientNum] = 0;
+	cgs.lastValidClientinfo[clientNum] = newInfo; // We may wanna show people on the scoreboard who already disconnected. Remember stuff about them.
+
 
 	//force a weapon change anyway, for all clients being rendered to the current client
 	while (i < MAX_CLIENTS)

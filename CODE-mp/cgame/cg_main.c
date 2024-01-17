@@ -494,6 +494,16 @@ vmCvar_t	cg_fov;
 vmCvar_t	cg_distanceAwareFov;
 vmCvar_t	cg_zoomFov;
 
+vmCvar_t	cg_eternalScoreboard;
+vmCvar_t	cg_colorScoreboard;
+vmCvar_t	cg_smallScoreboard;
+vmCvar_t	cg_drawScoreboardIcons;
+vmCvar_t	cg_scoreboardDisconnectedPlayersDrawTime;
+vmCvar_t	cg_drawScoresAlways;
+vmCvar_t	cg_drawInventory;
+vmCvar_t	cg_drawPowerUpIcons;
+vmCvar_t	cg_drawFlagPowerupIcon;
+
 vmCvar_t	cg_swingAngles;
 
 vmCvar_t	cg_oldPainSounds;
@@ -978,6 +988,16 @@ Ghoul2 Insert End
 	{ &cg_trueRoll,			"cg_trueRoll",			"2",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_trueSaber,		"cg_trueSaber",			"0",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_trueSpin,			"cg_trueSpin",			"1",			NULL,	CVAR_ARCHIVE	},
+
+	{ &cg_eternalScoreboard,"cg_eternalScoreboard",	"1",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_smallScoreboard,	"cg_smallScoreboard",	"0",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_colorScoreboard,	"cg_colorScoreboard",	"0",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_drawScoreboardIcons,"cg_drawScoreboardIcons",	"0",		NULL,	CVAR_ARCHIVE	},
+	{ &cg_scoreboardDisconnectedPlayersDrawTime,"cg_scoreboardDisconnectedPlayersDrawTime",	"30",NULL,	CVAR_ARCHIVE	},
+	{ &cg_drawScoresAlways,	"cg_drawScoresAlways",	"1",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_drawInventory,	"cg_drawInventory",		"1",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_drawPowerUpIcons,	"cg_drawPowerUpIcons",		"1",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_drawFlagPowerupIcon,"cg_drawFlagPowerupIcon",		"0",			NULL,	CVAR_ARCHIVE	},
 };
 
 static int  cvarTableSize = sizeof( cvarTable ) / sizeof( cvarTable[0] );

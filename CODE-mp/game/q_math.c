@@ -1481,3 +1481,7 @@ int irand(int min, int max)
 	result = ((result * (max - min)) >> 15) + min;
 	return(result);
 }
+
+float sRGBToLinear(const float n) {
+	return (n > 0.04045f ? (float)pow((n + 0.055) / 1.055, 2.4) : n / 12.92f);
+}
