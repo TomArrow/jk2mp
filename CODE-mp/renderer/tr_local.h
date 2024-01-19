@@ -100,6 +100,13 @@ typedef struct {
 	float		modelMatrix[16];
 } orientationr_t;
 
+typedef struct {
+	const char* name;
+	int	minimize, maximize;
+} textureMode_t;
+
+const textureMode_t* GetTextureMode(const char* name);
+
 typedef struct image_s {
 	char		imgName[MAX_QPATH];		// game path, including extension
 	int			width, height;				// source image
@@ -430,6 +437,7 @@ typedef struct shader_s {
 	qboolean	noMipMaps;				// for console fonts, 2D elements, etc.
 	qboolean	noPicMip;				// for images that must always be full resolution
 	qboolean	noTC;					// for images that don't wnt to be texture compressed (eg skies)
+	const textureMode_t* textureMode;		// NULL = follow r_texturemode
 
 	fogPass_t	fogPass;				// draw a blended pass, possibly with depth test equals
 
@@ -1329,6 +1337,7 @@ extern	cvar_t	*r_noServerGhoul2;
 Ghoul2 Insert End
 */
 
+extern	cvar_t* r_consoleFont;
 extern	cvar_t* r_fontSharpness;
 extern	cvar_t* r_font3DBrightness;
 

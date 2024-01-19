@@ -2335,6 +2335,13 @@ static qboolean ParseShader( const char **text )
 			shader.noPicMip = qtrue;
 			continue;
 		}
+		// for high resolution UI elements
+		else if (!Q_stricmp(token, "uielement") || !Q_stricmp(token, "uielementhd"))
+		{
+			shader.noMipMaps = qtrue;
+			shader.noPicMip = qtrue;
+			continue;
+		}
 		// no picmip adjustment
 		else if ( !Q_stricmp( token, "nopicmip" ) )
 		{
@@ -2350,6 +2357,13 @@ static qboolean ParseShader( const char **text )
 		else if ( !Q_stricmp( token, "polygonOffset" ) )
 		{
 			shader.polygonOffset = qtrue;
+			continue;
+		}
+		// force texturemode, regardless of r_texturemode cvar value
+		else if (!Q_stricmp(token, "texturemode"))
+		{
+			token = COM_ParseExt(text, qfalse);
+			shader.textureMode = GetTextureMode(token); // TODO Make this do something?
 			continue;
 		}
 		else if ( !Q_stricmp( token, "noTC" ) )

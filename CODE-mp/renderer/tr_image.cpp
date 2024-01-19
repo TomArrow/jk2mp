@@ -71,10 +71,7 @@ void R_GammaCorrect( byte *buffer, int bufSize ) {
 	}
 }
 
-typedef struct {
-	char *name;
-	int	minimize, maximize;
-} textureMode_t;
+
 
 textureMode_t modes[] = {
 	{"GL_NEAREST", GL_NEAREST, GL_NEAREST},
@@ -975,7 +972,12 @@ static void Upload32( T *picData,
 	}
 done:
 
-	if (mipmap)
+	/*if (upload->textureMode)
+	{
+		qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, upload->textureMode->minimize);
+		qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, upload->textureMode->maximize);
+	}
+	else*/ if (mipmap)
 	{
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
@@ -1327,6 +1329,26 @@ image_t *R_CreateImage( const char *name, const textureImage_t *picWrap, int wid
 	return image;
 }
 #endif // !DEDICATED
+
+
+/*
+=================
+GetTextureMode
+=================
+*/
+const textureMode_t* GetTextureMode(const char* name)
+{
+#ifndef DEDICATED
+	for (size_t i = 0; i < ARRAY_LEN(modes); i++) {
+		if (!Q_stricmp(modes[i].name, name)) {
+			return &modes[i];
+		}
+	}
+#endif
+
+	return NULL;
+}
+
 /*
 =========================================================
 

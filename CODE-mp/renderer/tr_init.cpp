@@ -231,6 +231,7 @@ cvar_t	*r_Ghoul2UnSqashAfterSmooth=0;
 Ghoul2 Insert End
 */
 
+cvar_t* r_consoleFont;
 cvar_t* r_fontSharpness;
 cvar_t* r_font3DBrightness;
 
@@ -1104,6 +1105,8 @@ extern qboolean Sys_LowPhysicalMemory();
 	ri.Cmd_AddCommand( "modelist", R_ModeList_f );
 	ri.Cmd_AddCommand( "modelcacheinfo", RE_RegisterModels_Info_f);
 
+	r_consoleFont = ri.Cvar_Get("r_consoleFont", "1", CVAR_ARCHIVE);
+	r_consoleFont->modified = qtrue;
 	r_fontSharpness = ri.Cvar_Get("r_fontSharpness", "3", CVAR_ARCHIVE);
 	r_font3DBrightness = ri.Cvar_Get("r_font3DBrightness", "2", CVAR_ARCHIVE);
 }
