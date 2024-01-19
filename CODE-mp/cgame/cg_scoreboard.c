@@ -115,6 +115,7 @@ static int SB_NAME_X = (SB_SCORELINE_X_CONST + .48 * SB_SCORELINE_WIDTH_CONST);
 
 static qboolean localClient; // true if local client has been displayed
 
+extern float	r_HUDBrightness;
 
 							 /*
 =================

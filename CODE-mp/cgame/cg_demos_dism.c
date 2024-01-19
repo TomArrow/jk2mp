@@ -197,7 +197,9 @@ static void demoDismember( centity_t *cent , vec3_t dir, int part, vec3_t limbor
 	cg_entities[clientnum].torsoBolt = 1;
 	
 	////EFFECTS
-	trap_S_StartSound(limborg, cent->currentState.number, CHAN_BODY, trap_S_RegisterSound(va("sound/weapons/saber/saberhit%i.mp3",Q_irand(1,4))));
+	if (cg_dismemberSaberHitSounds.integer) {
+		trap_S_StartSound(limborg, cent->currentState.number, CHAN_BODY, trap_S_RegisterSound(va("sound/weapons/saber/saberhit%i.mp3", Q_irand(1, 4))));
+	}
 	VectorNormalize(dir);
 	trap_FX_PlayEffectID( trap_FX_RegisterEffect("saber/blood_sparks.efx"), limborg, dir );
 }

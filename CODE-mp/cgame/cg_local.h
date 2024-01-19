@@ -1923,6 +1923,8 @@ extern	vmCvar_t	cg_chatBox;
 extern	vmCvar_t	cg_chatBoxHeight;
 extern	vmCvar_t	cg_chatBoxMaxItems;
 extern	vmCvar_t	cg_commandSmooth;
+extern	vmCvar_t	cg_newSaberHitSounds;
+extern	vmCvar_t	cg_dismemberSaberHitSounds;
 
 //New MME cvars
 extern	vmCvar_t	mov_chatBeep;

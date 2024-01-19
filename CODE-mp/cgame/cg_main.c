@@ -651,6 +651,8 @@ vmCvar_t	cg_chatBox;
 vmCvar_t	cg_chatBoxHeight;
 vmCvar_t	cg_chatBoxMaxItems;
 vmCvar_t    cg_commandSmooth;
+vmCvar_t    cg_newSaberHitSounds;
+vmCvar_t    cg_dismemberSaberHitSounds;
 
 //mme
 vmCvar_t	mov_chatBeep;
@@ -934,6 +936,8 @@ Ghoul2 Insert End
 	{ &cg_chatBoxHeight,	"cg_chatBoxHeight",		"350",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_chatBoxMaxItems,	"cg_chatBoxMaxItems",	"20",			NULL,	CVAR_ARCHIVE	},
 	{ &cg_commandSmooth,	"cg_commandSmooth",		"2",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_newSaberHitSounds,	"cg_newSaberHitSounds",		"0",			NULL,	CVAR_ARCHIVE	},
+	{ &cg_dismemberSaberHitSounds,	"cg_dismemberSaberHitSounds",		"1",			NULL,	CVAR_ARCHIVE	},
 	//mme
 	{ &mme_demoFileName,	"mme_demoFileName",		"",				NULL,	0				},
 	{ &mme_chaseViewHeightFix,	"mme_chaseViewHeightFix",	"1",	NULL,	CVAR_ARCHIVE	},
