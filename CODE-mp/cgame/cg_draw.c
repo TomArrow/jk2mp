@@ -61,6 +61,7 @@ vec4_t	bluehudtint = {0.5, 0.5, 1.0, 1.0};
 vec4_t	redhudtint = {1.0, 0.5, 0.5, 1.0};
 float	*hudTintColor;
 float r_HUDBrightness;
+float r_HUDBrightnessOld;
 
 int sortedTeamPlayers[TEAM_MAXOVERLAY];
 int	numSortedTeamPlayers;
@@ -878,9 +879,7 @@ void CG_DrawHealth(int x,int y)
 
 	vec4_t scaledColor;
 	Vector4Copy(colorTable[CT_HUD_RED], scaledColor);
-#ifdef OLDHUDBRIGHTNESS
-	VectorScale(scaledColor, r_HUDBrightness, scaledColor);
-#endif
+	VectorScale(scaledColor, r_HUDBrightnessOld, scaledColor);
 	trap_R_SetColor(scaledColor);
 	CG_DrawNumField ((float)x - (float)l + ((float)l + 16.0f)*cgs.widthRatioCoef, y + 40, 3, ps->stats[STAT_HEALTH], 6, 12, 
 		NUM_FONT_SMALL,qfalse);
@@ -982,9 +981,7 @@ void CG_DrawArmor(int x,int y)
 
 	vec4_t scaledColor;
 	Vector4Copy(colorTable[CT_HUD_GREEN], scaledColor); 
-#ifdef OLDHUDBRIGHTNESS
-	VectorScale(scaledColor, r_HUDBrightness, scaledColor);
-#endif
+	VectorScale(scaledColor, r_HUDBrightnessOld, scaledColor);
 	trap_R_SetColor(scaledColor);
 	CG_DrawNumField ((float)x - (float)l + ((float)l + 18.0f + 14.0f)*cgs.widthRatioCoef, y + 40 + 14, 3, ps->stats[STAT_ARMOR], 6, 12, 
 		NUM_FONT_SMALL,qfalse);
@@ -1107,9 +1104,7 @@ static void CG_DrawAmmo(centity_t	*cent,int x,int y)
 
 	vec4_t scaledColor;
 	Vector4Copy(colorTable[numColor_i], scaledColor);
-#ifdef OLDHUDBRIGHTNESS
-	VectorScale(scaledColor, r_HUDBrightness, scaledColor);
-#endif
+	VectorScale(scaledColor, r_HUDBrightnessOld, scaledColor);
 	trap_R_SetColor(scaledColor);
 	CG_DrawNumField (640 - (640 - x - 30)*cgs.widthRatioCoef, y + 26, 3, value, 6, 12, NUM_FONT_SMALL,qfalse);
 
@@ -1268,6 +1263,7 @@ void CG_DrawHUD(centity_t	*cent)
 	score = cam_specEnt.integer == -1 || cam_specEnt.integer == cg.snap->ps.clientNum ? cg.snap->ps.persistant[PERS_SCORE] : cgs.clientinfo[cam_specEnt.integer].score;
 	
 	r_HUDBrightness = CG_Cvar_Get("r_HUDBrightness");
+	r_HUDBrightnessOld = CG_Cvar_Get("r_HUDBrightnessOld");
 
 	if (cg_hudFiles.integer)
 	{
@@ -1283,16 +1279,12 @@ void CG_DrawHUD(centity_t	*cent)
 
 		vec4_t scaledColor;
 		Vector4Copy(colorTable[CT_HUD_RED], scaledColor);
-#ifdef OLDHUDBRIGHTNESS
-		VectorScale(scaledColor, r_HUDBrightness, scaledColor);
-#endif
+		VectorScale(scaledColor, r_HUDBrightnessOld, scaledColor);
 		UI_DrawProportionalString( (x+16)*cgs.widthRatioCoef, y+40, va( "%i", cg.snap->ps.stats[STAT_HEALTH] ),
 			UI_SMALLFONT|UI_DROPSHADOW, scaledColor);
 
 		Vector4Copy(colorTable[CT_HUD_GREEN], scaledColor);
-#ifdef OLDHUDBRIGHTNESS
-		VectorScale(scaledColor, r_HUDBrightness, scaledColor);
-#endif
+		VectorScale(scaledColor, r_HUDBrightnessOld, scaledColor);
 		UI_DrawProportionalString( (x+18+14)*cgs.widthRatioCoef, y+40+14, va( "%i", cg.snap->ps.stats[STAT_ARMOR] ),
 			UI_SMALLFONT|UI_DROPSHADOW, scaledColor);
 
@@ -1320,16 +1312,12 @@ void CG_DrawHUD(centity_t	*cent)
 		}
 		
 		Vector4Copy(colorTable[CT_HUD_ORANGE], scaledColor);
-#ifdef OLDHUDBRIGHTNESS
-		VectorScale(scaledColor, r_HUDBrightness, scaledColor);
-#endif
+		VectorScale(scaledColor, r_HUDBrightnessOld, scaledColor);
 		UI_DrawProportionalString( SCREEN_WIDTH-(weapX+16+32)*cgs.widthRatioCoef, y+40, va( "%s", ammoString ),
 			UI_SMALLFONT|UI_DROPSHADOW, scaledColor);
 
 		Vector4Copy(colorTable[CT_ICON_BLUE], scaledColor);
-#ifdef OLDHUDBRIGHTNESS
-		VectorScale(scaledColor, r_HUDBrightness, scaledColor);
-#endif
+		VectorScale(scaledColor, r_HUDBrightnessOld, scaledColor);
 		UI_DrawProportionalString( SCREEN_WIDTH-(x+18+14+32)*cgs.widthRatioCoef, y+40+14, va( "%i", cg.snap->ps.fd.forcePower),
 			UI_SMALLFONT|UI_DROPSHADOW, scaledColor);
 
@@ -1354,9 +1342,7 @@ void CG_DrawHUD(centity_t	*cent)
 	/*float hudTintColorScaled[4];
 	float* hudTintFormerSetting = hudTintColor;
 	VectorCopy( hudTintColor, hudTintColorScaled);
-#ifdef OLDHUDBRIGHTNESS
-	VectorScale(hudTintColorScaled, r_HUDBrightness, hudTintColorScaled);
-#endif
+	VectorScale(hudTintColorScaled, r_HUDBrightnessOld, hudTintColorScaled);
 	hudTintColor = hudTintColorScaled;*/ // This was just an early attempt before I put it all into the shaders themselves as this wouldn't handle rgbgen const
 
 
@@ -1641,7 +1627,7 @@ void CG_DrawForceSelect( void )
 	if ( showPowersName[cg.forceSelect] ) 
 	{
 		vec4_t tmpColor;
-		Vector4Copy(colorTable[CT_ICON_BLUE], tmpColor);
+		Vector4Copy(colorTable[CT_ICON_BLUE], tmpColor); 
 #ifdef OLDHUDBRIGHTNESS
 		VectorScale(tmpColor, r_HUDBrightness, tmpColor);
 #endif
@@ -1706,7 +1692,6 @@ void CG_DrawInvenSelect( void )
 
 		vec4_t tmpColor;
 		Vector4Copy(colorTable[CT_ICON_BLUE],tmpColor);
-
 #ifdef OLDHUDBRIGHTNESS
 		VectorScale(tmpColor, r_HUDBrightness, tmpColor);
 #endif
@@ -1802,8 +1787,8 @@ void CG_DrawInvenSelect( void )
 
 #ifdef OLDHUDBRIGHTNESS
 			VectorScale(textColor, r_HUDBrightness, textColor);
-#endif
-			
+#endif 
+
 			if ( trap_SP_GetStringTextString( va("INGAME_%s",bg_itemlist[itemNdex].classname), text, sizeof( text )))
 			{
 				UI_DrawProportionalString(320, y+45, text, UI_CENTER | UI_SMALLFONT, textColor);

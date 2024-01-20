@@ -1296,7 +1296,7 @@ void CG_DrawWeaponSelect( void ) {
 		vec4_t			textColor = { .875f, .718f, .121f, 1.0f };
 		char	text[1024];
 
-#ifdef OLDHUDBRIGHTNESS
+#ifdef OLDHUDBRIGHTNESS // TODO Should this be turned on again? Dunno
 		VectorScale(textColor, r_HUDBrightness, textColor);
 #endif
 				

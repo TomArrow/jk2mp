@@ -39,6 +39,7 @@ typedef struct {
 	qhandle_t (*RegisterShader)( const char *name );
 	qhandle_t (*RegisterShaderNoMip)( const char *name );
 	qhandle_t (*RegisterShaderNoMipHUD)( const char *name );
+	qhandle_t (*RegisterShaderWithFlags)( const char *name, int shaderFlags );
 	qhandle_t (*RegisterShaderHUD)( const char *name );
 	void	(*LoadWorld)( const char *name );
 

@@ -3883,6 +3883,31 @@ qhandle_t RE_RegisterShader( const char *name ) {
 	return sh->index;
 }
 
+qhandle_t RE_RegisterShaderWithFlags( const char *name, int shaderFlags ) {
+	shader_t	*sh;
+
+	if ( strlen( name ) >= MAX_QPATH ) {
+		Com_Printf( "Shader name exceeds MAX_QPATH\n" );
+		return 0;
+	}
+
+	sh = R_FindShader( name, lightmaps2d, stylesDefault, (shaderFlags&SHAD_NOMIP) ? qfalse : qtrue );
+	
+	sh->isHud = (shaderFlags & SHAD_HUD) ? qfalse : qtrue;
+	sh->shaderFlags = shaderFlags;
+
+	// we want to return 0 if the shader failed to
+	// load for some reason, but R_FindShader should
+	// still keep a name allocated for it, so if
+	// something calls RE_RegisterShader again with
+	// the same name, we don't try looking for it again
+	if ( sh->defaultShader ) {
+		return 0;
+	}
+
+	return sh->index;
+}
+
 qhandle_t RE_RegisterShaderHUD( const char *name ) {
 	shader_t	*sh;
 

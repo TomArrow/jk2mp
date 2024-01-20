@@ -1183,7 +1183,7 @@ static void RB_FogPass( void ) {
 ComputeColors
 ===============
 */
-static void ComputeColors( shaderStage_t *pStage, int forceRGBGen, qboolean isHUD )
+static void ComputeColors( shaderStage_t *pStage, int forceRGBGen, qboolean isHUD, int shaderFlags )
 {
 	int			i;
 	color4f_t	*colors = tess.svars.colors;
@@ -1377,32 +1377,18 @@ static void ComputeColors( shaderStage_t *pStage, int forceRGBGen, qboolean isHU
 
 	if (isHUD && r_HUDBrightness->value != 1.0f) { // Brightness scaling for HUD elements
 		variousStuffMultiplier *= r_HUDBrightness->value;
-		/*for (i = 0; i < tess.numVertexes; i++)
-		{
-			tess.svars.colors[i][0] *= r_HUDBrightness->value;
-			tess.svars.colors[i][1] *= r_HUDBrightness->value;
-			tess.svars.colors[i][2] *= r_HUDBrightness->value;
-		}*/
+	}
+
+	if ((shaderFlags & SHAD_LEFTRIGHTHUD) && r_HUDBrightnessOld->value != 1.0f) { // Brightness scaling for HUD elements
+		variousStuffMultiplier *= r_HUDBrightnessOld->value;
 	}
 
 	if (tess.shader->hasLightmapStage && r_LightmapBrightness->value != 1.0f) {
 		variousStuffMultiplier *= r_LightmapBrightness->value;
-		/*for (i = 0; i < tess.numVertexes; i++)
-		{
-			tess.svars.colors[i][0] *= r_LightmapBrightness->value;
-			tess.svars.colors[i][1] *= r_LightmapBrightness->value;
-			tess.svars.colors[i][2] *= r_LightmapBrightness->value;
-		}*/
 	}
 
 	if ((/*isLit ||*/ tess.shader->hasLightmapStage) && r_LightBrightness->value != 1.0f) {
 		variousStuffMultiplier *= r_LightBrightness->value;
-		/*for (i = 0; i < tess.numVertexes; i++)
-		{
-			tess.svars.colors[i][0] *= r_LightBrightness->value;
-			tess.svars.colors[i][1] *= r_LightBrightness->value;
-			tess.svars.colors[i][2] *= r_LightBrightness->value;
-		}*/
 	}
 
 	if (variousStuffMultiplier != 1.0f) {
@@ -1713,7 +1699,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			continue;
 		}
 
-		ComputeColors( pStage, forceRGBGen, input->shader->isHud);
+		ComputeColors( pStage, forceRGBGen, input->shader->isHud, input->shader->shaderFlags);
 		ComputeTexCoords( pStage );
 
 		if ( !setArraysOnce )

@@ -954,6 +954,13 @@ signed short ClampShort( int i );
 int DirToByte( vec3_t dir );
 void ByteToDir( int b, vec3_t dir );
 
+typedef enum shaderFlags_t {
+	SHAD_HUD,
+	SHAD_NOMIP,
+	SHAD_LEFTRIGHTHUD,
+	SHAD_FONT
+};
+
 #if	1
 
 #define DotProduct(x,y)			((x)[0]*(y)[0]+(x)[1]*(y)[1]+(x)[2]*(y)[2])

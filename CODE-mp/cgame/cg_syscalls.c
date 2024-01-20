@@ -227,6 +227,10 @@ qhandle_t trap_R_RegisterShaderNoMipHUD( const char *name ) {
 	return syscall( CG_R_REGISTERSHADERNOMIPHUD, name );
 }
 
+qhandle_t trap_R_RegisterShaderWithFlags( const char *name, int shaderFlags ) {
+	return syscall(CG_R_REGISTERSHADERWITHFLAGS, name, shaderFlags );
+}
+
 qhandle_t trap_R_RegisterFont( const char *fontName )
 {
 	return syscall( CG_R_REGISTERFONT, fontName);

@@ -2993,28 +2993,28 @@ Ghoul2 Insert End
 	cgs.media.rageRecShader = trap_R_RegisterShaderNoMipHUD("gfx/mp/f_icon_ragerec");
 
 	//rww - precache other HUD graphics
-	cgs.media.HUDLeftFrame		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/static_test" );
-	cgs.media.HUDInnerLeft		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/hudleft_innerframe" );
-	cgs.media.HUDArmor1			= trap_R_RegisterShaderNoMipHUD( "gfx/hud/armor1" );
-	cgs.media.HUDArmor2			= trap_R_RegisterShaderNoMipHUD( "gfx/hud/armor2" );
-	cgs.media.HUDHealth			= trap_R_RegisterShaderNoMipHUD( "gfx/hud/health" );
-	cgs.media.HUDHealthTic		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/health_tic" );
-	cgs.media.HUDArmorTic		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/armor_tic" );
+	cgs.media.HUDLeftFrame		= trap_R_RegisterShaderWithFlags( "gfx/hud/static_test", SHAD_HUD|SHAD_LEFTRIGHTHUD|SHAD_NOMIP );
+	cgs.media.HUDInnerLeft		= trap_R_RegisterShaderWithFlags( "gfx/hud/hudleft_innerframe", SHAD_HUD | SHAD_LEFTRIGHTHUD | SHAD_NOMIP);
+	cgs.media.HUDArmor1			= trap_R_RegisterShaderWithFlags( "gfx/hud/armor1", SHAD_HUD | SHAD_LEFTRIGHTHUD | SHAD_NOMIP);
+	cgs.media.HUDArmor2			= trap_R_RegisterShaderWithFlags( "gfx/hud/armor2", SHAD_HUD | SHAD_LEFTRIGHTHUD | SHAD_NOMIP);
+	cgs.media.HUDHealth			= trap_R_RegisterShaderWithFlags( "gfx/hud/health", SHAD_HUD | SHAD_LEFTRIGHTHUD | SHAD_NOMIP);
+	cgs.media.HUDHealthTic		= trap_R_RegisterShaderWithFlags( "gfx/hud/health_tic", SHAD_HUD | SHAD_LEFTRIGHTHUD | SHAD_NOMIP);
+	cgs.media.HUDArmorTic		= trap_R_RegisterShaderWithFlags( "gfx/hud/armor_tic", SHAD_HUD | SHAD_LEFTRIGHTHUD | SHAD_NOMIP);
 	
 	cgs.media.HUDLeftStatic		= cgs.media.HUDLeftFrame;//trap_R_RegisterShaderNoMipHUD( "gfx/hud/static_test" );
 	cgs.media.HUDLeft			= cgs.media.HUDInnerLeft;//trap_R_RegisterShaderNoMipHUD( "gfx/hud/hudleft" );
 
-	cgs.media.HUDSaberStyle1	= trap_R_RegisterShaderNoMipHUD( "gfx/hud/saber_stylesFast"   );
-	cgs.media.HUDSaberStyle2	= trap_R_RegisterShaderNoMipHUD( "gfx/hud/saber_stylesMed"	  );
-	cgs.media.HUDSaberStyle3	= trap_R_RegisterShaderNoMipHUD( "gfx/hud/saber_stylesStrong" );
+	cgs.media.HUDSaberStyle1	= trap_R_RegisterShaderWithFlags( "gfx/hud/saber_stylesFast", SHAD_HUD | SHAD_LEFTRIGHTHUD | SHAD_NOMIP);
+	cgs.media.HUDSaberStyle2	= trap_R_RegisterShaderWithFlags( "gfx/hud/saber_stylesMed", SHAD_HUD | SHAD_LEFTRIGHTHUD | SHAD_NOMIP);
+	cgs.media.HUDSaberStyle3	= trap_R_RegisterShaderWithFlags( "gfx/hud/saber_stylesStrong", SHAD_HUD | SHAD_LEFTRIGHTHUD | SHAD_NOMIP);
 
-	cgs.media.HUDRightFrame		= trap_R_RegisterShaderNoMipHUD("gfx/hud/hudrightframe");
-	cgs.media.HUDInnerRight		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/hudright_innerframe" );
+	cgs.media.HUDRightFrame		= trap_R_RegisterShaderWithFlags("gfx/hud/hudrightframe", SHAD_HUD | SHAD_LEFTRIGHTHUD | SHAD_NOMIP);
+	cgs.media.HUDInnerRight		= trap_R_RegisterShaderWithFlags( "gfx/hud/hudright_innerframe", SHAD_HUD | SHAD_LEFTRIGHTHUD | SHAD_NOMIP);
 
 	// Load tics
 	for (i = 0; i < MAX_TICS; i++) {
-		forceTicPos[i].tic		= trap_R_RegisterShaderNoMipHUD( forceTicPos[i].file );
-		ammoTicPos[i].tic		= trap_R_RegisterShaderNoMipHUD( ammoTicPos[i].file );
+		forceTicPos[i].tic		= trap_R_RegisterShaderWithFlags( forceTicPos[i].file, SHAD_HUD | SHAD_LEFTRIGHTHUD | SHAD_NOMIP);
+		ammoTicPos[i].tic		= trap_R_RegisterShaderWithFlags( ammoTicPos[i].file, SHAD_HUD | SHAD_LEFTRIGHTHUD | SHAD_NOMIP);
 	}
 	
 	// get the rendering configuration from the client system

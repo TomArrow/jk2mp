@@ -132,6 +132,7 @@ cvar_t* r_gammaLegacy;
 cvar_t* r_gammaLegacyPrecision;
 cvar_t* r_gammaSrgbLightvalues;
 cvar_t* r_HUDBrightness;
+cvar_t* r_HUDBrightnessOld;
 cvar_t* r_LightmapBrightness;
 cvar_t* r_LightBrightness;
 
@@ -968,7 +969,8 @@ void R_Register( void )
 	r_gammaLegacy = ri.Cvar_Get("r_gammaLegacy", "0", CVAR_ARCHIVE);
 	r_gammaLegacyPrecision = ri.Cvar_Get("r_gammaLegacyPrecision", "2", CVAR_ARCHIVE);
 	r_gammaSrgbLightvalues = ri.Cvar_Get("r_gammaSrgbLightvalues", "1", CVAR_ARCHIVE);
-	r_HUDBrightness = ri.Cvar_Get("r_HUDBrightness", "0.5", CVAR_ARCHIVE);
+	r_HUDBrightness = ri.Cvar_Get("r_HUDBrightness", "1.0", CVAR_ARCHIVE);
+	r_HUDBrightnessOld = ri.Cvar_Get("r_HUDBrightnessOld", "0.5", CVAR_ARCHIVE);
 	r_LightmapBrightness = ri.Cvar_Get("r_LightmapBrightness", "1.0", CVAR_ARCHIVE);
 	r_LightBrightness = ri.Cvar_Get("r_LightBrightness", "1.0", CVAR_ARCHIVE);
 
@@ -1472,6 +1474,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.RegisterShader = RE_RegisterShader;
 	re.RegisterShaderNoMip = RE_RegisterShaderNoMip;
 	re.RegisterShaderNoMipHUD = RE_RegisterShaderNoMipHUD;
+	re.RegisterShaderWithFlags = RE_RegisterShaderWithFlags;
 	re.RegisterShaderHUD = RE_RegisterShaderHUD;
 	re.LoadWorld = RE_LoadWorldMap;
 	re.SetWorldVisData = RE_SetWorldVisData;
