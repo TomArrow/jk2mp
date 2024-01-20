@@ -878,7 +878,9 @@ void CG_DrawHealth(int x,int y)
 
 	vec4_t scaledColor;
 	Vector4Copy(colorTable[CT_HUD_RED], scaledColor);
+#ifdef OLDHUDBRIGHTNESS
 	VectorScale(scaledColor, r_HUDBrightness, scaledColor);
+#endif
 	trap_R_SetColor(scaledColor);
 	CG_DrawNumField ((float)x - (float)l + ((float)l + 16.0f)*cgs.widthRatioCoef, y + 40, 3, ps->stats[STAT_HEALTH], 6, 12, 
 		NUM_FONT_SMALL,qfalse);
@@ -979,8 +981,10 @@ void CG_DrawArmor(int x,int y)
 	}
 
 	vec4_t scaledColor;
-	Vector4Copy(colorTable[CT_HUD_GREEN], scaledColor);
+	Vector4Copy(colorTable[CT_HUD_GREEN], scaledColor); 
+#ifdef OLDHUDBRIGHTNESS
 	VectorScale(scaledColor, r_HUDBrightness, scaledColor);
+#endif
 	trap_R_SetColor(scaledColor);
 	CG_DrawNumField ((float)x - (float)l + ((float)l + 18.0f + 14.0f)*cgs.widthRatioCoef, y + 40 + 14, 3, ps->stats[STAT_ARMOR], 6, 12, 
 		NUM_FONT_SMALL,qfalse);
@@ -1103,7 +1107,9 @@ static void CG_DrawAmmo(centity_t	*cent,int x,int y)
 
 	vec4_t scaledColor;
 	Vector4Copy(colorTable[numColor_i], scaledColor);
+#ifdef OLDHUDBRIGHTNESS
 	VectorScale(scaledColor, r_HUDBrightness, scaledColor);
+#endif
 	trap_R_SetColor(scaledColor);
 	CG_DrawNumField (640 - (640 - x - 30)*cgs.widthRatioCoef, y + 26, 3, value, 6, 12, NUM_FONT_SMALL,qfalse);
 
@@ -1277,12 +1283,16 @@ void CG_DrawHUD(centity_t	*cent)
 
 		vec4_t scaledColor;
 		Vector4Copy(colorTable[CT_HUD_RED], scaledColor);
+#ifdef OLDHUDBRIGHTNESS
 		VectorScale(scaledColor, r_HUDBrightness, scaledColor);
+#endif
 		UI_DrawProportionalString( (x+16)*cgs.widthRatioCoef, y+40, va( "%i", cg.snap->ps.stats[STAT_HEALTH] ),
 			UI_SMALLFONT|UI_DROPSHADOW, scaledColor);
 
 		Vector4Copy(colorTable[CT_HUD_GREEN], scaledColor);
+#ifdef OLDHUDBRIGHTNESS
 		VectorScale(scaledColor, r_HUDBrightness, scaledColor);
+#endif
 		UI_DrawProportionalString( (x+18+14)*cgs.widthRatioCoef, y+40+14, va( "%i", cg.snap->ps.stats[STAT_ARMOR] ),
 			UI_SMALLFONT|UI_DROPSHADOW, scaledColor);
 
@@ -1310,12 +1320,16 @@ void CG_DrawHUD(centity_t	*cent)
 		}
 		
 		Vector4Copy(colorTable[CT_HUD_ORANGE], scaledColor);
+#ifdef OLDHUDBRIGHTNESS
 		VectorScale(scaledColor, r_HUDBrightness, scaledColor);
+#endif
 		UI_DrawProportionalString( SCREEN_WIDTH-(weapX+16+32)*cgs.widthRatioCoef, y+40, va( "%s", ammoString ),
 			UI_SMALLFONT|UI_DROPSHADOW, scaledColor);
 
 		Vector4Copy(colorTable[CT_ICON_BLUE], scaledColor);
+#ifdef OLDHUDBRIGHTNESS
 		VectorScale(scaledColor, r_HUDBrightness, scaledColor);
+#endif
 		UI_DrawProportionalString( SCREEN_WIDTH-(x+18+14+32)*cgs.widthRatioCoef, y+40+14, va( "%i", cg.snap->ps.fd.forcePower),
 			UI_SMALLFONT|UI_DROPSHADOW, scaledColor);
 
@@ -1340,7 +1354,9 @@ void CG_DrawHUD(centity_t	*cent)
 	/*float hudTintColorScaled[4];
 	float* hudTintFormerSetting = hudTintColor;
 	VectorCopy( hudTintColor, hudTintColorScaled);
+#ifdef OLDHUDBRIGHTNESS
 	VectorScale(hudTintColorScaled, r_HUDBrightness, hudTintColorScaled);
+#endif
 	hudTintColor = hudTintColorScaled;*/ // This was just an early attempt before I put it all into the shaders themselves as this wouldn't handle rgbgen const
 
 
@@ -1417,7 +1433,9 @@ void CG_DrawHUD(centity_t	*cent)
 		}
 		vec4_t scaledColor;
 		Vector4Copy(colorTable[CT_WHITE], scaledColor);
+#ifdef OLDHUDBRIGHTNESS
 		VectorScale(scaledColor, r_HUDBrightness, scaledColor);
+#endif
 		UI_DrawScaledProportionalString(SCREEN_WIDTH - 124 * cgs.widthRatioCoef/*(strlen(scoreStr)*20.5)*/, SCREEN_HEIGHT - 23, scoreStr, UI_RIGHT | UI_DROPSHADOW, scaledColor, 0.7);
 	}
 
@@ -1624,7 +1642,9 @@ void CG_DrawForceSelect( void )
 	{
 		vec4_t tmpColor;
 		Vector4Copy(colorTable[CT_ICON_BLUE], tmpColor);
+#ifdef OLDHUDBRIGHTNESS
 		VectorScale(tmpColor, r_HUDBrightness, tmpColor);
+#endif
 
 		UI_DrawProportionalString(320, y + 30, CG_GetStripEdString("INGAME", showPowersName[cg.forceSelect]), UI_CENTER | UI_SMALLFONT, tmpColor);
 	}
@@ -1686,7 +1706,10 @@ void CG_DrawInvenSelect( void )
 
 		vec4_t tmpColor;
 		Vector4Copy(colorTable[CT_ICON_BLUE],tmpColor);
+
+#ifdef OLDHUDBRIGHTNESS
 		VectorScale(tmpColor, r_HUDBrightness, tmpColor);
+#endif
 
 		UI_DrawProportionalString(320, y2 + 22, "EMPTY INVENTORY", UI_CENTER | UI_SMALLFONT, tmpColor);
 		return;
@@ -1776,8 +1799,10 @@ void CG_DrawInvenSelect( void )
 		{
 			vec4_t	textColor = { .312f, .75f, .621f, 1.0f };
 			char	text[1024]; 
-			
+
+#ifdef OLDHUDBRIGHTNESS
 			VectorScale(textColor, r_HUDBrightness, textColor);
+#endif
 			
 			if ( trap_SP_GetStringTextString( va("INGAME_%s",bg_itemlist[itemNdex].classname), text, sizeof( text )))
 			{
@@ -2343,9 +2368,9 @@ static float CG_DrawPowerupIcons(int y) {
 				}
 				if (cgs.gametype == GT_CTY && (j == PW_REDFLAG || j == PW_BLUEFLAG)) {
 					if (j == PW_REDFLAG)
-						icoShader = trap_R_RegisterShaderNoMip( "gfx/hud/mpi_rflag_ys" );
+						icoShader = trap_R_RegisterShaderNoMipHUD( "gfx/hud/mpi_rflag_ys" );
 					else
-						icoShader = trap_R_RegisterShaderNoMip( "gfx/hud/mpi_bflag_ys" );
+						icoShader = trap_R_RegisterShaderNoMipHUD( "gfx/hud/mpi_bflag_ys" );
 				} else {
 					icoShader = trap_R_RegisterShader( item->icon );
 				}
@@ -3340,7 +3365,7 @@ static void CG_DrawRocketLocking( int lockEntNum, int lockTime )
 
 			trap_R_SetColor( color );
 			// our slices are offset by about 45 degrees.
-			CG_DrawRotatePic( cx - sz, cy - sz, sz, sz, i * 45.0f, trap_R_RegisterShaderNoMip( "gfx/2d/wedge" ));
+			CG_DrawRotatePic( cx - sz, cy - sz, sz, sz, i * 45.0f, trap_R_RegisterShaderNoMipHUD( "gfx/2d/wedge" ));
 		}
 
 		// we are locked and loaded baby
@@ -3352,7 +3377,7 @@ static void CG_DrawRocketLocking( int lockEntNum, int lockTime )
 			color[3] = 1.0f; // this art is additive, so the alpha value does nothing
 
 			trap_R_SetColor( color );
-			CG_DrawPic( cx - sz * ratioFix, cy - sz * 2, sz * 2 * ratioFix, sz * 2, trap_R_RegisterShaderNoMip( "gfx/2d/lock" ));
+			CG_DrawPic( cx - sz * ratioFix, cy - sz * 2, sz * 2 * ratioFix, sz * 2, trap_R_RegisterShaderNoMipHUD( "gfx/2d/lock" ));
 		}
 	}
 }
@@ -4571,19 +4596,19 @@ void CG_DrawFlagStatus() {
 	team = cgs.clientinfo[cg.playerCent->currentState.number].team;
 	if (cgs.gametype == GT_CTY) {
 		if (team == TEAM_RED) {
-			myFlagTakenShader = trap_R_RegisterShaderNoMip( "gfx/hud/mpi_rflag_x" );
-			theirFlagShader = trap_R_RegisterShaderNoMip( "gfx/hud/mpi_bflag_ys" );
+			myFlagTakenShader = trap_R_RegisterShaderNoMipHUD( "gfx/hud/mpi_rflag_x" );
+			theirFlagShader = trap_R_RegisterShaderNoMipHUD( "gfx/hud/mpi_bflag_ys" );
 		} else {
-			myFlagTakenShader = trap_R_RegisterShaderNoMip( "gfx/hud/mpi_bflag_x" );
-			theirFlagShader = trap_R_RegisterShaderNoMip( "gfx/hud/mpi_rflag_ys" );
+			myFlagTakenShader = trap_R_RegisterShaderNoMipHUD( "gfx/hud/mpi_bflag_x" );
+			theirFlagShader = trap_R_RegisterShaderNoMipHUD( "gfx/hud/mpi_rflag_ys" );
 		}
 	} else {
 		if (team == TEAM_RED) {
-			myFlagTakenShader = trap_R_RegisterShaderNoMip( "gfx/hud/mpi_rflag_x" );
-			theirFlagShader = trap_R_RegisterShaderNoMip( "gfx/hud/mpi_bflag" );
+			myFlagTakenShader = trap_R_RegisterShaderNoMipHUD( "gfx/hud/mpi_rflag_x" );
+			theirFlagShader = trap_R_RegisterShaderNoMipHUD( "gfx/hud/mpi_bflag" );
 		} else {
-			myFlagTakenShader = trap_R_RegisterShaderNoMip( "gfx/hud/mpi_bflag_x" );
-			theirFlagShader = trap_R_RegisterShaderNoMip( "gfx/hud/mpi_rflag" );
+			myFlagTakenShader = trap_R_RegisterShaderNoMipHUD( "gfx/hud/mpi_bflag_x" );
+			theirFlagShader = trap_R_RegisterShaderNoMipHUD( "gfx/hud/mpi_rflag" );
 		}
 	}
 	

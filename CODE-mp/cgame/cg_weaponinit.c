@@ -254,7 +254,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		cgs.media.disruptorInsert		= trap_R_RegisterShader( "gfx/2d/cropCircle");
 		cgs.media.disruptorLight		= trap_R_RegisterShader( "gfx/2d/cropCircleGlow" );
 		cgs.media.disruptorInsertTick	= trap_R_RegisterShader( "gfx/2d/insertTick" );
-		cgs.media.disruptorChargeShader	= trap_R_RegisterShaderNoMip("gfx/2d/crop_charge");
+		cgs.media.disruptorChargeShader	= trap_R_RegisterShaderNoMipHUD("gfx/2d/crop_charge");
 
 		cgs.media.disruptorZoomLoop		= trap_S_RegisterSound( "sound/weapons/disruptor/zoomloop.wav" );
 		break;
@@ -410,8 +410,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		cgs.effects.rocketShotEffect			= trap_FX_RegisterEffect( "rocket/shot" );
 		cgs.effects.rocketExplosionEffect		= trap_FX_RegisterEffect( "rocket/explosion" );
 	
-		trap_R_RegisterShaderNoMip( "gfx/2d/wedge" );
-		trap_R_RegisterShaderNoMip( "gfx/2d/lock" );
+		trap_R_RegisterShaderNoMipHUD( "gfx/2d/wedge" );
+		trap_R_RegisterShaderNoMipHUD( "gfx/2d/lock" );
 
 		trap_S_RegisterSound( "sound/weapons/rocket/lock.wav" );
 		trap_S_RegisterSound( "sound/weapons/rocket/tick.wav" );

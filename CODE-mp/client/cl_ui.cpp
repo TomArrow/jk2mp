@@ -890,6 +890,9 @@ int CL_UISystemCalls( int *args ) {
 	case UI_R_REGISTERSHADERNOMIP:
 		return re.RegisterShaderNoMip( (const char *)VMA(1) );
 
+	case UI_R_REGISTERSHADERNOMIPHUD:
+		return re.RegisterShaderNoMipHUD( (const char *)VMA(1) );
+
 	case UI_R_CLEARSCENE:
 		re.ClearScene();
 		return 0;

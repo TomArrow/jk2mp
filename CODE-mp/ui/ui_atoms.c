@@ -374,7 +374,7 @@ void UI_Shutdown( void ) {
 void UI_DrawNamedPic( float x, float y, float width, float height, const char *picname ) {
 	qhandle_t	hShader;
 
-	hShader = trap_R_RegisterShaderNoMip( picname );
+	hShader = trap_R_RegisterShaderNoMipHUD( picname );
 	trap_R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, hShader );
 }
 

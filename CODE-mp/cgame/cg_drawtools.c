@@ -14,6 +14,8 @@
 #include "../game/q_shared.h"
 
 
+extern float r_HUDBrightness;
+
 /*
 ================
 UI_DrawRect
@@ -366,6 +368,9 @@ Coordinates are at 640 by 480 virtual resolution
 void CG_DrawStringExt( int x, int y, const char *string, const float *setColor, 
 		qboolean forceColor, qboolean shadow, int charWidth, int charHeight, int maxChars )
 {
+	//vec3_t scaledSetColor;
+	//VectorScale(setColor,r_HUDBrightness, scaledSetColor);
+
 	if (trap_Language_IsAsian())
 	{
 		// hack-a-doodle-do (post-release quick fix code)...
@@ -414,7 +419,7 @@ void CG_DrawStringExt( int x, int y, const char *string, const float *setColor,
 		// draw the colored text
 		s = string;
 		xx = x;
-		trap_R_SetColor( setColor );
+		trap_R_SetColor(setColor);
 		while ( *s ) {
 			if (Q_IsColorStringHex(s + 1)) {
 				int skipCount = 0;
@@ -422,6 +427,7 @@ void CG_DrawStringExt( int x, int y, const char *string, const float *setColor,
 				s += 1 + skipCount;
 				if (!forceColor) {
 					//color[3] = setColor[3]; // eeeh.
+					//VectorScale(color, r_HUDBrightness, color);
 					trap_R_SetColor(color);
 				}
 				continue;
@@ -430,6 +436,7 @@ void CG_DrawStringExt( int x, int y, const char *string, const float *setColor,
 				if ( !forceColor ) {
 					memcpy( color, g_color_table_nt[ColorIndexNT(*(s+1))], sizeof( color ) );
 					color[3] = setColor[3];
+					//VectorScale(color, r_HUDBrightness, color);
 					trap_R_SetColor( color );
 				}
 				s += 2;
@@ -438,6 +445,7 @@ void CG_DrawStringExt( int x, int y, const char *string, const float *setColor,
 				if ( !forceColor ) {
 					memcpy( color, g_color_table[ColorIndex(*(s+1))], sizeof( color ) );
 					color[3] = setColor[3];
+					//VectorScale(color, r_HUDBrightness, color);
 					trap_R_SetColor( color );
 				}
 				s += 2;

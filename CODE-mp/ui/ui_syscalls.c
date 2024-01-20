@@ -150,6 +150,9 @@ unsigned int trap_AnyLanguage_ReadCharFromString( const char *psText, int *piAdv
 qhandle_t trap_R_RegisterShaderNoMip( const char *name ) {
 	return syscall( UI_R_REGISTERSHADERNOMIP, name );
 }
+qhandle_t trap_R_RegisterShaderNoMipHUD( const char *name ) {
+	return syscall( UI_R_REGISTERSHADERNOMIPHUD, name );
+}
 
 void trap_R_ClearScene( void ) {
 	syscall( UI_R_CLEARSCENE );

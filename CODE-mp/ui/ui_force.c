@@ -95,31 +95,31 @@ int uiForceStarShaders[NUM_FORCE_STAR_IMAGES][2];
 int uiSaberColorShaders[NUM_SABER_COLORS];
 void UI_InitForceShaders(void)
 {
-	uiForceStarShaders[0][0] = trap_R_RegisterShaderNoMip("forcestar0");
-	uiForceStarShaders[0][1] = trap_R_RegisterShaderNoMip("forcestar0");
-	uiForceStarShaders[1][0] = trap_R_RegisterShaderNoMip("forcecircle1");
-	uiForceStarShaders[1][1] = trap_R_RegisterShaderNoMip("forcestar1");
-	uiForceStarShaders[2][0] = trap_R_RegisterShaderNoMip("forcecircle2");
-	uiForceStarShaders[2][1] = trap_R_RegisterShaderNoMip("forcestar2");
-	uiForceStarShaders[3][0] = trap_R_RegisterShaderNoMip("forcecircle3");
-	uiForceStarShaders[3][1] = trap_R_RegisterShaderNoMip("forcestar3");
-	uiForceStarShaders[4][0] = trap_R_RegisterShaderNoMip("forcecircle4");
-	uiForceStarShaders[4][1] = trap_R_RegisterShaderNoMip("forcestar4");
-	uiForceStarShaders[5][0] = trap_R_RegisterShaderNoMip("forcecircle5");
-	uiForceStarShaders[5][1] = trap_R_RegisterShaderNoMip("forcestar5");
-	uiForceStarShaders[6][0] = trap_R_RegisterShaderNoMip("forcecircle6");
-	uiForceStarShaders[6][1] = trap_R_RegisterShaderNoMip("forcestar6");
-	uiForceStarShaders[7][0] = trap_R_RegisterShaderNoMip("forcecircle7");
-	uiForceStarShaders[7][1] = trap_R_RegisterShaderNoMip("forcestar7");
-	uiForceStarShaders[8][0] = trap_R_RegisterShaderNoMip("forcecircle8");
-	uiForceStarShaders[8][1] = trap_R_RegisterShaderNoMip("forcestar8");
+	uiForceStarShaders[0][0] = trap_R_RegisterShaderNoMipHUD("forcestar0");
+	uiForceStarShaders[0][1] = trap_R_RegisterShaderNoMipHUD("forcestar0");
+	uiForceStarShaders[1][0] = trap_R_RegisterShaderNoMipHUD("forcecircle1");
+	uiForceStarShaders[1][1] = trap_R_RegisterShaderNoMipHUD("forcestar1");
+	uiForceStarShaders[2][0] = trap_R_RegisterShaderNoMipHUD("forcecircle2");
+	uiForceStarShaders[2][1] = trap_R_RegisterShaderNoMipHUD("forcestar2");
+	uiForceStarShaders[3][0] = trap_R_RegisterShaderNoMipHUD("forcecircle3");
+	uiForceStarShaders[3][1] = trap_R_RegisterShaderNoMipHUD("forcestar3");
+	uiForceStarShaders[4][0] = trap_R_RegisterShaderNoMipHUD("forcecircle4");
+	uiForceStarShaders[4][1] = trap_R_RegisterShaderNoMipHUD("forcestar4");
+	uiForceStarShaders[5][0] = trap_R_RegisterShaderNoMipHUD("forcecircle5");
+	uiForceStarShaders[5][1] = trap_R_RegisterShaderNoMipHUD("forcestar5");
+	uiForceStarShaders[6][0] = trap_R_RegisterShaderNoMipHUD("forcecircle6");
+	uiForceStarShaders[6][1] = trap_R_RegisterShaderNoMipHUD("forcestar6");
+	uiForceStarShaders[7][0] = trap_R_RegisterShaderNoMipHUD("forcecircle7");
+	uiForceStarShaders[7][1] = trap_R_RegisterShaderNoMipHUD("forcestar7");
+	uiForceStarShaders[8][0] = trap_R_RegisterShaderNoMipHUD("forcecircle8");
+	uiForceStarShaders[8][1] = trap_R_RegisterShaderNoMipHUD("forcestar8");
 
-	uiSaberColorShaders[SABER_RED]		= trap_R_RegisterShaderNoMip("menu/art/saber_red");
-	uiSaberColorShaders[SABER_ORANGE]	= trap_R_RegisterShaderNoMip("menu/art/saber_orange");
-	uiSaberColorShaders[SABER_YELLOW]	= trap_R_RegisterShaderNoMip("menu/art/saber_yellow");
-	uiSaberColorShaders[SABER_GREEN]	= trap_R_RegisterShaderNoMip("menu/art/saber_green");
-	uiSaberColorShaders[SABER_BLUE]		= trap_R_RegisterShaderNoMip("menu/art/saber_blue");
-	uiSaberColorShaders[SABER_PURPLE]	= trap_R_RegisterShaderNoMip("menu/art/saber_purple");
+	uiSaberColorShaders[SABER_RED]		= trap_R_RegisterShaderNoMipHUD("menu/art/saber_red");
+	uiSaberColorShaders[SABER_ORANGE]	= trap_R_RegisterShaderNoMipHUD("menu/art/saber_orange");
+	uiSaberColorShaders[SABER_YELLOW]	= trap_R_RegisterShaderNoMipHUD("menu/art/saber_yellow");
+	uiSaberColorShaders[SABER_GREEN]	= trap_R_RegisterShaderNoMipHUD("menu/art/saber_green");
+	uiSaberColorShaders[SABER_BLUE]		= trap_R_RegisterShaderNoMipHUD("menu/art/saber_blue");
+	uiSaberColorShaders[SABER_PURPLE]	= trap_R_RegisterShaderNoMipHUD("menu/art/saber_purple");
 }
 
 // Draw the stars spent on the current force power

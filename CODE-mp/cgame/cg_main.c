@@ -1671,16 +1671,16 @@ static void CG_RegisterGraphics( void ) {
 
 	for ( i=0; i < 11; i++ )
 	{
-		cgs.media.numberShaders[i]			= trap_R_RegisterShaderNoMip( sb_nums[i] );
-		cgs.media.smallnumberShaders[i]		= trap_R_RegisterShaderNoMip( sb_t_nums[i] );
-		cgs.media.chunkyNumberShaders[i]	= trap_R_RegisterShaderNoMip( sb_c_nums[i] );
+		cgs.media.numberShaders[i]			= trap_R_RegisterShaderNoMipHUD( sb_nums[i] );
+		cgs.media.smallnumberShaders[i]		= trap_R_RegisterShaderNoMipHUD( sb_t_nums[i] );
+		cgs.media.chunkyNumberShaders[i]	= trap_R_RegisterShaderNoMipHUD( sb_c_nums[i] );
 	}
 
 	cgs.media.balloonShader = trap_R_RegisterShader( "gfx/mp/chat_icon" );
 
 	cgs.media.viewBloodShader = trap_R_RegisterShader( "viewBloodBlend" );
 
-	cgs.media.deferShader = trap_R_RegisterShaderNoMip( "gfx/2d/defer.tga" );
+	cgs.media.deferShader = trap_R_RegisterShaderNoMipHUD( "gfx/2d/defer.tga" );
 
 #ifdef GIB
 	cgs.media.gibAbdomen = trap_R_RegisterModel("models/gibs/abdomen.md3");
@@ -1697,8 +1697,8 @@ static void CG_RegisterGraphics( void ) {
 
 	cgs.media.smokePuffShader = trap_R_RegisterShader( "smokePuff" );
 	cgs.media.bloodTrailShader = trap_R_RegisterShader( "bloodTrail" );
-	cgs.media.lagometerShader = trap_R_RegisterShaderNoMip("gfx/2d/lag" );
-	cgs.media.connectionShader = trap_R_RegisterShaderNoMip( "gfx/2d/net" );
+	cgs.media.lagometerShader = trap_R_RegisterShaderNoMipHUD("gfx/2d/lag" );
+	cgs.media.connectionShader = trap_R_RegisterShaderNoMipHUD( "gfx/2d/net" );
 
 	cgs.media.waterBubbleShader = trap_R_RegisterShader( "waterBubble" );
 
@@ -1796,28 +1796,28 @@ static void CG_RegisterGraphics( void ) {
 			cgs.media.blueFlagModel = trap_R_RegisterModel( "models/flags/b_flag_ysal.md3" );
 		}
 
-		cgs.media.flagShaderYsal[TEAM_RED] = trap_R_RegisterShaderNoMip("gfx/hud/mpi_rflag_ys");
-		cgs.media.flagShaderYsal[TEAM_BLUE] = trap_R_RegisterShaderNoMip("gfx/hud/mpi_bflag_ys");
-		cgs.media.flagShaderYsal[TEAM_FREE] = trap_R_RegisterShaderNoMip("icons/iconf_neutral1"); //will have to do for now
+		cgs.media.flagShaderYsal[TEAM_RED] = trap_R_RegisterShaderNoMipHUD("gfx/hud/mpi_rflag_ys");
+		cgs.media.flagShaderYsal[TEAM_BLUE] = trap_R_RegisterShaderNoMipHUD("gfx/hud/mpi_bflag_ys");
+		cgs.media.flagShaderYsal[TEAM_FREE] = trap_R_RegisterShaderNoMipHUD("icons/iconf_neutral1"); //will have to do for now
 
-		cgs.media.flagShader[TEAM_RED] = trap_R_RegisterShaderNoMip("gfx/hud/mpi_rflag");
-		cgs.media.flagShader[TEAM_BLUE] = trap_R_RegisterShaderNoMip("gfx/hud/mpi_bflag");
-		cgs.media.flagShader[TEAM_FREE] = trap_R_RegisterShaderNoMip("icons/iconf_neutral1");
+		cgs.media.flagShader[TEAM_RED] = trap_R_RegisterShaderNoMipHUD("gfx/hud/mpi_rflag");
+		cgs.media.flagShader[TEAM_BLUE] = trap_R_RegisterShaderNoMipHUD("gfx/hud/mpi_bflag");
+		cgs.media.flagShader[TEAM_FREE] = trap_R_RegisterShaderNoMipHUD("icons/iconf_neutral1");
 
-		cgs.media.flagShaderTaken[TEAM_RED] = trap_R_RegisterShaderNoMip("gfx/hud/mpi_rflag_x");
-		cgs.media.flagShaderTaken[TEAM_BLUE] = trap_R_RegisterShaderNoMip("gfx/hud/mpi_bflag_x");
-		cgs.media.flagShaderTaken[TEAM_FREE] = trap_R_RegisterShaderNoMip("icons/iconf_neutral1_x");
+		cgs.media.flagShaderTaken[TEAM_RED] = trap_R_RegisterShaderNoMipHUD("gfx/hud/mpi_rflag_x");
+		cgs.media.flagShaderTaken[TEAM_BLUE] = trap_R_RegisterShaderNoMipHUD("gfx/hud/mpi_bflag_x");
+		cgs.media.flagShaderTaken[TEAM_FREE] = trap_R_RegisterShaderNoMipHUD("icons/iconf_neutral1_x");
 
-		trap_R_RegisterShaderNoMip( "gfx/hud/mpi_rflag_x" );
-		trap_R_RegisterShaderNoMip( "gfx/hud/mpi_bflag_x" );
+		trap_R_RegisterShaderNoMipHUD( "gfx/hud/mpi_rflag_x" );
+		trap_R_RegisterShaderNoMipHUD( "gfx/hud/mpi_bflag_x" );
 
-		trap_R_RegisterShaderNoMip( "gfx/hud/mpi_rflag_ys" );
-		trap_R_RegisterShaderNoMip( "gfx/hud/mpi_bflag_ys" );
+		trap_R_RegisterShaderNoMipHUD( "gfx/hud/mpi_rflag_ys" );
+		trap_R_RegisterShaderNoMipHUD( "gfx/hud/mpi_bflag_ys" );
 
-		trap_R_RegisterShaderNoMip( "gfx/hud/mpi_rflag" );
-		trap_R_RegisterShaderNoMip( "gfx/hud/mpi_bflag" );
+		trap_R_RegisterShaderNoMipHUD( "gfx/hud/mpi_rflag" );
+		trap_R_RegisterShaderNoMipHUD( "gfx/hud/mpi_bflag" );
 
-		trap_R_RegisterShaderNoMip("gfx/2d/net.tga");
+		trap_R_RegisterShaderNoMipHUD("gfx/2d/net.tga");
 
 		cgs.media.flagPoleModel = trap_R_RegisterModel( "models/flag2/flagpole.md3" );
 		cgs.media.flagFlapModel = trap_R_RegisterModel( "models/flag2/flagflap3.md3" );
@@ -1833,10 +1833,10 @@ static void CG_RegisterGraphics( void ) {
 
 	if ( cg_buildScript.integer ) {
 		cgs.media.neutralFlagModel = 0;//trap_R_RegisterModel( "models/flags/n_flag.md3" );
-		cgs.media.flagShader[0] = 0;//trap_R_RegisterShaderNoMip( "icons/iconf_neutral1" );
-		cgs.media.flagShader[1] = 0;//trap_R_RegisterShaderNoMip( "icons/iconf_red2" );
-		cgs.media.flagShader[2] = 0;//trap_R_RegisterShaderNoMip( "icons/iconf_blu2" );
-		cgs.media.flagShader[3] = 0;//trap_R_RegisterShaderNoMip( "icons/iconf_neutral3" );
+		cgs.media.flagShader[0] = 0;//trap_R_RegisterShaderNoMipHUD( "icons/iconf_neutral1" );
+		cgs.media.flagShader[1] = 0;//trap_R_RegisterShaderNoMipHUD( "icons/iconf_red2" );
+		cgs.media.flagShader[2] = 0;//trap_R_RegisterShaderNoMipHUD( "icons/iconf_blu2" );
+		cgs.media.flagShader[3] = 0;//trap_R_RegisterShaderNoMipHUD( "icons/iconf_neutral3" );
 	}
 
 
@@ -1852,9 +1852,9 @@ static void CG_RegisterGraphics( void ) {
 	}
 
 	cgs.media.armorModel = 0;//trap_R_RegisterModel( "models/powerups/armor/armor_yel.md3" );
-	cgs.media.armorIcon  = 0;//trap_R_RegisterShaderNoMip( "icons/iconr_yellow" );
+	cgs.media.armorIcon  = 0;//trap_R_RegisterShaderNoMipHUD( "icons/iconr_yellow" );
 
-	cgs.media.heartShader			= trap_R_RegisterShaderNoMip( "ui/assets/statusbar/selectedhealth.tga" );
+	cgs.media.heartShader			= trap_R_RegisterShaderNoMipHUD( "ui/assets/statusbar/selectedhealth.tga" );
 
 	cgs.media.ysaliredShader		= trap_R_RegisterShader( "powerups/ysaliredshell");
 	cgs.media.ysaliblueShader		= trap_R_RegisterShader( "powerups/ysaliblueshell");
@@ -1865,27 +1865,27 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.invulnerabilityShader = trap_R_RegisterShader( "powerups/invulnerabilityshell");
 
 	//JAPRO - Clientside - Movement Keys - Start
-	cgs.media.keyCrouchOffShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/crouch_off");
-	cgs.media.keyCrouchOnShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/crouch_on");
-	cgs.media.keyJumpOffShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/jump_off");
-	cgs.media.keyJumpOnShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/jump_on");
-	cgs.media.keyBackOffShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/back_off");
-	cgs.media.keyBackOnShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/back_on");
-	cgs.media.keyForwardOffShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/forward_off");
-	cgs.media.keyForwardOnShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/forward_on");
-	cgs.media.keyLeftOffShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/left_off");
-	cgs.media.keyLeftOnShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/left_on");
-	cgs.media.keyRightOffShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/right_off");
-	cgs.media.keyRightOnShader = trap_R_RegisterShaderNoMip("gfx/hud/keys/right_on");
+	cgs.media.keyCrouchOffShader = trap_R_RegisterShaderNoMipHUD("gfx/hud/keys/crouch_off");
+	cgs.media.keyCrouchOnShader = trap_R_RegisterShaderNoMipHUD("gfx/hud/keys/crouch_on");
+	cgs.media.keyJumpOffShader = trap_R_RegisterShaderNoMipHUD("gfx/hud/keys/jump_off");
+	cgs.media.keyJumpOnShader = trap_R_RegisterShaderNoMipHUD("gfx/hud/keys/jump_on");
+	cgs.media.keyBackOffShader = trap_R_RegisterShaderNoMipHUD("gfx/hud/keys/back_off");
+	cgs.media.keyBackOnShader = trap_R_RegisterShaderNoMipHUD("gfx/hud/keys/back_on");
+	cgs.media.keyForwardOffShader = trap_R_RegisterShaderNoMipHUD("gfx/hud/keys/forward_off");
+	cgs.media.keyForwardOnShader = trap_R_RegisterShaderNoMipHUD("gfx/hud/keys/forward_on");
+	cgs.media.keyLeftOffShader = trap_R_RegisterShaderNoMipHUD("gfx/hud/keys/left_off");
+	cgs.media.keyLeftOnShader = trap_R_RegisterShaderNoMipHUD("gfx/hud/keys/left_on");
+	cgs.media.keyRightOffShader = trap_R_RegisterShaderNoMipHUD("gfx/hud/keys/right_off");
+	cgs.media.keyRightOnShader = trap_R_RegisterShaderNoMipHUD("gfx/hud/keys/right_on");
 	//JAPRO - Clientside - Movement Keys - End
 
 #ifdef JK2AWARDS
-	cgs.media.medalImpressive		= trap_R_RegisterShaderNoMip( "medal_impressive" );
-	cgs.media.medalExcellent		= trap_R_RegisterShaderNoMip( "medal_excellent" );
-	cgs.media.medalGauntlet			= trap_R_RegisterShaderNoMip( "medal_gauntlet" );
-	cgs.media.medalDefend			= trap_R_RegisterShaderNoMip( "medal_defend" );
-	cgs.media.medalAssist			= trap_R_RegisterShaderNoMip( "medal_assist" );
-	cgs.media.medalCapture			= trap_R_RegisterShaderNoMip( "medal_capture" );
+	cgs.media.medalImpressive		= trap_R_RegisterShaderNoMipHUD( "medal_impressive" );
+	cgs.media.medalExcellent		= trap_R_RegisterShaderNoMipHUD( "medal_excellent" );
+	cgs.media.medalGauntlet			= trap_R_RegisterShaderNoMipHUD( "medal_gauntlet" );
+	cgs.media.medalDefend			= trap_R_RegisterShaderNoMipHUD( "medal_defend" );
+	cgs.media.medalAssist			= trap_R_RegisterShaderNoMipHUD( "medal_assist" );
+	cgs.media.medalCapture			= trap_R_RegisterShaderNoMipHUD( "medal_capture" );
 #endif
 
 	// Binocular interface
@@ -1997,20 +1997,20 @@ Ghoul2 Insert End
 
 
 	// new stuff
-	cgs.media.patrolShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/patrol.tga");
-	cgs.media.assaultShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/assault.tga");
-	cgs.media.campShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/camp.tga");
-	cgs.media.followShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/follow.tga");
-	cgs.media.defendShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/defend.tga");
-	cgs.media.teamLeaderShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/team_leader.tga");
-	cgs.media.retrieveShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/retrieve.tga");
-	cgs.media.escortShader = trap_R_RegisterShaderNoMip("ui/assets/statusbar/escort.tga");
-	cgs.media.cursor = trap_R_RegisterShaderNoMip( "menu/art/3_cursor2" );
-	cgs.media.sizeCursor = trap_R_RegisterShaderNoMip( "ui/assets/sizecursor.tga" );
-	cgs.media.selectCursor = trap_R_RegisterShaderNoMip( "ui/assets/selectcursor.tga" );
-	cgs.media.flagShaders[0] = trap_R_RegisterShaderNoMip("ui/assets/statusbar/flag_in_base.tga");
-	cgs.media.flagShaders[1] = trap_R_RegisterShaderNoMip("ui/assets/statusbar/flag_capture.tga");
-	cgs.media.flagShaders[2] = trap_R_RegisterShaderNoMip("ui/assets/statusbar/flag_missing.tga");
+	cgs.media.patrolShader = trap_R_RegisterShaderNoMipHUD("ui/assets/statusbar/patrol.tga");
+	cgs.media.assaultShader = trap_R_RegisterShaderNoMipHUD("ui/assets/statusbar/assault.tga");
+	cgs.media.campShader = trap_R_RegisterShaderNoMipHUD("ui/assets/statusbar/camp.tga");
+	cgs.media.followShader = trap_R_RegisterShaderNoMipHUD("ui/assets/statusbar/follow.tga");
+	cgs.media.defendShader = trap_R_RegisterShaderNoMipHUD("ui/assets/statusbar/defend.tga");
+	cgs.media.teamLeaderShader = trap_R_RegisterShaderNoMipHUD("ui/assets/statusbar/team_leader.tga");
+	cgs.media.retrieveShader = trap_R_RegisterShaderNoMipHUD("ui/assets/statusbar/retrieve.tga");
+	cgs.media.escortShader = trap_R_RegisterShaderNoMipHUD("ui/assets/statusbar/escort.tga");
+	cgs.media.cursor = trap_R_RegisterShaderNoMipHUD( "menu/art/3_cursor2" );
+	cgs.media.sizeCursor = trap_R_RegisterShaderNoMipHUD( "ui/assets/sizecursor.tga" );
+	cgs.media.selectCursor = trap_R_RegisterShaderNoMipHUD( "ui/assets/selectcursor.tga" );
+	cgs.media.flagShaders[0] = trap_R_RegisterShaderNoMipHUD("ui/assets/statusbar/flag_in_base.tga");
+	cgs.media.flagShaders[1] = trap_R_RegisterShaderNoMipHUD("ui/assets/statusbar/flag_capture.tga");
+	cgs.media.flagShaders[2] = trap_R_RegisterShaderNoMipHUD("ui/assets/statusbar/flag_missing.tga");
 
 	cgs.media.halfShieldModel	= trap_R_RegisterModel ( "models/weaphits/testboom.md3" );
 	cgs.media.halfShieldShader	= trap_R_RegisterShader( "halfShieldShell" );
@@ -2216,7 +2216,7 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr)) {
 				return qfalse;
 			}
-			cgDC.Assets.gradientBar = trap_R_RegisterShaderNoMip(tempStr);
+			cgDC.Assets.gradientBar = trap_R_RegisterShaderNoMipHUD(tempStr);
 			continue;
 		}
 
@@ -2260,7 +2260,7 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &cgDC.Assets.cursorStr)) {
 				return qfalse;
 			}
-			cgDC.Assets.cursor = trap_R_RegisterShaderNoMip( cgDC.Assets.cursorStr);
+			cgDC.Assets.cursor = trap_R_RegisterShaderNoMipHUD( cgDC.Assets.cursorStr);
 			continue;
 		}
 
@@ -2708,23 +2708,23 @@ void CG_AssetCache() {
 	//}
 	//Assets.background = trap_R_RegisterShaderNoMip( ASSET_BACKGROUND );
 	//Com_Printf("Menu Size: %i bytes\n", sizeof(Menus));
-	cgDC.Assets.gradientBar = trap_R_RegisterShaderNoMip( ASSET_GRADIENTBAR );
-	cgDC.Assets.fxBasePic = trap_R_RegisterShaderNoMip( ART_FX_BASE );
-	cgDC.Assets.fxPic[0] = trap_R_RegisterShaderNoMip( ART_FX_RED );
-	cgDC.Assets.fxPic[1] = trap_R_RegisterShaderNoMip( ART_FX_YELLOW );
-	cgDC.Assets.fxPic[2] = trap_R_RegisterShaderNoMip( ART_FX_GREEN );
-	cgDC.Assets.fxPic[3] = trap_R_RegisterShaderNoMip( ART_FX_TEAL );
-	cgDC.Assets.fxPic[4] = trap_R_RegisterShaderNoMip( ART_FX_BLUE );
-	cgDC.Assets.fxPic[5] = trap_R_RegisterShaderNoMip( ART_FX_CYAN );
-	cgDC.Assets.fxPic[6] = trap_R_RegisterShaderNoMip( ART_FX_WHITE );
-	cgDC.Assets.scrollBar = trap_R_RegisterShaderNoMip( ASSET_SCROLLBAR );
-	cgDC.Assets.scrollBarArrowDown = trap_R_RegisterShaderNoMip( ASSET_SCROLLBAR_ARROWDOWN );
-	cgDC.Assets.scrollBarArrowUp = trap_R_RegisterShaderNoMip( ASSET_SCROLLBAR_ARROWUP );
-	cgDC.Assets.scrollBarArrowLeft = trap_R_RegisterShaderNoMip( ASSET_SCROLLBAR_ARROWLEFT );
-	cgDC.Assets.scrollBarArrowRight = trap_R_RegisterShaderNoMip( ASSET_SCROLLBAR_ARROWRIGHT );
-	cgDC.Assets.scrollBarThumb = trap_R_RegisterShaderNoMip( ASSET_SCROLL_THUMB );
-	cgDC.Assets.sliderBar = trap_R_RegisterShaderNoMip( ASSET_SLIDER_BAR );
-	cgDC.Assets.sliderThumb = trap_R_RegisterShaderNoMip( ASSET_SLIDER_THUMB );
+	cgDC.Assets.gradientBar = trap_R_RegisterShaderNoMipHUD( ASSET_GRADIENTBAR );
+	cgDC.Assets.fxBasePic = trap_R_RegisterShaderNoMipHUD( ART_FX_BASE );
+	cgDC.Assets.fxPic[0] = trap_R_RegisterShaderNoMipHUD( ART_FX_RED );
+	cgDC.Assets.fxPic[1] = trap_R_RegisterShaderNoMipHUD( ART_FX_YELLOW );
+	cgDC.Assets.fxPic[2] = trap_R_RegisterShaderNoMipHUD( ART_FX_GREEN );
+	cgDC.Assets.fxPic[3] = trap_R_RegisterShaderNoMipHUD( ART_FX_TEAL );
+	cgDC.Assets.fxPic[4] = trap_R_RegisterShaderNoMipHUD( ART_FX_BLUE );
+	cgDC.Assets.fxPic[5] = trap_R_RegisterShaderNoMipHUD( ART_FX_CYAN );
+	cgDC.Assets.fxPic[6] = trap_R_RegisterShaderNoMipHUD( ART_FX_WHITE );
+	cgDC.Assets.scrollBar = trap_R_RegisterShaderNoMipHUD( ASSET_SCROLLBAR );
+	cgDC.Assets.scrollBarArrowDown = trap_R_RegisterShaderNoMipHUD( ASSET_SCROLLBAR_ARROWDOWN );
+	cgDC.Assets.scrollBarArrowUp = trap_R_RegisterShaderNoMipHUD( ASSET_SCROLLBAR_ARROWUP );
+	cgDC.Assets.scrollBarArrowLeft = trap_R_RegisterShaderNoMipHUD( ASSET_SCROLLBAR_ARROWLEFT );
+	cgDC.Assets.scrollBarArrowRight = trap_R_RegisterShaderNoMipHUD( ASSET_SCROLLBAR_ARROWRIGHT );
+	cgDC.Assets.scrollBarThumb = trap_R_RegisterShaderNoMipHUD( ASSET_SCROLL_THUMB );
+	cgDC.Assets.sliderBar = trap_R_RegisterShaderNoMipHUD( ASSET_SLIDER_BAR );
+	cgDC.Assets.sliderThumb = trap_R_RegisterShaderNoMipHUD( ASSET_SLIDER_THUMB );
 }
 
 /*
@@ -2906,12 +2906,12 @@ Ghoul2 Insert End
 	cg.tip = rand();
 
 	// load a few needed things before we do any screen updates
-	cgs.media.charsetShader		= trap_R_RegisterShaderNoMip( "gfx/2d/charsgrid_med" );
+	cgs.media.charsetShader		= trap_R_RegisterShaderNoMipHUD( "gfx/2d/charsgrid_med" );
 	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
 
-	cgs.media.loadBarLED		= trap_R_RegisterShaderNoMip( "gfx/hud/load_tick" );
-	cgs.media.loadBarLEDCap		= trap_R_RegisterShaderNoMip( "gfx/hud/load_tick_cap" );
-	cgs.media.loadBarLEDSurround= trap_R_RegisterShaderNoMip( "gfx/hud/mp_levelload" );
+	cgs.media.loadBarLED		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/load_tick" );
+	cgs.media.loadBarLEDCap		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/load_tick_cap" );
+	cgs.media.loadBarLEDSurround= trap_R_RegisterShaderNoMipHUD( "gfx/hud/mp_levelload" );
 
 	//rww - precache HUD weapon icons here
 	//actually, these should be stored in the icon field of each item def
@@ -3001,8 +3001,8 @@ Ghoul2 Insert End
 	cgs.media.HUDHealthTic		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/health_tic" );
 	cgs.media.HUDArmorTic		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/armor_tic" );
 	
-	cgs.media.HUDLeftStatic		= cgs.media.HUDLeftFrame;//trap_R_RegisterShaderNoMip( "gfx/hud/static_test" );
-	cgs.media.HUDLeft			= cgs.media.HUDInnerLeft;//trap_R_RegisterShaderNoMip( "gfx/hud/hudleft" );
+	cgs.media.HUDLeftStatic		= cgs.media.HUDLeftFrame;//trap_R_RegisterShaderNoMipHUD( "gfx/hud/static_test" );
+	cgs.media.HUDLeft			= cgs.media.HUDInnerLeft;//trap_R_RegisterShaderNoMipHUD( "gfx/hud/hudleft" );
 
 	cgs.media.HUDSaberStyle1	= trap_R_RegisterShaderNoMipHUD( "gfx/hud/saber_stylesFast"   );
 	cgs.media.HUDSaberStyle2	= trap_R_RegisterShaderNoMipHUD( "gfx/hud/saber_stylesMed"	  );

@@ -837,7 +837,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 	SB_SCORE_X = (SB_SCORELINE_X + .37 * SB_SCORELINE_WIDTH);
 	SB_NAME_X = (SB_SCORELINE_X + .50 * SB_SCORELINE_WIDTH);
 
-	//CG_DrawPic ( SB_SCORELINE_X - 40, y - 5, SB_SCORELINE_WIDTH + 80, 40, trap_R_RegisterShaderNoMip ( "gfx/menus/menu_buttonback.tga" ) );
+	//CG_DrawPic ( SB_SCORELINE_X - 40, y - 5, SB_SCORELINE_WIDTH + 80, 40, trap_R_RegisterShaderNoMipHUD ( "gfx/menus/menu_buttonback.tga" ) );
 
 	CG_Text_Paint ( SB_NAME_X, y, mySBScale, colorWhite, "Name",0, 0, ITEM_TEXTSTYLE_OUTLINED, FONT_SMALL );
 	if (cgs.gametype == GT_TOURNAMENT)
@@ -856,7 +856,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 #else
 	y = SB_HEADER;
 
-	CG_DrawPic ( SB_SCORELINE_X - 40, y - 5, SB_SCORELINE_WIDTH + 80, 40, trap_R_RegisterShaderNoMip ( "gfx/menus/menu_buttonback.tga" ) );
+	CG_DrawPic ( SB_SCORELINE_X - 40, y - 5, SB_SCORELINE_WIDTH + 80, 40, trap_R_RegisterShaderNoMipHUD( "gfx/menus/menu_buttonback.tga" ) );
 
 	// "NAME", "SCORE", "PING", "TIME" weren't localised, GODDAMMIT!!!!!!!!     
 	//
@@ -961,7 +961,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 		
 		y = SB_TOP - CG_Text_Height( 0, FONT_SMALL, mySBScale ) - 5;
 	
-		//CG_DrawPic ( SB_SCORELINE_X - 40, y - 5, SB_SCORELINE_WIDTH + 80, 40, trap_R_RegisterShaderNoMip ( "gfx/menus/menu_buttonback.tga" ) );
+		//CG_DrawPic ( SB_SCORELINE_X - 40, y - 5, SB_SCORELINE_WIDTH + 80, 40, trap_R_RegisterShaderNoMipHUD ( "gfx/menus/menu_buttonback.tga" ) );
 	
 		CG_Text_Paint ( SB_NAME_X, y, mySBScale, colorWhite, "Name",0, 0, ITEM_TEXTSTYLE_OUTLINED, FONT_SMALL );
 		CG_Text_Paint ( SB_SCORE_X - CG_Text_Width( "Score", mySBScale, FONT_SMALL) / 2, y, mySBScale, colorWhite, "Score", 0, 0, ITEM_TEXTSTYLE_OUTLINED, FONT_SMALL );
@@ -1250,7 +1250,7 @@ qboolean CG_DrawOldScoreboardEternal(void) {
 	// scoreboard
 	y = SB_HEADER;
 
-	CG_DrawPic(ETSB_SCORELINE_X - 40, y - 5, ETSB_SCORELINE_WIDTH + 80, 40, trap_R_RegisterShaderNoMip("gfx/menus/menu_buttonback.tga"));
+	CG_DrawPic(ETSB_SCORELINE_X - 40, y - 5, ETSB_SCORELINE_WIDTH + 80, 40, trap_R_RegisterShaderNoMipHUD("gfx/menus/menu_buttonback.tga"));
 
 	// "NAME", "SCORE", "PING", "TIME" weren't localised, GODDAMMIT!!!!!!!!     
 	//

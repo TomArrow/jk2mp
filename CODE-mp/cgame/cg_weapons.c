@@ -1296,7 +1296,9 @@ void CG_DrawWeaponSelect( void ) {
 		vec4_t			textColor = { .875f, .718f, .121f, 1.0f };
 		char	text[1024];
 
+#ifdef OLDHUDBRIGHTNESS
 		VectorScale(textColor, r_HUDBrightness, textColor);
+#endif
 				
 		if ( trap_SP_GetStringTextString( va("INGAME_%s",cg_weapons[ cg.weaponSelect ].item->classname), text, sizeof( text )))
 		{

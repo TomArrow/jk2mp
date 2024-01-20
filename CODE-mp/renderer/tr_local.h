@@ -1553,6 +1553,7 @@ extern	const byte	stylesDefault[MAXLIGHTMAPS];
 
 qhandle_t RE_RegisterShaderLightMap( const char *name, const int *lightmapIndex, const byte *styles ) ;
 qhandle_t		 RE_RegisterShader( const char *name );
+qhandle_t		 RE_RegisterShaderHUD( const char *name );
 qhandle_t		 RE_RegisterShaderNoMip( const char *name );
 qhandle_t		 RE_RegisterShader3DPoly( const char *name );
 qhandle_t		 RE_RegisterShader3DPolyAlpha( const char *name );

@@ -551,7 +551,7 @@ retryModel:
 		Q_strncpyz (ci->teamName, teamName, sizeof(ci->teamName));
 
 	// Model icon for drawing the portrait on screen
-	ci->modelIcon = trap_R_RegisterShaderNoMip ( va ( "models/players/%s/icon_%s", modelName, skinName ) );
+	ci->modelIcon = trap_R_RegisterShaderNoMipHUD( va ( "models/players/%s/icon_%s", modelName, skinName ) );
 
 	return qtrue;
 }

@@ -1298,9 +1298,9 @@ void demoPlaybackInit(void) {
 	trap_AddCommand("cut");
 
 	demo.media.additiveWhiteShader = trap_R_RegisterShader( "mme_additiveWhite" );
-	demo.media.mouseCursor = trap_R_RegisterShaderNoMip( "cursor" );
-	demo.media.switchOn = trap_R_RegisterShaderNoMip( "mme_message_on" );
-	demo.media.switchOff = trap_R_RegisterShaderNoMip( "mme_message_off" );
+	demo.media.mouseCursor = trap_R_RegisterShaderNoMipHUD( "cursor" );
+	demo.media.switchOn = trap_R_RegisterShaderNoMipHUD( "mme_message_on" );
+	demo.media.switchOff = trap_R_RegisterShaderNoMipHUD( "mme_message_off" );
 	
 	// Weather
 	demo.media.heavyRain = trap_S_RegisterSound("sound/ambient/rain_hard");

@@ -390,7 +390,7 @@ CFontInfo::CFontInfo(const char *fontName)
 
 	Q_strncpyz(m_sFontName, fontName, sizeof(m_sFontName));
 	COM_StripExtension( m_sFontName, m_sFontName );	// so we get better error printing if failed to load shader (ie lose ".fontdat")
-	mShader = RE_RegisterShaderNoMip(m_sFontName);
+	mShader = RE_RegisterShaderNoMipHUD(m_sFontName);
 	mShader3D = RE_RegisterShader3DPolyAlpha (m_sFontName);
 
 	FlagNoAsianGlyphs();
@@ -479,7 +479,7 @@ void CFontInfo::UpdateAsianIfNeeded( bool bForceReEval /* = false */ )
 					//
 					// returning 0 here will automatically inhibit Asian glyph calculations at runtime...
 					//
-					m_hAsianShaders[i] = RE_RegisterShaderNoMip( sTemp );
+					m_hAsianShaders[i] = RE_RegisterShaderNoMipHUD( sTemp );
 					m_hAsianShaders3D[i] = RE_RegisterShader3DPolyAlpha( sTemp );
 				}
 			

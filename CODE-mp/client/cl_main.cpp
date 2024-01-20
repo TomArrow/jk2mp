@@ -2329,16 +2329,19 @@ void CL_InitRenderer( void ) {
 	// this sets up the renderer and calls R_Init
 	re.BeginRegistration( &cls.glconfig );
 
+	re.RegisterShaderHUD("gfx/2d/code_new_roman");
+	re.RegisterShaderHUD("gfx/2d/mplus_1m_bold");
+
 	// load character sets
 #ifdef _JK2
-	cls.charSetShader = re.RegisterShaderNoMip("gfx/2d/charsgrid_med");
+	cls.charSetShader = re.RegisterShaderNoMipHUD("gfx/2d/charsgrid_med");
 #else
-	cls.charSetShader = re.RegisterShaderNoMip( "gfx/2d/bigchars" );
+	cls.charSetShader = re.RegisterShaderNoMipHUD( "gfx/2d/bigchars" );
 #endif
 
 	cls.whiteShader = re.RegisterShader( "white" );
 	cls.consoleShader = re.RegisterShader( "console" );
-	cls.recordingShader = re.RegisterShaderNoMip("gfx/hud/message_on");
+	cls.recordingShader = re.RegisterShaderNoMipHUD("gfx/hud/message_on");
 	cls.ratioFix = (float)(SCREEN_WIDTH * cls.glconfig.vidHeight) / (float)(SCREEN_HEIGHT * cls.glconfig.vidWidth);
 	g_console_field_width = cls.glconfig.vidWidth / SMALLCHAR_WIDTH - 2;
 	kg.g_consoleField.widthInChars = g_console_field_width;
