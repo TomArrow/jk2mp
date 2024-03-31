@@ -14,6 +14,7 @@ in vec4 gl_TexCoordIn[3][1];
 
 in mat4x4 projectionMatrix[3];
 
+out vec3 normal;
 
 varying in vec4 eyeSpaceCoords[3];
 varying out vec4 eyeSpaceCoordsGeom;
@@ -90,6 +91,8 @@ void makeUVTransformationMatrix(in vec3 vec1i, in vec2 vec1o, in vec3 vec2i, in 
 //
 //
 void standard(){
+
+	normal = normalize(cross(normalize(gl_PositionIn[2].xyz-gl_PositionIn[0].xyz),normalize(gl_PositionIn[1].xyz-gl_PositionIn[0].xyz)));
 
 	// Calculate UV vectors (dunno what im doing, i want parallax mapping lol)
 	vec3 uvtransform[2];
