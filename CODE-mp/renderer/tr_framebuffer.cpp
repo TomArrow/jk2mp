@@ -68,6 +68,7 @@ void R_FrameBuffer_CreateRollingShutterBuffers(int width, int height, int flags)
 cvar_t *r_convertToHDR;
 cvar_t *r_floatBuffer;
 cvar_t *r_fbo;
+cvar_t *r_fboGLSL;
 cvar_t *r_fboFishEye;
 cvar_t *r_fboFishEyeTessellate;
 cvar_t *r_fboExposure;
@@ -254,7 +255,7 @@ static qboolean R_FrameBuffer_ReactivateFisheye() {
 	if (!fishEyeShader || !fishEyeShader->IsWorking())
 		return qfalse;
 
-	if (!r_fboFishEye->integer) {
+	if (!r_fboFishEye->integer && !r_fboGLSL->integer) {
 		if (fbo.fishEyeActive) {
 			R_FrameBuffer_DeactivateFisheye();
 		}
@@ -288,7 +289,7 @@ qboolean R_FrameBuffer_ActivateFisheye(vec_t* pixelJitter3D, vec_t* dofJitter3D,
 	if (!fishEyeShader || !fishEyeShader->IsWorking())
 		return qfalse;
 
-	if (!r_fboFishEye->integer) {
+	if (!r_fboFishEye->integer && !r_fboGLSL->integer) {
 		if (fbo.fishEyeActive) {
 			R_FrameBuffer_DeactivateFisheye();
 		}
@@ -378,7 +379,7 @@ qboolean R_FrameBuffer_FishEyeDeactivateTessellation() {
 static GLenum fishEyeProcessGLMode(GLenum mode) {
 	if (!fbo.fishEyeActive) return mode;
 
-	if (r_fboFishEyeTessellate->integer && mode == GL_TRIANGLES) { // Tessellation only for triangles rn
+	if (r_fboFishEye->integer && r_fboFishEyeTessellate->integer && mode == GL_TRIANGLES) { // Tessellation only for triangles rn
 		if (R_FrameBuffer_FishEyeActivateTessellation()) {
 			return GL_PATCHES;
 		}
@@ -818,6 +819,7 @@ void R_FrameBuffer_Init( void ) {
 
 	memset( &fbo, 0, sizeof( fbo ) );
 	r_fbo = ri.Cvar_Get( "r_fbo", "1", CVAR_ARCHIVE | CVAR_LATCH);
+	r_fboGLSL = ri.Cvar_Get( "r_fboGLSL", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboFishEye = ri.Cvar_Get( "r_fboFishEye", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboFishEyeTessellate = ri.Cvar_Get( "r_fboFishEyeTessellate", "1", CVAR_ARCHIVE);
 	r_fboDepthBits = ri.Cvar_Get( "r_fboDepthBits", "32f", CVAR_ARCHIVE | CVAR_LATCH);
@@ -944,7 +946,7 @@ void R_FrameBuffer_Init( void ) {
 			ri.Printf(PRINT_WARNING, "WARNING: HDR PQ Shader could not be compiled. HDR conversion disabled.\n");
 		}
 	}
-	if (r_fboFishEye->integer) {
+	if (r_fboFishEye->integer || r_fboGLSL->integer) {
 
 		fishEyeShader = new R_GLSL("glsl/fisheye-vertex.glsl", "", "", "glsl/fisheye-geom.glsl", "glsl/fisheye-fragment.glsl", qfalse);
 		if (!fishEyeShader->IsWorking()) {

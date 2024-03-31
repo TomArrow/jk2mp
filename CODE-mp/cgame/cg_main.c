@@ -468,6 +468,7 @@ vmCvar_t	cg_crosshairHealth;
 vmCvar_t	cg_draw2D;
 vmCvar_t	cg_drawStatus;
 vmCvar_t	cg_animSpeed;
+vmCvar_t	cg_debugSuppressAnnoyingDebugs;
 vmCvar_t	cg_debugAnim;
 vmCvar_t	cg_debugSaber;
 vmCvar_t	cg_debugPosition;
@@ -790,6 +791,7 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cg_bobroll, "cg_bobroll", "0.002", NULL, CVAR_ARCHIVE },
 	//{ &cg_swingSpeed, "cg_swingSpeed", "0.3", NULL, CVAR_CHEAT },
 	{ &cg_animSpeed, "cg_animspeed", "1", NULL, CVAR_CHEAT },
+	{ &cg_debugSuppressAnnoyingDebugs, "cg_debugSuppressAnnoyingDebugs", "1", NULL, CVAR_CHEAT },
 	{ &cg_debugAnim, "cg_debuganim", "0", NULL, CVAR_CHEAT },
 	{ &cg_debugSaber, "cg_debugsaber", "0", NULL, CVAR_CHEAT },
 	{ &cg_debugPosition, "cg_debugposition", "0", NULL, CVAR_CHEAT },

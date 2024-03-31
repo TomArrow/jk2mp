@@ -285,7 +285,7 @@ static int demoSetupView( void) {
 			chaseEntityOrigin( targetCent, targetOrigin );
 			//Find distance betwene plane of camera and this target
 			// For fisheye this is the actual distance to the target and see if it also behaves correctly with stuff behind camera (since fisheye mode can see behind)
-			int r_fishEye = CG_Cvar_GetInt("r_fishEye");
+			int r_fishEye = CG_Cvar_GetInt("r_fboFishEye");
 			int mme_forceNonFishEyeDistanceCalc = CG_Cvar_GetInt("mme_forceNonFishEyeDistanceCalc");
 			if (r_fishEye && !mme_forceNonFishEyeDistanceCalc) {
 				demo.viewFocus = VectorDistance(targetOrigin, cg.refdef.vieworg);
@@ -317,7 +317,7 @@ static int demoSetupView( void) {
 			chaseEntityOrigin( targetCent, targetOrigin );
 			//Find distance betwene plane of camera and this target
 			// For fisheye this is the actual distance to the target and see if it also behaves correctly with stuff behind camera (since fisheye mode can see behind)
-			int r_fishEye = CG_Cvar_GetInt("r_fishEye");
+			int r_fishEye = CG_Cvar_GetInt("r_fboFishEye");
 			int mme_forceNonFishEyeDistanceCalc = CG_Cvar_GetInt("mme_forceNonFishEyeDistanceCalc");
 			if (r_fishEye && !mme_forceNonFishEyeDistanceCalc) {
 				demo.viewFocus = VectorDistance(targetOrigin, cg.refdef.vieworg);

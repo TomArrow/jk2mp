@@ -464,7 +464,7 @@ static void SetFinalProjection( void ) {
 	dx += eyeJitter[0];
 	dy += eyeJitter[1];
 
-	if (r_fboFishEye->integer) {
+	if (r_fboFishEye->integer || r_fboGLSL->integer) {
 
 		vec3_t pixelJitterOrigin = { (pixelJitter[0] * width) / backEnd.viewParms.viewportWidth,(pixelJitter[1] * height) / backEnd.viewParms.viewportHeight,0 }; // TODO: how, if at all, should we take fbo supersampling into account here?
 		vec3_t dofJitterOrigin = { eyeJitter[0],eyeJitter[1],0 };

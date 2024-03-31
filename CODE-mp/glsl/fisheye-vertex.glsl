@@ -3,6 +3,7 @@
 uniform vec3 dofJitterUniform;
 uniform float dofFocusUniform;
 uniform float dofRadiusUniform;
+uniform int fishEyeModeUniform; //1= fisheye, 2=equirectangular
 
 out vec3 debugColor;
 out vec4 color;
@@ -27,7 +28,7 @@ vec3 getPerpendicularAxis(vec3 point, vec3 mainAxis)
 
 void setDebugColor(float x, float y, float z)
 {
-	//debugColor = vec3(max(0.0,min(1.0,x)),max(0.0,min(1.0,y)),max(0.0,min(1.0,z)));
+	debugColor = vec3(max(0.0,min(1.0,x)),max(0.0,min(1.0,y)),max(0.0,min(1.0,z)));
 }
 
 float calcDofFactor(float pointDistance, float dofFocus)
@@ -88,10 +89,18 @@ vec4 equirect_getPos(vec3 pointVec)
 void equirectangular()
 {
 
-	vec4 correctPos = gl_ModelViewMatrix * gl_Vertex;
-	vec3 pointVec = -correctPos.xyz;
+	vec3 pointVec;
+	if(fishEyeModeUniform == 0){
+		//pointVec = (gl_ProjectionMatrix*gl_ModelViewMatrix*gl_Vertex).xyz;
+		//pointVec = (gl_ProjectionMatrix*gl_ModelViewMatrix*gl_Vertex).xyz;
+		//gl_Position = vec4(pointVec, 1.0);
+		gl_Position = ftransform();
+	} else {
+		pointVec = -(gl_ModelViewMatrix * gl_Vertex).xyz;
+		gl_Position = vec4(pointVec, 1.0);
+	}
 	//gl_Position = equirect_getPos(pointVec); // TODO Reinstate this IF geometry shader is not available.
-	gl_Position = vec4(pointVec, 1.0);
+
 
 	gl_TexCoord[0] = gl_MultiTexCoord0;
 	texCoord = gl_MultiTexCoord0;
@@ -104,5 +113,5 @@ void equirectangular()
 void main(void)
 {
 	equirectangular();
-
+	//setDebugColor(1,0,0);
 }

@@ -1251,6 +1251,7 @@ extern cvar_t	*r_ext_preferred_tc_method;
 extern cvar_t	*r_ext_gamma_control;
 extern cvar_t	*r_ext_texenv_op;
 extern cvar_t	*r_ext_multitexture;
+extern cvar_t	*r_fboGLSL;
 extern cvar_t	*r_fboFishEye;
 extern cvar_t	*r_ext_compiled_vertex_array;
 extern cvar_t	*r_ext_texture_env_add;

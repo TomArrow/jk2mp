@@ -146,8 +146,10 @@ void CG_AddToHistory(int serverTime, entityState_t* state, centity_t* cent) {
 	if ((cent->stateHistory.nextSlot % MAX_STATE_HISTORY) == (cent->currentStateHistory % MAX_STATE_HISTORY) && cent->currentStateHistory < cent->stateHistory.nextSlot) {
 		// buffer overflowed, force advance
 #ifdef _DEBUG
-		if (state->eType != ET_MOVER) { // Well, currentstatehistory is only really manually advanced for clients so... this is always gonna get called for the "movers"
-			Com_Printf("centity buffer overflow for client %d\n", state->number);
+		if (!cg_debugSuppressAnnoyingDebugs.integer) {
+			if (state->eType != ET_MOVER) { // Well, currentstatehistory is only really manually advanced for clients so... this is always gonna get called for the "movers"
+				Com_Printf("centity buffer overflow for client %d\n", state->number);
+			}
 		}
 #endif
 		cent->currentStateHistory = cent->stateHistory.nextSlot - MAX_STATE_HISTORY + 1;
@@ -213,7 +215,9 @@ void CG_UpdateTps(snapshot_t* snap, qboolean isTeleport) {
 	if ((cg.psHistory.nextSlot % MAX_STATE_HISTORY) == (cg.currentPsHistory % MAX_STATE_HISTORY) && cg.currentPsHistory < cg.psHistory.nextSlot) {
 		// buffer overflowed, force advance
 #ifdef _DEBUG
-		Com_Printf("ps buffer overflow\n");
+		if (!cg_debugSuppressAnnoyingDebugs.integer) {
+			Com_Printf("ps buffer overflow\n");
+		}
 #endif
 		cg.currentPsHistory = cg.psHistory.nextSlot - MAX_STATE_HISTORY + 1;
 	}

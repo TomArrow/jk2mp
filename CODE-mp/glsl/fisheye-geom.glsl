@@ -126,6 +126,22 @@ vec4 equirect_getPos(vec3 pointVec, int iter)
 
 
 
+void standard(){
+
+	
+	//setDebugColor(1,0,0);
+	for (int i = 0; i < 3; i++)
+	{
+		gl_Position = gl_PositionIn[i];
+		gl_TexCoord[0] = gl_TexCoordIn[i][0];
+		gl_TexCoord[0] = geomTexCoord[i];
+		vertColor = color[i];
+		EmitVertex();
+	}
+	EndPrimitive();
+
+}
+
 void equirect(){
 	bool someInBack = false;
 	bool someLeft = false;
@@ -324,7 +340,9 @@ void main()
 // TODO Apply distortion in TES instead? To have more multithreading? And then send it over as in/out variable?
 	if(fishEyeModeUniform == 2){
 		equirect();
-	} else {
+	} else if(fishEyeModeUniform == 1){
 		fisheye();
+	} else {
+		standard();
 	}
 }
