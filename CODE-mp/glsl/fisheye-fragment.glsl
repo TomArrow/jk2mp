@@ -15,7 +15,7 @@ uniform float texAverageBrightnessUniform;
 uniform float parallaxMapDepthUniform;
 uniform int parallaxMapLayersUniform;
 uniform float parallaxMapGammaUniform;
-uniform int isLightmapUniform; // Not currently filled
+uniform int isLightmapUniform; 
 uniform int isWorldBrushUniform; 
 
 varying vec4 eyeSpaceCoordsGeom;
@@ -98,7 +98,10 @@ void main(void)
 		gl_FragColor = color*vertColor; 
 		gl_FragColor.xyz+=debugColor;
 		if(isWorldBrushUniform > 0){
-			gl_FragColor.xyz+=pureVertexCoordsGeom.xyz/1000.0f; 
+			//gl_FragColor.xyz+=pureVertexCoordsGeom.xyz/1000.0f; 
+		}
+		if(isLightmapUniform > 0){
+			gl_FragColor.xyz = vec3(1.0,1.0,1.0);
 		}
 		//gl_FragColor.xyz+=eyeSpaceCoordsGeom.xyz/1000.0f; // cool effect lol
 	} else {

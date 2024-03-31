@@ -1672,6 +1672,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 #endif
 
+		// Tell GLSL that this is a world brush. Dumb?
+		bool isLightmap = pStage->bundle[0].isLightmap || pStage->bundle[1].isLightmap;
+		R_FrameBuffer_SetDynamicUniforms(NULL, &isLightmap, NULL);
+
 		if ( stage && r_lightmap->integer && !( pStage->bundle[0].isLightmap || pStage->bundle[1].isLightmap || pStage->bundle[0].vertexLightmap ) )
 		{
 			break;
@@ -1792,6 +1796,7 @@ void RB_StageIteratorGeneric( void )
 		qglPolygonOffset( r_offsetFactor->value, r_offsetUnits->value );
 	}
 
+	// Tell GLSL that this is a world brush. Dumb?
 	bool isWorldshader = input->shader->isWorldShader;
 	R_FrameBuffer_SetDynamicUniforms(NULL, NULL, &isWorldshader);
 
