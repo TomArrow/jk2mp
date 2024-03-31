@@ -71,6 +71,8 @@ cvar_t *r_fbo;
 cvar_t *r_fboGLSL;
 cvar_t *r_fboGLSLParallaxMapping;
 cvar_t *r_fboGLSLParallaxMappingDepth;
+cvar_t * r_fboGLSLParallaxMappingGamma;
+cvar_t * r_fboGLSLParallaxMappingLayers;
 cvar_t *r_fboFishEye;
 cvar_t *r_fboFishEyeTessellate;
 cvar_t *r_fboExposure;
@@ -203,7 +205,9 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "pixelHeightUniform"), height * superSampleMultiplier);
 		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "texAverageBrightnessUniform"), fbo.fishEyeData.texAverageBrightness);
 		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "isLightmapUniform"), fbo.fishEyeData.isLightmap);
+		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "parallaxMapLayersUniform"), r_fboGLSLParallaxMappingLayers->integer);
 		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "parallaxMapDepthUniform"), r_fboGLSLParallaxMappingDepth->value);
+		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "parallaxMapGammaUniform"), r_fboGLSLParallaxMappingGamma->value);
 
 
 		if (fbo.fishEyeData.tessellationActive) {
@@ -223,7 +227,9 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "pixelHeightUniform"), height * superSampleMultiplier);
 		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "texAverageBrightnessUniform"), fbo.fishEyeData.texAverageBrightness);
 		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "isLightmapUniform"), fbo.fishEyeData.isLightmap ? 1 : 0);
+		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "parallaxMapLayersUniform"), r_fboGLSLParallaxMappingLayers->integer);
 		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "parallaxMapDepthUniform"), r_fboGLSLParallaxMappingDepth->value);
+		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "parallaxMapGammaUniform"), r_fboGLSLParallaxMappingGamma->value);
 	}
 
 	return qtrue;
@@ -848,7 +854,9 @@ void R_FrameBuffer_Init( void ) {
 	memset( &fbo, 0, sizeof( fbo ) );
 	r_fbo = ri.Cvar_Get( "r_fbo", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboGLSL = ri.Cvar_Get( "r_fboGLSL", "0", CVAR_ARCHIVE | CVAR_LATCH);
-	r_fboGLSLParallaxMappingDepth = ri.Cvar_Get( "r_fboGLSLParallaxMappingDepth", "5.0", CVAR_ARCHIVE);
+	r_fboGLSLParallaxMappingDepth = ri.Cvar_Get( "r_fboGLSLParallaxMappingDepth", "10", CVAR_ARCHIVE);
+	r_fboGLSLParallaxMappingGamma = ri.Cvar_Get( "r_fboGLSLParallaxMappingGamma", "15", CVAR_ARCHIVE);
+	r_fboGLSLParallaxMappingLayers = ri.Cvar_Get( "r_fboGLSLParallaxMappingLayers", "200", CVAR_ARCHIVE);
 	r_fboGLSLParallaxMapping = ri.Cvar_Get( "r_fboGLSLParallaxMapping", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboFishEye = ri.Cvar_Get( "r_fboFishEye", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboFishEyeTessellate = ri.Cvar_Get( "r_fboFishEyeTessellate", "1", CVAR_ARCHIVE);

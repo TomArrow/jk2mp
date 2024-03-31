@@ -13,6 +13,8 @@ in vec3 normal;
 uniform int fishEyeModeUniform; //1= fisheye, 2=equirectangular
 uniform float texAverageBrightnessUniform;
 uniform float parallaxMapDepthUniform;
+uniform int parallaxMapLayersUniform;
+uniform float parallaxMapGammaUniform;
 uniform int isLightmapUniform; // Not currently filled
 
 varying vec4 eyeSpaceCoordsGeom;
@@ -36,11 +38,12 @@ vec2 parallaxMap(){
 		return uvCoords;
 }
 vec2 parallaxMapSteep(){
-		const int layers = 10;
+		int layers = parallaxMapLayersUniform;
 		vec2 uvCoords;
 
 		float layerDepth = parallaxMapDepthUniform / float(layers);
 		vec3 currentPlace = eyeSpaceCoordsGeom.xyz;
+		float gamma = 1.0f/parallaxMapGammaUniform;
 
 		//vec4 color = texture2D(text_in, gl_TexCoord[0].st);
 
@@ -56,7 +59,7 @@ vec2 parallaxMapSteep(){
 		for(int i=0; i< layers;i++){
 			
 			vec4 color = texture2D(text_in, uvCoords);
-			float texDepth = parallaxMapDepthUniform*(max(min((color.x + color.y + color.z)/3.0f/texAverageBrightnessUniform,1.0f),0.0f)-1.0f);
+			float texDepth = parallaxMapDepthUniform*(pow(max(min((color.x + color.y + color.z)/3.0f/texAverageBrightnessUniform,1.0f),0.0f),gamma)-1.0f);
 			if(texDepth >= -(layerDepth * float(i))){
 				break;
 			} else {
@@ -87,7 +90,7 @@ void main(void)
 
     if(fishEyeModeUniform == 0){
 	
-		vec2 uvCoords = parallaxMapSteep();
+		vec2 uvCoords = parallaxMapLayersUniform < 2 ? parallaxMap():parallaxMapSteep();
 		vec4 color = texture2D(text_in, uvCoords);
 
 		gl_FragColor = color*vertColor; 
