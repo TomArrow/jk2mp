@@ -147,6 +147,38 @@ float perlinNoiseHelper(vec4 coords){ // Looks a bit like marble?
 	//res.xyz = vec3(1.0)-res.xyz;
 	return val;
 }
+float perlinNoiseHelper2(vec4 coords){ // Looks a bit like marble?
+    float val;
+	float timeVal =  serverTimeUniform*100.0;
+    coords.w = timeVal/128.0;
+	val = ( snoise(coords/10.0))/128.0;
+    coords.w = timeVal/64.0;
+	val += ( snoise(coords/20.0))/64.0;
+    coords.w = timeVal/32.0;
+	val += ( snoise(coords/40.0))/32.0;
+    coords.w = timeVal/16.0;
+	val += ( snoise(coords/80.0))/16.0;
+    coords.w = timeVal/8.0;
+	val += ( snoise(coords/160.0))/8.0;
+    coords.w = timeVal/4.0;
+	val += ( snoise(coords/320.0))/4.0;
+    coords.w = timeVal/2.0;
+	val += ( snoise(coords/640.0))/2.0;
+    coords.w = timeVal;
+	val += ( snoise(coords/1280.0));
+	//gl_FragColor.xyz += 8.0f;
+	//gl_FragColor.xyz /= 16.0f;
+	//res.xyz = abs(res.xyz);
+	//res.xyz += 1.0;
+	//res.xyz *= 0.5;
+    val = abs(val);
+    //val += 1.0;
+    //val *= 0.5;
+    //val = pow(val ,0.3);
+    //val = 1.0 - val;
+	//res.xyz = vec3(1.0)-res.xyz;
+	return val;
+}
 
 
 vec3 perlinNoiseVariation3(){ // Looks a bit like marble?
@@ -179,6 +211,17 @@ vec3 perlinNoiseVariation3(){ // Looks a bit like marble?
     }
 	return res;
 }
+vec3 perlinNoiseVariation4(){ // Looks a bit like marble?
+	vec3 res;
+	vec4 startCooords = pureVertexCoordsGeom*0.25;
+    vec3 distort = vec3(perlinNoiseHelper2(startCooords),perlinNoiseHelper2(startCooords+vec4(40.3,3.4,100.5,1.0)),perlinNoiseHelper2(startCooords+vec4(10.1,1.4,101.5,1.0)));
+    vec3 distort2 = vec3(perlinNoiseHelper2(startCooords+30.0*vec4(distort,1.0)),perlinNoiseHelper2(startCooords+30.0*vec4(distort,1.0)+vec4(15.3,13.4,110.3,1.0)),perlinNoiseHelper2(startCooords+30.0*vec4(distort,1.0)+vec4(13.1,11.4,151.5,1.0)));
+    float finalVal = perlinNoiseHelper2(startCooords+100.0*vec4(distort2,1.0));
+    float finalVal2 = perlinNoiseHelper2(startCooords-33.0*vec4(distort2,1.0));
+    float finalVal3 = perlinNoiseHelper2(startCooords-72.456*vec4(distort2,1.0));
+    res =vec3(pow(finalVal,2.4),pow(finalVal2,2.4),pow(finalVal3,2.4));
+	return res;
+}
 
 void main(void)
 {
@@ -198,12 +241,12 @@ void main(void)
 
 		gl_FragColor = color*vertColor; 
 		gl_FragColor.xyz+=debugColor;
-		if(isWorldBrushUniform > 0 && isLightmapUniform == 0){
+		if(isWorldBrushUniform > 0 && isLightmapUniform == 0 && perlinFuckery > 0){
 			//gl_FragColor.xyz+=pureVertexCoordsGeom.xyz/1000.0f; 
-			gl_FragColor.xyz = perlinNoiseVariation3();
+			gl_FragColor.xyz = perlinNoiseVariation4();
 		}
-		if(isLightmapUniform > 0){
-			//gl_FragColor.xyz = vec3(1.0,1.0,1.0);
+		if(isLightmapUniform > 0 && isWorldBrushUniform > 0 && perlinFuckery > 0){
+			gl_FragColor.xyz = vec3(1.0,1.0,1.0);
 		}
 		//gl_FragColor.xyz+=eyeSpaceCoordsGeom.xyz/1000.0f; // cool effect lol
 	} else {
