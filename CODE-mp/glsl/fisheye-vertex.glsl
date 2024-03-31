@@ -17,6 +17,7 @@ out float realDepth;
 out mat4x4 projectionMatrix;
 
 varying vec4 eyeSpaceCoords;
+varying vec4 pureVertexCoords;
 
 
 float angleOnPlane(vec3 point, vec3 axis1, vec3 axis2)
@@ -110,6 +111,7 @@ void equirectangular()
 	}
 	//gl_Position = equirect_getPos(pointVec); // TODO Reinstate this IF geometry shader is not available.
 
+	pureVertexCoords = gl_Vertex;
 
 	gl_TexCoord[0] = gl_MultiTexCoord0;
 	texCoord = gl_MultiTexCoord0;

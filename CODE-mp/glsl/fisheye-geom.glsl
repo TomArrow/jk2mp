@@ -19,6 +19,9 @@ out vec3 normal;
 varying in vec4 eyeSpaceCoords[3];
 varying out vec4 eyeSpaceCoordsGeom;
 
+varying in vec4 pureVertexCoords[3];
+varying out vec4 pureVertexCoordsGeom;
+
 uniform vec3 pixelJitterUniform;
 uniform vec3 dofJitterUniform;
 uniform float dofFocusUniform;
@@ -108,6 +111,7 @@ void standard(){
 		//gl_TexCoord[0].s = dot(gl_PositionIn[i].xyz,uvtransform[0]);
 		//gl_TexCoord[0].t = dot(gl_PositionIn[i].xyz,uvtransform[1]);
 		eyeSpaceCoordsGeom = eyeSpaceCoords[i];
+		pureVertexCoordsGeom = pureVertexCoords[i];
 
 		vertColor = color[i];
 		EmitVertex();

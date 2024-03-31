@@ -1792,6 +1792,9 @@ void RB_StageIteratorGeneric( void )
 		qglPolygonOffset( r_offsetFactor->value, r_offsetUnits->value );
 	}
 
+	bool isWorldshader = input->shader->isWorldShader;
+	R_FrameBuffer_SetDynamicUniforms(NULL, NULL, &isWorldshader);
+
 	//
 	// if there is only a single pass then we can enable color
 	// and texture arrays before we compile, otherwise we need

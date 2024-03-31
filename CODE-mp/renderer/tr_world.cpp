@@ -310,6 +310,8 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits ) {
 		shader->cullType = CT_TWO_SIDED;
 	}
 
+	surf->shader->isWorldShader = qtrue;
+
 	R_AddDrawSurf( surf->data, shader, surf->fogIndex, dlightBits );
 }
 
