@@ -69,6 +69,8 @@ cvar_t *r_convertToHDR;
 cvar_t *r_floatBuffer;
 cvar_t *r_fbo;
 cvar_t *r_fboGLSL;
+cvar_t *r_fboGLSLParallaxMapping;
+cvar_t *r_fboGLSLParallaxMappingDepth;
 cvar_t *r_fboFishEye;
 cvar_t *r_fboFishEyeTessellate;
 cvar_t *r_fboExposure;
@@ -135,6 +137,8 @@ typedef struct {
 	float fovX;
 	float fovY;
 	qboolean tessellationActive;
+	float texAverageBrightness;
+	bool isLightmap;
 } fishEyeData_t;
 
 static struct {
@@ -197,6 +201,9 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "fovYUniform"), fbo.fishEyeData.fovY);
 		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "pixelWidthUniform"), width*superSampleMultiplier);
 		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "pixelHeightUniform"), height * superSampleMultiplier);
+		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "texAverageBrightnessUniform"), fbo.fishEyeData.texAverageBrightness);
+		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "isLightmapUniform"), fbo.fishEyeData.isLightmap);
+		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "parallaxMapDepthUniform"), r_fboGLSLParallaxMappingDepth->value);
 
 
 		if (fbo.fishEyeData.tessellationActive) {
@@ -214,6 +221,9 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "fovYUniform"), fbo.fishEyeData.fovY);
 		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "pixelWidthUniform"), width * superSampleMultiplier);
 		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "pixelHeightUniform"), height * superSampleMultiplier);
+		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "texAverageBrightnessUniform"), fbo.fishEyeData.texAverageBrightness);
+		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "isLightmapUniform"), fbo.fishEyeData.isLightmap ? 1 : 0);
+		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "parallaxMapDepthUniform"), r_fboGLSLParallaxMappingDepth->value);
 	}
 
 	return qtrue;
@@ -305,6 +315,24 @@ qboolean R_FrameBuffer_ActivateFisheye(vec_t* pixelJitter3D, vec_t* dofJitter3D,
 	fbo.fishEyeData.dofRadius = dofRadius;
 	fbo.fishEyeData.fovX = fovX;
 	fbo.fishEyeData.fovY = fovY;
+
+	R_FrameBuffer_FishEyeSetUniforms(fbo.fishEyeData.tessellationActive);
+
+	return qtrue;
+#endif
+}
+
+qboolean R_FrameBuffer_SetDynamicUniforms(float* texAverageBrightness, bool* isLightmap) {
+#ifdef HAVE_GLES
+	//TODO
+	return qfalse;
+#else
+	if (texAverageBrightness) {
+		fbo.fishEyeData.texAverageBrightness = *texAverageBrightness;
+	}
+	if (isLightmap) {
+		fbo.fishEyeData.isLightmap = *isLightmap;
+	}
 
 	R_FrameBuffer_FishEyeSetUniforms(fbo.fishEyeData.tessellationActive);
 
@@ -820,6 +848,8 @@ void R_FrameBuffer_Init( void ) {
 	memset( &fbo, 0, sizeof( fbo ) );
 	r_fbo = ri.Cvar_Get( "r_fbo", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboGLSL = ri.Cvar_Get( "r_fboGLSL", "0", CVAR_ARCHIVE | CVAR_LATCH);
+	r_fboGLSLParallaxMappingDepth = ri.Cvar_Get( "r_fboGLSLParallaxMappingDepth", "5.0", CVAR_ARCHIVE);
+	r_fboGLSLParallaxMapping = ri.Cvar_Get( "r_fboGLSLParallaxMapping", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboFishEye = ri.Cvar_Get( "r_fboFishEye", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboFishEyeTessellate = ri.Cvar_Get( "r_fboFishEyeTessellate", "1", CVAR_ARCHIVE);
 	r_fboDepthBits = ri.Cvar_Get( "r_fboDepthBits", "32f", CVAR_ARCHIVE | CVAR_LATCH);

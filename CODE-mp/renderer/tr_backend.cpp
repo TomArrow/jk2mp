@@ -45,22 +45,29 @@ static float	s_flipMatrix[16] = {
 */
 void GL_Bind( image_t *image ) {
 	int texnum;
+	float averageBrightness;
 
 	if ( !image ) {
 		ri.Printf( PRINT_WARNING, "GL_Bind: NULL image\n" );
 		texnum = tr.defaultImage->texnum;
+		averageBrightness = tr.defaultImage->averageBrightnessLevel;
 	} else {
 		texnum = image->texnum;
+		averageBrightness = image->averageBrightnessLevel;
 	}
 
 	if ( r_nobind->integer && tr.dlightImage ) {		// performance evaluation option
 		texnum = tr.dlightImage->texnum;
+		averageBrightness = tr.dlightImage->averageBrightnessLevel;
 	}
 
 	if ( glState.currenttextures[glState.currenttmu] != texnum ) {
 		image->frameUsed = tr.frameCount;
 		glState.currenttextures[glState.currenttmu] = texnum;
 		qglBindTexture (GL_TEXTURE_2D, texnum);
+		if (r_fboGLSLParallaxMapping->integer) {
+			R_FrameBuffer_SetDynamicUniforms(&averageBrightness);
+		}
 	}
 }
 

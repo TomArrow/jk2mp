@@ -124,6 +124,8 @@ typedef struct image_s {
 
 	int			iLastLevelUsedOn;
 
+	float		averageBrightnessLevel;
+
 } image_t;
 
 //===============================================================================
@@ -1252,6 +1254,7 @@ extern cvar_t	*r_ext_gamma_control;
 extern cvar_t	*r_ext_texenv_op;
 extern cvar_t	*r_ext_multitexture;
 extern cvar_t	*r_fboGLSL;
+extern cvar_t	*r_fboGLSLParallaxMapping;
 extern cvar_t	*r_fboFishEye;
 extern cvar_t	*r_ext_compiled_vertex_array;
 extern cvar_t	*r_ext_texture_env_add;
@@ -2128,6 +2131,7 @@ qboolean R_FrameBuffer_Blur(float scale, int frame, int total);
 qboolean R_FrameBuffer_ApplyExposure();
 qboolean R_FrameBuffer_HDRConvert(HDRConvertSource source= HDRCONVSOURCE_MAINFBO, int param=0);
 qboolean R_FrameBuffer_ActivateFisheye(vec_t* pixelJitter3D,vec_t* dofJitter3D, float dofFocus, float dofRadius, float fovX,float fovY);
+qboolean R_FrameBuffer_SetDynamicUniforms(float* texAverageBrightness = NULL, bool* isLightmap = NULL);
 qboolean R_FrameBuffer_DeactivateFisheye();
 qboolean R_FrameBuffer_StartHDRRead();
 qboolean R_FrameBuffer_EndHDRRead();

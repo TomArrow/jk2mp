@@ -1266,9 +1266,21 @@ image_t *R_CreateImage( const char *name, const textureImage_t *picWrap, int wid
 
 	GL_Bind(image);
 
+	double averageBrightnessTotal = 0;
+	double averageBrightnessSamples = 0;
+
 	// Call templatized mipmap.
 	switch (picWrap->bpc) {
 	case BPC_32FLOAT:
+		if (r_fboGLSLParallaxMapping->integer) {
+			float* data = (float*)picWrap->ptr;
+			for (int i = 0; i < (image->height*image->width); i++, data += 4) {
+				averageBrightnessTotal += data[0];
+				averageBrightnessTotal += data[1];
+				averageBrightnessTotal += data[2]; 
+				averageBrightnessSamples += 3;
+			}
+		}
 		Upload32((float*)picWrap->ptr, image->width, image->height,
 			image->mipmap,
 			allowPicmip,
@@ -1279,6 +1291,15 @@ image_t *R_CreateImage( const char *name, const textureImage_t *picWrap, int wid
 			&image->uploadHeight,picWrap->bpc);
 		break;
 	case BPC_32BIT:
+		if (r_fboGLSLParallaxMapping->integer) {
+			unsigned int* data = (unsigned int*)picWrap->ptr;
+			for (int i = 0; i < (image->height * image->width); i++, data += 4) {
+				averageBrightnessTotal += (double)data[0]/(double)UINT_MAX;
+				averageBrightnessTotal += (double)data[1]/(double)UINT_MAX;
+				averageBrightnessTotal += (double)data[2]/(double)UINT_MAX;
+				averageBrightnessSamples += 3;
+			}
+		}
 		Upload32((unsigned int*)picWrap->ptr, image->width, image->height,
 			image->mipmap,
 			allowPicmip,
@@ -1289,6 +1310,15 @@ image_t *R_CreateImage( const char *name, const textureImage_t *picWrap, int wid
 			&image->uploadHeight, picWrap->bpc);
 		break;
 	case BPC_16BIT:
+		if (r_fboGLSLParallaxMapping->integer) {
+			unsigned short* data = (unsigned short*)picWrap->ptr;
+			for (int i = 0; i < (image->height * image->width); i++, data += 4) {
+				averageBrightnessTotal += (double)data[0] / (double)UINT16_MAX;
+				averageBrightnessTotal += (double)data[1] / (double)UINT16_MAX;
+				averageBrightnessTotal += (double)data[2] / (double)UINT16_MAX;
+				averageBrightnessSamples += 3;
+			}
+		}
 		Upload32((unsigned short*)picWrap->ptr, image->width, image->height,
 			image->mipmap,
 			allowPicmip,
@@ -1300,6 +1330,15 @@ image_t *R_CreateImage( const char *name, const textureImage_t *picWrap, int wid
 		break;
 	case BPC_8BIT:
 	default:
+		if (r_fboGLSLParallaxMapping->integer) {
+			byte* data = (byte*)picWrap->ptr;
+			for (int i = 0; i < (image->height * image->width); i++, data += 4) {
+				averageBrightnessTotal += (double)data[0] / (double)255;
+				averageBrightnessTotal += (double)data[1] / (double)255;
+				averageBrightnessTotal += (double)data[2] / (double)255;
+				averageBrightnessSamples += 3;
+			}
+		}
 		Upload32((byte*)picWrap->ptr, image->width, image->height,
 			image->mipmap,
 			allowPicmip,
@@ -1311,6 +1350,8 @@ image_t *R_CreateImage( const char *name, const textureImage_t *picWrap, int wid
 		break;
 
 	}
+
+	image->averageBrightnessLevel = (float)(averageBrightnessTotal / averageBrightnessSamples);
 
 	qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrapClampMode );
 	qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glWrapClampMode );

@@ -11,12 +11,15 @@ in mat4x4 projectionMatrix;
 in vec3 normal;
 
 uniform int fishEyeModeUniform; //1= fisheye, 2=equirectangular
+uniform float texAverageBrightnessUniform;
+uniform float parallaxMapDepthUniform;
+uniform int isLightmapUniform; // Not currently filled
 
 varying vec4 eyeSpaceCoordsGeom;
 
 void main(void)
 {
-    const float depth = 5.0f;
+    //const float depth = 5.0f;
 
     if(fishEyeModeUniform == 0){
 	
@@ -25,9 +28,9 @@ void main(void)
 		//uvCoords.t = dot(eyeSpaceCoordsGeom.xyz,texUVTransform[1]);
 		vec4 color = texture2D(text_in, gl_TexCoord[0].st);
 		//vec4 color = texture2D(text_in, uvCoords);
-		float offset = 1.0f - max(min((color.x + color.y + color.z)/1.0f,1.0f),0.0f);
+		float offset = 1.0f - max(min((color.x + color.y + color.z)/3.0f/texAverageBrightnessUniform,1.0f),0.0f);
 
-		vec3 offset3d =  normalize(eyeSpaceCoordsGeom.xyz)*depth * offset;
+		vec3 offset3d =  normalize(eyeSpaceCoordsGeom.xyz)*parallaxMapDepthUniform * offset;
 		offset3d -= normal * dot(normal,offset3d); // project onto surface aka get rid of any 3d component that aligns with the normal of the surface
 
 		vec3 transposedCoords = eyeSpaceCoordsGeom.xyz + offset3d;
