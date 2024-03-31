@@ -210,6 +210,7 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "parallaxMapLayersUniform"), r_fboGLSLParallaxMappingLayers->integer);
 		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "parallaxMapDepthUniform"), r_fboGLSLParallaxMappingDepth->value);
 		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "parallaxMapGammaUniform"), r_fboGLSLParallaxMappingGamma->value);
+		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "serverTimeUniform"), backEnd.refdef.floatTime);
 
 
 		if (fbo.fishEyeData.tessellationActive) {
@@ -233,6 +234,7 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "parallaxMapLayersUniform"), r_fboGLSLParallaxMappingLayers->integer);
 		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "parallaxMapDepthUniform"), r_fboGLSLParallaxMappingDepth->value);
 		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "parallaxMapGammaUniform"), r_fboGLSLParallaxMappingGamma->value);
+		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "serverTimeUniform"), backEnd.refdef.floatTime);
 	}
 
 	return qtrue;
