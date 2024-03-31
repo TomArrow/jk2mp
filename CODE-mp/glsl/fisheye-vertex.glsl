@@ -14,6 +14,11 @@ out vec4 geomTexCoord;
 
 out float realDepth;
 
+out mat4x4 projectionMatrix;
+
+varying vec4 eyeSpaceCoords;
+
+
 float angleOnPlane(vec3 point, vec3 axis1, vec3 axis2)
 {
 
@@ -92,9 +97,13 @@ void equirectangular()
 	vec3 pointVec;
 	if(fishEyeModeUniform == 0){
 		//pointVec = (gl_ProjectionMatrix*gl_ModelViewMatrix*gl_Vertex).xyz;
-		//pointVec = (gl_ProjectionMatrix*gl_ModelViewMatrix*gl_Vertex).xyz;
+		pointVec = (gl_ProjectionMatrix*gl_ModelViewMatrix*gl_Vertex).xyz;
 		//gl_Position = vec4(pointVec, 1.0);
-		gl_Position = ftransform();
+		//gl_Position = gl_ProjectionMatrix*gl_ModelViewMatrix*gl_Vertex;
+		gl_Position = gl_ModelViewMatrix*gl_Vertex;
+		projectionMatrix = gl_ProjectionMatrix;
+		//gl_Position = ftransform();
+		eyeSpaceCoords = gl_ModelViewMatrix * gl_Vertex;
 	} else {
 		pointVec = -(gl_ModelViewMatrix * gl_Vertex).xyz;
 		gl_Position = vec4(pointVec, 1.0);

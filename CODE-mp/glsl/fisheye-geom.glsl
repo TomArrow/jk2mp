@@ -6,10 +6,17 @@
 float realDepth[3]; in vec4 color[3];
 out vec4 vertColor;
 out vec3 debugColor;
+out vec3 texUVTransform[2];
 
 in vec4 geomTexCoord[3];
 
 in vec4 gl_TexCoordIn[3][1];
+
+in mat4x4 projectionMatrix[3];
+
+
+varying in vec4 eyeSpaceCoords[3];
+varying out vec4 eyeSpaceCoordsGeom;
 
 uniform vec3 pixelJitterUniform;
 uniform vec3 dofJitterUniform;
@@ -58,6 +65,55 @@ float calcDofFactor(float pointDistance, float dofFocus)
 {
 	return abs(pointDistance - dofFocus);	// /pointDistance;
 }
+
+vec3 generateTransformationMatrixRow(in vec3 vec1i, in vec3 vec2i, in vec3 vec3i, float resultValue1, float resultValue2, float resultValue3){
+	vec3 transformVec;
+	
+	transformVec.x = (vec2i.z * vec3i.y * resultValue1 - vec2i.y * vec3i.z * resultValue1 - vec1i.z * vec3i.y * resultValue2 + vec1i.y * vec3i.z * resultValue2 + vec1i.z * vec2i.y * resultValue3 - vec1i.y * vec2i.z * resultValue3) / (vec1i.z * vec2i.y * vec3i.x - vec1i.y * vec2i.z * vec3i.x - vec1i.z * vec2i.x * vec3i.y + vec1i.x * vec2i.z * vec3i.y + vec1i.y * vec2i.x * vec3i.z - vec1i.x * vec2i.y * vec3i.z);
+	transformVec.y = (-vec2i.z * vec3i.x * resultValue1 + vec2i.x * vec3i.z * resultValue1 + vec1i.z * vec3i.x * resultValue2 - vec1i.x * vec3i.z * resultValue2 - vec1i.z * vec2i.x * resultValue3 + vec1i.x * vec2i.z * resultValue3) / (vec1i.z * vec2i.y * vec3i.x - vec1i.y * vec2i.z * vec3i.x - vec1i.z * vec2i.x * vec3i.y + vec1i.x * vec2i.z * vec3i.y + vec1i.y * vec2i.x * vec3i.z - vec1i.x * vec2i.y * vec3i.z);
+	transformVec.z = (-vec2i.y * vec3i.x * resultValue1 + vec2i.x * vec3i.y * resultValue1 + vec1i.y * vec3i.x * resultValue2 - vec1i.x * vec3i.y * resultValue2 - vec1i.y * vec2i.x * resultValue3 + vec1i.x * vec2i.y * resultValue3) / (-vec1i.z * vec2i.y * vec3i.x + vec1i.y * vec2i.z * vec3i.x + vec1i.z * vec2i.x * vec3i.y - vec1i.x * vec2i.z * vec3i.y - vec1i.y * vec2i.x * vec3i.z + vec1i.x * vec2i.y * vec3i.z);
+	
+	return transformVec;
+}
+
+// Calculates matrix from 2 pairs of vectors that transforms the i vec3 ones to the o vec2 ones.
+void makeUVTransformationMatrix(in vec3 vec1i, in vec2 vec1o, in vec3 vec2i, in vec2 vec2o, in vec3 vec3i, in vec2 vec3o, inout vec3 matrix[2]){
+	
+	matrix[0] = generateTransformationMatrixRow(vec1i,vec2i,vec3i,vec1o.s,vec2o.s,vec3o.s);
+	matrix[1] = generateTransformationMatrixRow(vec1i,vec2i,vec3i,vec1o.t,vec2o.t,vec3o.t);
+
+}
+
+//
+//
+// Standard stuff 
+//
+//
+void standard(){
+
+	// Calculate UV vectors (dunno what im doing, i want parallax mapping lol)
+	vec3 uvtransform[2];
+	makeUVTransformationMatrix(gl_PositionIn[0].xyz,geomTexCoord[0].st,gl_PositionIn[1].xyz,geomTexCoord[1].st,gl_PositionIn[2].xyz,geomTexCoord[2].st,uvtransform);
+	texUVTransform= uvtransform;
+
+	//setDebugColor(1,0,0);
+	for (int i = 0; i < 3; i++)
+	{
+		gl_Position = projectionMatrix[0]* gl_PositionIn[i];
+		//gl_TexCoord[0] = gl_TexCoordIn[i][0];
+		gl_TexCoord[0] = geomTexCoord[i];
+		//gl_TexCoord[0].s = dot(gl_PositionIn[i].xyz,uvtransform[0]);
+		//gl_TexCoord[0].t = dot(gl_PositionIn[i].xyz,uvtransform[1]);
+		eyeSpaceCoordsGeom = eyeSpaceCoords[i];
+
+		vertColor = color[i];
+		EmitVertex();
+	}
+	EndPrimitive();
+
+}
+
+
 
 //
 //
@@ -125,22 +181,6 @@ vec4 equirect_getPos(vec3 pointVec, int iter)
 }
 
 
-
-void standard(){
-
-	
-	//setDebugColor(1,0,0);
-	for (int i = 0; i < 3; i++)
-	{
-		gl_Position = gl_PositionIn[i];
-		gl_TexCoord[0] = gl_TexCoordIn[i][0];
-		gl_TexCoord[0] = geomTexCoord[i];
-		vertColor = color[i];
-		EmitVertex();
-	}
-	EndPrimitive();
-
-}
 
 void equirect(){
 	bool someInBack = false;
