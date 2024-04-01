@@ -69,6 +69,7 @@ cvar_t *r_convertToHDR;
 cvar_t *r_floatBuffer;
 cvar_t *r_fbo;
 cvar_t *r_fboGLSL;
+cvar_t *r_fboGLSLNoiseFuckery;
 cvar_t *r_fboGLSLParallaxMapping;
 cvar_t *r_fboGLSLParallaxMappingDepth;
 cvar_t * r_fboGLSLParallaxMappingGamma;
@@ -211,6 +212,7 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "parallaxMapDepthUniform"), r_fboGLSLParallaxMappingDepth->value);
 		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "parallaxMapGammaUniform"), r_fboGLSLParallaxMappingGamma->value);
 		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "serverTimeUniform"), backEnd.refdef.floatTime);
+		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "noiseFuckeryUniform"), r_fboGLSLNoiseFuckery->integer);
 
 
 		if (fbo.fishEyeData.tessellationActive) {
@@ -235,6 +237,7 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "parallaxMapDepthUniform"), r_fboGLSLParallaxMappingDepth->value);
 		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "parallaxMapGammaUniform"), r_fboGLSLParallaxMappingGamma->value);
 		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "serverTimeUniform"), backEnd.refdef.floatTime);
+		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "noiseFuckeryUniform"), r_fboGLSLNoiseFuckery->integer);
 	}
 
 	return qtrue;
@@ -862,6 +865,7 @@ void R_FrameBuffer_Init( void ) {
 	memset( &fbo, 0, sizeof( fbo ) );
 	r_fbo = ri.Cvar_Get( "r_fbo", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboGLSL = ri.Cvar_Get( "r_fboGLSL", "0", CVAR_ARCHIVE | CVAR_LATCH);
+	r_fboGLSLNoiseFuckery = ri.Cvar_Get( "r_fboGLSLNoiseFuckery", "5", CVAR_ARCHIVE);
 	r_fboGLSLParallaxMappingDepth = ri.Cvar_Get( "r_fboGLSLParallaxMappingDepth", "10", CVAR_ARCHIVE);
 	r_fboGLSLParallaxMappingGamma = ri.Cvar_Get( "r_fboGLSLParallaxMappingGamma", "15", CVAR_ARCHIVE);
 	r_fboGLSLParallaxMappingLayers = ri.Cvar_Get( "r_fboGLSLParallaxMappingLayers", "200", CVAR_ARCHIVE);

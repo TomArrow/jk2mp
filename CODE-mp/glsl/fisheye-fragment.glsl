@@ -18,6 +18,7 @@ uniform float parallaxMapGammaUniform;
 uniform float serverTimeUniform;
 uniform int isLightmapUniform; 
 uniform int isWorldBrushUniform; 
+uniform int noiseFuckeryUniform; 
 
 varying vec4 eyeSpaceCoordsGeom;
 varying vec4 pureVertexCoordsGeom;
@@ -222,12 +223,53 @@ vec3 perlinNoiseVariation4(){ // Looks a bit like marble?
     res =vec3(pow(finalVal,2.4),pow(finalVal2,2.4),pow(finalVal3,2.4));
 	return res;
 }
+vec3 perlinNoiseVariation5(vec4 coords){ // Looks a bit like marble?
+	vec3 res;
+	float val,val2;
+	float timeVal =  serverTimeUniform*2.5;
+    coords.w = timeVal;
+	val = ( snoise(coords/0.078125))/16384.0;
+	val += ( snoise(coords/0.15625))/8192.0;
+	val += ( snoise(coords/0.3125))/4096.0;
+	val += ( snoise(coords/0.625))/2048.0;
+	val += ( snoise(coords/1.25))/1024.0;
+	val += ( snoise(coords/2.5))/512.0;
+	val += ( snoise(coords/5.0))/256.0;
+	val += ( snoise(coords/10.0))/128.0;
+	val += ( snoise(coords/20.0))/64.0;
+	val += ( snoise(coords/40.0))/32.0;
+	val += ( snoise(coords/80.0))/16.0;
+	val += ( snoise(coords/160.0))/8.0;
+	val += ( snoise(coords/320.0))/4.0;
+	val += ( snoise(coords/640.0))/2.0;
+	val += ( snoise(coords/1280.0));
+	//gl_FragColor.xyz += 8.0f;
+	//gl_FragColor.xyz /= 16.0f;
+	//res.xyz = abs(res.xyz);
+	//res.xyz += 1.0;
+	//res.xyz *= 0.5;
+    val = abs(val);
+    //return vec3(val < 0.002);
+    //val += 1.0;
+    val = 1.0 - val;
+    val2=val;
+	float dist = length(eyeSpaceCoordsGeom.xyz);
+	dist = max(0.0,1000.0-dist);
+    val = pow(val ,1000.0+dist*2.0);
+    val2 = pow(val2 ,40.0);
+	//res.xyz = vec3(1.0)-res.xyz;
+    res.xyz = vec3(val*10.0)+vec3(val2*0.5)*vec3(val2*0.5,val2*0.7,1.0);
+	res.x = max(0.0,pow(res.x,2.4));
+	res.y = max(0.0,pow(res.y,2.4));
+	res.z = max(0.0,pow(res.z,2.4));
+	return res;
+}
 
 void main(void)
 {
     //const float depth = 5.0f;
 
-	const int perlinFuckery = 1;
+	int perlinFuckery = noiseFuckeryUniform;
 
     if(fishEyeModeUniform == 0){
 	
@@ -241,9 +283,26 @@ void main(void)
 
 		gl_FragColor = color*vertColor; 
 		gl_FragColor.xyz+=debugColor;
+		vec4 startCooords = pureVertexCoordsGeom*0.25;
 		if(isWorldBrushUniform > 0 && isLightmapUniform == 0 && perlinFuckery > 0){
 			//gl_FragColor.xyz+=pureVertexCoordsGeom.xyz/1000.0f; 
+			switch(perlinFuckery){
+				case 1:
+			gl_FragColor.xyz = perlinNoiseVariation1();
+				break;
+				case 2:
+			gl_FragColor.xyz = perlinNoiseVariation2();
+				break;
+				case 3:
+			gl_FragColor.xyz = perlinNoiseVariation3();
+				break;
+				case 4:
 			gl_FragColor.xyz = perlinNoiseVariation4();
+				break;
+				case 5:
+			gl_FragColor.xyz = perlinNoiseVariation4()*0.25+perlinNoiseVariation5(startCooords);
+				break;
+			}
 		}
 		if(isLightmapUniform > 0 && isWorldBrushUniform > 0 && perlinFuckery > 0){
 			gl_FragColor.xyz = vec3(1.0,1.0,1.0);
