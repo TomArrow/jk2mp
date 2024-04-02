@@ -196,6 +196,7 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 
 	if (tess) {
 
+		qglUniform3fv(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "viewOriginUniform"), 1, tr.refdef.vieworg);
 		qglUniform3fv(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "pixelJitterUniform"), 1, fbo.fishEyeData.pixelJitter3D);
 		qglUniform3fv(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "dofJitterUniform"), 1, fbo.fishEyeData.dofJitter3D);
 		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "dofFocusUniform"), fbo.fishEyeData.dofFocus);
@@ -221,6 +222,7 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		}
 	}
 	else {
+		qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "viewOriginUniform"), 1, tr.refdef.vieworg);
 		qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "pixelJitterUniform"), 1, fbo.fishEyeData.pixelJitter3D);
 		qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofJitterUniform"), 1, fbo.fishEyeData.dofJitter3D);
 		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofFocusUniform"), fbo.fishEyeData.dofFocus);

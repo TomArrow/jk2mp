@@ -19,6 +19,7 @@ uniform float serverTimeUniform;
 uniform int isLightmapUniform; 
 uniform int isWorldBrushUniform; 
 uniform int noiseFuckeryUniform; 
+uniform vec3 viewOriginUniform; 
 
 varying vec4 eyeSpaceCoordsGeom;
 varying vec4 pureVertexCoordsGeom;
@@ -92,21 +93,24 @@ vec2 parallaxMapSteep(){
 
 vec3 perlinNoiseVariation1(){ // Looks a bit like marble?
 	vec3 res;
-	res.xyz = vec3( snoise(pureVertexCoordsGeom/10.0f));
-	res.xyz += vec3( snoise(pureVertexCoordsGeom/20.0f));
-	res.xyz += vec3( snoise(pureVertexCoordsGeom/40.0f));
-	res.xyz += vec3( snoise(pureVertexCoordsGeom/80.0f));
-	res.xyz += vec3( snoise(pureVertexCoordsGeom/160.0f));
-	res.xyz += vec3( snoise(pureVertexCoordsGeom/320.0f));
-	res.xyz += vec3( snoise(pureVertexCoordsGeom/640.0f));
-	res.xyz += vec3( snoise(pureVertexCoordsGeom/1280.0f));
+	vec4 coords = pureVertexCoordsGeom/2.0;
+	float timeVal =  serverTimeUniform*2.5;
+    coords.w = timeVal;
+	res.xyz = vec3( snoise(coords/10.0f));
+	res.xyz += vec3( snoise(coords/20.0f));
+	res.xyz += vec3( snoise(coords/40.0f));
+	res.xyz += vec3( snoise(coords/80.0f));
+	res.xyz += vec3( snoise(coords/160.0f));
+	res.xyz += vec3( snoise(coords/320.0f));
+	res.xyz += vec3( snoise(coords/640.0f));
+	res.xyz += vec3( snoise(coords/1280.0f));
 	//gl_FragColor.xyz += 8.0f;
 	//gl_FragColor.xyz /= 16.0f;
 	res.xyz = abs(res.xyz);
 	res.xyz /= 4.0f;
 	return res;
 }
-vec3 perlinNoiseVariation2(){ // Looks a bit like marble?
+vec3 perlinNoiseVariation2(){ 
 	vec3 res;
 	res.xyz = vec3( snoise(pureVertexCoordsGeom/10.0f))/128.0f;
 	res.xyz += vec3( snoise(pureVertexCoordsGeom/20.0f))/64.0f;
@@ -124,7 +128,7 @@ vec3 perlinNoiseVariation2(){ // Looks a bit like marble?
 	return res;
 }
 
-float perlinNoiseHelper(vec4 coords){ // Looks a bit like marble?
+float perlinNoiseHelper(vec4 coords){
     float val;
     coords.w = serverTimeUniform*10.0;
 	//val = ( snoise(pureVertexCoordsGeom/10.0))/128.0;
@@ -148,7 +152,7 @@ float perlinNoiseHelper(vec4 coords){ // Looks a bit like marble?
 	//res.xyz = vec3(1.0)-res.xyz;
 	return val;
 }
-float perlinNoiseHelper2(vec4 coords){ // Looks a bit like marble?
+float perlinNoiseHelper2(vec4 coords){
     float val;
 	float timeVal =  serverTimeUniform*100.0;
     coords.w = timeVal/128.0;
@@ -182,7 +186,7 @@ float perlinNoiseHelper2(vec4 coords){ // Looks a bit like marble?
 }
 
 
-vec3 perlinNoiseVariation3(){ // Looks a bit like marble?
+vec3 perlinNoiseVariation3(){ 
 	vec3 res;
     vec3 distort = vec3(perlinNoiseHelper(pureVertexCoordsGeom),perlinNoiseHelper(pureVertexCoordsGeom+vec4(40.3,3.4,100.5,1.0)),perlinNoiseHelper(pureVertexCoordsGeom+vec4(10.1,1.4,101.5,1.0)));
     vec3 distort2 = vec3(perlinNoiseHelper(pureVertexCoordsGeom+30.0*vec4(distort,1.0)),perlinNoiseHelper(pureVertexCoordsGeom+30.0*vec4(distort,1.0)+vec4(15.3,13.4,110.3,1.0)),perlinNoiseHelper(pureVertexCoordsGeom+30.0*vec4(distort,1.0)+vec4(13.1,11.4,151.5,1.0)));
@@ -245,7 +249,7 @@ vec3 perlinNoiseVariation3(){ // Looks a bit like marble?
 	res.z = max(0.0,pow(res.z,2.4));
 	return res;//*0.5;
 }
-vec3 perlinNoiseVariation4(){ // Looks a bit like marble?
+vec3 perlinNoiseVariation4(){ 
 	vec3 res;
 	vec4 startCooords = pureVertexCoordsGeom*0.25;
     vec3 distort = vec3(perlinNoiseHelper2(startCooords),perlinNoiseHelper2(startCooords+vec4(40.3,3.4,100.5,1.0)),perlinNoiseHelper2(startCooords+vec4(10.1,1.4,101.5,1.0)));
@@ -256,7 +260,7 @@ vec3 perlinNoiseVariation4(){ // Looks a bit like marble?
     res =vec3(pow(finalVal,2.4),pow(finalVal2,2.4),pow(finalVal3,2.4));
 	return res;
 }
-vec3 perlinNoiseVariation5(vec4 coords){ // Looks a bit like marble?
+vec3 perlinNoiseVariation5(vec4 coords){ 
 	vec3 res;
 	float val,val2;
 	float timeVal =  serverTimeUniform*2.5;
@@ -297,6 +301,107 @@ vec3 perlinNoiseVariation5(vec4 coords){ // Looks a bit like marble?
 	res.z = max(0.0,pow(res.z,2.4));
 	return res;
 }
+vec3 perlinNoiseVariation6(vec4 coords){ 
+	vec3 res;
+	float val,val2;
+	float timeVal =  serverTimeUniform*2.5;
+    coords.w = timeVal/16384.0;
+	val = abs( snoise(coords/0.078125))/16384.0;
+    coords.w = timeVal/8192.0;
+	val += abs( snoise(coords/0.15625))/8192.0;
+    coords.w = timeVal/4096.0;
+	val += abs( snoise(coords/0.3125))/4096.0;
+    coords.w = timeVal/2048.0;
+	val += abs( snoise(coords/0.625))/2048.0;
+    coords.w = timeVal/1024.0;
+	val += abs( snoise(coords/1.25))/1024.0;
+    coords.w = timeVal/512.0;
+	val += abs( snoise(coords/2.5))/512.0;
+    coords.w = timeVal/256.0;
+	val += abs( snoise(coords/5.0))/256.0;
+    coords.w = timeVal/128.0;
+	val += abs( snoise(coords/10.0))/128.0;
+    coords.w = timeVal/64.0;
+	val += abs( snoise(coords/20.0))/64.0;
+    coords.w = timeVal/32.0;
+	val += abs( snoise(coords/40.0))/32.0;
+    coords.w = timeVal/16.0;
+	val += abs( snoise(coords/80.0))/16.0;
+    coords.w = timeVal/8.0;
+	val += abs( snoise(coords/160.0))/8.0;
+    coords.w = timeVal/4.0;
+	val += abs( snoise(coords/320.0))/4.0;
+    coords.w = timeVal/2.0;
+	val += abs( snoise(coords/640.0))/2.0;
+    coords.w = timeVal;
+	val += abs( snoise(coords/1280.0));
+	//gl_FragColor.xyz += 8.0f;
+	//gl_FragColor.xyz /= 16.0f;
+	//res.xyz = abs(res.xyz);
+	//res.xyz += 1.0;
+	val *= 0.5;
+	res = vec3(val);
+	res.x = max(0.0,pow(res.x,2.4));
+	res.y = max(0.0,pow(res.y,2.4));
+	res.z = max(0.0,pow(res.z,2.4));
+	return res;
+}
+vec3 perlinNoiseVariation6Stack(vec4 coords,vec3 vieworg){ 
+	vec3 res;
+	float val,val2;
+	float timeVal =  serverTimeUniform*200.0;
+	const int layers = 10;
+
+	float viewdist = distance(coords.xyz,vieworg);
+	//return vec3(viewdist)/10000.0;;
+	vec3 viewVec = coords.xyz-vieworg;
+	vec3 viewVecPiece = viewVec/float(layers);
+	coords.xyz = vieworg+viewVecPiece;
+	val = 0;
+	for(int i=0;i<layers;i++){
+		coords.w = timeVal/16384.0;
+		val += abs( snoise(coords/0.078125))/16384.0;
+		coords.w = timeVal/8192.0;
+		val += abs( snoise(coords/0.15625))/8192.0;
+		coords.w = timeVal/4096.0;
+		val += abs( snoise(coords/0.3125))/4096.0;
+		coords.w = timeVal/2048.0;
+		val += abs( snoise(coords/0.625))/2048.0;
+		coords.w = timeVal/1024.0;
+		val += abs( snoise(coords/1.25))/1024.0;
+		coords.w = timeVal/512.0;
+		val += abs( snoise(coords/2.5))/512.0;
+		coords.w = timeVal/256.0;
+		val += abs( snoise(coords/5.0))/256.0;
+		coords.w = timeVal/128.0;
+		val += abs( snoise(coords/10.0))/128.0;
+		coords.w = timeVal/64.0;
+		val += abs( snoise(coords/20.0))/64.0;
+		coords.w = timeVal/32.0;
+		val += abs( snoise(coords/40.0))/32.0;
+		coords.w = timeVal/16.0;
+		val += abs( snoise(coords/80.0))/16.0;
+		coords.w = timeVal/8.0;
+		val += abs( snoise(coords/160.0))/8.0;
+		coords.w = timeVal/4.0;
+		val += abs( snoise(coords/320.0))/4.0;
+		coords.w = timeVal/2.0;
+		val += abs( snoise(coords/640.0))/2.0;
+		coords.w = timeVal;
+		val += abs( snoise(coords/1280.0));
+		coords.xyz += viewVecPiece;
+	}
+
+    
+	val /= float(layers);
+	val *= viewdist/10000.0;
+
+	res = vec3(val);
+	res.x = max(0.0,pow(res.x,2.4));
+	res.y = max(0.0,pow(res.y,2.4));
+	res.z = max(0.0,pow(res.z,2.4));
+	return res;
+}
 
 void main(void)
 {
@@ -328,7 +433,7 @@ void main(void)
 				break;
 				case 3:
 			//gl_FragColor.xyz = perlinNoiseVariation3()+(color*vertColor).xyz*0.2;
-			gl_FragColor.xyz = 10.0*perlinNoiseVariation3()*(color).xyz/texAverageBrightnessUniform+0.25*(color*vertColor).xyz;
+			gl_FragColor.xyz = 10.0*perlinNoiseVariation3()*(color).xyz/texAverageBrightnessUniform+0.25*(color*vertColor).xyz+perlinNoiseVariation6Stack(pureVertexCoordsGeom,viewOriginUniform)+perlinNoiseVariation5(startCooords);
 				break;
 				case 4:
 			gl_FragColor.xyz = perlinNoiseVariation4();
@@ -336,9 +441,12 @@ void main(void)
 				case 5:
 			gl_FragColor.xyz = perlinNoiseVariation4()*0.25+perlinNoiseVariation5(startCooords);
 				break;
+				case 6:
+			gl_FragColor.xyz = perlinNoiseVariation6Stack(pureVertexCoordsGeom,viewOriginUniform);
+				break;
 			}
 		}
-		if(isLightmapUniform > 0 && isWorldBrushUniform > 0 && perlinFuckery > 0 && perlinFuckery!=3){
+		if(isLightmapUniform > 0 && isWorldBrushUniform > 0 && perlinFuckery > 0 && perlinFuckery!=3 && perlinFuckery!=1){
 			gl_FragColor.xyz = vec3(1.0,1.0,1.0);
 		}
 		//gl_FragColor.xyz+=eyeSpaceCoordsGeom.xyz/1000.0f; // cool effect lol
