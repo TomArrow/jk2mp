@@ -1003,6 +1003,7 @@ static void ProjectDlightTexture2( void ) {
 	}
 }
 
+
 static void ProjectDlightTexture( void ) {
 	int		i, l;
 	vec3_t	origin;
@@ -1018,6 +1019,10 @@ static void ProjectDlightTexture( void ) {
 	vec3_t	floatColor;
 
 	if ( !backEnd.refdef.num_dlights ) {
+		return;
+	}
+
+	if ((r_fboFishEye->integer || r_fboGLSL->integer) && r_fboGLSLDLights->integer) {
 		return;
 	}
 
@@ -1961,6 +1966,9 @@ void RB_StageIteratorVertexLitTexture( void )
 		qglLockArraysEXT(0, input->numVertexes);
 		GLimp_LogComment( "glLockArraysEXT\n" );
 	}
+
+	bool isLightmap = false;
+	R_FrameBuffer_SetDynamicUniforms(NULL, &isLightmap, NULL);
 
 	//
 	// call special shade routine

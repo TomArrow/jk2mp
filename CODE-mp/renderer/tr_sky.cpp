@@ -814,6 +814,10 @@ void RB_StageIteratorSky( void ) {
 		return;
 	}
 
+
+	bool falseBool = false;
+	R_FrameBuffer_SetDynamicUniforms(NULL, &falseBool, &falseBool);
+
 	// go through all the polygons and project them onto
 	// the sky box to see which blocks on each side need
 	// to be drawn

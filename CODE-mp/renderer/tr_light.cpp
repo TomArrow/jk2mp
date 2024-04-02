@@ -21,7 +21,10 @@ void R_TransformDlights( int count, dlight_t *dl, orientationr_t *ori) {
 	int		i;
 	vec3_t	temp;
 
-	if (r_newDLights->integer)
+	if ((r_fboFishEye->integer || r_fboGLSL->integer) && r_fboGLSLDLights->integer) {
+
+	}
+	else if (r_newDLights->integer)
 	{
 		for ( i = 0 ; i < count ; i++, dl++ ) 
 		{

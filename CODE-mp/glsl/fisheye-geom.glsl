@@ -14,6 +14,10 @@ in vec4 gl_TexCoordIn[3][1];
 
 in mat4x4 projectionMatrix[3];
 
+
+in mat4x4 worldModelViewMatrixReverse[3];
+out mat4x4 worldModelViewMatrixReverseGeom;
+
 out vec3 normal;
 
 varying in vec4 eyeSpaceCoords[3];
@@ -383,7 +387,7 @@ void fisheye(){
 
 void main()
 {
-
+	worldModelViewMatrixReverseGeom = worldModelViewMatrixReverse[0];
 // TODO Apply distortion in TES instead? To have more multithreading? And then send it over as in/out variable?
 	if(fishEyeModeUniform == 2){
 		equirect();

@@ -5,6 +5,9 @@ uniform float dofFocusUniform;
 uniform float dofRadiusUniform;
 uniform int fishEyeModeUniform; //1= fisheye, 2=equirectangular
 
+uniform mat4x4 worldModelViewMatrixUniform;
+out mat4x4 worldModelViewMatrixReverse;
+
 out vec3 debugColor;
 out vec4 color;
 out vec4 texCoord;
@@ -95,6 +98,8 @@ vec4 equirect_getPos(vec3 pointVec)
 void equirectangular()
 {
 
+	worldModelViewMatrixReverse = inverse(worldModelViewMatrixUniform);
+
 	vec3 pointVec;
 	if(fishEyeModeUniform == 0){
 		//pointVec = (gl_ProjectionMatrix*gl_ModelViewMatrix*gl_Vertex).xyz;
@@ -102,6 +107,7 @@ void equirectangular()
 		//gl_Position = vec4(pointVec, 1.0);
 		//gl_Position = gl_ProjectionMatrix*gl_ModelViewMatrix*gl_Vertex;
 		gl_Position = gl_ModelViewMatrix*gl_Vertex;
+		//gl_Position = worldModelViewMatrixUniform*gl_Vertex;
 		projectionMatrix = gl_ProjectionMatrix;
 		//gl_Position = ftransform();
 		eyeSpaceCoords = gl_ModelViewMatrix * gl_Vertex;

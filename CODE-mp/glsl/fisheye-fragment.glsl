@@ -6,7 +6,8 @@ in vec3 debugColor;
 varying vec4 vertColor;
 in vec3 texUVTransform[2];
 
-in mat4x4 projectionMatrix;
+
+in mat4x4 worldModelViewMatrixReverseGeom;
 
 in vec3 normal;
 
@@ -26,6 +27,37 @@ varying vec4 pureVertexCoordsGeom;
 
 
 float snoise(vec4 v);
+
+
+struct dlight_t {
+	//int				mType;
+
+	vec3			origin;
+	//vec3			mProjOrigin;		// projected light's origin
+
+	vec3			color;				// range from 0.0 to 1.0, should be color normalized
+
+	float			radius;
+	/*float			mProjRadius;		// desired radius of light 
+
+	int				additive;			// texture detail is lost tho when the lightmap is dark
+
+	vec3			transformed;		// origin in local coordinate system
+	vec3			mProjTransformed;	// projected light's origin in local coordinate system
+
+	vec3			mDirection;
+	vec3			mBasis2;
+	vec3			mBasis3;
+
+	vec3			mTransDirection;
+	vec3			mTransBasis2;
+	vec3			mTransBasis3;
+	*/
+};
+
+uniform int dLightsCountUniform;
+uniform dlight_t dLightsUniform[32]; 
+
 
 vec2 parallaxMap(){
 		vec2 uvCoords;
@@ -455,6 +487,13 @@ void main(void)
 		vec4 color = texture2D(text_in, gl_TexCoord[0].st);
 		gl_FragColor = color*vertColor; 
 		gl_FragColor.xyz+=debugColor;
+	}
+	for(int i=0;i<dLightsCountUniform;i++){
+		vec4 properWorldCoord = worldModelViewMatrixReverseGeom*eyeSpaceCoordsGeom;
+		float dist = distance(properWorldCoord.xyz,dLightsUniform[i].origin);
+		//if(distance(pureVertexCoordsGeom.xyz,dLightsUniform[i].origin) < 500.0){
+			gl_FragColor.xyz += (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius*100.0)/(dist*dist);
+		//}
 	}
 }
 

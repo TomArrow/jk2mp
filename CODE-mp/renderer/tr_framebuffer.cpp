@@ -63,6 +63,37 @@
 #include "qgl.h"
 #endif
 
+
+typedef struct uniformLocations_t {
+	GLint viewOriginUniform;
+	GLint pixelJitterUniform;
+	GLint dofJitterUniform;
+	GLint dofFocusUniform;
+	GLint dofRadiusUniform;
+	GLint fishEyeModeUniform;
+	GLint fovXUniform;
+	GLint fovYUniform;
+	GLint pixelWidthUniform;
+	GLint pixelHeightUniform;
+	GLint texAverageBrightnessUniform;
+	GLint isLightmapUniform;
+	GLint isWorldBrushUniform;
+	GLint parallaxMapLayersUniform;
+	GLint parallaxMapDepthUniform;
+	GLint parallaxMapGammaUniform;
+	GLint serverTimeUniform;
+	GLint noiseFuckeryUniform;
+	GLint worldModelViewMatrixUniform;
+	GLint dLightsCountUniform;
+	GLint dLightsUniformOrigin[32];
+	GLint dLightsUniformColor[32];
+	GLint dLightsUniformRadius[32];
+};
+
+uniformLocations_t uniformLocationsTess;
+uniformLocations_t uniformLocations;
+
+
 void R_FrameBuffer_CreateRollingShutterBuffers(int width, int height, int flags);
 
 cvar_t *r_convertToHDR;
@@ -70,6 +101,7 @@ cvar_t *r_floatBuffer;
 cvar_t *r_fbo;
 cvar_t *r_fboGLSL;
 cvar_t *r_fboGLSLNoiseFuckery;
+cvar_t *r_fboGLSLDLights;
 cvar_t *r_fboGLSLParallaxMapping;
 cvar_t *r_fboGLSLParallaxMappingDepth;
 cvar_t * r_fboGLSLParallaxMappingGamma;
@@ -127,38 +159,11 @@ int rollingShutterSuperSampleMultiplier =1; // TODO Make it possible to supersam
 #endif
 
 //typedef frameBufferData_t* doubleFrameBufferData_t[2];
-typedef struct {
-	frameBufferData_t* current;
-	frameBufferData_t* next;
-} doubleFrameBufferData_t;
 
-typedef struct {
-	vec3_t pixelJitter3D;
-	vec3_t dofJitter3D;
-	float dofFocus;
-	float dofRadius;
-	float fovX;
-	float fovY;
-	qboolean tessellationActive;
-	float texAverageBrightness;
-	bool isLightmap;
-	bool isWorldBrush;
-} fishEyeData_t;
 
-static struct {
-	frameBufferData_t *multiSample;
-	frameBufferData_t *main;
-	frameBufferData_t *exposure;
-	frameBufferData_t *blur;
-	frameBufferData_t *dof;
-	frameBufferData_t *colorSpaceConv;
-	frameBufferData_t *colorSpaceConvResult;
-	std::vector<doubleFrameBufferData_t> rollingShutterBuffers;
-	qboolean fishEyeActive;
-	int fishEyeTempDisabled;
-	int screenWidth, screenHeight;
-	fishEyeData_t fishEyeData;
-} fbo;
+
+
+
 
 extern std::vector<int> pboRollingShutterProgresses;
 extern std::vector<float> pboRollingShutterDrifts;
@@ -166,7 +171,7 @@ extern int rollingShutterBufferCount;
 extern int progressOvershoot;
 extern float drift;
 
-
+fbo_t fbo;
 
 
 R_GLSL* hdrPqShader;
@@ -196,24 +201,35 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 
 	if (tess) {
 
-		qglUniform3fv(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "viewOriginUniform"), 1, tr.refdef.vieworg);
-		qglUniform3fv(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "pixelJitterUniform"), 1, fbo.fishEyeData.pixelJitter3D);
-		qglUniform3fv(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "dofJitterUniform"), 1, fbo.fishEyeData.dofJitter3D);
-		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "dofFocusUniform"), fbo.fishEyeData.dofFocus);
-		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "dofRadiusUniform"), fbo.fishEyeData.dofRadius);
-		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "fishEyeModeUniform"), r_fboFishEye->integer);
-		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "fovXUniform"), fbo.fishEyeData.fovX);
-		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "fovYUniform"), fbo.fishEyeData.fovY);
-		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "pixelWidthUniform"), width*superSampleMultiplier);
-		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "pixelHeightUniform"), height * superSampleMultiplier);
-		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "texAverageBrightnessUniform"), fbo.fishEyeData.texAverageBrightness);
-		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "isLightmapUniform"), fbo.fishEyeData.isLightmap ? 1 : 0);
-		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "isWorldBrushUniform"), fbo.fishEyeData.isWorldBrush ? 1 : 0);
-		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "parallaxMapLayersUniform"), r_fboGLSLParallaxMappingLayers->integer);
-		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "parallaxMapDepthUniform"), r_fboGLSLParallaxMappingDepth->value);
-		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "parallaxMapGammaUniform"), r_fboGLSLParallaxMappingGamma->value);
-		qglUniform1f(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "serverTimeUniform"), backEnd.refdef.floatTime);
-		qglUniform1i(qglGetUniformLocation(fishEyeShaderTess->ShaderId(), "noiseFuckeryUniform"), r_fboGLSLNoiseFuckery->integer);
+		qglUniform3fv(uniformLocationsTess.viewOriginUniform, 1, tr.refdef.vieworg);
+		qglUniform3fv(uniformLocationsTess.pixelJitterUniform, 1, fbo.fishEyeData.pixelJitter3D);
+		qglUniform3fv(uniformLocationsTess.dofJitterUniform, 1, fbo.fishEyeData.dofJitter3D);
+		qglUniform1f(uniformLocationsTess.dofFocusUniform, fbo.fishEyeData.dofFocus);
+		qglUniform1f(uniformLocationsTess.dofRadiusUniform, fbo.fishEyeData.dofRadius);
+		qglUniform1i(uniformLocationsTess.fishEyeModeUniform, r_fboFishEye->integer);
+		qglUniform1f(uniformLocationsTess.fovXUniform, fbo.fishEyeData.fovX);
+		qglUniform1f(uniformLocationsTess.fovYUniform, fbo.fishEyeData.fovY);
+		qglUniform1i(uniformLocationsTess.pixelWidthUniform, width*superSampleMultiplier);
+		qglUniform1i(uniformLocationsTess.pixelHeightUniform, height * superSampleMultiplier);
+		qglUniform1f(uniformLocationsTess.texAverageBrightnessUniform, fbo.fishEyeData.texAverageBrightness);
+		qglUniform1i(uniformLocationsTess.isLightmapUniform, fbo.fishEyeData.isLightmap ? 1 : 0);
+		qglUniform1i(uniformLocationsTess.isWorldBrushUniform, fbo.fishEyeData.isWorldBrush ? 1 : 0);
+		qglUniform1i(uniformLocationsTess.parallaxMapLayersUniform, r_fboGLSLParallaxMappingLayers->integer);
+		qglUniform1f(uniformLocationsTess.parallaxMapDepthUniform, r_fboGLSLParallaxMappingDepth->value);
+		qglUniform1f(uniformLocationsTess.parallaxMapGammaUniform, r_fboGLSLParallaxMappingGamma->value);
+		qglUniform1f(uniformLocationsTess.serverTimeUniform, backEnd.refdef.floatTime);
+		qglUniform1i(uniformLocationsTess.noiseFuckeryUniform, r_fboGLSLNoiseFuckery->integer);
+		qglUniformMatrix4fv(uniformLocationsTess.worldModelViewMatrixUniform, 1, GL_FALSE, backEnd.viewParms.world.modelMatrix);
+		qglUniform1i(uniformLocationsTess.dLightsCountUniform, r_fboGLSLDLights->integer?  backEnd.refdef.num_dlights : 0);
+		//qglUniform3fv(uniformLocationsTess.dLightsUniform"), sizeof(dlight_t) / 4 / 4 * backEnd.refdef.num_dlights, (GLfloat*)&backEnd.refdef.dlights);
+		if (r_fboGLSLDLights->integer) {
+			for (int i = 0; i < backEnd.refdef.num_dlights; i++) {
+
+				qglUniform3fv(uniformLocationsTess.dLightsUniformOrigin[i], 1, backEnd.refdef.dlights[i].origin);
+				qglUniform3fv(uniformLocationsTess.dLightsUniformColor[i], 1, backEnd.refdef.dlights[i].color);
+				qglUniform1f(uniformLocationsTess.dLightsUniformRadius[i], backEnd.refdef.dlights[i].radius);
+			}
+		}
 
 
 		if (fbo.fishEyeData.tessellationActive) {
@@ -222,24 +238,35 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		}
 	}
 	else {
-		qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "viewOriginUniform"), 1, tr.refdef.vieworg);
-		qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "pixelJitterUniform"), 1, fbo.fishEyeData.pixelJitter3D);
-		qglUniform3fv(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofJitterUniform"), 1, fbo.fishEyeData.dofJitter3D);
-		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofFocusUniform"), fbo.fishEyeData.dofFocus);
-		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "dofRadiusUniform"), fbo.fishEyeData.dofRadius);
-		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "fishEyeModeUniform"), r_fboFishEye->integer);
-		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "fovXUniform"), fbo.fishEyeData.fovX);
-		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "fovYUniform"), fbo.fishEyeData.fovY);
-		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "pixelWidthUniform"), width * superSampleMultiplier);
-		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "pixelHeightUniform"), height * superSampleMultiplier);
-		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "texAverageBrightnessUniform"), fbo.fishEyeData.texAverageBrightness);
-		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "isLightmapUniform"), fbo.fishEyeData.isLightmap ? 1 : 0);
-		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "isWorldBrushUniform"), fbo.fishEyeData.isWorldBrush ? 1 : 0);
-		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "parallaxMapLayersUniform"), r_fboGLSLParallaxMappingLayers->integer);
-		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "parallaxMapDepthUniform"), r_fboGLSLParallaxMappingDepth->value);
-		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "parallaxMapGammaUniform"), r_fboGLSLParallaxMappingGamma->value);
-		qglUniform1f(qglGetUniformLocation(fishEyeShader->ShaderId(), "serverTimeUniform"), backEnd.refdef.floatTime);
-		qglUniform1i(qglGetUniformLocation(fishEyeShader->ShaderId(), "noiseFuckeryUniform"), r_fboGLSLNoiseFuckery->integer);
+		qglUniform3fv(uniformLocations.viewOriginUniform, 1, tr.refdef.vieworg);
+		qglUniform3fv(uniformLocations.pixelJitterUniform, 1, fbo.fishEyeData.pixelJitter3D);
+		qglUniform3fv(uniformLocations.dofJitterUniform, 1, fbo.fishEyeData.dofJitter3D);
+		qglUniform1f(uniformLocations.dofFocusUniform, fbo.fishEyeData.dofFocus);
+		qglUniform1f(uniformLocations.dofRadiusUniform, fbo.fishEyeData.dofRadius);
+		qglUniform1i(uniformLocations.fishEyeModeUniform, r_fboFishEye->integer);
+		qglUniform1f(uniformLocations.fovXUniform, fbo.fishEyeData.fovX);
+		qglUniform1f(uniformLocations.fovYUniform, fbo.fishEyeData.fovY);
+		qglUniform1i(uniformLocations.pixelWidthUniform, width * superSampleMultiplier);
+		qglUniform1i(uniformLocations.pixelHeightUniform, height * superSampleMultiplier);
+		qglUniform1f(uniformLocations.texAverageBrightnessUniform, fbo.fishEyeData.texAverageBrightness);
+		qglUniform1i(uniformLocations.isLightmapUniform, fbo.fishEyeData.isLightmap ? 1 : 0);
+		qglUniform1i(uniformLocations.isWorldBrushUniform, fbo.fishEyeData.isWorldBrush ? 1 : 0);
+		qglUniform1i(uniformLocations.parallaxMapLayersUniform, r_fboGLSLParallaxMappingLayers->integer);
+		qglUniform1f(uniformLocations.parallaxMapDepthUniform, r_fboGLSLParallaxMappingDepth->value);
+		qglUniform1f(uniformLocations.parallaxMapGammaUniform, r_fboGLSLParallaxMappingGamma->value);
+		qglUniform1f(uniformLocations.serverTimeUniform, backEnd.refdef.floatTime);
+		qglUniform1i(uniformLocations.noiseFuckeryUniform, r_fboGLSLNoiseFuckery->integer);
+		qglUniformMatrix4fv(uniformLocations.worldModelViewMatrixUniform, 1, GL_FALSE, backEnd.viewParms.world.modelMatrix);
+		qglUniform1i(uniformLocations.dLightsCountUniform, r_fboGLSLDLights->integer ? backEnd.refdef.num_dlights : 0);
+		//qglUniform3fv(uniformLocations.dLightsUniform"), sizeof(dlight_t) / 4 / 4 * backEnd.refdef.num_dlights, (GLfloat*)&backEnd.refdef.dlights);
+		if (r_fboGLSLDLights->integer) {
+			for (int i = 0; i < backEnd.refdef.num_dlights; i++) {
+
+				qglUniform3fv(uniformLocations.dLightsUniformOrigin[i], 1, backEnd.refdef.dlights[i].origin);
+				qglUniform3fv(uniformLocations.dLightsUniformColor[i], 1, backEnd.refdef.dlights[i].color);
+				qglUniform1f(uniformLocations.dLightsUniformRadius[i], backEnd.refdef.dlights[i].radius);
+			}
+		}
 	}
 
 	return qtrue;
@@ -853,6 +880,34 @@ frameBufferData_t* R_FrameBufferCreate( int width, int height, int flags, int su
 #endif
 }
 
+static void R_FrameBufferInitUniformLocs(R_GLSL* program,uniformLocations_t* locs) {
+	locs->viewOriginUniform = qglGetUniformLocation(program->ShaderId(), "viewOriginUniform");
+	locs->pixelJitterUniform = qglGetUniformLocation(program->ShaderId(), "pixelJitterUniform");
+	locs->dofJitterUniform = qglGetUniformLocation(program->ShaderId(), "dofJitterUniform");
+	locs->dofFocusUniform = qglGetUniformLocation(program->ShaderId(), "dofFocusUniform");
+	locs->dofRadiusUniform = qglGetUniformLocation(program->ShaderId(), "dofRadiusUniform");
+	locs->fishEyeModeUniform = qglGetUniformLocation(program->ShaderId(), "fishEyeModeUniform");
+	locs->fovXUniform = qglGetUniformLocation(program->ShaderId(), "fovXUniform");
+	locs->fovYUniform = qglGetUniformLocation(program->ShaderId(), "fovYUniform");
+	locs->pixelWidthUniform = qglGetUniformLocation(program->ShaderId(), "pixelWidthUniform");
+	locs->pixelHeightUniform = qglGetUniformLocation(program->ShaderId(), "pixelHeightUniform");
+	locs->texAverageBrightnessUniform = qglGetUniformLocation(program->ShaderId(), "texAverageBrightnessUniform");
+	locs->isLightmapUniform = qglGetUniformLocation(program->ShaderId(), "isLightmapUniform");
+	locs->isWorldBrushUniform = qglGetUniformLocation(program->ShaderId(), "isWorldBrushUniform");
+	locs->parallaxMapLayersUniform = qglGetUniformLocation(program->ShaderId(), "parallaxMapLayersUniform");
+	locs->parallaxMapDepthUniform = qglGetUniformLocation(program->ShaderId(), "parallaxMapDepthUniform");
+	locs->parallaxMapGammaUniform = qglGetUniformLocation(program->ShaderId(), "parallaxMapGammaUniform");
+	locs->serverTimeUniform = qglGetUniformLocation(program->ShaderId(), "serverTimeUniform");
+	locs->noiseFuckeryUniform = qglGetUniformLocation(program->ShaderId(), "noiseFuckeryUniform");
+	locs->worldModelViewMatrixUniform = qglGetUniformLocation(program->ShaderId(), "worldModelViewMatrixUniform");
+	locs->dLightsCountUniform = qglGetUniformLocation(program->ShaderId(), "dLightsCountUniform");
+	for (int i = 0; i < 32; i++) {
+		locs->dLightsUniformColor[i] = qglGetUniformLocation(program->ShaderId(), va("dLightsUniform[%d].color",i));
+		locs->dLightsUniformOrigin[i] = qglGetUniformLocation(program->ShaderId(), va("dLightsUniform[%d].origin",i));
+		locs->dLightsUniformRadius[i] = qglGetUniformLocation(program->ShaderId(), va("dLightsUniform[%d].radius",i));
+	}
+}
+
 void R_FrameBuffer_Init( void ) {
 #ifdef HAVE_GLES
 	//TODO
@@ -871,6 +926,7 @@ void R_FrameBuffer_Init( void ) {
 	r_fboGLSLParallaxMappingDepth = ri.Cvar_Get( "r_fboGLSLParallaxMappingDepth", "10", CVAR_ARCHIVE);
 	r_fboGLSLParallaxMappingGamma = ri.Cvar_Get( "r_fboGLSLParallaxMappingGamma", "15", CVAR_ARCHIVE);
 	r_fboGLSLParallaxMappingLayers = ri.Cvar_Get( "r_fboGLSLParallaxMappingLayers", "200", CVAR_ARCHIVE);
+	r_fboGLSLDLights = ri.Cvar_Get( "r_fboGLSLDLights", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboGLSLParallaxMapping = ri.Cvar_Get( "r_fboGLSLParallaxMapping", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboFishEye = ri.Cvar_Get( "r_fboFishEye", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboFishEyeTessellate = ri.Cvar_Get( "r_fboFishEyeTessellate", "1", CVAR_ARCHIVE);
@@ -1005,11 +1061,16 @@ void R_FrameBuffer_Init( void ) {
 			ri.Printf(PRINT_WARNING, "WARNING: Fisheye shader could not be compiled. Fisheye mode not available.\n");
 		}
 		else {
+
+			R_FrameBufferInitUniformLocs(fishEyeShader,&uniformLocations);
+
 			fishEyeShaderTess = new R_GLSL("glsl/fisheye-vertex.glsl", "glsl/fisheye-tessellation-control.glsl", "glsl/fisheye-tessellation-evaluation.glsl", "glsl/fisheye-geom.glsl", "glsl/fisheye-fragment.glsl", qfalse);
 			if (!fishEyeShaderTess->IsWorking()) {
 				ri.Printf(PRINT_WARNING, "WARNING: Fisheye shader with tessellation could not be compiled. Fisheye mode will not use hardware tessellation and will require tessellated maps instead.\n");
 			}
 			else {
+
+				R_FrameBufferInitUniformLocs(fishEyeShaderTess, &uniformLocationsTess);
 				// Ok, we want tessellation. Let's intercept all drawing calls and convert them into GL_PATCHES calls if they are GL_TRIANGLES (or maybe later some other types we wanna support)
 				qglBegin = dllBegin = fishEyeBegin;
 				qglDrawArrays = dllDrawArrays = fishEyeDrawArrays;

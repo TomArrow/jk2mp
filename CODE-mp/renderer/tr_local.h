@@ -67,6 +67,7 @@ typedef struct dlight_s {
 	vec3_t			mTransDirection;
 	vec3_t			mTransBasis2;
 	vec3_t			mTransBasis3;
+
 } dlight_t;
 
 
@@ -864,6 +865,9 @@ typedef struct {
 	char		*entityParsePoint;
 } world_t;
 
+
+
+
 //======================================================================
 /*
 Ghoul2 Insert Start
@@ -1256,6 +1260,7 @@ extern cvar_t	*r_ext_gamma_control;
 extern cvar_t	*r_ext_texenv_op;
 extern cvar_t	*r_ext_multitexture;
 extern cvar_t	*r_fboGLSL;
+extern cvar_t	*r_fboGLSLDLights;
 extern cvar_t	*r_fboGLSLParallaxMapping;
 extern cvar_t	*r_fboFishEye;
 extern cvar_t	*r_ext_compiled_vertex_array;
@@ -2115,6 +2120,39 @@ typedef struct {
 	unsigned int flags;				//the creation flags
 	int		width, height;			//Size of the buffer
 } frameBufferData_t;
+
+typedef struct {
+	vec3_t pixelJitter3D;
+	vec3_t dofJitter3D;
+	float dofFocus;
+	float dofRadius;
+	float fovX;
+	float fovY;
+	qboolean tessellationActive;
+	float texAverageBrightness;
+	bool isLightmap;
+	bool isWorldBrush;
+} fishEyeData_t;
+
+typedef struct {
+	frameBufferData_t* current;
+	frameBufferData_t* next;
+} doubleFrameBufferData_t;
+
+typedef struct {
+	frameBufferData_t* multiSample;
+	frameBufferData_t* main;
+	frameBufferData_t* exposure;
+	frameBufferData_t* blur;
+	frameBufferData_t* dof;
+	frameBufferData_t* colorSpaceConv;
+	frameBufferData_t* colorSpaceConvResult;
+	std::vector<doubleFrameBufferData_t> rollingShutterBuffers;
+	qboolean fishEyeActive;
+	int fishEyeTempDisabled;
+	int screenWidth, screenHeight;
+	fishEyeData_t fishEyeData;
+} fbo_t;
 
 
 enum HDRConvertSource {
