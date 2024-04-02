@@ -7,6 +7,7 @@ varying vec4 vertColor;
 in vec3 texUVTransform[2];
 
 
+uniform mat4x4 worldModelViewMatrixUniform;
 in mat4x4 worldModelViewMatrixReverseGeom;
 
 in vec3 normal;
@@ -72,8 +73,10 @@ vec2 parallaxMap(){
 
 		vec3 transposedCoords = eyeSpaceCoordsGeom.xyz + offset3d;
 		
-		uvCoords.s = mod(dot(transposedCoords,texUVTransform[0]),1);
-		uvCoords.t = mod(dot(transposedCoords,texUVTransform[1]),1);
+		//uvCoords.s = mod(dot(transposedCoords,texUVTransform[0]),1);
+		//uvCoords.t = mod(dot(transposedCoords,texUVTransform[1]),1);
+		uvCoords.s = dot(transposedCoords,texUVTransform[0]);
+		uvCoords.t = dot(transposedCoords,texUVTransform[1]);
 		return uvCoords;
 }
 vec2 parallaxMapSteep(){
@@ -92,8 +95,10 @@ vec2 parallaxMapSteep(){
 		float viewVecMultiplier = layerDepth/length(depthComponent); // Calculate how much we have to multiple the unity view vector with to go one layer deeper.
 		vec3 oneLayerProgressVec = viewVecFlat*viewVecMultiplier;
 
-		uvCoords.s = mod(dot(currentPlace,texUVTransform[0]),1);
-		uvCoords.t = mod(dot(currentPlace,texUVTransform[1]),1);
+		//uvCoords.s = mod(dot(currentPlace,texUVTransform[0]),1.0);
+		//uvCoords.t = mod(dot(currentPlace,texUVTransform[1]),1.0);
+		uvCoords.s = dot(currentPlace,texUVTransform[0]);
+		uvCoords.t = dot(currentPlace,texUVTransform[1]);
 
 		for(int i=0; i< layers;i++){
 			
@@ -103,8 +108,10 @@ vec2 parallaxMapSteep(){
 				break;
 			} else {
 				currentPlace += oneLayerProgressVec;
-				uvCoords.s = mod(dot(currentPlace,texUVTransform[0]),1);
-				uvCoords.t = mod(dot(currentPlace,texUVTransform[1]),1);
+				//uvCoords.s = mod(dot(currentPlace,texUVTransform[0]),1);
+				//uvCoords.t = mod(dot(currentPlace,texUVTransform[1]),1);
+				uvCoords.s = dot(currentPlace,texUVTransform[0]);
+				uvCoords.t = dot(currentPlace,texUVTransform[1]);
 			}
 		}
 
@@ -489,10 +496,12 @@ void main(void)
 		gl_FragColor.xyz+=debugColor;
 	}
 	for(int i=0;i<dLightsCountUniform;i++){
-		vec4 properWorldCoord = worldModelViewMatrixReverseGeom*eyeSpaceCoordsGeom;
-		float dist = distance(properWorldCoord.xyz,dLightsUniform[i].origin);
+		vec4 eyeCoordLight = worldModelViewMatrixUniform*vec4(dLightsUniform[i].origin,1.0);
+		vec3 lightVector = eyeCoordLight.xyz-eyeSpaceCoordsGeom.xyz;
+		float intensity = max(dot(normal,normalize(lightVector)),0.0);
+		float dist = length(lightVector);
 		//if(distance(pureVertexCoordsGeom.xyz,dLightsUniform[i].origin) < 500.0){
-			gl_FragColor.xyz += (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius*100.0)/(dist*dist);
+			gl_FragColor.xyz += (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius*50.0)*intensity/(dist*dist);
 		//}
 	}
 }

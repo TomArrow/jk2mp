@@ -370,6 +370,10 @@ qboolean R_FrameBuffer_SetDynamicUniforms(float* texAverageBrightness, bool* isL
 	//TODO
 	return qfalse;
 #else
+	if (!r_fboGLSL->integer && !r_fboFishEye->integer) {
+		return qfalse;
+	}
+
 	if (texAverageBrightness) {
 		fbo.fishEyeData.texAverageBrightness = *texAverageBrightness;
 	}
