@@ -3,7 +3,7 @@
 uniform sampler2D text_in;
 
 in vec3 debugColor;
-in vec4 vertColor;
+varying vec4 vertColor;
 in vec3 texUVTransform[2];
 
 in mat4x4 projectionMatrix;
@@ -126,7 +126,7 @@ vec3 perlinNoiseVariation2(){ // Looks a bit like marble?
 
 float perlinNoiseHelper(vec4 coords){ // Looks a bit like marble?
     float val;
-    coords.w = serverTimeUniform*100.0;
+    coords.w = serverTimeUniform*10.0;
 	//val = ( snoise(pureVertexCoordsGeom/10.0))/128.0;
 	//val += ( snoise(pureVertexCoordsGeom/20.0))/64.0;
 	//val += ( snoise(pureVertexCoordsGeom/40.0))/32.0;
@@ -187,8 +187,10 @@ vec3 perlinNoiseVariation3(){ // Looks a bit like marble?
     vec3 distort = vec3(perlinNoiseHelper(pureVertexCoordsGeom),perlinNoiseHelper(pureVertexCoordsGeom+vec4(40.3,3.4,100.5,1.0)),perlinNoiseHelper(pureVertexCoordsGeom+vec4(10.1,1.4,101.5,1.0)));
     vec3 distort2 = vec3(perlinNoiseHelper(pureVertexCoordsGeom+30.0*vec4(distort,1.0)),perlinNoiseHelper(pureVertexCoordsGeom+30.0*vec4(distort,1.0)+vec4(15.3,13.4,110.3,1.0)),perlinNoiseHelper(pureVertexCoordsGeom+30.0*vec4(distort,1.0)+vec4(13.1,11.4,151.5,1.0)));
     float finalVal = perlinNoiseHelper(pureVertexCoordsGeom+100.0*vec4(distort2,1.0));
-    res =vec3(finalVal);
-    if(finalVal > 0.9){
+
+	//finalVal*=5.0;
+    //res =vec3(finalVal);
+    /*if(finalVal > 0.9){
         res = vec3(1.0,0.0,0.0);
     } else if(finalVal > 0.8){
         res = vec3(0.0,0.0,1.0);
@@ -209,8 +211,39 @@ vec3 perlinNoiseVariation3(){ // Looks a bit like marble?
     }else{
         
         res = vec3(0.0,1.0,0.0);
+    }*/
+	if(finalVal > 0.8){
+        res = vec3(0.0,0.0,0.05);
+    } else if(finalVal > 0.75){
+        res = vec3(0.0,0.0,0.0);
+    } else if(finalVal > 0.72){
+        res = vec3(0.65,0.5,0.0);
+    } else if(finalVal > 0.7){
+        res = vec3(0.0,0.25,0.0);
+    } else if(finalVal > 0.67){
+        res = vec3(0.85,0.0,0.0);
+    } 
+    else if(finalVal > 0.667){
+        res = vec3(100.0,0.0,0.0);
+    } 
+    else if(finalVal > 0.5){
+        res = vec3(0.0,0.05,0.0);
+    } else if(finalVal > 0.4){
+        res = vec3(0.0,0.03,0.0);
+    } else if(finalVal > 0.3){
+        res = vec3(0.0,0.0,0.0);
+    } else if(finalVal > 0.28){
+        res = vec3(1.2,0.65,0.0);
+    }else if(finalVal > 0.1){
+        res = vec3(0.0,0.0,0.0);
+    }else{
+        
+        res = vec3(0.0,0.3,0.0);
     }
-	return res;
+	res.x = max(0.0,pow(res.x,2.4));
+	res.y = max(0.0,pow(res.y,2.4));
+	res.z = max(0.0,pow(res.z,2.4));
+	return res;//*0.5;
 }
 vec3 perlinNoiseVariation4(){ // Looks a bit like marble?
 	vec3 res;
@@ -255,7 +288,7 @@ vec3 perlinNoiseVariation5(vec4 coords){ // Looks a bit like marble?
     val2=val;
 	float dist = length(eyeSpaceCoordsGeom.xyz);
 	dist = max(0.0,1000.0-dist);
-    val = pow(val ,1000.0+dist*2.0);
+    val = pow(val ,2000.0+dist*2.0);
     val2 = pow(val2 ,40.0);
 	//res.xyz = vec3(1.0)-res.xyz;
     res.xyz = vec3(val*10.0)+vec3(val2*0.5)*vec3(val2*0.5,val2*0.7,1.0);
@@ -294,7 +327,8 @@ void main(void)
 			gl_FragColor.xyz = perlinNoiseVariation2();
 				break;
 				case 3:
-			gl_FragColor.xyz = perlinNoiseVariation3();
+			//gl_FragColor.xyz = perlinNoiseVariation3()+(color*vertColor).xyz*0.2;
+			gl_FragColor.xyz = 10.0*perlinNoiseVariation3()*(color).xyz/texAverageBrightnessUniform+0.25*(color*vertColor).xyz;
 				break;
 				case 4:
 			gl_FragColor.xyz = perlinNoiseVariation4();
@@ -304,7 +338,7 @@ void main(void)
 				break;
 			}
 		}
-		if(isLightmapUniform > 0 && isWorldBrushUniform > 0 && perlinFuckery > 0){
+		if(isLightmapUniform > 0 && isWorldBrushUniform > 0 && perlinFuckery > 0 && perlinFuckery!=3){
 			gl_FragColor.xyz = vec3(1.0,1.0,1.0);
 		}
 		//gl_FragColor.xyz+=eyeSpaceCoordsGeom.xyz/1000.0f; // cool effect lol

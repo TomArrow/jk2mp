@@ -4,7 +4,7 @@
 #extension GL_ARB_geometry_shader4 : enable
 //in float realDepth[3];
 float realDepth[3]; in vec4 color[3];
-out vec4 vertColor;
+varying out vec4 vertColor;
 out vec3 debugColor;
 out vec3 texUVTransform[2];
 
