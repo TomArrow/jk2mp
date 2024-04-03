@@ -81,7 +81,7 @@ vec2 parallaxMap(){
 		uvCoords.t = dot(transposedCoords,texUVTransform[1]);
 		return uvCoords;
 }
-vec2 parallaxMapSteep(){
+vec2 parallaxMapSteep(inout vec3 finalPosition){
 		int layers = parallaxMapLayersUniform;
 		vec2 uvCoords;
 
@@ -116,6 +116,8 @@ vec2 parallaxMapSteep(){
 				uvCoords.t = dot(currentPlace,texUVTransform[1]);
 			}
 		}
+
+		finalPosition = currentPlace;
 
 		//float offset = 1.0f - max(min((color.x + color.y + color.z)/3.0f/texAverageBrightnessUniform,1.0f),0.0f);
 
@@ -444,17 +446,49 @@ vec3 perlinNoiseVariation6Stack(vec4 coords,vec3 vieworg){
 	return res;
 }
 
+vec3 calculateTextureNormal(vec2 uvCoords, vec3 startPosition){
+		//uvCoords.s = dot(eyeSpaceCoordsGeom.xyz,texUVTransform[0]);
+		//uvCoords.t = dot(eyeSpaceCoordsGeom.xyz,texUVTransform[1]);
+		vec4 color = texture2D(text_in, uvCoords);
+		//vec4 color = texture2D(text_in, uvCoords);
+		float offset = 1.0f - max(min((color.x + color.y + color.z)/3.0f/texAverageBrightnessUniform,1.0f),0.0f);
+
+		vec3 offset3d =  normalize(startPosition);
+		vec3 normalComponent = normal * dot(normal,offset3d);
+		offset3d -= normalComponent; // project onto surface aka get rid of any 3d component that aligns with the normal of the surface
+		offset3d = normalize(offset3d)*0.1;
+
+		vec3 transposedCoords = startPosition + offset3d;
+		uvCoords.s = dot(transposedCoords,texUVTransform[0]);
+		uvCoords.t = dot(transposedCoords,texUVTransform[1]);
+		vec4 color2 = texture2D(text_in, uvCoords);
+		float offset2 = 1.0f - max(min((color2.x + color2.y + color2.z)/3.0f/texAverageBrightnessUniform,1.0f),0.0f);
+
+		vec3 transposedCoords2 = startPosition + normalize(cross(offset3d,normal))*0.1;
+		uvCoords.s = dot(transposedCoords2,texUVTransform[0]);
+		uvCoords.t = dot(transposedCoords2,texUVTransform[1]);
+		vec4 color3 = texture2D(text_in, uvCoords);
+		float offset3 = 1.0f - max(min((color3.x + color3.y + color3.z)/3.0f/texAverageBrightnessUniform,1.0f),0.0f);
+
+		vec3 place1 = startPosition + normalComponent * offset;
+		vec3 place2 = transposedCoords + normalComponent * offset2;
+		vec3 place3 = transposedCoords2 + normalComponent * offset3;
+
+		return -normalize(cross(place2-place1,place3-place1));
+}
+
 void main(void)
 {
     //const float depth = 5.0f;
 
 	int perlinFuckery = noiseFuckeryUniform;
-
+	
+	vec2 uvCoords = gl_TexCoord[0].st;
+	vec3 effectiveUVPixelPos = eyeSpaceCoordsGeom.xyz;
     if(fishEyeModeUniform == 0){
 	
-		vec2 uvCoords;
 		if(isLightmapUniform == 0 && perlinFuckery == 0 && isWorldBrushUniform > 0){
-			uvCoords = parallaxMapLayersUniform < 2 ? parallaxMap():parallaxMapSteep();
+			uvCoords = parallaxMapLayersUniform < 2 ? parallaxMap():parallaxMapSteep(effectiveUVPixelPos);
 		} else {
 			uvCoords = gl_TexCoord[0].st; // Don't parallax lightmaps
 		}
@@ -493,15 +527,17 @@ void main(void)
 		//gl_FragColor.xyz+=eyeSpaceCoordsGeom.xyz/1000.0f; // cool effect lol
 	} else {
 		
-		vec4 color = texture2D(text_in, gl_TexCoord[0].st);
+		vec4 color = texture2D(text_in, uvCoords);
 		gl_FragColor = color*vertColor; 
 		gl_FragColor.xyz+=debugColor;
 	}
+	//vec3 lightNormal = normal;
+	vec3 lightNormal = calculateTextureNormal(uvCoords,effectiveUVPixelPos);
 	for(int i=0;i<dLightsCountUniform;i++){
 		vec4 eyeCoordLight = worldModelViewMatrixUniform*vec4(dLightsUniform[i].origin,1.0);
 		vec3 lightVector1 = eyeCoordLight.xyz-eyeSpaceCoordsGeom.xyz;
 		vec3 lightVectorNorm = normalize( lightVector1);
-		float intensity = max(dot(normal,lightVectorNorm),0.0);
+		float intensity = max(dot(lightNormal,lightVectorNorm),0.0);
 		float dist = length(lightVector1);
 		//if(distance(pureVertexCoordsGeom.xyz,dLightsUniform[i].origin) < 500.0){
 			// diffuse 
@@ -515,7 +551,7 @@ void main(void)
 			vec3 lightVectorNorm = normalize(lightVector);
 
 			// now mirror the lightVector around the normal
-			vec3 mirroredVec = lightVectorNorm - 2.0*normal*dot(lightVectorNorm,normal);
+			vec3 mirroredVec = lightVectorNorm - 2.0*lightNormal*dot(lightVectorNorm,lightNormal);
 			vec3 mirroredVecNorm = normalize(mirroredVec);
 
 			vec3 viewerVector = -eyeSpaceCoordsGeom.xyz;
