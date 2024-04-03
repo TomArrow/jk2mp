@@ -15,6 +15,8 @@ in vec3 normal;
 uniform int fishEyeModeUniform; //1= fisheye, 2=equirectangular
 uniform float texAverageBrightnessUniform;
 uniform float parallaxMapDepthUniform;
+uniform float dLightSpecIntensityUniform;
+uniform float dLightSpecGammaUniform;
 uniform int parallaxMapLayersUniform;
 uniform float parallaxMapGammaUniform;
 uniform float serverTimeUniform;
@@ -451,7 +453,7 @@ void main(void)
     if(fishEyeModeUniform == 0){
 	
 		vec2 uvCoords;
-		if(isLightmapUniform == 0 && perlinFuckery == 0){
+		if(isLightmapUniform == 0 && perlinFuckery == 0 && isWorldBrushUniform > 0){
 			uvCoords = parallaxMapLayersUniform < 2 ? parallaxMap():parallaxMapSteep();
 		} else {
 			uvCoords = gl_TexCoord[0].st; // Don't parallax lightmaps
@@ -497,12 +499,51 @@ void main(void)
 	}
 	for(int i=0;i<dLightsCountUniform;i++){
 		vec4 eyeCoordLight = worldModelViewMatrixUniform*vec4(dLightsUniform[i].origin,1.0);
-		vec3 lightVector = eyeCoordLight.xyz-eyeSpaceCoordsGeom.xyz;
-		float intensity = max(dot(normal,normalize(lightVector)),0.0);
-		float dist = length(lightVector);
+		vec3 lightVector1 = eyeCoordLight.xyz-eyeSpaceCoordsGeom.xyz;
+		vec3 lightVectorNorm = normalize( lightVector1);
+		float intensity = max(dot(normal,lightVectorNorm),0.0);
+		float dist = length(lightVector1);
 		//if(distance(pureVertexCoordsGeom.xyz,dLightsUniform[i].origin) < 500.0){
+			// diffuse 
 			gl_FragColor.xyz += (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius*50.0)*intensity/(dist*dist);
 		//}
+		// specular
+		if(intensity > 0.0){
+
+			
+			vec3 lightVector = eyeSpaceCoordsGeom.xyz-eyeCoordLight.xyz;
+			vec3 lightVectorNorm = normalize(lightVector);
+
+			// now mirror the lightVector around the normal
+			vec3 mirroredVec = lightVectorNorm - 2.0*normal*dot(lightVectorNorm,normal);
+			vec3 mirroredVecNorm = normalize(mirroredVec);
+
+			vec3 viewerVector = -eyeSpaceCoordsGeom.xyz;
+			vec3 viewerVectorNorm = normalize(viewerVector);
+
+			float specIntensity = pow(max(0.0,dot(mirroredVecNorm,viewerVectorNorm)),dLightSpecGammaUniform);
+
+			float totalDist = dist + length(viewerVector);
+
+			gl_FragColor.xyz += (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius)*specIntensity*dLightSpecIntensityUniform/totalDist;
+
+			/* Keeping this in here because it's hilariously bad and weird. Did I have a stroke? Or really tired.
+			vec3 viewerVector = eyeSpaceCoordsGeom.xyz-eyeSpaceCoordsGeom.xyz;
+			vec3 viewerVectorNorm = normalize(lightVector);
+
+			vec3 viewerLightPixelTriangleNormal = normalize(cross(lightVectorNorm,viewerVectorNorm));
+			vec3 viewerLightPixelTriangleAltitudeVec = normalize(cross(viewerLightPixelTriangleNormal,normalize(-eyeCoordLight.xyz)));
+
+			float viewerAngle = abs(dot(viewerLightPixelTriangleAltitudeVec,viewerVectorNorm));
+			float lightAngle = abs(dot(viewerLightPixelTriangleAltitudeVec,lightVectorNorm));
+
+			//if(lightAngle > 0 && viewerAngle > 0){
+				float specIntensity = max(0.0,1.0-abs(1.0-viewerAngle-lightAngle));
+
+				gl_FragColor.xyz += (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius*50.0)*specIntensity*dLightSpecIntensityUniform;
+			//}*/
+		}
+
 	}
 }
 
