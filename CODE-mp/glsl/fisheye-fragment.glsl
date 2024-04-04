@@ -567,15 +567,24 @@ void main(void)
 
 		vec3 value = (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius*50.0*20.0)*intensity/(dist*dist);
 
-		bool fastSkip = intensity <= 0.0 || length(value) < 0.0001f;
+		//bool fastSkip = intensity <= 0.0 || length(value) < 0.0001f;
+		bool fastSkip = intensity <= 0.0 || length(value) < 0.1f;
 		
 		if(!fastSkip){
 		
+			vec3 shadowDebugColor = vec3(1.0,1.0,1.0);
 			float shadowedIntensity = 1.0f;
 			vec3 worldPixel = (worldModelViewMatrixReverseGeom*eyeSpaceCoordsGeom).xyz;
 			vec3 lightVectorAbs = worldPixel-dLightsUniform[i].origin;
 			vec3 lightVectorAbsNorm = normalize(lightVectorAbs);
 			for(int s=0;s<shadowLinesCountUniform;s++){
+
+				vec3 line1Point1 = shadowLines[s].point1.xyz;
+				vec3 line1Point2 = shadowLines[s].point2.xyz;
+				
+				vec3 line2Point1 = dLightsUniform[i].origin;
+				vec3 line2Point2 = worldPixel;
+
 				// distance between lines
 				vec3 shadowLine = shadowLines[s].point2.xyz-shadowLines[s].point1.xyz;
 				vec3 shadowLineNorm = normalize(shadowLine);
@@ -595,19 +604,27 @@ void main(void)
 					// from the perspective of the cross vector, the lines overlap. We can calculate simple infinite distance
 					float distanceInfinite = abs(dot(crossBoth,dLightsUniform[i].origin-shadowLines[s].point1.xyz)); // Project any vector between any 2 points of the lines onto the one perpendicular to both
 					maxDistance = distanceInfinite;
+					shadowDebugColor = vec3(1.0,0.0,0.0);
 				} else if(sign(dot1_1) != sign(dot1_2)){
 					// point to line distance
 					vec3 pointToMeasure = abs(dot2_1) < abs(dot2_2) ? dLightsUniform[i].origin : worldPixel;
 					maxDistance = distanceToLine(pointToMeasure,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz);
+					maxDistance = min(distance(shadowLines[s].point1.xyz,pointToMeasure),maxDistance);
+					maxDistance = min(distance(shadowLines[s].point2.xyz,pointToMeasure),maxDistance);
+					shadowDebugColor = vec3(0.0,1.0,0.0);
 				} else if(sign(dot2_1) != sign(dot2_2)){
 					// point to line distance
 					vec3 pointToMeasure = abs(dot1_1) < abs(dot1_2) ? shadowLines[s].point1.xyz : shadowLines[s].point2.xyz;
 					maxDistance = distanceToLine(pointToMeasure,dLightsUniform[i].origin,worldPixel);
+					maxDistance = min(distance(dLightsUniform[i].origin,pointToMeasure),maxDistance);
+					maxDistance = min(distance(worldPixel,pointToMeasure),maxDistance);
+					shadowDebugColor = vec3(0.0,0.0,1.0);
 				} else {
 					// point to point distance
-					vec3 pointToMeasure1 = abs(dot2_1) < abs(dot2_2) ? dLightsUniform[i].origin : worldPixel;
-					vec3 pointToMeasure2 = abs(dot1_1) < abs(dot1_2) ? shadowLines[s].point1.xyz : shadowLines[s].point2.xyz;
-					maxDistance = distance(pointToMeasure1,pointToMeasure2);
+					vec3 pointToMeasure = abs(dot2_1) < abs(dot2_2) ? dLightsUniform[i].origin : worldPixel;
+					maxDistance = distance(pointToMeasure,shadowLines[s].point1.xyz);
+					maxDistance = min(distance(pointToMeasure,shadowLines[s].point2.xyz),maxDistance);
+					shadowDebugColor = vec3(1.0,1.0,0.0);
 				}
 
 				float lightIntensityHere = max(0.0f,maxDistance / shadowLines[s].width);
@@ -617,6 +634,9 @@ void main(void)
 			//if(distance(pureVertexCoordsGeom.xyz,dLightsUniform[i].origin) < 500.0){
 				// diffuse 
 				gl_FragColor.xyz += value*shadowedIntensity;
+				if(shadowedIntensity < 1.0){
+					gl_FragColor.xyz += shadowDebugColor*(1.0-shadowedIntensity);
+				}
 			//}
 			// specular
 		}
