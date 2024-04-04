@@ -63,6 +63,7 @@
 #include "qgl.h"
 #endif
 
+extern bool g_SSBOsSupported;
 
 typedef struct uniformLocations_t {
 	GLint viewOriginUniform;
@@ -86,15 +87,23 @@ typedef struct uniformLocations_t {
 	GLint worldModelViewMatrixUniform;
 	GLint dLightSpecIntensityUniform;
 	GLint dLightSpecGammaUniform;
-	GLint dLightsCountUniform;
-	GLint dLightsUniformOrigin[32];
-	GLint dLightsUniformColor[32];
-	GLint dLightsUniformRadius[32];
+	GLint dLightsCountUniform; 
+	GLint dLightsUniformOrigin[MAX_DLIGHTS];
+	GLint dLightsUniformColor[MAX_DLIGHTS];
+	GLint dLightsUniformRadius[MAX_DLIGHTS];
+	GLint shadowLinesCountUniform;
+	GLint shadowLinesPoint1[MAX_SHADOWLINES];
+	GLint shadowLinesPoint2[MAX_SHADOWLINES];
+	GLint shadowLinesWidth[MAX_SHADOWLINES];
+	GLint shadowLinesA[MAX_SHADOWLINES];
+	GLint shadowLinesB[MAX_SHADOWLINES];
 };
 
 uniformLocations_t uniformLocationsTess;
 uniformLocations_t uniformLocations;
 
+static GLuint shadowLineSSBOReference = 0;
+static shadowline_t shadowLineSSBO[MAX_SHADOWLINES];
 
 void R_FrameBuffer_CreateRollingShutterBuffers(int width, int height, int flags);
 
@@ -203,6 +212,14 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		height = fbo.screenHeight;
 	}
 
+	if (g_SSBOsSupported) {
+		Com_Memcpy(shadowLineSSBO, backEnd.refdef.shadowlines, backEnd.refdef.num_shadowlines * sizeof(shadowline_t));
+		qglBindBufferARB(GL_SHADER_STORAGE_BUFFER,shadowLineSSBOReference);
+		qglBufferDataARB(GL_SHADER_STORAGE_BUFFER, sizeof(shadowLineSSBO), shadowLineSSBO, GL_DYNAMIC_DRAW_ARB);
+		qglBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, shadowLineSSBOReference);
+		qglBindBufferARB(GL_SHADER_STORAGE_BUFFER,0);
+	}
+
 	if (tess) {
 
 		qglUniform3fv(uniformLocationsTess.viewOriginUniform, 1, tr.refdef.vieworg);
@@ -228,6 +245,7 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1f(uniformLocationsTess.dLightSpecGammaUniform, r_fboGLSLDLightsSpecGamma->value);
 		qglUniform1f(uniformLocationsTess.dLightSpecIntensityUniform, r_fboGLSLDLightsSpecIntensity->value);
 		//qglUniform3fv(uniformLocationsTess.dLightsUniform"), sizeof(dlight_t) / 4 / 4 * backEnd.refdef.num_dlights, (GLfloat*)&backEnd.refdef.dlights);
+		qglUniform1i(uniformLocationsTess.shadowLinesCountUniform, r_fboGLSLDLights->integer ? backEnd.refdef.num_shadowlines : 0);
 		if (r_fboGLSLDLights->integer) {
 			for (int i = 0; i < backEnd.refdef.num_dlights; i++) {
 
@@ -235,6 +253,14 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 				qglUniform3fv(uniformLocationsTess.dLightsUniformColor[i], 1, backEnd.refdef.dlights[i].color);
 				qglUniform1f(uniformLocationsTess.dLightsUniformRadius[i], backEnd.refdef.dlights[i].radius);
 			}
+			/*for (int i = 0; i < backEnd.refdef.num_shadowlines; i++) {
+
+				qglUniform3fv(uniformLocationsTess.shadowLinesPoint1[i], 1, backEnd.refdef.shadowlines[i].point1);
+				qglUniform3fv(uniformLocationsTess.shadowLinesPoint1[i], 1, backEnd.refdef.shadowlines[i].point2);
+				qglUniform1f(uniformLocationsTess.shadowLinesWidth[i], backEnd.refdef.shadowlines[i].width);
+				qglUniform1f(uniformLocationsTess.shadowLinesA[i], backEnd.refdef.shadowlines[i].a);
+				qglUniform1f(uniformLocationsTess.shadowLinesB[i], backEnd.refdef.shadowlines[i].b);
+			}*/
 		}
 
 
@@ -267,6 +293,7 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1f(uniformLocations.dLightSpecGammaUniform, r_fboGLSLDLightsSpecGamma->value);
 		qglUniform1f(uniformLocations.dLightSpecIntensityUniform, r_fboGLSLDLightsSpecIntensity->value);
 		//qglUniform3fv(uniformLocations.dLightsUniform"), sizeof(dlight_t) / 4 / 4 * backEnd.refdef.num_dlights, (GLfloat*)&backEnd.refdef.dlights);
+		qglUniform1i(uniformLocations.shadowLinesCountUniform, r_fboGLSLDLights->integer ? backEnd.refdef.num_shadowlines : 0);
 		if (r_fboGLSLDLights->integer) {
 			for (int i = 0; i < backEnd.refdef.num_dlights; i++) {
 
@@ -274,6 +301,14 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 				qglUniform3fv(uniformLocations.dLightsUniformColor[i], 1, backEnd.refdef.dlights[i].color);
 				qglUniform1f(uniformLocations.dLightsUniformRadius[i], backEnd.refdef.dlights[i].radius);
 			}
+			/*for (int i = 0; i < backEnd.refdef.num_shadowlines; i++) {
+
+				qglUniform3fv(uniformLocations.shadowLinesPoint1[i], 1, backEnd.refdef.shadowlines[i].point1);
+				qglUniform3fv(uniformLocations.shadowLinesPoint1[i], 1, backEnd.refdef.shadowlines[i].point2);
+				qglUniform1f(uniformLocations.shadowLinesWidth[i], backEnd.refdef.shadowlines[i].width);
+				qglUniform1f(uniformLocations.shadowLinesA[i], backEnd.refdef.shadowlines[i].a);
+				qglUniform1f(uniformLocations.shadowLinesB[i], backEnd.refdef.shadowlines[i].b);
+			}*/
 		}
 	}
 
@@ -915,10 +950,18 @@ static void R_FrameBufferInitUniformLocs(R_GLSL* program,uniformLocations_t* loc
 	locs->dLightSpecGammaUniform = qglGetUniformLocation(program->ShaderId(), "dLightSpecGammaUniform");
 	locs->dLightSpecIntensityUniform = qglGetUniformLocation(program->ShaderId(), "dLightSpecIntensityUniform");
 	locs->dLightsCountUniform = qglGetUniformLocation(program->ShaderId(), "dLightsCountUniform");
-	for (int i = 0; i < 32; i++) {
+	for (int i = 0; i < MAX_DLIGHTS; i++) {
 		locs->dLightsUniformColor[i] = qglGetUniformLocation(program->ShaderId(), va("dLightsUniform[%d].color",i));
 		locs->dLightsUniformOrigin[i] = qglGetUniformLocation(program->ShaderId(), va("dLightsUniform[%d].origin",i));
 		locs->dLightsUniformRadius[i] = qglGetUniformLocation(program->ShaderId(), va("dLightsUniform[%d].radius",i));
+	}
+	locs->shadowLinesCountUniform = qglGetUniformLocation(program->ShaderId(), "shadowLinesCountUniform");
+	for (int i = 0; i < MAX_SHADOWLINES; i++) {
+		locs->shadowLinesPoint1[i] = qglGetUniformLocation(program->ShaderId(), va("shadowLinesUniform[%d].point1",i));
+		locs->shadowLinesPoint2[i] = qglGetUniformLocation(program->ShaderId(), va("shadowLinesUniform[%d].point2",i));
+		locs->shadowLinesWidth[i] = qglGetUniformLocation(program->ShaderId(), va("shadowLinesUniform[%d].width",i));
+		locs->shadowLinesA[i] = qglGetUniformLocation(program->ShaderId(), va("shadowLinesUniform[%d].a",i));
+		locs->shadowLinesB[i] = qglGetUniformLocation(program->ShaderId(), va("shadowLinesUniform[%d].b",i));
 	}
 }
 
@@ -1077,6 +1120,9 @@ void R_FrameBuffer_Init( void ) {
 			ri.Printf(PRINT_WARNING, "WARNING: Fisheye shader could not be compiled. Fisheye mode not available.\n");
 		}
 		else {
+			if (g_SSBOsSupported) {
+				qglGenBuffersARB(1,&shadowLineSSBOReference);
+			}
 
 			R_FrameBufferInitUniformLocs(fishEyeShader,&uniformLocations);
 

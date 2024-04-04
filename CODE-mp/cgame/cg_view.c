@@ -1896,6 +1896,8 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, int demoPlayb
 	
 	cg.fallingToDeath = cg.snap->ps.fallingToDeath;
 
+	Cam_AddPlayerShadowLines();
+
 	CG_CalcScreenEffects();
 
 	// first person blend blobs, done after AnglesToAxis

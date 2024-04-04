@@ -305,6 +305,9 @@ int		trap_R_LightForPoint( vec3_t point, vec3_t ambientLight, vec3_t directedLig
 	return syscall( CG_R_LIGHTFORPOINT, point, ambientLight, directedLight, lightDir );
 }
 
+void	trap_R_AddShadowLineToScene( const vec3_t p1, const vec3_t p2, float width, float a, float b) { // a, b reserved for shit I might need but not sure.
+	syscall( CG_R_ADDSHADOWLINE, p1, p2, PASSFLOAT(width), PASSFLOAT(a), PASSFLOAT(b));
+}
 void	trap_R_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b ) {
 	syscall( CG_R_ADDLIGHTTOSCENE, org, PASSFLOAT(intensity), PASSFLOAT(r), PASSFLOAT(g), PASSFLOAT(b) );
 }

@@ -22,7 +22,7 @@ void Cam_DrawClientNames(void) //FIXME: draw entitynums
 	{
 		centity_t* cent = &cg_entities[i];
 
-		if (cent && ((i != CG_CrosshairPlayer() /*&& i != cam.specEnt*/) /*|| cam_freeview.integer*/))
+		if (cent && cent->currentValid && ((i != CG_CrosshairPlayer() /*&& i != cam.specEnt*/) /*|| cam_freeview.integer*/))
 		{
 			trace_t trace;
 
@@ -134,6 +134,24 @@ void Cam_DrawClientNames(void) //FIXME: draw entitynums
 				}
 				
 			}
+		}
+	}
+}
+
+void Cam_AddPlayerShadowLines() {
+	int i;
+	vec3_t p1, p2;
+	for (i = 0; i < MAX_CLIENTS; i++)
+	{
+		centity_t* cent = &cg_entities[i];
+
+		if (cent->currentValid) {
+			VectorCopy(cent->lerpOrigin, p1);
+			VectorCopy(cent->lerpOrigin, p2);
+			p1[2] += DEFAULT_MAXS_2;
+			p1[2] += DEFAULT_MINS_2;
+
+			trap_R_AddShadowLineToScene(p1, p2, 20.0, 0, 0);
 		}
 	}
 }

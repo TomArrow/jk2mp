@@ -7,6 +7,7 @@
 
 
 #define	MAX_DLIGHTS		32			// can't be increased, because bit flags are used on surfaces
+#define	MAX_SHADOWLINES		(64*18)			// About 18 per player
 //#define	MAX_ENTITIES	1023		// can't be increased without changing drawsurf bit packing
 
 #define	REFENTITYNUM_BITS	16		// can't be increased without changing drawsurf bit packing

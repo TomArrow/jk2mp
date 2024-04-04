@@ -364,11 +364,14 @@ typedef void (APIENTRY * PFNGLBINDBUFFERARBPROC) (GLenum target, GLuint id);
 typedef void (APIENTRY * PFNGLBUFFERDATAARBPROC) (GLenum target, GLsizei size, const void* data, GLenum usage);
 typedef void *(APIENTRY * PFNGLMAPBUFFERARBPROC) (GLenum target, GLenum access);
 typedef GLboolean (APIENTRY * PFNGLUNMAPBUFFERARBPROC) (GLenum target);
+typedef void (APIENTRY * PFNGLBINDBUFFERBASEPROC) (GLenum target, GLuint index, GLuint buffer);
 #define GL_READ_ONLY_ARB                  0x88B8
 #define GL_STREAM_READ_ARB                0x88E1
 #define GL_DYNAMIC_READ_ARB               0x88E9
+#define GL_DYNAMIC_DRAW_ARB               0x88E8
 #define GL_PIXEL_PACK_BUFFER_ARB          0x88EB
 #define GL_PIXEL_UNPACK_BUFFER_ARB        0x88EC
+#define GL_SHADER_STORAGE_BUFFER          0x90D2
 
 /* Already in glext.h
 typedef void (APIENTRY *PFNGLCOMBINERPARAMETERFVNVPROC) (GLenum pname,const GLfloat *params);
@@ -463,6 +466,7 @@ extern PFNGLISPROGRAMARBPROC qglIsProgramARB;
 //teh's PBO
 extern PFNGLGENBUFFERSARBPROC qglGenBuffersARB;
 extern PFNGLBINDBUFFERARBPROC qglBindBufferARB;
+extern PFNGLBINDBUFFERBASEPROC qglBindBufferBase;
 extern PFNGLBUFFERDATAARBPROC qglBufferDataARB;
 extern PFNGLMAPBUFFERARBPROC qglMapBufferARB;
 extern PFNGLUNMAPBUFFERARBPROC qglUnmapBufferARB;

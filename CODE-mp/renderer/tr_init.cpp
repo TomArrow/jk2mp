@@ -289,6 +289,7 @@ PFNGLBINDBUFFERARBPROC qglBindBufferARB = NULL;
 PFNGLBUFFERDATAARBPROC qglBufferDataARB = NULL;
 PFNGLMAPBUFFERARBPROC qglMapBufferARB = NULL;
 PFNGLUNMAPBUFFERARBPROC qglUnmapBufferARB = NULL;
+PFNGLBINDBUFFERBASEPROC qglBindBufferBase = NULL;
 
 #ifdef _WIN32
 // Declare Render-Texture function pointers.
@@ -1498,6 +1499,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.AddMiniRefEntityToScene = RE_AddMiniRefEntityToScene;
 	re.AddPolyToScene = RE_AddPolyToScene;
 	re.LightForPoint = R_LightForPoint;
+	re.AddShadowLineToScene = RE_AddShadowLineToScene;
 	re.AddLightToScene = RE_AddLightToScene;
 	re.AddAdditiveLightToScene = RE_AddAdditiveLightToScene;
 	re.RenderScene = RE_RenderScene;

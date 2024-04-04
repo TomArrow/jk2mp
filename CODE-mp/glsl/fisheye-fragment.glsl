@@ -1,4 +1,5 @@
 #version 400 compatibility
+#extension GL_ARB_shader_storage_buffer_object : enable
 
 uniform sampler2D text_in;
 
@@ -61,6 +62,22 @@ struct dlight_t {
 uniform int dLightsCountUniform;
 uniform dlight_t dLightsUniform[32]; 
 
+struct shadowline_t {
+	vec4			point1;
+	vec4			point2;
+	float			width;
+	float			a;
+	float			b;
+	float			c; // unused, padding
+};
+
+uniform int shadowLinesCountUniform;
+//uniform shadowline_t shadowLinesUniform[64*18]; 
+
+layout(std430, binding = 3) buffer layoutName
+{
+    shadowline_t shadowLines[64*18];
+};
 
 vec2 parallaxMap(){
 		vec2 uvCoords;
@@ -290,7 +307,7 @@ vec3 perlinNoiseVariation3(){
 	res.x = max(0.0,pow(res.x,2.4));
 	res.y = max(0.0,pow(res.y,2.4));
 	res.z = max(0.0,pow(res.z,2.4));
-	return res;//*0.5;
+	return res;
 }
 vec3 perlinNoiseVariation4(){ 
 	vec3 res;
@@ -539,9 +556,31 @@ void main(void)
 		vec3 lightVectorNorm = normalize( lightVector1);
 		float intensity = max(dot(lightNormal,lightVectorNorm),0.0);
 		float dist = length(lightVector1);
+
+		float shadowedIntensity = 1.0f;
+		
+		vec3 lightVectorAbs = (worldModelViewMatrixReverseGeom*eyeSpaceCoordsGeom).xyz-dLightsUniform[i].origin;
+		vec3 lightVectorAbsNorm = normalize(lightVectorAbs);
+		for(int s=0;s<shadowLinesCountUniform;s++){
+			// distance between lines
+			vec3 shadowLine = shadowLines[s].point2.xyz-shadowLines[s].point1.xyz;
+			vec3 shadowLineNorm = normalize(shadowLine);
+			vec3 perpendicularToBothLines = normalize(cross(lightVectorAbsNorm,shadowLineNorm));
+			
+			//vec3 perpTo
+
+			//float dot1 = dot(shadowLineNorm,dLightsUniform[i].origin-shadowLines[s].point1.xyz);
+			//float dot2 = dot(shadowLineNorm,dLightsUniform[i].origin-shadowLines[s].point2.xyz);
+
+			float distanceInfinite = abs(dot(perpendicularToBothLines,dLightsUniform[i].origin-shadowLines[s].point1.xyz)); // Project any vector between any 2 points of the lines onto the one perpendicular to both
+			
+			float lightIntensityHere = max(0.0f,distanceInfinite / shadowLines[s].width);
+			shadowedIntensity = min(lightIntensityHere,shadowedIntensity);
+		}
+
 		//if(distance(pureVertexCoordsGeom.xyz,dLightsUniform[i].origin) < 500.0){
 			// diffuse 
-			gl_FragColor.xyz += (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius*50.0)*intensity/(dist*dist);
+			gl_FragColor.xyz += (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius*50.0*20.0)*intensity*shadowedIntensity/(dist*dist);
 		//}
 		// specular
 		if(intensity > 0.0){
@@ -581,6 +620,16 @@ void main(void)
 		}
 
 	}
+	/*
+	for(int s=0;s<shadowLinesCountUniform;s++){
+		// distance between lines
+		if(distance(shadowLines[s].point1,pureVertexCoordsGeom.xyz) < 500){
+			gl_FragColor.xyz *= 0.1;
+		}
+	}
+	if(shadowLinesCountUniform == 0){
+		gl_FragColor.x = 10.0;
+	}*/
 }
 
 

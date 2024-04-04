@@ -43,3 +43,4 @@ typedef struct camera_s
 void Cam_DrawClientNames(void);
 void Cam_Draw2d(void);
 void Cam_Draw3d(void);
+void Cam_AddPlayerShadowLines(void);

@@ -70,6 +70,15 @@ typedef struct dlight_s {
 
 } dlight_t;
 
+typedef struct shadowline_s {
+	vec4_t			point1; // vec4 or alignment with opengl SSBO
+	vec4_t			point2; // vec4 or alignment with opengl SSBO
+	float			width;
+	float			a;
+	float			b;
+	float			c; // unused, padding
+} shadowline_t;
+
 
 // a trMiniRefEntity_t has all the information passed in by
 // the client game, other info will come from it's parent main ref entity
@@ -550,6 +559,9 @@ typedef struct {
 
 	int			num_dlights;
 	struct dlight_s	*dlights;
+
+	int			num_shadowlines;
+	struct shadowline_s	*shadowlines;
 
 	int			numPolys;
 	struct srfPoly_s	*polys;
@@ -1801,7 +1813,8 @@ void RE_ClearScene( void );
 void RE_AddRefEntityToScene( const refEntity_t *ent );
 void RE_AddMiniRefEntityToScene( const miniRefEntity_t *ent );
 void RE_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num );
-void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b );
+void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b ); 
+void RE_AddShadowLineToScene(const vec3_t p1, const vec3_t p2, float width, float a, float b);
 void RE_AddAdditiveLightToScene( const vec3_t org, float intensity, float r, float g, float b );
 void RE_RenderScene( const refdef_t *fd );
 
@@ -2004,6 +2017,7 @@ typedef enum {
 // on an SMP machine
 typedef struct {
 	drawSurf_t	drawSurfs[MAX_DRAWSURFS];
+	shadowline_t	shadowLines[MAX_SHADOWLINES];
 	dlight_t	dlights[MAX_DLIGHTS];
 	//trRefEntity_t	entities[MAX_ENTITIES];
 	trRefEntity_t	entities[MAX_REFENTITIES];

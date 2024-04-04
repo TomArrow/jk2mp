@@ -101,6 +101,7 @@ cvar_t	*r_allowSoftwareGL;		// don't abort out if the pixelformat claims softwar
 #ifdef JEDIACADEMY_GLOW
 // Whether the current hardware supports dynamic glows/flares.
 extern bool g_bDynamicGlowSupported;
+extern bool g_SSBOsSupported;
 #endif
 
 static void GLW_ARB_InitExtensions( void ) {
@@ -1405,6 +1406,7 @@ static void GLW_InitExtensions( qboolean createFakeContext = qfalse )
 		ri.Printf( PRINT_ALL, "*** IGNORING OPENGL EXTENSIONS ***\n" );
 #ifdef JEDIACADEMY_GLOW
 		g_bDynamicGlowSupported = false;
+		g_SSBOsSupported = false;
 		ri.Cvar_Set( "r_DynamicGlow","0" );
 #endif
 		return;
@@ -1694,7 +1696,19 @@ static void GLW_InitExtensions( qboolean createFakeContext = qfalse )
 	else
 	{
 		bARBFragmentProgram = false;
-		Com_Printf ("...GL_ARB_fragment_program not found\n" );
+		Com_Printf("...GL_ARB_fragment_program not found\n");
+	}
+
+	// SSBOs
+	bool bSSBOs = false;
+	if ( GL_CheckForExtension( "ARB_shader_storage_buffer_object" ) )
+	{
+		bSSBOs = true;
+	}
+	else
+	{
+		bSSBOs = false;
+		Com_Printf ("...ARB_shader_storage_buffer_object not found\n" );
 	}
 
 	// If we support one or the other, load the shared function pointers.
@@ -1726,6 +1740,12 @@ static void GLW_InitExtensions( qboolean createFakeContext = qfalse )
 		qglMapBufferARB						= (PFNGLMAPBUFFERARBPROC)		 qwglGetProcAddress("glMapBufferARB");
 		qglUnmapBufferARB					= (PFNGLUNMAPBUFFERARBPROC)		 qwglGetProcAddress("glUnmapBufferARB");
 
+		if (bSSBOs) {
+			// glBindBufferBase isn't part of ARB_shader_storage_buffer_object per se I think, but ARB_shader_storage_buffer_object depends on it, so it's a safe guess it's here.
+			// Then again it barely matters because qwglGetProcAddress would just return NULL anyway otherwise.
+			qglBindBufferBase = (PFNGLBINDBUFFERBASEPROC)qwglGetProcAddress("glBindBufferBase");
+		}
+
 		// Validate the functions we need.
 		if ( !qglProgramStringARB || !qglBindProgramARB || !qglDeleteProgramsARB || !qglGenProgramsARB ||
 			 !qglProgramEnvParameter4dARB || !qglProgramEnvParameter4dvARB || !qglProgramEnvParameter4fARB ||
@@ -1738,10 +1758,13 @@ static void GLW_InitExtensions( qboolean createFakeContext = qfalse )
 			bARBFragmentProgram = false;
 			qglGenProgramsARB = NULL;	//clear ptrs that get checked
 			qglProgramEnvParameter4fARB = NULL;
+			qglBindBufferBase = NULL;
 			Com_Printf ("...ignoring GL_ARB_vertex_program\n" );
 			Com_Printf ("...ignoring GL_ARB_fragment_program\n" );
 		}
 	}
+
+	g_SSBOsSupported = qglBindBufferBase != NULL;
 
 	// Figure out which texture rectangle extension to use.
 	bool bTexRectSupported = false;

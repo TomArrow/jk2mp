@@ -708,6 +708,9 @@ int CL_CgameSystemCalls( int *args ) {
 	case CG_R_ADDLIGHTTOSCENE:
 		re.AddLightToScene( (const float *)VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
 		return 0;
+	case CG_R_ADDSHADOWLINE:
+		re.AddShadowLineToScene( (const float *)VMA(1), (const float *)VMA(2), VMF(3), VMF(4), VMF(5) );
+		return 0;
 	case CG_R_ADDADDITIVELIGHTTOSCENE:
 		re.AddAdditiveLightToScene( (const float *)VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
 		return 0;

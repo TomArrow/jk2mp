@@ -756,6 +756,7 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 
 	// Demo project objects
 	drawDemoObjects(!captureFrame); 
+	Cam_AddPlayerShadowLines();
 	Cam_Draw3d();
 	CG_DrawSpeedGraph3D();
 

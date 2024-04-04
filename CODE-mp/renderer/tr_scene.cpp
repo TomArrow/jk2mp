@@ -15,6 +15,9 @@ static	int			r_firstSceneDrawSurf;
 static	int			r_numdlights;
 static	int			r_firstSceneDlight;
 
+static	int			r_numshadowlines;
+static	int			r_firstSceneShadowLine;
+
 static	int64_t		r_numentities;
 static	int			r_firstSceneEntity;
 static	int			r_numminientities;
@@ -49,6 +52,9 @@ void R_ToggleSmpFrame( void ) {
 	r_numdlights = 0;
 	r_firstSceneDlight = 0;
 
+	r_numshadowlines = 0;
+	r_firstSceneShadowLine = 0;
+
 	r_numentities = 0;
 	r_firstSceneEntity = 0;
 	refEntParent = -1;
@@ -69,6 +75,7 @@ RE_ClearScene
 ====================
 */
 void RE_ClearScene( void ) {
+	r_firstSceneShadowLine = r_numshadowlines;
 	r_firstSceneDlight = r_numdlights;
 	r_firstSceneEntity = r_numentities;
 	r_firstScenePoly = r_numpolys;
@@ -372,6 +379,32 @@ void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, fl
 
 /*
 =====================
+RE_AddShadowLineToScene
+
+=====================
+*/
+void RE_AddShadowLineToScene( const vec3_t p1, const vec3_t p2, float width, float a, float b ) {
+	shadowline_t	*sl;
+
+	if ( !tr.registered ) {
+		return;
+	}
+	if ( r_numdlights >= MAX_SHADOWLINES ) {
+		return;
+	}
+
+	sl = &backEndData[tr.smpFrame]->shadowLines[r_numshadowlines++];
+
+	VectorCopy (p1, sl->point1);
+	VectorCopy (p2, sl->point2);
+	sl->width = width;
+	sl->a = a;
+	sl->b = b;
+
+}
+
+/*
+=====================
 RE_AddAdditiveLightToScene
 
 =====================
@@ -479,6 +512,9 @@ void RE_RenderScene( const refdef_t *fd ) {
 	tr.refdef.num_dlights = r_numdlights - r_firstSceneDlight;
 	tr.refdef.dlights = &backEndData[tr.smpFrame]->dlights[r_firstSceneDlight];
 
+	tr.refdef.num_shadowlines = r_numshadowlines - r_firstSceneShadowLine;
+	tr.refdef.shadowlines = &backEndData[tr.smpFrame]->shadowLines[r_firstSceneShadowLine];
+
 	tr.refdef.numPolys = r_numpolys - r_firstScenePoly;
 	tr.refdef.polys = &backEndData[tr.smpFrame]->polys[r_firstScenePoly];
 
@@ -527,6 +563,7 @@ void RE_RenderScene( const refdef_t *fd ) {
 	r_firstSceneEntity = r_numentities;
 	r_firstSceneMiniEntity = r_numminientities;
 	r_firstSceneDlight = r_numdlights;
+	r_firstSceneShadowLine = r_numshadowlines;
 	r_firstScenePoly = r_numpolys;
 
 	refEntParent = -1;
