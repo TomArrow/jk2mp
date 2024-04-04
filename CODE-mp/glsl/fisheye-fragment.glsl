@@ -559,22 +559,32 @@ void main(void)
 
 		float shadowedIntensity = 1.0f;
 		
-		vec3 lightVectorAbs = (worldModelViewMatrixReverseGeom*eyeSpaceCoordsGeom).xyz-dLightsUniform[i].origin;
+		vec3 worldPixel = (worldModelViewMatrixReverseGeom*eyeSpaceCoordsGeom).xyz;
+		vec3 lightVectorAbs = worldPixel-dLightsUniform[i].origin;
 		vec3 lightVectorAbsNorm = normalize(lightVectorAbs);
 		for(int s=0;s<shadowLinesCountUniform;s++){
 			// distance between lines
 			vec3 shadowLine = shadowLines[s].point2.xyz-shadowLines[s].point1.xyz;
 			vec3 shadowLineNorm = normalize(shadowLine);
-			vec3 perpendicularToBothLines = normalize(cross(lightVectorAbsNorm,shadowLineNorm));
+			vec3 crossBoth = normalize(cross(lightVectorAbsNorm,shadowLineNorm));
 			
-			//vec3 perpTo
+			vec3 perp1 = normalize(cross(crossBoth,shadowLineNorm));
+			vec3 perp2 = normalize(cross(crossBoth,lightVectorAbsNorm));
 
-			//float dot1 = dot(shadowLineNorm,dLightsUniform[i].origin-shadowLines[s].point1.xyz);
-			//float dot2 = dot(shadowLineNorm,dLightsUniform[i].origin-shadowLines[s].point2.xyz);
+			float dot1_1 = dot(perp2,dLightsUniform[i].origin-shadowLines[s].point1.xyz);
+			float dot1_2 = dot(perp2,dLightsUniform[i].origin-shadowLines[s].point2.xyz);
+			float dot2_1 = dot(perp1,shadowLines[s].point1.xyz-dLightsUniform[i].origin);
+			float dot2_2 = dot(perp1,shadowLines[s].point1.xyz-worldPixel);
 
-			float distanceInfinite = abs(dot(perpendicularToBothLines,dLightsUniform[i].origin-shadowLines[s].point1.xyz)); // Project any vector between any 2 points of the lines onto the one perpendicular to both
-			
-			float lightIntensityHere = max(0.0f,distanceInfinite / shadowLines[s].width);
+			float maxDistance = shadowLines[s].width;
+
+			if(sign(dot1_1) != sign(dot1_2) && sign(dot2_1) != sign(dot2_2)){
+				// from the perspective of the cross vector, the lines overlap. We can calculate simple infinite distance
+				float distanceInfinite = abs(dot(crossBoth,dLightsUniform[i].origin-shadowLines[s].point1.xyz)); // Project any vector between any 2 points of the lines onto the one perpendicular to both
+				maxDistance = distanceInfinite;
+			}
+
+			float lightIntensityHere = max(0.0f,maxDistance / shadowLines[s].width);
 			shadowedIntensity = min(lightIntensityHere,shadowedIntensity);
 		}
 
