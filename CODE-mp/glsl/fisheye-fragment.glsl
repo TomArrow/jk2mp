@@ -70,7 +70,7 @@ struct shadowline_t {
 	float			width;
 	float			a;
 	float			b;
-	float			c; // unused, padding
+	int				flags; // 1 = use point1 for feet shadow
 };
 
 uniform int shadowLinesCountUniform;
@@ -619,6 +619,51 @@ void main(void)
 	}
 	//vec3 lightNormal = normal;
 	vec3 lightNormal = calculateTextureNormal(uvCoords,effectiveUVPixelPos);
+	
+	vec3 worldPixel = (worldModelViewMatrixReverseGeom*eyeSpaceCoordsGeom).xyz;
+
+	float boringShadowingIntensity = 1.0f;
+
+	vec3 baseColorForLighting = gl_FragColor.xyz;
+
+	if(isWorldBrushUniform > 0){
+		// Bit of boring standard shadow and ambient occlusion to replace cg_shadows 1
+		for(int s=0;s<shadowLinesCountUniform;s++){
+
+			if(0 < (shadowLines[s].flags & 1)){ // Flag 1 means foot shadow
+				vec3 delta = shadowLines[s].point1.xyz-worldPixel;
+
+				if(delta.z < -0.1) continue; // foots must be above us.
+
+				if(shadowLines[s].a > shadowLines[s].width){
+					// with flag 1, parameter a tells us how great the Z-distance from the foot can be.
+					// We simply adjust the z delta accordingly.
+					delta.z *=  shadowLines[s].width/shadowLines[s].a;
+				}
+
+				float widenRatio = max(0.0,min(1.0,delta.z/shadowLines[s].width));
+
+				float maxDistance = length(delta);
+				float lightIntensityHere = min(1.0,max(0.0f,maxDistance / (shadowLines[s].width+widenRatio*shadowLines[s].b)));
+				float maxWidenFade = shadowLines[s].b / (shadowLines[s].width+shadowLines[s].b);
+				//lightIntensityHere = max(0.0f,1.0-pow(1.0-lightIntensityHere,4.0)*(1.0-(4.0*widenRatio)*maxWidenFade-0.3)));
+				lightIntensityHere = max(0.0f,1.0-pow(1.0-lightIntensityHere,1.0)*(1.0-(widenRatio)*maxWidenFade-0.4));
+				boringShadowingIntensity = min(lightIntensityHere,boringShadowingIntensity);
+
+			}
+			else if(0 < (shadowLines[s].flags & 2)){ // Flag 2 means ambient occlusion thing (we use less of them to not have even more performance loss)
+				
+				float maxDistance = distanceToLineProper(worldPixel,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz );
+				
+				float lightIntensityHere = min(1.0,max(0.0f,maxDistance / shadowLines[s].width)); // only max 0.2, this is supposed to be mild
+				lightIntensityHere = max(0.0f,1.0-pow(1.0-lightIntensityHere,2.0)*0.5);
+				boringShadowingIntensity = min(lightIntensityHere,boringShadowingIntensity);
+			}
+		}
+	}
+
+	vec3 boringShadowSubtractVal = baseColorForLighting * (1.0f - boringShadowingIntensity);
+
 	for(int i=0;i<dLightsCountUniform;i++){
 		vec4 eyeCoordLight = worldModelViewMatrixUniform*vec4(dLightsUniform[i].origin,1.0);
 		vec3 lightVector1 = eyeCoordLight.xyz-eyeSpaceCoordsGeom.xyz;
@@ -626,12 +671,11 @@ void main(void)
 		float intensity = max(dot(lightNormal,lightVectorNorm),0.0);
 		float dist = length(lightVector1);
 
-		vec3 value = (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius*50.0*dLightIntensityUniform)*intensity/(dist*dist);
+		vec3 value = (baseColorForLighting*dLightsUniform[i].color*dLightsUniform[i].radius*50.0*dLightIntensityUniform)*intensity/(dist*dist);
 
 		bool fastSkip = intensity <= 0.0 || length(value) < dLightFastSkipThresholdUniform;
 		//bool fastSkip = intensity <= 0.0 || length(value) < 0.1f;
 		
-		vec3 worldPixel = (worldModelViewMatrixReverseGeom*eyeSpaceCoordsGeom).xyz;
 		bool mainLightShadowLinesCalculated = false;
 		float shadowedIntensity = 1.0f;
 		if(!fastSkip){
@@ -641,6 +685,10 @@ void main(void)
 			vec3 lightVectorAbs = worldPixel-dLightsUniform[i].origin;
 			vec3 lightVectorAbsNorm = normalize(lightVectorAbs);
 			for(int s=0;s<shadowLinesCountUniform;s++){
+
+				if(0 < (shadowLines[s].flags & 2)){ // this one's just used for some simplistic ambient occlusion
+					continue;
+				}
 
 				int type= 0;
 				float maxDistance = shortestDistanceLines(worldPixel,dLightsUniform[i].origin,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz,type);
@@ -747,7 +795,7 @@ void main(void)
 
 			//vec3 worldViewer = (worldModelViewMatrixReverseGeom*vec4(0.0,0.0,0.0,1.0)).xyz;
 
-			vec3 addVal = (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius)*specIntensity*dLightSpecIntensityUniform/totalDist;
+			vec3 addVal = (baseColorForLighting*dLightsUniform[i].color*dLightsUniform[i].radius)*specIntensity*dLightSpecIntensityUniform/totalDist;
 
 			bool fastSkip2 =  length(value) < dLightFastSkipThresholdUniform || specIntensity <= 0;
 			
@@ -756,6 +804,9 @@ void main(void)
 
 					for(int s=0;s<shadowLinesCountUniform;s++){
 
+						if(0 < (shadowLines[s].flags & 2)){ // this one's just used for some simplistic ambient occlusion
+							continue;
+						}
 						int type= 0;
 						// We can reuse shadowedIntensity if it was already calculated for the main light but otherwise we have to recalculate it here.
 						float maxDistance = shortestDistanceLines(worldPixel,dLightsUniform[i].origin,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz,type);
@@ -792,6 +843,8 @@ void main(void)
 		}
 
 	}
+
+	gl_FragColor.xyz -= boringShadowSubtractVal;
 	/*
 	for(int s=0;s<shadowLinesCountUniform;s++){
 		// distance between lines

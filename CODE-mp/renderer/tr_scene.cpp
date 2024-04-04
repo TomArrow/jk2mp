@@ -383,7 +383,7 @@ RE_AddShadowLineToScene
 
 =====================
 */
-void RE_AddShadowLineToScene( const vec3_t p1, const vec3_t p2, float width, float a, float b ) {
+void RE_AddShadowLineToScene( const vec3_t p1, const vec3_t p2, float width, float a, float b, int flags ) {
 	shadowline_t	*sl;
 
 	if ( !tr.registered ) {
@@ -400,6 +400,7 @@ void RE_AddShadowLineToScene( const vec3_t p1, const vec3_t p2, float width, flo
 	sl->width = width;
 	sl->a = a;
 	sl->b = b;
+	sl->flags = flags;
 
 }
 

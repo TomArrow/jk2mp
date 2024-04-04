@@ -138,20 +138,84 @@ void Cam_DrawClientNames(void) //FIXME: draw entitynums
 	}
 }
 
+static qboolean GetBoltPositionReal( qhandle_t bolt, centity_t* cent, vec3_t result) {
+	if (!cent->ghoul2 || !bolt) {
+		return qfalse;
+	}
+	mdxaBone_t boneMatrix;
+	if (trap_G2API_GetBoltMatrix(cent->ghoul2, 0, bolt, &boneMatrix, cent->turAngles, cent->lerpOrigin, cg.time, cgs.gameModels, cent->modelScale)) {
+		vec3_t betterOrigin;
+		trap_G2API_GiveMeVectorFromMatrix(&boneMatrix, ORIGIN, betterOrigin);
+		VectorCopy(betterOrigin, result);
+		return qtrue;
+	}
+	return qfalse;
+}
+
+static qboolean GetBoltPosition(centity_t* cent, const char* boltName,  vec3_t result) {
+	if (!cent->ghoul2) {
+		return qfalse;
+	}
+	qhandle_t bolt = trap_G2API_AddBolt(cent->ghoul2, 0, boltName);
+	return GetBoltPositionReal(bolt, cent,result);
+}
+
 void Cam_AddPlayerShadowLines() {
 	int i;
 	vec3_t p1, p2;
+	vec3_t rtibia, ltibia, rtalus, ltalus, cervical, llumbar, rhumerus, lhumerus, rradius, lradius, rhand, lhand;
 	for (i = 0; i < MAX_CLIENTS; i++)
 	{
 		centity_t* cent = &cg_entities[i];
 
 		if (cent->currentValid) {
-			VectorCopy(cent->lerpOrigin, p1);
-			VectorCopy(cent->lerpOrigin, p2);
-			p1[2] += DEFAULT_MAXS_2;
-			p1[2] += DEFAULT_MINS_2;
+			if (0) { // simple
+				VectorCopy(cent->lerpOrigin, p1);
+				VectorCopy(cent->lerpOrigin, p2);
+				p1[2] += DEFAULT_MAXS_2;
+				p1[2] += DEFAULT_MINS_2;
 
-			trap_R_AddShadowLineToScene(p1, p2, 20.0, 0, 0);
+				trap_R_AddShadowLineToScene(p1, p2, 20.0, 0, 0,1);
+			}
+			else { // this is cool idea in theory but ... atm a bit slow and doesnt look quite right yet
+				
+				VectorCopy(cent->lerpOrigin, p1);
+				VectorCopy(cent->lerpOrigin, p2);
+				p1[2] += DEFAULT_MAXS_2;
+				//p2[2] += DEFAULT_MINS_2;
+				trap_R_AddShadowLineToScene(p1, p2, 60.0, 400.0, 0, 2); // ambient occlusion thingie
+
+				qboolean success = qtrue;
+				success = success && GetBoltPosition(cent,"rtibia",rtibia);
+				success = success && GetBoltPosition(cent,"ltibia", ltibia);
+				success = success && GetBoltPosition(cent,"rtalus", rtalus);
+				success = success && GetBoltPosition(cent,"ltalus", ltalus);
+				success = success && GetBoltPosition(cent,"cervical", cervical);
+				success = success && GetBoltPosition(cent,"lower_lumbar", llumbar);
+				success = success && GetBoltPosition(cent,"rhumerus", rhumerus);
+				success = success && GetBoltPosition(cent,"lhumerus", lhumerus);
+				success = success && GetBoltPosition(cent,"rradius", rradius);
+				success = success && GetBoltPosition(cent,"lradius", lradius);
+				success = success && GetBoltPosition(cent,"rhand", rhand);
+				success = success && GetBoltPosition(cent,"lhand", lhand);
+
+				if (success) {
+
+					trap_R_AddShadowLineToScene(cervical, llumbar, 15.0, 0, 0, 0);
+
+					trap_R_AddShadowLineToScene(cervical, rhumerus, 7.0, 0, 0, 0);
+					trap_R_AddShadowLineToScene(rradius, rhumerus, 5.0, 0, 0, 0);
+					trap_R_AddShadowLineToScene(rradius, rhand, 3.0, 0, 0, 0);
+					trap_R_AddShadowLineToScene(cervical, lhumerus, 7.0, 0, 0, 0);
+					trap_R_AddShadowLineToScene(lradius, lhumerus, 5.0, 0, 0, 0);
+					trap_R_AddShadowLineToScene(lradius, lhand, 3.0, 0, 0, 0);
+
+					trap_R_AddShadowLineToScene(rtibia, llumbar, 7.0, 0, 0, 0);
+					trap_R_AddShadowLineToScene(rtalus, rtibia,3.0, 60.0, 30.0, 1);
+					trap_R_AddShadowLineToScene(ltibia, llumbar, 7.0, 0, 0, 0);
+					trap_R_AddShadowLineToScene(ltalus, ltibia, 3.0, 60.0, 30.0, 1);
+				}
+			}
 		}
 	}
 }
