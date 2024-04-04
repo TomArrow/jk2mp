@@ -502,6 +502,50 @@ float distanceToLine(vec3 point, vec3 linePoint1, vec3 linePoint2){
 	return length(cross(P1toPoint, P1ToP2)) / length(P1ToP2);
 }
 
+float shortestDistanceLines(vec3 a0,vec3 a1, vec3 b0, vec3 b1,inout int type){
+
+	vec3 a=normalize(a1-a0);
+	vec3 b=normalize(b1-b0);
+	vec3 crossBoth = normalize(cross(b,a));
+	vec3 perp1 = normalize(cross(crossBoth,a));
+	vec3 perp2 = normalize(cross(crossBoth,b));
+
+	float dot1_1 = dot(perp2,b0-a0);
+	float dot1_2 = dot(perp2,b0-a1);
+	float dot2_1 = dot(perp1,a0-b0);
+	float dot2_2 = dot(perp1,a0-b1);
+
+	float maxDistance = 999999.0;
+
+	if(sign(dot1_1) != sign(dot1_2) && sign(dot2_1) != sign(dot2_2)){
+		// from the perspective of the cross vector, the lines overlap. We can calculate simple infinite distance
+		float distanceInfinite = abs(dot(crossBoth,a0-b0)); // Project any vector between any 2 points of the lines onto the one perpendicular to both
+		maxDistance = distanceInfinite;
+		type = 0;
+	} else if(sign(dot1_1) != sign(dot1_2)){ // the infinite light line "intersects" the shadow line (when projected onto crossBoth/shadowline plane)
+		// point to line distance
+		vec3 pointToMeasure = abs(dot2_1) < abs(dot2_2) ? b0 : b1;
+		maxDistance = distanceToLine(pointToMeasure,a0,a1);
+		maxDistance = min(length(a0-pointToMeasure),maxDistance);
+		maxDistance = min(length(a1-pointToMeasure),maxDistance);
+		type = 1;
+	} else if(sign(dot2_1) != sign(dot2_2)){ // the infinite shadow line "intersects" the light line (when projected onto crossBoth/light line plane)
+		// point to line distance
+		vec3 pointToMeasure = abs(dot1_1) < abs(dot1_2) ? a0 : a1;
+		maxDistance = distanceToLine(pointToMeasure,b0,b1);
+		maxDistance = min(length(b0-pointToMeasure),maxDistance);
+		maxDistance = min(length(b1-pointToMeasure),maxDistance);
+		type = 2;
+	} else {
+		// point to point distance
+		vec3 pointToMeasure = abs(dot2_1) < abs(dot2_2) ? b0 : b1;
+		maxDistance = length(pointToMeasure-a0);
+		maxDistance = min(length(pointToMeasure-a1),maxDistance);
+		type = 3;
+	}
+	return maxDistance;
+}
+
 void main(void)
 {
     //const float depth = 5.0f;
@@ -579,12 +623,37 @@ void main(void)
 			vec3 lightVectorAbsNorm = normalize(lightVectorAbs);
 			for(int s=0;s<shadowLinesCountUniform;s++){
 
-				vec3 line1Point1 = shadowLines[s].point1.xyz;
+				int type= 0;
+				float maxDistance = shortestDistanceLines(worldPixel,dLightsUniform[i].origin,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz,type);
+				
+				float lightIntensityHere = max(0.0f,maxDistance / shadowLines[s].width);
+				shadowedIntensity = min(lightIntensityHere*lightIntensityHere,shadowedIntensity);
+
+				switch(type){
+					case 0:
+					shadowDebugColor = vec3(1.0,0.0,0.0);
+					break;
+					case 1:
+					shadowDebugColor = vec3(0.0,1.0,0.0);
+					break;
+					case 2:
+					shadowDebugColor = vec3(0.0,0.0,1.0);
+					break;
+					case 3:
+					shadowDebugColor = vec3(1.0,1.0,0.0);
+					break;
+				}
+
+				/*vec3 line1Point1 = shadowLines[s].point1.xyz;
 				vec3 line1Point2 = shadowLines[s].point2.xyz;
 				
 				vec3 line2Point1 = dLightsUniform[i].origin;
 				vec3 line2Point2 = worldPixel;
-
+				
+				
+				vec3 lightVectorAbs = worldPixel-line2Point1;
+				vec3 lightVectorAbsNorm = normalize(lightVectorAbs);*/
+				/*
 				// distance between lines
 				vec3 shadowLine = shadowLines[s].point2.xyz-shadowLines[s].point1.xyz;
 				vec3 shadowLineNorm = normalize(shadowLine);
@@ -605,14 +674,14 @@ void main(void)
 					float distanceInfinite = abs(dot(crossBoth,dLightsUniform[i].origin-shadowLines[s].point1.xyz)); // Project any vector between any 2 points of the lines onto the one perpendicular to both
 					maxDistance = distanceInfinite;
 					shadowDebugColor = vec3(1.0,0.0,0.0);
-				} else if(sign(dot1_1) != sign(dot1_2)){
+				} else if(sign(dot1_1) != sign(dot1_2)){ // the infinite light line "intersects" the shadow line (when projected onto crossBoth/shadowline plane)
 					// point to line distance
 					vec3 pointToMeasure = abs(dot2_1) < abs(dot2_2) ? dLightsUniform[i].origin : worldPixel;
 					maxDistance = distanceToLine(pointToMeasure,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz);
 					maxDistance = min(distance(shadowLines[s].point1.xyz,pointToMeasure),maxDistance);
 					maxDistance = min(distance(shadowLines[s].point2.xyz,pointToMeasure),maxDistance);
 					shadowDebugColor = vec3(0.0,1.0,0.0);
-				} else if(sign(dot2_1) != sign(dot2_2)){
+				} else if(sign(dot2_1) != sign(dot2_2)){ // the infinite shadow line "intersects" the light line (when projected onto crossBoth/light line plane)
 					// point to line distance
 					vec3 pointToMeasure = abs(dot1_1) < abs(dot1_2) ? shadowLines[s].point1.xyz : shadowLines[s].point2.xyz;
 					maxDistance = distanceToLine(pointToMeasure,dLightsUniform[i].origin,worldPixel);
@@ -626,16 +695,16 @@ void main(void)
 					maxDistance = min(distance(pointToMeasure,shadowLines[s].point2.xyz),maxDistance);
 					shadowDebugColor = vec3(1.0,1.0,0.0);
 				}
-
 				float lightIntensityHere = max(0.0f,maxDistance / shadowLines[s].width);
 				shadowedIntensity = min(lightIntensityHere*lightIntensityHere,shadowedIntensity);
+				*/
 			}
 
 			//if(distance(pureVertexCoordsGeom.xyz,dLightsUniform[i].origin) < 500.0){
 				// diffuse 
 				gl_FragColor.xyz += value*shadowedIntensity;
 				if(shadowedIntensity < 1.0){
-					gl_FragColor.xyz += shadowDebugColor*(1.0-shadowedIntensity);
+					//gl_FragColor.xyz += shadowDebugColor*(1.0-shadowedIntensity);
 				}
 			//}
 			// specular
