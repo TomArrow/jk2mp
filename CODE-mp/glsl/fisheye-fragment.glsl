@@ -16,6 +16,8 @@ in vec3 normal;
 uniform int fishEyeModeUniform; //1= fisheye, 2=equirectangular
 uniform float texAverageBrightnessUniform;
 uniform float parallaxMapDepthUniform;
+uniform float dLightFastSkipThresholdUniform;
+uniform float dLightIntensityUniform;
 uniform float dLightSpecIntensityUniform;
 uniform float dLightSpecGammaUniform;
 uniform int parallaxMapLayersUniform;
@@ -502,9 +504,27 @@ float distanceToLine(vec3 point, vec3 linePoint1, vec3 linePoint2){
 	return length(cross(P1toPoint, P1ToP2)) / length(P1ToP2);
 }
 
+float distanceToLineProper(vec3 point, vec3 linePoint1, vec3 linePoint2){
+  vec3 P1toPoint = linePoint2 - point;
+  vec3 P1ToP2 = linePoint2 - linePoint1;
+  
+  float dot1 = dot(point - linePoint1,linePoint2 - linePoint1);
+  float dot2 = dot(point - linePoint2,linePoint1 - linePoint2);
+  if(dot1> 0.0 && dot2 > 0.0){
+  
+    return length(cross(P1toPoint, P1ToP2)) / length(P1ToP2);
+  } else if (dot1 > 0.0){
+    return distance(linePoint2,point);
+  } else if (dot2 > 0.0){
+    return distance(linePoint1,point);
+  } else {
+    return 0.0;// shouldnt happen?
+  }
+}
+
 float shortestDistanceLines(vec3 a0,vec3 a1, vec3 b0, vec3 b1,inout int type){
 
-	vec3 a=normalize(a1-a0);
+  vec3 a=normalize(a1-a0);
 	vec3 b=normalize(b1-b0);
 	vec3 crossBoth = normalize(cross(b,a));
 	vec3 perp1 = normalize(cross(crossBoth,a));
@@ -515,32 +535,29 @@ float shortestDistanceLines(vec3 a0,vec3 a1, vec3 b0, vec3 b1,inout int type){
 	float dot2_1 = dot(perp1,a0-b0);
 	float dot2_2 = dot(perp1,a0-b1);
 
-	float maxDistance = 999999.0;
+	float maxDistance = 1.0;
 
 	if(sign(dot1_1) != sign(dot1_2) && sign(dot2_1) != sign(dot2_2)){
 		// from the perspective of the cross vector, the lines overlap. We can calculate simple infinite distance
-		float distanceInfinite = abs(dot(crossBoth,a0-b0)); // Project any vector between any 2 points of the lines onto the one perpendicular to both
+		float distanceInfinite = abs(dot(crossBoth,a1-b1)); 
 		maxDistance = distanceInfinite;
 		type = 0;
-	} else if(sign(dot1_1) != sign(dot1_2)){ // the infinite light line "intersects" the shadow line (when projected onto crossBoth/shadowline plane)
-		// point to line distance
+	} else if(sign(dot1_1) != sign(dot1_2)){
 		vec3 pointToMeasure = abs(dot2_1) < abs(dot2_2) ? b0 : b1;
-		maxDistance = distanceToLine(pointToMeasure,a0,a1);
-		maxDistance = min(length(a0-pointToMeasure),maxDistance);
-		maxDistance = min(length(a1-pointToMeasure),maxDistance);
+		maxDistance = distanceToLineProper(pointToMeasure,a0,a1);
 		type = 1;
-	} else if(sign(dot2_1) != sign(dot2_2)){ // the infinite shadow line "intersects" the light line (when projected onto crossBoth/light line plane)
-		// point to line distance
+	} else if(sign(dot2_1) != sign(dot2_2)){ 
 		vec3 pointToMeasure = abs(dot1_1) < abs(dot1_2) ? a0 : a1;
-		maxDistance = distanceToLine(pointToMeasure,b0,b1);
-		maxDistance = min(length(b0-pointToMeasure),maxDistance);
-		maxDistance = min(length(b1-pointToMeasure),maxDistance);
+		maxDistance = distanceToLineProper(pointToMeasure,b0,b1);
 		type = 2;
 	} else {
 		// point to point distance
-		vec3 pointToMeasure = abs(dot2_1) < abs(dot2_2) ? b0 : b1;
-		maxDistance = length(pointToMeasure-a0);
-		maxDistance = min(length(pointToMeasure-a1),maxDistance);
+		float dist1 = distanceToLineProper(b0,a0,a1);
+		float dist2 = distanceToLineProper(b1,a0,a1);
+		maxDistance = min(dist1,dist2);
+		dist1 = distanceToLineProper(a0,b0,b1);
+		dist2 = distanceToLineProper(a1,b0,b1);
+		maxDistance = min(maxDistance,min(dist1,dist2));
 		type = 3;
 	}
 	return maxDistance;
@@ -609,16 +626,18 @@ void main(void)
 		float intensity = max(dot(lightNormal,lightVectorNorm),0.0);
 		float dist = length(lightVector1);
 
-		vec3 value = (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius*50.0*20.0)*intensity/(dist*dist);
+		vec3 value = (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius*50.0*dLightIntensityUniform)*intensity/(dist*dist);
 
-		//bool fastSkip = intensity <= 0.0 || length(value) < 0.0001f;
-		bool fastSkip = intensity <= 0.0 || length(value) < 0.1f;
+		bool fastSkip = intensity <= 0.0 || length(value) < dLightFastSkipThresholdUniform;
+		//bool fastSkip = intensity <= 0.0 || length(value) < 0.1f;
 		
+		vec3 worldPixel = (worldModelViewMatrixReverseGeom*eyeSpaceCoordsGeom).xyz;
+		bool mainLightShadowLinesCalculated = false;
+		float shadowedIntensity = 1.0f;
 		if(!fastSkip){
 		
+			mainLightShadowLinesCalculated = true;
 			vec3 shadowDebugColor = vec3(1.0,1.0,1.0);
-			float shadowedIntensity = 1.0f;
-			vec3 worldPixel = (worldModelViewMatrixReverseGeom*eyeSpaceCoordsGeom).xyz;
 			vec3 lightVectorAbs = worldPixel-dLightsUniform[i].origin;
 			vec3 lightVectorAbsNorm = normalize(lightVectorAbs);
 			for(int s=0;s<shadowLinesCountUniform;s++){
@@ -726,7 +745,34 @@ void main(void)
 
 			float totalDist = dist + length(viewerVector);
 
-			gl_FragColor.xyz += (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius)*specIntensity*dLightSpecIntensityUniform/totalDist;
+			//vec3 worldViewer = (worldModelViewMatrixReverseGeom*vec4(0.0,0.0,0.0,1.0)).xyz;
+
+			vec3 addVal = (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius)*specIntensity*dLightSpecIntensityUniform/totalDist;
+
+			bool fastSkip2 =  length(value) < dLightFastSkipThresholdUniform || specIntensity <= 0;
+			
+			if(!fastSkip2){
+				if( !mainLightShadowLinesCalculated){
+
+					for(int s=0;s<shadowLinesCountUniform;s++){
+
+						int type= 0;
+						// We can reuse shadowedIntensity if it was already calculated for the main light but otherwise we have to recalculate it here.
+						float maxDistance = shortestDistanceLines(worldPixel,dLightsUniform[i].origin,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz,type);
+						float lightIntensityHere = max(0.0f,maxDistance / shadowLines[s].width);
+						shadowedIntensity = min(lightIntensityHere*lightIntensityHere,shadowedIntensity);
+					
+				
+						// Actually dont do this, looks bad :) already occluded by geometry
+						//float maxDistance = shortestDistanceLines(worldPixel,worldViewer,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz,type);
+						//float lightIntensityHere = max(0.0f,maxDistance / shadowLines[s].width);
+						//shadowedIntensity = min(lightIntensityHere*lightIntensityHere,shadowedIntensity);
+					}
+				}
+				gl_FragColor.xyz += addVal * shadowedIntensity;
+			}
+
+			//gl_FragColor.xyz += (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius)*specIntensity*dLightSpecIntensityUniform*shadowedIntensity/totalDist;
 
 			/* Keeping this in here because it's hilariously bad and weird. Did I have a stroke? Or really tired.
 			vec3 viewerVector = eyeSpaceCoordsGeom.xyz-eyeSpaceCoordsGeom.xyz;
