@@ -542,6 +542,21 @@ typedef struct
 } saberTrail_t;
 
 typedef struct {
+	qhandle_t rtibia;
+	qhandle_t  ltibia;
+	qhandle_t  rtalus;
+	qhandle_t  ltalus;
+	qhandle_t  cervical;
+	qhandle_t  llumbar;
+	qhandle_t  rhumerus;
+	qhandle_t  lhumerus;
+	qhandle_t  rradius;
+	qhandle_t  lradius;
+	qhandle_t  rhand;
+	qhandle_t  lhand;
+} shadowlineBolts_t;
+
+typedef struct {
 	qboolean		infoValid;
 
 	char			name[MAX_QPATH];
@@ -624,6 +639,8 @@ typedef struct {
 	qhandle_t		bolt_motion;
 
 	qhandle_t		bolt_llumbar;
+
+	shadowlineBolts_t shadowBolts;
 
 	saberTrail_t	saberTrail;
 	int				saberHitWallSoundDebounceTime;

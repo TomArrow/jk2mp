@@ -138,8 +138,8 @@ void Cam_DrawClientNames(void) //FIXME: draw entitynums
 	}
 }
 
-static qboolean GetBoltPositionReal( qhandle_t bolt, centity_t* cent, vec3_t result) {
-	if (!cent->ghoul2 || !bolt) {
+static qboolean GetBoltPositionReal( centity_t* cent, qhandle_t bolt, vec3_t result) {
+	if (!cent->ghoul2 || /*!bolt || */bolt == -1) {
 		return qfalse;
 	}
 	mdxaBone_t boneMatrix;
@@ -157,7 +157,7 @@ static qboolean GetBoltPosition(centity_t* cent, const char* boltName,  vec3_t r
 		return qfalse;
 	}
 	qhandle_t bolt = trap_G2API_AddBolt(cent->ghoul2, 0, boltName);
-	return GetBoltPositionReal(bolt, cent,result);
+	return GetBoltPositionReal( cent, bolt, result);
 }
 
 void Cam_AddPlayerShadowLines() {
@@ -167,6 +167,7 @@ void Cam_AddPlayerShadowLines() {
 	for (i = 0; i < MAX_CLIENTS; i++)
 	{
 		centity_t* cent = &cg_entities[i];
+		clientInfo_t* ci = cgs.clientinfo + i;
 
 		if (cent->currentValid) {
 			if (0) { // simple
@@ -177,7 +178,7 @@ void Cam_AddPlayerShadowLines() {
 
 				trap_R_AddShadowLineToScene(p1, p2, 20.0, 0, 0,1);
 			}
-			else { // this is cool idea in theory but ... atm a bit slow and doesnt look quite right yet
+			else { // this is cool idea in theory but ... atm a bit slow and doesnt look quite right yet; edit: nvm
 				
 				VectorCopy(cent->lerpOrigin, p1);
 				VectorCopy(cent->lerpOrigin, p2);
@@ -185,7 +186,7 @@ void Cam_AddPlayerShadowLines() {
 				//p2[2] += DEFAULT_MINS_2;
 				trap_R_AddShadowLineToScene(p1, p2, 60.0, 400.0, 0, 2); // ambient occlusion thingie
 
-				qboolean success = qtrue;
+				/*qboolean success = qtrue;
 				success = success && GetBoltPosition(cent,"rtibia",rtibia);
 				success = success && GetBoltPosition(cent,"ltibia", ltibia);
 				success = success && GetBoltPosition(cent,"rtalus", rtalus);
@@ -197,7 +198,20 @@ void Cam_AddPlayerShadowLines() {
 				success = success && GetBoltPosition(cent,"rradius", rradius);
 				success = success && GetBoltPosition(cent,"lradius", lradius);
 				success = success && GetBoltPosition(cent,"rhand", rhand);
-				success = success && GetBoltPosition(cent,"lhand", lhand);
+				success = success && GetBoltPosition(cent,"lhand", lhand);*/
+				qboolean success = qtrue;
+				success = success && GetBoltPositionReal(cent,ci->shadowBolts.rtibia,rtibia);
+				success = success && GetBoltPositionReal(cent, ci->shadowBolts.ltibia, ltibia);
+				success = success && GetBoltPositionReal(cent, ci->shadowBolts.rtalus, rtalus);
+				success = success && GetBoltPositionReal(cent, ci->shadowBolts.ltalus, ltalus);
+				success = success && GetBoltPositionReal(cent, ci->shadowBolts.cervical, cervical);
+				success = success && GetBoltPositionReal(cent, ci->shadowBolts.llumbar, llumbar);
+				success = success && GetBoltPositionReal(cent, ci->shadowBolts.rhumerus, rhumerus);
+				success = success && GetBoltPositionReal(cent, ci->shadowBolts.lhumerus, lhumerus);
+				success = success && GetBoltPositionReal(cent, ci->shadowBolts.rradius, rradius);
+				success = success && GetBoltPositionReal(cent, ci->shadowBolts.lradius, lradius);
+				success = success && GetBoltPositionReal(cent, ci->shadowBolts.rhand, rhand);
+				success = success && GetBoltPositionReal(cent, ci->shadowBolts.lhand, lhand);
 
 				if (success) {
 

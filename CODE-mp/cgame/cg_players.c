@@ -235,6 +235,25 @@ qboolean CG_ParseSurfsFile( const char *modelName, const char *skinName, char *s
 static qboolean trueviewwarning = qfalse;
 //[/TrueView]
 
+
+static qboolean CG_GetShadowLineBolts(void* ghoul2, shadowlineBolts_t* shadowBolts) {
+	qboolean success = qtrue;
+	if (!ghoul2) return qfalse;
+	success = success && (shadowBolts->rtibia = trap_G2API_AddBolt(ghoul2, 0, "rtibia"));
+	success = success && (shadowBolts->ltibia = trap_G2API_AddBolt(ghoul2, 0, "ltibia"));
+	success = success && (shadowBolts->rtalus = trap_G2API_AddBolt(ghoul2, 0, "rtalus"));
+	success = success && (shadowBolts->ltalus = trap_G2API_AddBolt(ghoul2, 0, "ltalus"));
+	success = success && (shadowBolts->cervical = trap_G2API_AddBolt(ghoul2, 0, "cervical"));
+	success = success && (shadowBolts->llumbar = trap_G2API_AddBolt(ghoul2, 0, "lower_lumbar"));
+	success = success && (shadowBolts->rhumerus = trap_G2API_AddBolt(ghoul2, 0, "rhumerus"));
+	success = success && (shadowBolts->lhumerus = trap_G2API_AddBolt(ghoul2, 0, "lhumerus"));
+	success = success && (shadowBolts->rradius = trap_G2API_AddBolt(ghoul2, 0, "rradius"));
+	success = success && (shadowBolts->lradius = trap_G2API_AddBolt(ghoul2, 0, "lradius"));
+	success = success && (shadowBolts->rhand = trap_G2API_AddBolt(ghoul2, 0, "rhand"));
+	success = success && (shadowBolts->lhand = trap_G2API_AddBolt(ghoul2, 0, "lhand"));
+	return success;
+}
+
 /*
 ==========================
 CG_RegisterClientModelname
@@ -477,7 +496,7 @@ retryModel:
 		//We need a lower lumbar bolt for footsteps
 		ci->bolt_llumbar = trap_G2API_AddBolt(ci->ghoul2Model, 0, "lower_lumbar");
 
-		if (ci->bolt_rhand == -1 || ci->bolt_lhand == -1 || ci->bolt_head == -1 || ci->bolt_motion == -1 || ci->bolt_llumbar == -1)
+		if (ci->bolt_rhand == -1 || ci->bolt_lhand == -1 || ci->bolt_head == -1 || ci->bolt_motion == -1 || ci->bolt_llumbar == -1 || !CG_GetShadowLineBolts(ci->ghoul2Model, &ci->shadowBolts))
 			badModel = qtrue;
 
 		if (badModel)
@@ -855,6 +874,7 @@ static void CG_CopyClientInfoModel( clientInfo_t *from, clientInfo_t *to ) {
 	to->bolt_rhand = from->bolt_rhand;
 	to->bolt_motion = from->bolt_motion;
 	to->bolt_llumbar = from->bolt_llumbar;
+	to->shadowBolts = from->shadowBolts;
 
 //	to->ATST = from->ATST;
 
@@ -924,6 +944,7 @@ static qboolean CG_ScanForExistingClientInfo( clientInfo_t *ci, int clientNum ) 
 						ci->bolt_rhand = match->bolt_rhand;
 						ci->bolt_motion = match->bolt_motion;
 						ci->bolt_llumbar = match->bolt_llumbar;
+						ci->shadowBolts = match->shadowBolts;
 
 						memcpy( ci->sounds, match->sounds, sizeof( ci->sounds ) );
 
@@ -6478,6 +6499,8 @@ void CG_ForceFPLSPlayerModel(centity_t *cent, clientInfo_t *ci)
 
 		//We need a lower lumbar bolt for footsteps
 		ci->bolt_llumbar = trap_G2API_AddBolt(ci->ghoul2Model, 0, "lower_lumbar");
+
+		CG_GetShadowLineBolts(ci->ghoul2Model, &ci->shadowBolts);
 	}
 	else
 	{
