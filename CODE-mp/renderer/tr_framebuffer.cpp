@@ -216,13 +216,14 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		height = fbo.screenHeight;
 	}
 
+	/* Sending this large amount of data... do it less often, in R_FrameBuffer_SendDLightInfo
 	if (g_SSBOsSupported) {
 		Com_Memcpy(shadowLineSSBO, backEnd.refdef.shadowlines, backEnd.refdef.num_shadowlines * sizeof(shadowline_t));
 		qglBindBufferARB(GL_SHADER_STORAGE_BUFFER,shadowLineSSBOReference);
 		qglBufferDataARB(GL_SHADER_STORAGE_BUFFER, sizeof(shadowLineSSBO), shadowLineSSBO, GL_DYNAMIC_DRAW_ARB);
 		qglBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, shadowLineSSBOReference);
 		qglBindBufferARB(GL_SHADER_STORAGE_BUFFER,0);
-	}
+	}*/
 
 	if (tess) {
 
@@ -253,19 +254,11 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		//qglUniform3fv(uniformLocationsTess.dLightsUniform"), sizeof(dlight_t) / 4 / 4 * backEnd.refdef.num_dlights, (GLfloat*)&backEnd.refdef.dlights);
 		qglUniform1i(uniformLocationsTess.shadowLinesCountUniform, r_fboGLSLDLights->integer ? backEnd.refdef.num_shadowlines : 0);
 		if (r_fboGLSLDLights->integer) {
-			for (int i = 0; i < backEnd.refdef.num_dlights; i++) {
+			/*for (int i = 0; i < backEnd.refdef.num_dlights; i++) {
 
 				qglUniform3fv(uniformLocationsTess.dLightsUniformOrigin[i], 1, backEnd.refdef.dlights[i].origin);
 				qglUniform3fv(uniformLocationsTess.dLightsUniformColor[i], 1, backEnd.refdef.dlights[i].color);
 				qglUniform1f(uniformLocationsTess.dLightsUniformRadius[i], backEnd.refdef.dlights[i].radius);
-			}
-			/*for (int i = 0; i < backEnd.refdef.num_shadowlines; i++) {
-
-				qglUniform3fv(uniformLocationsTess.shadowLinesPoint1[i], 1, backEnd.refdef.shadowlines[i].point1);
-				qglUniform3fv(uniformLocationsTess.shadowLinesPoint1[i], 1, backEnd.refdef.shadowlines[i].point2);
-				qglUniform1f(uniformLocationsTess.shadowLinesWidth[i], backEnd.refdef.shadowlines[i].width);
-				qglUniform1f(uniformLocationsTess.shadowLinesA[i], backEnd.refdef.shadowlines[i].a);
-				qglUniform1f(uniformLocationsTess.shadowLinesB[i], backEnd.refdef.shadowlines[i].b);
 			}*/
 		}
 
@@ -303,19 +296,12 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		//qglUniform3fv(uniformLocations.dLightsUniform"), sizeof(dlight_t) / 4 / 4 * backEnd.refdef.num_dlights, (GLfloat*)&backEnd.refdef.dlights);
 		qglUniform1i(uniformLocations.shadowLinesCountUniform, r_fboGLSLDLights->integer ? backEnd.refdef.num_shadowlines : 0);
 		if (r_fboGLSLDLights->integer) {
+			/*
 			for (int i = 0; i < backEnd.refdef.num_dlights; i++) {
 
 				qglUniform3fv(uniformLocations.dLightsUniformOrigin[i], 1, backEnd.refdef.dlights[i].origin);
 				qglUniform3fv(uniformLocations.dLightsUniformColor[i], 1, backEnd.refdef.dlights[i].color);
 				qglUniform1f(uniformLocations.dLightsUniformRadius[i], backEnd.refdef.dlights[i].radius);
-			}
-			/*for (int i = 0; i < backEnd.refdef.num_shadowlines; i++) {
-
-				qglUniform3fv(uniformLocations.shadowLinesPoint1[i], 1, backEnd.refdef.shadowlines[i].point1);
-				qglUniform3fv(uniformLocations.shadowLinesPoint1[i], 1, backEnd.refdef.shadowlines[i].point2);
-				qglUniform1f(uniformLocations.shadowLinesWidth[i], backEnd.refdef.shadowlines[i].width);
-				qglUniform1f(uniformLocations.shadowLinesA[i], backEnd.refdef.shadowlines[i].a);
-				qglUniform1f(uniformLocations.shadowLinesB[i], backEnd.refdef.shadowlines[i].b);
 			}*/
 		}
 	}
@@ -324,6 +310,70 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 
 #endif
 }
+
+
+qboolean R_FrameBuffer_SendDLightInfo() {
+#ifdef HAVE_GLES
+	//TODO
+	return qfalse;
+#else
+	qboolean tess = fbo.fishEyeData.tessellationActive;
+	if (!fishEyeShader->IsWorking())
+		return qfalse;
+
+	fbo.screenWidth = glMMEConfig.glWidth;
+	fbo.screenHeight = glMMEConfig.glHeight;
+
+	int width = r_fboWidth->integer;
+	int height = r_fboHeight->integer;
+	//Illegal width/height use original opengl one
+	if (width <= 0 || height <= 0) {
+		width = fbo.screenWidth;
+		height = fbo.screenHeight;
+	}
+
+	R_FrameBuffer_FishEyeSetUniforms(tess);
+
+	if (g_SSBOsSupported) {
+		Com_Memcpy(shadowLineSSBO, backEnd.refdef.shadowlines, backEnd.refdef.num_shadowlines * sizeof(shadowline_t));
+		qglBindBufferARB(GL_SHADER_STORAGE_BUFFER, shadowLineSSBOReference);
+		qglBufferDataARB(GL_SHADER_STORAGE_BUFFER, sizeof(shadowLineSSBO), shadowLineSSBO, GL_DYNAMIC_DRAW_ARB);
+		qglBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, shadowLineSSBOReference);
+		qglBindBufferARB(GL_SHADER_STORAGE_BUFFER, 0);
+	}
+
+	if (tess) {
+
+		qglUniform1i(uniformLocationsTess.dLightsCountUniform, r_fboGLSLDLights->integer ? backEnd.refdef.num_dlights : 0);
+		qglUniform1i(uniformLocationsTess.shadowLinesCountUniform, r_fboGLSLDLights->integer ? backEnd.refdef.num_shadowlines : 0);
+		if (r_fboGLSLDLights->integer) {
+			for (int i = 0; i < backEnd.refdef.num_dlights; i++) {
+
+				qglUniform3fv(uniformLocationsTess.dLightsUniformOrigin[i], 1, backEnd.refdef.dlights[i].origin);
+				qglUniform3fv(uniformLocationsTess.dLightsUniformColor[i], 1, backEnd.refdef.dlights[i].color);
+				qglUniform1f(uniformLocationsTess.dLightsUniformRadius[i], backEnd.refdef.dlights[i].radius);
+			}
+		}
+
+	}
+	else {
+		qglUniform1i(uniformLocations.dLightsCountUniform, r_fboGLSLDLights->integer ? backEnd.refdef.num_dlights : 0);
+		qglUniform1i(uniformLocations.shadowLinesCountUniform, r_fboGLSLDLights->integer ? backEnd.refdef.num_shadowlines : 0);
+		if (r_fboGLSLDLights->integer) {
+			for (int i = 0; i < backEnd.refdef.num_dlights; i++) {
+
+				qglUniform3fv(uniformLocations.dLightsUniformOrigin[i], 1, backEnd.refdef.dlights[i].origin);
+				qglUniform3fv(uniformLocations.dLightsUniformColor[i], 1, backEnd.refdef.dlights[i].color);
+				qglUniform1f(uniformLocations.dLightsUniformRadius[i], backEnd.refdef.dlights[i].radius);
+			}
+		}
+	}
+
+	return qtrue;
+
+#endif
+}
+
 qboolean R_FrameBuffer_TempDeactivateFisheye(qboolean glfinish = qtrue) {
 #ifdef HAVE_GLES
 	//TODO
