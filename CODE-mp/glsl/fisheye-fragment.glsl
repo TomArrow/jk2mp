@@ -571,6 +571,7 @@ void main(void)
 	
 	vec2 uvCoords = gl_TexCoord[0].st;
 	vec3 effectiveUVPixelPos = eyeSpaceCoordsGeom.xyz;
+	vec4 color;
     if(fishEyeModeUniform == 0){
 	
 		if(isLightmapUniform == 0 && perlinFuckery == 0 && isWorldBrushUniform > 0){
@@ -578,10 +579,19 @@ void main(void)
 		} else {
 			uvCoords = gl_TexCoord[0].st; // Don't parallax lightmaps
 		}
-		vec4 color = texture2D(text_in, uvCoords);
+		color = texture2D(text_in, uvCoords);
 
 		gl_FragColor = color*vertColor; 
 		gl_FragColor.xyz+=debugColor;
+		
+	} else {
+		
+		color = texture2D(text_in, uvCoords);
+		gl_FragColor = color*vertColor; 
+		gl_FragColor.xyz+=debugColor;
+	}
+
+	{
 		vec4 startCooords = pureVertexCoordsGeom*0.25;
 		if(isWorldBrushUniform > 0 && isLightmapUniform == 0 && perlinFuckery > 0){
 			//gl_FragColor.xyz+=pureVertexCoordsGeom.xyz/1000.0f; 
@@ -611,12 +621,9 @@ void main(void)
 			gl_FragColor.xyz = vec3(1.0,1.0,1.0);
 		}
 		//gl_FragColor.xyz+=eyeSpaceCoordsGeom.xyz/1000.0f; // cool effect lol
-	} else {
-		
-		vec4 color = texture2D(text_in, uvCoords);
-		gl_FragColor = color*vertColor; 
-		gl_FragColor.xyz+=debugColor;
 	}
+
+
 	//vec3 lightNormal = normal;
 	vec3 lightNormal = calculateTextureNormal(uvCoords,effectiveUVPixelPos);
 	
