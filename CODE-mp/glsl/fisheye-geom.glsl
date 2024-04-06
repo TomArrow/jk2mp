@@ -241,8 +241,8 @@ void equirect(){
 			gl_TexCoord[0] = geomTexCoord[i];
 			vertColor = color[i];
 			
-		eyeSpaceCoordsGeom = eyeSpaceCoords[i];
-		pureVertexCoordsGeom = pureVertexCoords[i];
+			eyeSpaceCoordsGeom = eyeSpaceCoords[i];
+			pureVertexCoordsGeom = pureVertexCoords[i];
 			EmitVertex();
 		}
 		EndPrimitive();
@@ -258,8 +258,8 @@ void equirect(){
 			gl_TexCoord[0] = geomTexCoord[i];
 			vertColor = color[i];
 			
-		eyeSpaceCoordsGeom = eyeSpaceCoords[i];
-		pureVertexCoordsGeom = pureVertexCoords[i];
+			eyeSpaceCoordsGeom = eyeSpaceCoords[i];
+			pureVertexCoordsGeom = pureVertexCoords[i];
 			EmitVertex();
 		}
 		EndPrimitive();
@@ -393,12 +393,17 @@ void fisheye(){
 
 void main()
 {
-
-	normal = normalize(cross(normalize(gl_PositionIn[2].xyz-gl_PositionIn[0].xyz),normalize(gl_PositionIn[1].xyz-gl_PositionIn[0].xyz)));
+	/*normal = normalize(cross(normalize(gl_PositionIn[2].xyz-gl_PositionIn[0].xyz),normalize(gl_PositionIn[1].xyz-gl_PositionIn[0].xyz)));
 
 	// Calculate UV vectors (dunno what im doing, i want parallax mapping lol)
 	vec3 uvtransform[2];
 	makeUVTransformationMatrix(gl_PositionIn[0].xyz,geomTexCoord[0].st,gl_PositionIn[1].xyz,geomTexCoord[1].st,gl_PositionIn[2].xyz,geomTexCoord[2].st,uvtransform);
+	texUVTransform= uvtransform;*/
+	normal = normalize(cross(normalize(eyeSpaceCoords[2].xyz-eyeSpaceCoords[0].xyz),normalize(eyeSpaceCoords[1].xyz-eyeSpaceCoords[0].xyz)));
+
+	// Calculate UV vectors (dunno what im doing, i want parallax mapping lol)
+	vec3 uvtransform[2];
+	makeUVTransformationMatrix(eyeSpaceCoords[0].xyz,geomTexCoord[0].st,eyeSpaceCoords[1].xyz,geomTexCoord[1].st,eyeSpaceCoords[2].xyz,geomTexCoord[2].st,uvtransform);
 	texUVTransform= uvtransform;
 
 

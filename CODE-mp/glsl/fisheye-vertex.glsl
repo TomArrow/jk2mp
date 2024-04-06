@@ -101,6 +101,9 @@ void equirectangular()
 {
 
 	worldModelViewMatrixReverse = inverse(worldModelViewMatrixUniform);
+	
+	projectionMatrix = gl_ProjectionMatrix;
+	eyeSpaceCoords = gl_ModelViewMatrix * gl_Vertex;
 
 	vec3 pointVec;
 	if(fishEyeModeUniform == 0){
@@ -110,9 +113,7 @@ void equirectangular()
 		//gl_Position = gl_ProjectionMatrix*gl_ModelViewMatrix*gl_Vertex;
 		gl_Position = gl_ModelViewMatrix*gl_Vertex;
 		//gl_Position = worldModelViewMatrixUniform*gl_Vertex;
-		projectionMatrix = gl_ProjectionMatrix;
 		//gl_Position = ftransform();
-		eyeSpaceCoords = gl_ModelViewMatrix * gl_Vertex;
 	} else {
 		pointVec = -(gl_ModelViewMatrix * gl_Vertex).xyz;
 		gl_Position = vec4(pointVec, 1.0);
