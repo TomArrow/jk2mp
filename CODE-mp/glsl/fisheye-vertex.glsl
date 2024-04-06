@@ -19,8 +19,10 @@ out float realDepth;
 
 out mat4x4 projectionMatrix;
 
-varying vec4 eyeSpaceCoords;
-varying vec4 pureVertexCoords;
+//varying vec4 eyeSpaceCoords;
+//varying vec4 pureVertexCoords;
+out vec4 eyeSpaceCoords;
+out vec4 pureVertexCoords;
 
 
 float angleOnPlane(vec3 point, vec3 axis1, vec3 axis2)

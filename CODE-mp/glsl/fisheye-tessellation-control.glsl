@@ -8,6 +8,20 @@ in vec4 colorVertex[];
 out vec4 vertexTexCoord[];
 out vec4 colorTCS[];
 
+
+in mat4x4 worldModelViewMatrixReverse[];
+out mat4x4 worldModelViewMatrixReverseTCS[];
+
+in vec3 normal[];
+out vec3 normalTCS[];
+
+in vec4 eyeSpaceCoords[];
+out vec4 eyeSpaceCoordsTCS[];
+
+in vec4 pureVertexCoords[];
+out vec4 pureVertexCoordsTCS[];
+
+
 vec3 getPerpendicularAxis(vec3 point, vec3 mainAxis)
 {
 	return normalize(point - dot(point, mainAxis) *mainAxis);
@@ -130,6 +144,12 @@ void main()
 	gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
 	vertexTexCoord[gl_InvocationID] = texCoord[gl_InvocationID];
 	colorTCS[gl_InvocationID] = colorVertex[gl_InvocationID];
+
+
+	worldModelViewMatrixReverseTCS[gl_InvocationID] = worldModelViewMatrixReverse[gl_InvocationID];
+	normalTCS[gl_InvocationID] = normal[gl_InvocationID];
+	eyeSpaceCoordsTCS[gl_InvocationID] = eyeSpaceCoords[gl_InvocationID];
+	pureVertexCoordsTCS[gl_InvocationID] = pureVertexCoords[gl_InvocationID];
 
 
 	

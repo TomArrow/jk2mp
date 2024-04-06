@@ -20,10 +20,10 @@ out mat4x4 worldModelViewMatrixReverseGeom;
 
 out vec3 normal;
 
-varying in vec4 eyeSpaceCoords[3];
+in vec4 eyeSpaceCoords[3];
 varying out vec4 eyeSpaceCoordsGeom;
 
-varying in vec4 pureVertexCoords[3];
+in vec4 pureVertexCoords[3];
 varying out vec4 pureVertexCoordsGeom;
 
 uniform vec3 pixelJitterUniform;
@@ -99,12 +99,6 @@ void makeUVTransformationMatrix(in vec3 vec1i, in vec2 vec1o, in vec3 vec2i, in 
 //
 void standard(){
 
-	normal = normalize(cross(normalize(gl_PositionIn[2].xyz-gl_PositionIn[0].xyz),normalize(gl_PositionIn[1].xyz-gl_PositionIn[0].xyz)));
-
-	// Calculate UV vectors (dunno what im doing, i want parallax mapping lol)
-	vec3 uvtransform[2];
-	makeUVTransformationMatrix(gl_PositionIn[0].xyz,geomTexCoord[0].st,gl_PositionIn[1].xyz,geomTexCoord[1].st,gl_PositionIn[2].xyz,geomTexCoord[2].st,uvtransform);
-	texUVTransform= uvtransform;
 
 	//setDebugColor(1,0,0);
 	for (int i = 0; i < 3; i++)
@@ -225,6 +219,9 @@ void equirect(){
 			gl_TexCoord[0] = gl_TexCoordIn[i][0];
 			gl_TexCoord[0] = geomTexCoord[i];
 			vertColor = color[i];
+			
+			eyeSpaceCoordsGeom = eyeSpaceCoords[i];
+			pureVertexCoordsGeom = pureVertexCoords[i];
 			EmitVertex();
 		}
 		EndPrimitive();
@@ -243,6 +240,9 @@ void equirect(){
 			gl_TexCoord[0] = gl_TexCoordIn[i][0];
 			gl_TexCoord[0] = geomTexCoord[i];
 			vertColor = color[i];
+			
+		eyeSpaceCoordsGeom = eyeSpaceCoords[i];
+		pureVertexCoordsGeom = pureVertexCoords[i];
 			EmitVertex();
 		}
 		EndPrimitive();
@@ -257,6 +257,9 @@ void equirect(){
 			gl_TexCoord[0] = gl_TexCoordIn[i][0];
 			gl_TexCoord[0] = geomTexCoord[i];
 			vertColor = color[i];
+			
+		eyeSpaceCoordsGeom = eyeSpaceCoords[i];
+		pureVertexCoordsGeom = pureVertexCoords[i];
 			EmitVertex();
 		}
 		EndPrimitive();
@@ -378,6 +381,9 @@ void fisheye(){
 			gl_TexCoord[0] = gl_TexCoordIn[i][0];
 			gl_TexCoord[0] = geomTexCoord[i];
 			vertColor = color[i];
+			
+			eyeSpaceCoordsGeom = eyeSpaceCoords[i];
+			pureVertexCoordsGeom = pureVertexCoords[i];
 			EmitVertex();
 		}
 		EndPrimitive();
@@ -387,7 +393,17 @@ void fisheye(){
 
 void main()
 {
+
+	normal = normalize(cross(normalize(gl_PositionIn[2].xyz-gl_PositionIn[0].xyz),normalize(gl_PositionIn[1].xyz-gl_PositionIn[0].xyz)));
+
+	// Calculate UV vectors (dunno what im doing, i want parallax mapping lol)
+	vec3 uvtransform[2];
+	makeUVTransformationMatrix(gl_PositionIn[0].xyz,geomTexCoord[0].st,gl_PositionIn[1].xyz,geomTexCoord[1].st,gl_PositionIn[2].xyz,geomTexCoord[2].st,uvtransform);
+	texUVTransform= uvtransform;
+
+
 	worldModelViewMatrixReverseGeom = worldModelViewMatrixReverse[0];
+
 // TODO Apply distortion in TES instead? To have more multithreading? And then send it over as in/out variable?
 	if(fishEyeModeUniform == 2){
 		equirect();
