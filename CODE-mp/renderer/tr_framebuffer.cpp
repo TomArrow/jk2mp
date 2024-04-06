@@ -409,7 +409,7 @@ static qboolean R_FrameBuffer_ReactivateFisheye() {
 	if (!fishEyeShader || !fishEyeShader->IsWorking())
 		return qfalse;
 
-	if (!r_fboFishEye->integer && !r_fboGLSL->integer) {
+	if (/*!r_fboFishEye->integer &&*/ !r_fboGLSL->integer) {
 		if (fbo.fishEyeActive) {
 			R_FrameBuffer_DeactivateFisheye();
 		}
@@ -443,7 +443,7 @@ qboolean R_FrameBuffer_ActivateFisheye(vec_t* pixelJitter3D, vec_t* dofJitter3D,
 	if (!fishEyeShader || !fishEyeShader->IsWorking())
 		return qfalse;
 
-	if (!r_fboFishEye->integer && !r_fboGLSL->integer) {
+	if (/*!r_fboFishEye->integer &&*/ !r_fboGLSL->integer) {
 		if (fbo.fishEyeActive) {
 			R_FrameBuffer_DeactivateFisheye();
 		}
@@ -471,7 +471,7 @@ qboolean R_FrameBuffer_SetDynamicUniforms(float* texAverageBrightness, bool* isL
 	//TODO
 	return qfalse;
 #else
-	if (!r_fboGLSL->integer && !r_fboFishEye->integer) {
+	if (!r_fboGLSL->integer/* && !r_fboFishEye->integer*/) {
 		return qfalse;
 	}
 
@@ -1043,13 +1043,13 @@ void R_FrameBuffer_Init( void ) {
 	r_fboGLSLParallaxMappingDepth = ri.Cvar_Get( "r_fboGLSLParallaxMappingDepth", "10.0", CVAR_ARCHIVE);
 	r_fboGLSLParallaxMappingGamma = ri.Cvar_Get( "r_fboGLSLParallaxMappingGamma", "10.0", CVAR_ARCHIVE);
 	r_fboGLSLParallaxMappingLayers = ri.Cvar_Get( "r_fboGLSLParallaxMappingLayers", "200", CVAR_ARCHIVE);
-	r_fboGLSLDLights = ri.Cvar_Get( "r_fboGLSLDLights", "1", CVAR_ARCHIVE | CVAR_LATCH);
+	r_fboGLSLDLights = ri.Cvar_Get( "r_fboGLSLDLights", "1", CVAR_ARCHIVE );
 	r_fboGLSLDLightsSpecIntensity = ri.Cvar_Get( "r_fboGLSLDLightsSpecIntensity", "3.0", CVAR_ARCHIVE);
 	r_fboGLSLDLightsIntensity = ri.Cvar_Get( "r_fboGLSLDLightsIntensity", "1.0", CVAR_ARCHIVE);
 	r_fboGLSLDLightsSpecGamma = ri.Cvar_Get( "r_fboGLSLDLightsSpecGamma", "5.0", CVAR_ARCHIVE);
 	r_fboGLSLDLightsFastSkipThreshold = ri.Cvar_Get( "r_fboGLSLDLightsFastSkipThreshold", "0.00001", CVAR_ARCHIVE);
 	r_fboGLSLParallaxMapping = ri.Cvar_Get( "r_fboGLSLParallaxMapping", "1", CVAR_ARCHIVE | CVAR_LATCH);
-	r_fboFishEye = ri.Cvar_Get( "r_fboFishEye", "0", CVAR_ARCHIVE | CVAR_LATCH);
+	r_fboFishEye = ri.Cvar_Get( "r_fboFishEye", "0", CVAR_ARCHIVE);
 	r_fboFishEyeTessellate = ri.Cvar_Get( "r_fboFishEyeTessellate", "1", CVAR_ARCHIVE);
 	r_fboDepthBits = ri.Cvar_Get( "r_fboDepthBits", "32f", CVAR_ARCHIVE | CVAR_LATCH);
 	r_fboDepthPacked = ri.Cvar_Get( "r_fboDepthPacked", "1", CVAR_ARCHIVE | CVAR_LATCH);
@@ -1175,7 +1175,7 @@ void R_FrameBuffer_Init( void ) {
 			ri.Printf(PRINT_WARNING, "WARNING: HDR PQ Shader could not be compiled. HDR conversion disabled.\n");
 		}
 	}
-	if (r_fboFishEye->integer || r_fboGLSL->integer) {
+	if (r_fboGLSL->integer) {
 
 		fishEyeShader = new R_GLSL("glsl/fisheye-vertex.glsl", "", "", "glsl/fisheye-geom.glsl", "glsl/fisheye-fragment.glsl", qfalse);
 		if (!fishEyeShader->IsWorking()) {
@@ -1273,6 +1273,7 @@ void R_FrameBuffer_StartFrame( void ) {
 	usedFloat = qfalse;
 
 	r_fboFishEyeTessellate = ri.Cvar_Get("r_fboFishEyeTessellate", "1", CVAR_ARCHIVE); // Updated on every frame.
+	r_fboFishEye = ri.Cvar_Get("r_fboFishEye", "0", CVAR_ARCHIVE);
 
 #endif
 }
