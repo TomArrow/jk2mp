@@ -44,3 +44,4 @@ void Cam_DrawClientNames(void);
 void Cam_Draw2d(void);
 void Cam_Draw3d(void);
 void Cam_AddPlayerShadowLines(void);
+void Cam_Add3DHUd(void);

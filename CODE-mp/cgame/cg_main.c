@@ -648,6 +648,8 @@ vmCvar_t	cam_shownamesPositionBasedOnG2Head;
 vmCvar_t	cam_specEnt; // my own simplification
 vmCvar_t	cam_specDrawHUDFrame;
 vmCvar_t	cam_specDrawScore;
+vmCvar_t	cam_hud3D;
+vmCvar_t	cam_hud3DOffset;
 
 //JA
 vmCvar_t	cg_chatBox;
@@ -745,6 +747,8 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cam_specEnt, "cam_specEnt", "-1", NULL, CVAR_CHEAT },
 	{ &cam_specDrawHUDFrame, "cam_specDrawHUDFrame", "0", NULL, CVAR_ARCHIVE },
 	{ &cam_specDrawScore, "cam_specDrawScore", "0", NULL, CVAR_ARCHIVE },
+	{ &cam_hud3D, "cam_hud3D", "0", NULL, CVAR_ARCHIVE },
+	{ &cam_hud3DOffset, "cam_hud3DOffset", "20.0", NULL, CVAR_ARCHIVE },
 	{ &cg_ignore, "cg_ignore", "0", NULL, 0 },	// used for debugging
 	{ &cg_autoswitch, "cg_autoswitch", "1", NULL, CVAR_ARCHIVE },
 	{ &cg_drawGun, "cg_drawGun", "1", NULL, CVAR_ARCHIVE },

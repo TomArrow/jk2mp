@@ -12,6 +12,9 @@ void Cam_Draw3d(void)
 {
 	if (cam_shownames.integer && cam_shownames3D.integer)
 		Cam_DrawClientNames();
+
+	if (cam_hud3D.integer )
+		Cam_Add3DHUd();
 }
 
 void Cam_DrawClientNames(void) //FIXME: draw entitynums
@@ -158,6 +161,108 @@ static qboolean GetBoltPosition(centity_t* cent, const char* boltName,  vec3_t r
 	}
 	qhandle_t bolt = trap_G2API_AddBolt(cent->ghoul2, 0, boltName);
 	return GetBoltPositionReal( cent, bolt, result);
+}
+
+// copied from/based on demoDrawSetupVerts
+void hud3DDrawSetupVerts(polyVert_t* verts, const vec4_t color) {
+	int i;
+	for (i = 0; i < 4; i++) {
+		verts[i].modulate[0] = color[0] * 255;
+		verts[i].modulate[1] = color[1] * 255;
+		verts[i].modulate[2] = color[2] * 255;
+		verts[i].modulate[3] = color[3] * 255;
+		verts[i].st[0] = (i & 2) ? 0 : 1;
+		verts[i].st[1] = (i & 1) ? 0 : 1;
+	}
+}
+
+
+void GetPerpendicularViewVector(const vec3_t point, const vec3_t p1, const vec3_t p2, vec3_t up);
+
+// copied from/based on demoDrawRawLine
+void hud3DDrawRawLine(const vec3_t start, const vec3_t end, float width, polyVert_t* verts, vec3_t fixedUp) {
+	vec3_t up;
+	vec3_t middle;
+
+	//VectorScale(start, 0.5, middle);
+	//VectorMA(middle, 0.5, end, middle);
+	//if (VectorDistance(middle, cg.refdef.vieworg) < 100)
+	//	return;
+	if (fixedUp) {
+		VectorCopy(fixedUp, up);
+	}
+	else {
+		GetPerpendicularViewVector(cg.refdef.vieworg, start, end, up);
+	}
+	VectorMA(start, width, up, verts[0].xyz);
+	VectorMA(start, -width, up, verts[1].xyz);
+	VectorMA(end, -width, up, verts[2].xyz);
+	VectorMA(end, width, up, verts[3].xyz);
+	trap_R_AddPolyToScene(cgs.media.mmeWhiteShader, 4, verts);
+}
+
+
+void Cam_Add3DHUd() {
+	vec3_t cervical, llumbar;
+	vec3_t forward,right, up;
+	vec3_t start, end;
+	vec3_t startHealth, endHealth;
+	vec3_t startShield, endShield;
+	vec4_t forceBarColor = { 0.0f, 0.3f, 0.5f, 0.5f};
+	vec4_t healthBarColor = { 0.5f, 0.0f, 0.0f, 0.5f};
+	vec4_t shieldBarColor = { 0.0f, 0.5f, 0.0f, 0.5f};
+	float fullHeight;
+	polyVert_t verts[4];
+
+	int playerNum = cam_shownamesIncludePlayer.integer ? -1 : cg.snap->ps.clientNum;
+	if (cam_specEnt.integer != -1) {
+		playerNum = cam_shownamesIncludePlayer.integer ? -1 : cam_specEnt.integer;
+	}
+	if (demo.chase.target != -1) {
+		playerNum = cam_shownamesIncludePlayer.integer ? -1 : demo.chase.target;
+	}
+	if (playerNum != cg.snap->ps.clientNum) {
+		return;
+	}
+
+	centity_t* cent = &cg_entities[playerNum];
+	if (!cent->currentValid) {
+		return;
+	}
+	clientInfo_t* ci = cgs.clientinfo + playerNum;
+	qboolean success = qtrue;
+	success = success && GetBoltPositionReal(cent, ci->shadowBolts.cervical, cervical);
+	success = success && GetBoltPositionReal(cent, ci->shadowBolts.llumbar, llumbar);
+	if (!success) {
+		return;
+	}
+	AngleVectors(cent->lerpAngles, NULL, right, NULL);
+	VectorSubtract(cervical, llumbar, up);
+	fullHeight = VectorNormalize(up);
+	CrossProduct(right, up, forward);
+	VectorNormalize(forward);
+	VectorMA(llumbar, cam_hud3DOffset.value, forward, start);
+
+	VectorCopy(start,startHealth);
+	VectorCopy(start,startShield);
+
+	VectorMA(start, 2.0f, right, start);
+	VectorMA(start, fullHeight*(float)cg.predictedPlayerState.fd.forcePower/ 100.0f, up, end);
+
+	VectorMA(startShield, -1.5f, right, startShield);
+	VectorMA(startShield, fullHeight*(float)cg.predictedPlayerState.stats[STAT_ARMOR] / 200.0f, up, endShield);
+
+	VectorMA(startHealth, -2.25f, right, startHealth);
+	VectorMA(startHealth, fullHeight*(float)cg.predictedPlayerState.stats[STAT_HEALTH] / 100.0f, up, endHealth);
+
+
+	//VectorMA(start, fullHeight*cg.predictedPlayerState.stats[STAT_HEALTH], up, end);
+	hud3DDrawSetupVerts(verts, forceBarColor);
+	hud3DDrawRawLine(start,end,1.5f,verts, NULL); // 1.25 from middle
+	hud3DDrawSetupVerts(verts, shieldBarColor);
+	hud3DDrawRawLine(startShield, endShield,0.5f,verts, NULL); // 1.25 from middle
+	hud3DDrawSetupVerts(verts, healthBarColor);
+	hud3DDrawRawLine(startHealth, endHealth,0.5f,verts, NULL); // 1.25 from middle
 }
 
 void Cam_AddPlayerShadowLines() {

@@ -1981,6 +1981,8 @@ extern  vmCvar_t		cam_shownamesPositionBasedOnG2Head;
 extern	vmCvar_t		cam_specEnt; // my own simplification
 extern	vmCvar_t		cam_specDrawHUDFrame;
 extern	vmCvar_t		cam_specDrawScore;
+extern	vmCvar_t		cam_hud3D;
+extern	vmCvar_t		cam_hud3DOffset;
 
 //JA
 extern	vmCvar_t	cg_chatBox;
