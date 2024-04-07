@@ -461,10 +461,13 @@ void demoProcessSnapShots(qboolean hadSkip) {
 	} while (1);
 }
 
+void CG_CalculateSpeed(centity_t* cent);
+void CG_StrafeHelper(centity_t* cent);
 void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	int deltaTime;
 	qboolean hadSkip;
 	qboolean captureFrame;
+	centity_t* cent;
 	//int rollingShutterFactor = 108;
 	//int mme_rollingShutterPixels = CG_Cvar_GetInt("mme_rollingShutterPixels");
 	//float mme_rollingShutterMultiplier = CG_Cvar_Get("mme_rollingShutterMultiplier");
@@ -758,6 +761,14 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 	drawDemoObjects(!captureFrame); 
 	Cam_AddPlayerShadowLines();
 	Cam_Draw3d();
+
+	cent = cam_specEnt.integer == -1 ? &cg_entities[cg.snap->ps.clientNum] : &cg_entities[cam_specEnt.integer];
+	if ((cg_speedometer.integer & SPEEDOMETER_ENABLE) || cg_strafeHelper.integer /* || (cgs.isJK2Pro && cg_raceTimer.integer > 1)*/)
+		CG_CalculateSpeed(cent);
+
+	if (cg_strafeHelper.integer & SHELPER_ALL3D)
+		CG_StrafeHelper(cent);
+
 	CG_DrawSpeedGraph3D();
 
 	CG_CalcScreenEffects();

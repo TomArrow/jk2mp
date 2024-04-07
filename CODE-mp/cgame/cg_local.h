@@ -103,6 +103,50 @@ extern camera_t cam;
 
 extern int dueltypes[MAX_CLIENTS];//jk2PRO - Clientside - Fullforce Duels
 
+
+//jk2pro
+#define SHELPER_SUPEROLDSTYLE	(1<<0)
+#define SHELPER_OLDSTYLE		(1<<1)
+#define SHELPER_NEWBARS			(1<<2)
+#define SHELPER_OLDBARS			(1<<3)
+#define SHELPER_SOUND			(1<<4)
+#define SHELPER_W				(1<<5)
+#define SHELPER_WA				(1<<6)
+#define SHELPER_WD				(1<<7)
+#define SHELPER_A				(1<<8)
+#define SHELPER_D				(1<<9)
+#define SHELPER_REAR			(1<<10)
+#define SHELPER_CENTER			(1<<11)
+#define SHELPER_ACCELMETER		(1<<12)
+#define SHELPER_WEZE			(1<<13)
+#define SHELPER_CROSSHAIR		(1<<14)
+#define SHELPER_S				(1<<15)
+#define SHELPER_SA				(1<<16)
+#define SHELPER_SD				(1<<17)
+#define SHELPER_TINY		    (1<<18)
+#define SHELPER_MAX 			(1<<19)
+#define SHELPER_ACCELZONES      (1<<20)
+#define SHELPER_3D				(1<<21)
+
+#define SHELPER_ALL2D			(SHELPER_SUPEROLDSTYLE|SHELPER_OLDSTYLE|SHELPER_NEWBARS|SHELPER_OLDBARS|SHELPER_ACCELMETER|SHELPER_WEZE|SHELPER_CROSSHAIR|SHELPER_SOUND)
+#define SHELPER_ALL3D			(SHELPER_3D)
+
+#define SPEEDOMETER_ENABLE			(1<<0)
+#define SPEEDOMETER_GROUNDSPEED		(1<<1)
+#define SPEEDOMETER_JUMPHEIGHT		(1<<2)
+#define SPEEDOMETER_JUMPDISTANCE	(1<<3)
+#define SPEEDOMETER_VERTICALSPEED	(1<<4)
+#define SPEEDOMETER_YAWSPEED		(1<<5)
+#define SPEEDOMETER_ACCELMETER		(1<<6)
+#define SPEEDOMETER_SPEEDGRAPH		(1<<7)
+#define SPEEDOMETER_KPH				(1<<8)
+#define SPEEDOMETER_MPH				(1<<9)
+#define SPEEDOMETER_NOSPEED			(1<<10)
+//jk2pro end
+
+
+
+
 extern int fxT;
 extern qboolean doFX;
 
@@ -1096,6 +1140,7 @@ void CGCam_SetMusicMult( float multiplier, int duration );
 typedef struct {
 	qhandle_t	charsetShader;
 	qhandle_t	whiteShader;
+	qhandle_t	mmeWhiteShader;
 
 	qhandle_t	loadBarLED;
 	qhandle_t	loadBarLEDCap;
@@ -1844,6 +1889,7 @@ extern	vmCvar_t		cg_showpos;
 
 extern	vmCvar_t		cg_strafeHelperCutoff;
 extern	vmCvar_t		cg_strafeHelper;
+extern	vmCvar_t		cg_strafeHelper3DDistance;
 extern	vmCvar_t		cg_strafeHelperPrecision;
 extern	vmCvar_t		cg_strafeHelperLineWidth;
 extern	vmCvar_t		cg_strafeHelperActiveColor;

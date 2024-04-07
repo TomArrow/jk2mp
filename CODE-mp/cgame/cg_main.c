@@ -127,6 +127,7 @@ char *HolocronIcons[] = {
 };
 
 int forceModelModificationCount = -1;
+int strafeHelperActiveColorModificationCount = -1;//japro
 
 void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum );
 void CG_Shutdown( void );
@@ -546,6 +547,7 @@ vmCvar_t	cg_showpos;
 
 vmCvar_t	cg_strafeHelperCutoff;
 vmCvar_t	cg_strafeHelper;
+vmCvar_t	cg_strafeHelper3DDistance;
 vmCvar_t	cg_strafeHelperPrecision;
 vmCvar_t	cg_strafeHelperLineWidth;
 vmCvar_t	cg_strafeHelperActiveColor;
@@ -846,6 +848,7 @@ static cvarTable_t cvarTable[] = { // bk001129
 
 	{ &cg_strafeHelperCutoff, "cg_strafeHelperCutoff", "240", NULL, CVAR_ARCHIVE },
 	{ &cg_strafeHelper, "cg_strafeHelper", "992", NULL, CVAR_ARCHIVE },
+	{ &cg_strafeHelper3DDistance, "cg_strafeHelper3DDistance", "100", NULL, 0 },
 	{ &cg_strafeHelperPrecision, "cg_strafeHelperPrecision", "256", NULL, 0 },
 	{ &cg_strafeHelperLineWidth, "cg_strafeHelperLineWidth", "1", NULL, CVAR_ARCHIVE },
 	{ &cg_strafeHelperActiveColor, "cg_strafeHelperActiveColor", "0 255 0 200", NULL, CVAR_ARCHIVE },
@@ -1055,6 +1058,41 @@ void CG_RegisterCvars( void ) {
 	MV_UpdateCgFlags();
 }
 
+
+/*
+===================
+CG_StrafeHelperActiveColorChange
+===================
+*/
+static void CG_StrafeHelperActiveColorChange(void) {
+	int i;
+	if (sscanf(cg_strafeHelperActiveColor.string, "%f %f %f %f", &cg.strafeHelperActiveColor[0], &cg.strafeHelperActiveColor[1], &cg.strafeHelperActiveColor[2], &cg.strafeHelperActiveColor[3]) != 4) {
+		cg.strafeHelperActiveColor[0] = 0;
+		cg.strafeHelperActiveColor[1] = 255;
+		cg.strafeHelperActiveColor[2] = 0;
+		cg.strafeHelperActiveColor[3] = 200;
+	}
+
+	for (i = 0; i < 4; i++) {
+		if (cg.strafeHelperActiveColor[i] < 0)
+			cg.strafeHelperActiveColor[i] = 0;
+		else if (cg.strafeHelperActiveColor[i] > 255)
+			cg.strafeHelperActiveColor[i] = 255;
+	}
+
+	trap_Cvar_Set("ui_sha_r", va("%f", cg.strafeHelperActiveColor[0]));
+	trap_Cvar_Set("ui_sha_g", va("%f", cg.strafeHelperActiveColor[1]));
+	trap_Cvar_Set("ui_sha_b", va("%f", cg.strafeHelperActiveColor[2]));
+	trap_Cvar_Set("ui_sha_a", va("%f", cg.strafeHelperActiveColor[3]));
+
+	cg.strafeHelperActiveColor[0] /= 255.0f;
+	cg.strafeHelperActiveColor[1] /= 255.0f;
+	cg.strafeHelperActiveColor[2] /= 255.0f;
+	cg.strafeHelperActiveColor[3] /= 255.0f;
+
+	//Com_Printf("New color is %f, %f, %f, %f\n", cg.strafeHelperActiveColor[0], cg.strafeHelperActiveColor[1], cg.strafeHelperActiveColor[2], cg.strafeHelperActiveColor[3]);
+}
+
 /*
 =================
 CG_UpdateCvars
@@ -1072,6 +1110,12 @@ void CG_UpdateCvars( void ) {
 					cv->update();
 			}
 		}
+	}
+
+
+	if (strafeHelperActiveColorModificationCount != cg_strafeHelperActiveColor.modificationCount) {
+		strafeHelperActiveColorModificationCount = cg_strafeHelperActiveColor.modificationCount;
+		CG_StrafeHelperActiveColorChange();
 	}
 }
 
@@ -2912,6 +2956,7 @@ Ghoul2 Insert End
 	// load a few needed things before we do any screen updates
 	cgs.media.charsetShader		= trap_R_RegisterShaderNoMipHUD( "gfx/2d/charsgrid_med" );
 	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
+	cgs.media.mmeWhiteShader		= trap_R_RegisterShader("mme_additiveWhite");
 
 	cgs.media.loadBarLED		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/load_tick" );
 	cgs.media.loadBarLEDCap		= trap_R_RegisterShaderNoMipHUD( "gfx/hud/load_tick_cap" );

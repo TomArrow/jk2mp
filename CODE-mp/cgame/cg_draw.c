@@ -10,10 +10,10 @@
 qboolean CG_WorldCoordToScreenCoordFloat(vec3_t worldCoord, float *x, float *y);
 qboolean CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle );
 
-static void CG_CalculateSpeed(centity_t* cent); //jk2pro.
+void CG_CalculateSpeed(centity_t* cent); //jk2pro.
 static void CG_MovementKeys(centity_t* cent);
 static void CG_Speedometer(void); //jk2pro
-static void CG_StrafeHelper(centity_t* cent); //jk2pro
+void CG_StrafeHelper(centity_t* cent); //jk2pro
 static void CG_DrawAccelMeter(void); //jk2pro
 static void CG_JumpHeight(centity_t* cent); //jk2pro
 //static void CG_RaceTimer(centity_t *cent); //jk2pro
@@ -24,35 +24,7 @@ static void CG_DrawVerticalSpeed(void); //jk2pro
 static void CG_DrawYawSpeed(void); //jk2pro
 static void CG_DrawShowPos(void); //jk2pro
 
-//jk2pro
-#define SHELPER_SUPEROLDSTYLE	(1<<0)
-#define SHELPER_OLDSTYLE		(1<<1)
-#define SHELPER_NEWBARS			(1<<2)
-#define SHELPER_OLDBARS			(1<<3)
-#define SHELPER_SOUND			(1<<4)
-#define SHELPER_W				(1<<5)
-#define SHELPER_WA				(1<<6)
-#define SHELPER_WD				(1<<7)
-#define SHELPER_A				(1<<8)
-#define SHELPER_D				(1<<9)
-#define SHELPER_REAR			(1<<10)
-#define SHELPER_CENTER			(1<<11)
-#define SHELPER_ACCELMETER		(1<<12)
-#define SHELPER_WEZE			(1<<13)
-#define SHELPER_CROSSHAIR		(1<<14)
 
-#define SPEEDOMETER_ENABLE			(1<<0)
-#define SPEEDOMETER_GROUNDSPEED		(1<<1)
-#define SPEEDOMETER_JUMPHEIGHT		(1<<2)
-#define SPEEDOMETER_JUMPDISTANCE	(1<<3)
-#define SPEEDOMETER_VERTICALSPEED	(1<<4)
-#define SPEEDOMETER_YAWSPEED		(1<<5)
-#define SPEEDOMETER_ACCELMETER		(1<<6)
-#define SPEEDOMETER_SPEEDGRAPH		(1<<7)
-#define SPEEDOMETER_KPH				(1<<8)
-#define SPEEDOMETER_MPH				(1<<9)
-#define SPEEDOMETER_NOSPEED			(1<<10)
-//jk2pro end
 
 // used for scoreboard
 extern displayContextDef_t cgDC;
@@ -1206,8 +1178,6 @@ void CG_DrawHUD(centity_t	*cent)
 	char scoreBiasStr[16];
 	int team, score;
 
-	if ((cg_speedometer.integer & SPEEDOMETER_ENABLE) || cg_strafeHelper.integer /* || (cgs.isJK2Pro && cg_raceTimer.integer > 1)*/)
-		CG_CalculateSpeed(cent);
 
 	if (cg_movementKeys.integer)
 		CG_MovementKeys(cent);
@@ -1230,7 +1200,7 @@ void CG_DrawHUD(centity_t	*cent)
 			CG_DrawVerticalSpeed();
 	}
 	
-	if (cg_strafeHelper.integer)
+	if (cg_strafeHelper.integer & SHELPER_ALL2D)
 		CG_StrafeHelper(cent);
 
 	if (cg_strafeHelper.integer & SHELPER_CROSSHAIR) {
@@ -5412,7 +5382,7 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
  	CG_Draw2D();
 }
 
-static void CG_CalculateSpeed(centity_t* cent) {
+void CG_CalculateSpeed(centity_t* cent) {
 	const vec_t* const velocity = (cent->currentState.clientNum == cg.clientNum ? cg.predictedPlayerState.velocity : cent->currentState.pos.trDelta);
 	//cg.currentSpeed = sqrtf(velocity[0] * velocity[0] + velocity[1] * velocity[1]); // is this right?
 	cg.currentSpeed = (float)sqrt(velocity[0] * velocity[0] + velocity[1] * velocity[1]); // is this right?
@@ -6200,8 +6170,47 @@ void Dzikie_CG_DrawSpeed(int moveDir) {
 
 }
 
-static void DrawStrafeLine(vec3_t velocity, float diff, qboolean active, int moveDir) { //moveDir is 1-7 for wasd combinations, and 8 for the centerline in cpm style, 9 and 10 for backwards a/d lines
+// copied from/based on demoDrawSetupVerts
+void strafehelper3DDrawSetupVerts(polyVert_t* verts, const vec4_t color) {
+	int i;
+	for (i = 0; i < 4; i++) {
+		verts[i].modulate[0] = color[0] * 255;
+		verts[i].modulate[1] = color[1] * 255;
+		verts[i].modulate[2] = color[2] * 255;
+		verts[i].modulate[3] = color[3] * 255;
+		verts[i].st[0] = (i & 2) ? 0 : 1;
+		verts[i].st[1] = (i & 1) ? 0 : 1;
+	}
+}
+
+static ID_INLINE vec_t VectorDistance(const vec3_t v1, const vec3_t v2) {
+	vec3_t v;
+	VectorSubtract(v1, v2, v);
+	return (vec_t)sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+}
+
+void GetPerpendicularViewVector(const vec3_t point, const vec3_t p1, const vec3_t p2, vec3_t up);
+
+// copied from/based on demoDrawRawLine
+void strafehelper3DDrawRawLine(const vec3_t start, const vec3_t end, float width, polyVert_t* verts) {
+	vec3_t up;
+	vec3_t middle;
+
+	//VectorScale(start, 0.5, middle);
+	//VectorMA(middle, 0.5, end, middle);
+	//if (VectorDistance(middle, cg.refdef.vieworg) < 100)
+	//	return;
+	GetPerpendicularViewVector(cg.refdef.vieworg, start, end, up);
+	VectorMA(start, width, up, verts[0].xyz);
+	VectorMA(start, -width, up, verts[1].xyz);
+	VectorMA(end, -width, up, verts[2].xyz);
+	VectorMA(end, width, up, verts[3].xyz);
+	trap_R_AddPolyToScene(cgs.media.mmeWhiteShader, 4, verts);
+}
+
+static void DrawStrafeLine(vec3_t velocity, float diff, qboolean active, int moveDir, qboolean only3d) { //moveDir is 1-7 for wasd combinations, and 8 for the centerline in cpm style, 9 and 10 for backwards a/d lines
 	vec3_t start, angs, forward, delta, line;
+	vec3_t start3D,  delta3D, line3D;
 	float x, y, startx, starty, lineWidth;
 	int sensitivity = cg_strafeHelperPrecision.integer;
 	static const int LINE_HEIGHT = 230; //240 is midpoint, so it should be a little higher so crosshair is always on it.
@@ -6243,67 +6252,92 @@ static void DrawStrafeLine(vec3_t velocity, float diff, qboolean active, int mov
 		color[3] = cg_strafeHelperInactiveAlpha.value / 255.0f;
 	}
 
+	color[0]=sRGBToLinear(color[0]);
+	color[1]=sRGBToLinear(color[1]);
+	color[2]=sRGBToLinear(color[2]);
+
 	//if (!(cg_strafeHelper.integer & SHELPER_SUPEROLDSTYLE))
 	VectorCopy(cg.refdef.vieworg, start);
+	VectorCopy(cg.predictedPlayerState.origin, start3D);
 	//else //gay
 	//	VectorCopy(cg.predictedPlayerState.origin, start); //This created problems for some peoplem, use refdef instead? (avygeil fix)
 
 	VectorCopy(velocity, angs);
+	angs[PITCH] = 0.0;
 	angs[YAW] += diff;
 	AngleVectors(angs, forward, NULL, NULL);
 	VectorScale(forward, sensitivity, delta); // line length
+	VectorScale(forward, cg_strafeHelper3DDistance.integer, delta3D); // line length
 
 	line[0] = delta[0] + start[0];
 	line[1] = delta[1] + start[1];
 	line[2] = start[2];
 
-	if (!CG_WorldCoordToScreenCoord(line, &x, &y))
+	line3D[0] = delta3D[0] + start3D[0];
+	line3D[1] = delta3D[1] + start3D[1];
+	line3D[2] = start3D[2];
+
+	if (!CG_WorldCoordToScreenCoordFloat(line, &x, &y) && !(cg_strafeHelper.integer & SHELPER_3D))
 		return;
 
-	if (cg_strafeHelper.integer & SHELPER_NEWBARS) {
-		Dzikie_CG_DrawLine(x, (SCREEN_HEIGHT / 2) + 20, x, (SCREEN_HEIGHT / 2) - 20, lineWidth, color, 0.75f, 0);
-		//CG_DottedLine( x, 260, x, 220, 1, 100, color, 0.75f ); //240 is center, so 220 - 260 is symetrical on crosshair.'
-	}
-	if (cg_strafeHelper.integer & SHELPER_OLDBARS && active && moveDir != 0) { //Not sure how to deal with multiple lines for W only so just fuck it for now..
-																			   //Proper way is to tell which line we are closest to aiming at and display the shit for that...
-		CG_FillRect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, cgs.widthRatioCoef*(-4.444 * AngleSubtract(cg.predictedPlayerState.viewangles[YAW], angs[YAW])), 12, colorTable[CT_RED]);
-	}
-	if (cg_strafeHelper.integer & SHELPER_OLDSTYLE) {
-		int cutoff = SCREEN_HEIGHT - cg_strafeHelperCutoff.integer; //Should be between 480 and LINE_HEIGHT
-														  //distance = sqrt( ((320-x)*(320-x)) + ((480-LINE_HEIGHT)*(480-LINE_HEIGHT)) ); 
+	if(!only3d){
+		if (cg_strafeHelper.integer & SHELPER_NEWBARS) {
+			Dzikie_CG_DrawLine(x, (SCREEN_HEIGHT / 2) + 20, x, (SCREEN_HEIGHT / 2) - 20, lineWidth, color, 0.75f, 0);
+			//CG_DottedLine( x, 260, x, 220, 1, 100, color, 0.75f ); //240 is center, so 220 - 260 is symetrical on crosshair.'
+		}
+		if (cg_strafeHelper.integer & SHELPER_OLDBARS && active && moveDir != 0) { //Not sure how to deal with multiple lines for W only so just fuck it for now..
+																				   //Proper way is to tell which line we are closest to aiming at and display the shit for that...
+			CG_FillRect(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, cgs.widthRatioCoef*(-4.444 * AngleSubtract(cg.predictedPlayerState.viewangles[YAW], angs[YAW])), 12, colorTable[CT_RED]);
+		}
+		if (cg_strafeHelper.integer & SHELPER_OLDSTYLE) {
+			int cutoff = SCREEN_HEIGHT - cg_strafeHelperCutoff.integer; //Should be between 480 and LINE_HEIGHT
+															  //distance = sqrt( ((320-x)*(320-x)) + ((480-LINE_HEIGHT)*(480-LINE_HEIGHT)) ); 
 
-		if (cutoff > SCREEN_HEIGHT)
-			cutoff = SCREEN_HEIGHT;
-		if (cutoff < LINE_HEIGHT + 20)
-			cutoff = LINE_HEIGHT + 20;
+			if (cutoff > SCREEN_HEIGHT)
+				cutoff = SCREEN_HEIGHT;
+			if (cutoff < LINE_HEIGHT + 20)
+				cutoff = LINE_HEIGHT + 20;
 
-		//Com_Printf("Numdots %i\n", distance);
-		//if (distance < 0)
-		//distance = 100;
-		//else if (distance > 1000)
-		//distance = 1000;
+			//Com_Printf("Numdots %i\n", distance);
+			//if (distance < 0)
+			//distance = 100;
+			//else if (distance > 1000)
+			//distance = 1000;
 
-		Dzikie_CG_DrawLine(SCREEN_WIDTH * 0.5, SCREEN_HEIGHT, x, LINE_HEIGHT, lineWidth, color, color[3], cutoff);
-		//CG_DottedLineSegment( 320, 480, x, LINE_HEIGHT, 1, distance, color, color[3], cutoff ); //240 is center, so 220 - 260 is symetrical on crosshair.
+			Dzikie_CG_DrawLine(SCREEN_WIDTH * 0.5, SCREEN_HEIGHT, x, LINE_HEIGHT, lineWidth, color, color[3], cutoff);
+			//CG_DottedLineSegment( 320, 480, x, LINE_HEIGHT, 1, distance, color, color[3], cutoff ); //240 is center, so 220 - 260 is symetrical on crosshair.
+		}
+		if (cg_strafeHelper.integer & SHELPER_SUPEROLDSTYLE) {
+			int cutoff = SCREEN_HEIGHT - cg_strafeHelperCutoff.integer; //Should be between 480 and LINE_HEIGHT
+															  //distance = sqrt( ((320-x)*(320-x)) + ((480-LINE_HEIGHT)*(480-LINE_HEIGHT)) ); 
+
+			if (cutoff > SCREEN_HEIGHT)
+				cutoff = SCREEN_HEIGHT;
+			if (cutoff < LINE_HEIGHT + 20)
+				cutoff = LINE_HEIGHT + 20;
+
+			if (CG_WorldCoordToScreenCoordFloat(start, &startx, &starty))
+				Dzikie_CG_DrawLine(startx, starty, x, y, lineWidth, color, color[3], cutoff);
+			//CG_DottedLineSegment( startx, starty, x, y, 1, distance, color, color[3], cutoff ); //240 is center, so 220 - 260 is symetrical on crosshair.
+		}
+		if (cg_strafeHelper.integer & SHELPER_WEZE) {
+			Dzikie_CG_DrawSpeed(moveDir);
+		}
+		if (cg_strafeHelper.integer & SHELPER_SOUND && active && moveDir != 8) { //Dont do this shit for the center line since its not really a strafe
+			CG_StrafeHelperSound(100 * AngleSubtract(cg.predictedPlayerState.viewangles[YAW], angs[YAW]));
+		}
 	}
-	if (cg_strafeHelper.integer & SHELPER_SUPEROLDSTYLE) {
-		int cutoff = SCREEN_HEIGHT - cg_strafeHelperCutoff.integer; //Should be between 480 and LINE_HEIGHT
-														  //distance = sqrt( ((320-x)*(320-x)) + ((480-LINE_HEIGHT)*(480-LINE_HEIGHT)) ); 
 
-		if (cutoff > SCREEN_HEIGHT)
-			cutoff = SCREEN_HEIGHT;
-		if (cutoff < LINE_HEIGHT + 20)
-			cutoff = LINE_HEIGHT + 20;
-
-		if (CG_WorldCoordToScreenCoord(start, &startx, &starty))
-			Dzikie_CG_DrawLine(startx, starty, x, y, lineWidth, color, color[3], cutoff);
-		//CG_DottedLineSegment( startx, starty, x, y, 1, distance, color, color[3], cutoff ); //240 is center, so 220 - 260 is symetrical on crosshair.
-	}
-	if (cg_strafeHelper.integer & SHELPER_WEZE) {
-		Dzikie_CG_DrawSpeed(moveDir);
-	}
-	if (cg_strafeHelper.integer & SHELPER_SOUND && active && moveDir != 8) { //Dont do this shit for the center line since its not really a strafe
-		CG_StrafeHelperSound(100 * AngleSubtract(cg.predictedPlayerState.viewangles[YAW], angs[YAW]));
+	if (cg_strafeHelper.integer & SHELPER_3D && (moveDir == 0 || moveDir == 8 || moveDir == 20)) {
+		vec3_t line3DEnd;
+		polyVert_t verts[4];
+		VectorCopy(line3D, line3DEnd);
+		line3DEnd[2] += 20.0f;
+		strafehelper3DDrawSetupVerts(verts, moveDir == 20 ? cg.strafeHelperActiveColor : (moveDir == 0 ? activeColor : centerColor));
+		strafehelper3DDrawRawLine(line3D, line3DEnd, 0.5f, verts);
+		verts[0].modulate[0] = verts[0].modulate[1] = verts[0].modulate[2] = verts[0].modulate[3] = 0;
+		verts[1].modulate[0] = verts[1].modulate[1] = verts[1].modulate[2] = verts[1].modulate[3] = 0;
+		strafehelper3DDrawRawLine(start3D, line3D, 0.5f, verts);
 	}
 }
 
@@ -6329,7 +6363,7 @@ ID_INLINE int PM_GetMovePhysics(void) // this was in bg_public before.. was some
 	return MV_JKA;
 }
 
-static void CG_StrafeHelper(centity_t* cent)
+void CG_StrafeHelper(centity_t* cent)
 {
 	vec_t* velocity = cg.predictedPlayerState.velocity;
 	static vec3_t velocityAngle;
@@ -6339,6 +6373,7 @@ static void CG_StrafeHelper(centity_t* cent)
 	int moveDir;
 	qboolean onGround;
 	usercmd_t cmd = { 0 };
+	float moveAngle = 0;
 
 	if (moveStyle == MV_SIEGE)
 		return; //no strafe in siege
@@ -6350,21 +6385,41 @@ static void CG_StrafeHelper(centity_t* cent)
 		moveDir = cg.snap->ps.movementDir;
 		switch (moveDir) {
 		case 0: // W
-			cmd.forwardmove = 1; break;
+			cmd.forwardmove = 1; 
+			moveAngle = 0.0f;
+			break;
 		case 1: // WA
-			cmd.forwardmove = 1; cmd.rightmove = -1; break;
+			cmd.forwardmove = 1; 
+			cmd.rightmove = -1;
+			moveAngle = -45.0f;
+			break;
 		case 2: // A
-			cmd.rightmove = -1;	break;
+			cmd.rightmove = -1;
+			moveAngle = -90.0f;
+			break;
 		case 3: // AS
-			cmd.rightmove = -1;	cmd.forwardmove = -1; break;
+			cmd.rightmove = -1;	
+			cmd.forwardmove = -1;
+			moveAngle = -135.0f;
+			break;
 		case 4: // S
-			cmd.forwardmove = -1; break;
+			cmd.forwardmove = -1;
+			moveAngle = -180.0f;
+			break;
 		case 5: // SD
-			cmd.forwardmove = -1; cmd.rightmove = 1; break;
+			cmd.forwardmove = -1; 
+			cmd.rightmove = 1;
+			moveAngle = 135.0f;
+			break;
 		case 6: // D
-			cmd.rightmove = 1; break;
+			cmd.rightmove = 1;
+			moveAngle = 90.0f;
+			break;
 		case 7: // DW
-			cmd.rightmove = 1; cmd.forwardmove = 1;	break;
+			cmd.rightmove = 1; 
+			cmd.forwardmove = 1;
+			moveAngle = 45.0f;
+			break;
 		default:
 			break;
 		}
@@ -6445,33 +6500,37 @@ static void CG_StrafeHelper(centity_t* cent)
 	velocity[2] = 0;
 	vectoangles(velocity, velocityAngle); //We have the offset from our Velocity angle that we should be aiming at, so now we need to get our velocity angle.
 
-	if (moveStyle == MV_QW || moveStyle == MV_CPM || moveStyle == MV_PJK || moveStyle == MV_WSW || moveStyle == MV_RJCPM || moveStyle == MV_SWOOP || moveStyle == MV_BOTCPM || (moveStyle == MV_SLICK && !onGround)) {//QW, CPM, PJK, WSW, RJCPM have center line
+	if (moveStyle == MV_JKA || moveStyle == MV_QW || moveStyle == MV_CPM || moveStyle == MV_PJK || moveStyle == MV_WSW || moveStyle == MV_RJCPM || moveStyle == MV_SWOOP || moveStyle == MV_BOTCPM || (moveStyle == MV_SLICK && !onGround)) {//QW, CPM, PJK, WSW, RJCPM have center line
 		if (cg_strafeHelper.integer & SHELPER_CENTER)
-			DrawStrafeLine(velocityAngle, 0, (qboolean)(cmd.forwardmove == 0 && cmd.rightmove != 0), 8); //Center
+			DrawStrafeLine(velocityAngle, 0, (qboolean)(cmd.forwardmove == 0 && cmd.rightmove != 0), 8, qfalse); //Center
 	}
 	if (moveStyle != MV_QW && moveStyle != MV_SWOOP) { //Every style but QW has WA/WD lines
 		if (cg_strafeHelper.integer & SHELPER_WA)
-			DrawStrafeLine(velocityAngle, (optimalDeltaAngle + (cg_strafeHelperOffset.value * 0.01f)), (qboolean)(cmd.forwardmove > 0 && cmd.rightmove < 0), 1); //WA
+			DrawStrafeLine(velocityAngle, (optimalDeltaAngle + (cg_strafeHelperOffset.value * 0.01f)), (qboolean)(cmd.forwardmove > 0 && cmd.rightmove < 0), 1, qfalse); //WA
 		if (cg_strafeHelper.integer & SHELPER_WD)
-			DrawStrafeLine(velocityAngle, (-optimalDeltaAngle - (cg_strafeHelperOffset.value * 0.01f)), (qboolean)(cmd.forwardmove > 0 && cmd.rightmove > 0), 7); //WD
+			DrawStrafeLine(velocityAngle, (-optimalDeltaAngle - (cg_strafeHelperOffset.value * 0.01f)), (qboolean)(cmd.forwardmove > 0 && cmd.rightmove > 0), 7, qfalse); //WD
 	}
 	if (moveStyle == MV_JKA || moveStyle == MV_Q3 || moveStyle == MV_RJQ3 || moveStyle == MV_JETPACK || moveStyle == MV_SPEED || moveStyle == MV_SP || (moveStyle == MV_SLICK && onGround)) { //JKA, Q3, RJQ3, Jetpack? have A/D
 		if (cg_strafeHelper.integer & SHELPER_A)
-			DrawStrafeLine(velocityAngle, -(45.0f - (optimalDeltaAngle + (cg_strafeHelperOffset.value * 0.01f))), (qboolean)(cmd.forwardmove == 0 && cmd.rightmove < 0), 2); //A
+			DrawStrafeLine(velocityAngle, -(45.0f - (optimalDeltaAngle + (cg_strafeHelperOffset.value * 0.01f))), (qboolean)(cmd.forwardmove == 0 && cmd.rightmove < 0), 2, qfalse); //A
 		if (cg_strafeHelper.integer & SHELPER_D)
-			DrawStrafeLine(velocityAngle, (45.0f - (optimalDeltaAngle + (cg_strafeHelperOffset.value * 0.01f))), (qboolean)(cmd.forwardmove == 0 && cmd.rightmove > 0), 6); //D
+			DrawStrafeLine(velocityAngle, (45.0f - (optimalDeltaAngle + (cg_strafeHelperOffset.value * 0.01f))), (qboolean)(cmd.forwardmove == 0 && cmd.rightmove > 0), 6, qfalse); //D
 
 																																												  //A/D backwards strafe?
 		if (cg_strafeHelper.integer & SHELPER_REAR) {
-			DrawStrafeLine(velocityAngle, (225.0f - (optimalDeltaAngle + (cg_strafeHelperOffset.value * 0.01f))), (qboolean)(cmd.forwardmove == 0 && cmd.rightmove < 0), 9); //A
-			DrawStrafeLine(velocityAngle, (135.0f + (optimalDeltaAngle + (cg_strafeHelperOffset.value * 0.01f))), (qboolean)(cmd.forwardmove == 0 && cmd.rightmove > 0), 10); //D
+			DrawStrafeLine(velocityAngle, (225.0f - (optimalDeltaAngle + (cg_strafeHelperOffset.value * 0.01f))), (qboolean)(cmd.forwardmove == 0 && cmd.rightmove < 0), 9, qfalse); //A
+			DrawStrafeLine(velocityAngle, (135.0f + (optimalDeltaAngle + (cg_strafeHelperOffset.value * 0.01f))), (qboolean)(cmd.forwardmove == 0 && cmd.rightmove > 0), 10, qfalse); //D
 		}
 	}
 	if (moveStyle == MV_JKA || moveStyle == MV_Q3 || moveStyle == MV_RJQ3 || moveStyle == MV_SWOOP || moveStyle == MV_JETPACK || moveStyle == MV_SPEED || moveStyle == MV_SP) {
 		//W only
 		if (cg_strafeHelper.integer & SHELPER_W) {
-			DrawStrafeLine(velocityAngle, (45.0f + (optimalDeltaAngle + (cg_strafeHelperOffset.value * 0.01f))), (qboolean)(cmd.forwardmove > 0 && cmd.rightmove == 0), 0); //W
-			DrawStrafeLine(velocityAngle, (-45.0f - (optimalDeltaAngle + (cg_strafeHelperOffset.value * 0.01f))), (qboolean)(cmd.forwardmove > 0 && cmd.rightmove == 0), 0); //W
+			DrawStrafeLine(velocityAngle, (45.0f + (optimalDeltaAngle + (cg_strafeHelperOffset.value * 0.01f))), (qboolean)(cmd.forwardmove > 0 && cmd.rightmove == 0), 0, qfalse); //W
+			DrawStrafeLine(velocityAngle, (-45.0f - (optimalDeltaAngle + (cg_strafeHelperOffset.value * 0.01f))), (qboolean)(cmd.forwardmove > 0 && cmd.rightmove == 0), 0, qfalse); //W
+		}
+		if (cg_strafeHelper.integer & SHELPER_3D) {
+
+			DrawStrafeLine(cg.predictedPlayerState.viewangles,-moveAngle, (qboolean)(cmd.forwardmove > 0 && cmd.rightmove == 0), 20, qfalse); //W
 		}
 	}
 }
