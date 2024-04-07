@@ -205,6 +205,7 @@ void hud3DDrawRawLine(const vec3_t start, const vec3_t end, float width, polyVer
 void Cam_Add3DHUd() {
 	vec3_t cervical, llumbar;
 	vec3_t forward,right, up;
+	//vec3_t upangles;
 	vec3_t start, end;
 	vec3_t startHealth, endHealth;
 	vec3_t startShield, endShield;
@@ -238,7 +239,12 @@ void Cam_Add3DHUd() {
 	}
 	AngleVectors(cent->lerpAngles, NULL, right, NULL);
 	VectorSubtract(cervical, llumbar, up);
+	VectorMA(up,-DotProduct(up,right),right,up);
 	fullHeight = VectorNormalize(up);
+	//vectoangles(up, upangles);
+	//upangles[YAW] = (upangles[YAW] < -180.0f || upangles[YAW] > 180.0f) ? AngleSubtract(cent->lerpAngles[YAW], 180.0f) : cent->lerpAngles[YAW];
+	//upangles[ROLL] = 0;
+	//AngleVectors(upangles, up, NULL, NULL); // only use pitch
 	CrossProduct(right, up, forward);
 	VectorNormalize(forward);
 	VectorMA(llumbar, cam_hud3DOffset.value, forward, start);
@@ -246,23 +252,28 @@ void Cam_Add3DHUd() {
 	VectorCopy(start,startHealth);
 	VectorCopy(start,startShield);
 
-	VectorMA(start, 2.0f, right, start);
-	VectorMA(start, fullHeight*(float)cg.predictedPlayerState.fd.forcePower/ 100.0f, up, end);
+	if (cam_hud3D.integer & 1) {
+		VectorMA(start, 2.0f, right, start);
+		VectorMA(start, fullHeight * (float)cg.predictedPlayerState.fd.forcePower / 100.0f, up, end);
+		hud3DDrawSetupVerts(verts, forceBarColor);
+		hud3DDrawRawLine(start, end, 1.5f, verts, NULL); // 1.25 from middle
+	}
 
-	VectorMA(startShield, -1.5f, right, startShield);
-	VectorMA(startShield, fullHeight*(float)cg.predictedPlayerState.stats[STAT_ARMOR] / 200.0f, up, endShield);
+	if (cam_hud3D.integer & 2) {
+		VectorMA(startShield, -1.5f, right, startShield);
+		VectorMA(startShield, fullHeight*(float)cg.predictedPlayerState.stats[STAT_ARMOR] / 200.0f, up, endShield);
+		hud3DDrawSetupVerts(verts, shieldBarColor);
+		hud3DDrawRawLine(startShield, endShield,0.5f,verts, NULL); // 1.25 from middle
+	}
 
-	VectorMA(startHealth, -2.25f, right, startHealth);
-	VectorMA(startHealth, fullHeight*(float)cg.predictedPlayerState.stats[STAT_HEALTH] / 100.0f, up, endHealth);
 
+	if (cam_hud3D.integer & 4) {
+		VectorMA(startHealth, -2.25f, right, startHealth);
+		VectorMA(startHealth, fullHeight * (float)cg.predictedPlayerState.stats[STAT_HEALTH] / 100.0f, up, endHealth);
+		hud3DDrawSetupVerts(verts, healthBarColor);
+		hud3DDrawRawLine(startHealth, endHealth, 0.5f, verts, NULL); // 1.25 from middle
+	}
 
-	//VectorMA(start, fullHeight*cg.predictedPlayerState.stats[STAT_HEALTH], up, end);
-	hud3DDrawSetupVerts(verts, forceBarColor);
-	hud3DDrawRawLine(start,end,1.5f,verts, NULL); // 1.25 from middle
-	hud3DDrawSetupVerts(verts, shieldBarColor);
-	hud3DDrawRawLine(startShield, endShield,0.5f,verts, NULL); // 1.25 from middle
-	hud3DDrawSetupVerts(verts, healthBarColor);
-	hud3DDrawRawLine(startHealth, endHealth,0.5f,verts, NULL); // 1.25 from middle
 }
 
 void Cam_AddPlayerShadowLines() {

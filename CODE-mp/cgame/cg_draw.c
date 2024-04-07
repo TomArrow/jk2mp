@@ -6192,7 +6192,7 @@ static ID_INLINE vec_t VectorDistance(const vec3_t v1, const vec3_t v2) {
 void GetPerpendicularViewVector(const vec3_t point, const vec3_t p1, const vec3_t p2, vec3_t up);
 
 // copied from/based on demoDrawRawLine
-void strafehelper3DDrawRawLine(const vec3_t start, const vec3_t end, float width, polyVert_t* verts) {
+void strafehelper3DDrawRawLine(const vec3_t start, const vec3_t end, float width, polyVert_t* verts, qboolean arrow) {
 	vec3_t up;
 	vec3_t middle;
 
@@ -6201,8 +6201,8 @@ void strafehelper3DDrawRawLine(const vec3_t start, const vec3_t end, float width
 	//if (VectorDistance(middle, cg.refdef.vieworg) < 100)
 	//	return;
 	GetPerpendicularViewVector(cg.refdef.vieworg, start, end, up);
-	VectorMA(start, width, up, verts[0].xyz);
-	VectorMA(start, -width, up, verts[1].xyz);
+	VectorMA(start, arrow? 0.0f: width, up, verts[0].xyz);
+	VectorMA(start, arrow ? 0.0f : -width, up, verts[1].xyz);
 	VectorMA(end, -width, up, verts[2].xyz);
 	VectorMA(end, width, up, verts[3].xyz);
 	trap_R_AddPolyToScene(cgs.media.mmeWhiteShader, 4, verts);
@@ -6334,10 +6334,10 @@ static void DrawStrafeLine(vec3_t velocity, float diff, qboolean active, int mov
 		VectorCopy(line3D, line3DEnd);
 		line3DEnd[2] += 20.0f;
 		strafehelper3DDrawSetupVerts(verts, moveDir == 20 ? cg.strafeHelperActiveColor : (moveDir == 0 ? activeColor : centerColor));
-		strafehelper3DDrawRawLine(line3D, line3DEnd, 0.5f, verts);
+		strafehelper3DDrawRawLine(line3DEnd,line3D, 0.5f, verts,qtrue);
 		verts[0].modulate[0] = verts[0].modulate[1] = verts[0].modulate[2] = verts[0].modulate[3] = 0;
 		verts[1].modulate[0] = verts[1].modulate[1] = verts[1].modulate[2] = verts[1].modulate[3] = 0;
-		strafehelper3DDrawRawLine(start3D, line3D, 0.5f, verts);
+		strafehelper3DDrawRawLine(start3D, line3D, 0.5f, verts,qtrue);
 	}
 }
 
