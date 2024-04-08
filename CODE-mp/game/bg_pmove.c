@@ -2645,7 +2645,7 @@ static void PM_Footsteps( void ) {
 				}
 				else
 				{
-					if (pm->ps->weapon == WP_SABER && pm->ps->saberHolstered)
+					if (pm->ps->weapon == WP_SABER && (pm->ps->saberHolstered && !pm->forceSaberOn))
 					{
 						int anim = demo15detected?BOTH_STAND1_15:BOTH_STAND1;
 						PM_ContinueLegsAnim( anim );

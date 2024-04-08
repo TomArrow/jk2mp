@@ -523,6 +523,8 @@ vmCvar_t	cg_saberContact;
 vmCvar_t	cg_saberTrail;
 vmCvar_t	cg_saberTrailTime;
 
+vmCvar_t	cg_saberForceOn;
+
 vmCvar_t	cg_duelHeadAngles;
 
 vmCvar_t	cg_speedTrail;
@@ -830,6 +832,7 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cg_saberContact, "cg_saberContact", "1", NULL, 0 },
 	{ &cg_saberTrail, "cg_saberTrail", "2", NULL, CVAR_ARCHIVE },
 	{ &cg_saberTrailTime, "cg_saberTrailTime", "40.0", NULL, CVAR_ARCHIVE },
+	{ &cg_saberForceOn, "cg_saberForceOn", "0", NULL, CVAR_TEMP },
 
 	{ &cg_duelHeadAngles, "cg_duelHeadAngles", "0", NULL, 0 },
 

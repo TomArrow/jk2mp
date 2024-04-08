@@ -1517,7 +1517,7 @@ void PM_WeaponLightsaber(void)
 		}
 	}
 
-	if (pm->ps->saberHolstered)
+	if (pm->ps->saberHolstered && !pm->forceSaberOn)
 	{
 		if (pm->ps->saberMove != LS_READY)
 		{

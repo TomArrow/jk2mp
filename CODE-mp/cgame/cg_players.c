@@ -7497,7 +7497,7 @@ skipEffectOverride:
 
 		if (!(cg.snap->ps.pm_flags & PMF_FOLLOW))
 		{
-			if (cent->weapon == WP_SABER && cent->weapon != cent->currentState.weapon && !cent->currentState.shouldtarget)
+			if (cent->weapon == WP_SABER && cent->weapon != cent->currentState.weapon && !(cent->currentState.shouldtarget &&!cg_saberForceOn.integer))
 			{ //switching away from the saber
 				trap_S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_AUTO, trap_S_RegisterSound( "sound/weapons/saber/saberoffquick.wav" ));
 			}
@@ -8594,7 +8594,7 @@ skipPowerType3:
 		CG_DrawPlayerSphere(cent, cent->lerpOrigin, 1.4, cgs.media.invulnerabilityShader );
 	}
 stillDoSaber:
-	if (cent->currentState.weapon == WP_SABER && !cent->currentState.shouldtarget)
+	if (cent->currentState.weapon == WP_SABER && !(cent->currentState.shouldtarget && !cg_saberForceOn.integer))
 	{
 		if (!cent->currentState.saberInFlight && !(cent->currentState.eFlags & EF_DEAD))
 		{

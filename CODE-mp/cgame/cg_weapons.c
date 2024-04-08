@@ -2268,7 +2268,7 @@ void CG_CheckPlayerG2Weapons(playerState_t *ps, centity_t *cent)
 	{
 		CG_CopyG2WeaponInstance(cent, ps->weapon, cent->ghoul2);
 		cent->ghoul2weapon = g2WeaponInstances[ps->weapon];
-		if (cent->weapon == WP_SABER && cg_entities[cent->currentState.number].weapon != ps->weapon && !ps->saberHolstered)
+		if (cent->weapon == WP_SABER && cg_entities[cent->currentState.number].weapon != ps->weapon && !(ps->saberHolstered && !cg_saberForceOn.integer))
 		{ //switching away from the saber
 			trap_S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_AUTO, trap_S_RegisterSound( "sound/weapons/saber/saberoffquick.wav" ));
 		}

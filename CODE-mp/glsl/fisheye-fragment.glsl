@@ -643,7 +643,8 @@ void main(void)
 
 	float boringShadowingIntensity = 1.0f;
 
-	vec3 baseColorForLighting = gl_FragColor.xyz;
+	vec3 baseColorForLightingReal = gl_FragColor.xyz;
+	vec3 baseColorForLighting = isLightmapUniform > 0 ? vec3(1.0) : gl_FragColor.xyz;
 
 	if(isWorldBrushUniform > 0){
 		// Bit of boring standard shadow and ambient occlusion to replace cg_shadows 1
@@ -684,8 +685,9 @@ void main(void)
 		}
 	}
 
-	vec3 boringShadowSubtractVal = baseColorForLighting * (1.0f - boringShadowingIntensity);
-
+	vec3 boringShadowSubtractVal = baseColorForLightingReal * (1.0f - boringShadowingIntensity);
+	
+	vec3 addValue = vec3(0.0);
 	for(int i=0;i<dLightsCountUniform;i++){
 		vec4 eyeCoordLight = worldModelViewMatrixUniform*vec4(dLightsUniform[i].origin,1.0);
 		vec3 lightVector1 = eyeCoordLight.xyz-eyeSpaceCoordsGeom.xyz;
@@ -703,6 +705,7 @@ void main(void)
 		
 		bool mainLightShadowLinesCalculated = false;
 		float shadowedIntensity = 1.0f;
+
 		if(!fastSkip){
 		
 			mainLightShadowLinesCalculated = true;
@@ -739,73 +742,15 @@ void main(void)
 					break;
 				}
 
-				/*vec3 line1Point1 = shadowLines[s].point1.xyz;
-				vec3 line1Point2 = shadowLines[s].point2.xyz;
-				
-				vec3 line2Point1 = dLightsUniform[i].origin;
-				vec3 line2Point2 = worldPixel;
-				
-				
-				vec3 lightVectorAbs = worldPixel-line2Point1;
-				vec3 lightVectorAbsNorm = normalize(lightVectorAbs);*/
-				/*
-				// distance between lines
-				vec3 shadowLine = shadowLines[s].point2.xyz-shadowLines[s].point1.xyz;
-				vec3 shadowLineNorm = normalize(shadowLine);
-				vec3 crossBoth = normalize(cross(lightVectorAbsNorm,shadowLineNorm));
-			
-				vec3 perp1 = normalize(cross(crossBoth,shadowLineNorm));
-				vec3 perp2 = normalize(cross(crossBoth,lightVectorAbsNorm));
-
-				float dot1_1 = dot(perp2,dLightsUniform[i].origin-shadowLines[s].point1.xyz);
-				float dot1_2 = dot(perp2,dLightsUniform[i].origin-shadowLines[s].point2.xyz);
-				float dot2_1 = dot(perp1,shadowLines[s].point1.xyz-dLightsUniform[i].origin);
-				float dot2_2 = dot(perp1,shadowLines[s].point1.xyz-worldPixel);
-
-				float maxDistance = shadowLines[s].width;
-
-				if(sign(dot1_1) != sign(dot1_2) && sign(dot2_1) != sign(dot2_2)){
-					// from the perspective of the cross vector, the lines overlap. We can calculate simple infinite distance
-					float distanceInfinite = abs(dot(crossBoth,dLightsUniform[i].origin-shadowLines[s].point1.xyz)); // Project any vector between any 2 points of the lines onto the one perpendicular to both
-					maxDistance = distanceInfinite;
-					shadowDebugColor = vec3(1.0,0.0,0.0);
-				} else if(sign(dot1_1) != sign(dot1_2)){ // the infinite light line "intersects" the shadow line (when projected onto crossBoth/shadowline plane)
-					// point to line distance
-					vec3 pointToMeasure = abs(dot2_1) < abs(dot2_2) ? dLightsUniform[i].origin : worldPixel;
-					maxDistance = distanceToLine(pointToMeasure,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz);
-					maxDistance = min(distance(shadowLines[s].point1.xyz,pointToMeasure),maxDistance);
-					maxDistance = min(distance(shadowLines[s].point2.xyz,pointToMeasure),maxDistance);
-					shadowDebugColor = vec3(0.0,1.0,0.0);
-				} else if(sign(dot2_1) != sign(dot2_2)){ // the infinite shadow line "intersects" the light line (when projected onto crossBoth/light line plane)
-					// point to line distance
-					vec3 pointToMeasure = abs(dot1_1) < abs(dot1_2) ? shadowLines[s].point1.xyz : shadowLines[s].point2.xyz;
-					maxDistance = distanceToLine(pointToMeasure,dLightsUniform[i].origin,worldPixel);
-					maxDistance = min(distance(dLightsUniform[i].origin,pointToMeasure),maxDistance);
-					maxDistance = min(distance(worldPixel,pointToMeasure),maxDistance);
-					shadowDebugColor = vec3(0.0,0.0,1.0);
-				} else {
-					// point to point distance
-					vec3 pointToMeasure = abs(dot2_1) < abs(dot2_2) ? dLightsUniform[i].origin : worldPixel;
-					maxDistance = distance(pointToMeasure,shadowLines[s].point1.xyz);
-					maxDistance = min(distance(pointToMeasure,shadowLines[s].point2.xyz),maxDistance);
-					shadowDebugColor = vec3(1.0,1.0,0.0);
-				}
-				float lightIntensityHere = max(0.0f,maxDistance / shadowLines[s].width);
-				shadowedIntensity = min(lightIntensityHere*lightIntensityHere,shadowedIntensity);
-				*/
 			}
 
-			//if(distance(pureVertexCoordsGeom.xyz,dLightsUniform[i].origin) < 500.0){
-				// diffuse 
-				gl_FragColor.xyz += value*shadowedIntensity;
-				if(shadowedIntensity < 1.0){
-					//gl_FragColor.xyz += shadowDebugColor*(1.0-shadowedIntensity);
-				}
-			//}
-			// specular
+			addValue+= value*shadowedIntensity;
+			if(shadowedIntensity < 1.0){
+				//gl_FragColor.xyz += shadowDebugColor*(1.0-shadowedIntensity);
+			}
 		}
 		if(intensity > 0.0){
-
+			// specular
 			
 			vec3 lightVector = eyeSpaceCoordsGeom.xyz-eyeCoordLight.xyz;
 			vec3 lightVectorNorm = normalize(lightVector);
@@ -820,8 +765,6 @@ void main(void)
 			float specIntensity = pow(max(0.0,dot(mirroredVecNorm,viewerVectorNorm)),dLightSpecGammaUniform);
 
 			float totalDist = dist + length(viewerVector);
-
-			//vec3 worldViewer = (worldModelViewMatrixReverseGeom*vec4(0.0,0.0,0.0,1.0)).xyz;
 
 			vec3 addVal = (baseColorForLighting*dLightsUniform[i].color*dLightsUniform[i].radius)*specIntensity*dLightSpecIntensityUniform/totalDist;
 
@@ -848,41 +791,24 @@ void main(void)
 						//shadowedIntensity = min(lightIntensityHere*lightIntensityHere,shadowedIntensity);
 					}
 				}
-				gl_FragColor.xyz += addVal * shadowedIntensity;
+				//gl_FragColor.xyz += addVal * shadowedIntensity;
+				addValue += addVal * shadowedIntensity;
 			}
 
-			//gl_FragColor.xyz += (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius)*specIntensity*dLightSpecIntensityUniform*shadowedIntensity/totalDist;
-
-			/* Keeping this in here because it's hilariously bad and weird. Did I have a stroke? Or really tired.
-			vec3 viewerVector = eyeSpaceCoordsGeom.xyz-eyeSpaceCoordsGeom.xyz;
-			vec3 viewerVectorNorm = normalize(lightVector);
-
-			vec3 viewerLightPixelTriangleNormal = normalize(cross(lightVectorNorm,viewerVectorNorm));
-			vec3 viewerLightPixelTriangleAltitudeVec = normalize(cross(viewerLightPixelTriangleNormal,normalize(-eyeCoordLight.xyz)));
-
-			float viewerAngle = abs(dot(viewerLightPixelTriangleAltitudeVec,viewerVectorNorm));
-			float lightAngle = abs(dot(viewerLightPixelTriangleAltitudeVec,lightVectorNorm));
-
-			//if(lightAngle > 0 && viewerAngle > 0){
-				float specIntensity = max(0.0,1.0-abs(1.0-viewerAngle-lightAngle));
-
-				gl_FragColor.xyz += (gl_FragColor.xyz*dLightsUniform[i].color*dLightsUniform[i].radius*50.0)*specIntensity*dLightSpecIntensityUniform;
-			//}*/
 		}
 
 	}
 
+	if(isLightmapUniform > 0){ // this is super lame xd. idk, cba to code something that actually makes sense :) at least it kinda works
+		baseColorForLighting.x = max(baseColorForLightingReal.x,addValue.x);
+		baseColorForLighting.y = max(baseColorForLightingReal.y,addValue.y);
+		baseColorForLighting.z = max(baseColorForLightingReal.z,addValue.z);
+		addValue *= baseColorForLighting;
+	} 
+	
+	gl_FragColor.xyz += addValue;
 	gl_FragColor.xyz -= boringShadowSubtractVal;
-	/*
-	for(int s=0;s<shadowLinesCountUniform;s++){
-		// distance between lines
-		if(distance(shadowLines[s].point1,pureVertexCoordsGeom.xyz) < 500){
-			gl_FragColor.xyz *= 0.1;
-		}
-	}
-	if(shadowLinesCountUniform == 0){
-		gl_FragColor.x = 10.0;
-	}*/
+
 }
 
 

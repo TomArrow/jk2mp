@@ -1866,6 +1866,8 @@ extern	vmCvar_t		cg_saberContact;
 extern	vmCvar_t		cg_saberTrail;
 extern	vmCvar_t		cg_saberTrailTime;
 
+extern	vmCvar_t		cg_saberForceOn;
+
 extern	vmCvar_t		cg_duelHeadAngles;
 
 extern	vmCvar_t		cg_speedTrail;
