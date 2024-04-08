@@ -522,11 +522,17 @@ float distanceToLineProper(vec3 point, vec3 linePoint1, vec3 linePoint2){
   }
 }
 
-float shortestDistanceLines(vec3 a0,vec3 a1, vec3 b0, vec3 b1,inout int type){
+float shortestDistanceLines(vec3 a0,vec3 a1, vec3 b0, vec3 b1,inout int type, float quitThreshold){
 
   vec3 a=normalize(a1-a0);
 	vec3 b=normalize(b1-b0);
 	vec3 crossBoth = normalize(cross(b,a));
+	float distanceInfinite = abs(dot(crossBoth,a1-b1));
+
+	if(quitThreshold < distanceInfinite){ // attempt to exit early when possible
+		return quitThreshold;
+	}
+
 	vec3 perp1 = normalize(cross(crossBoth,a));
 	vec3 perp2 = normalize(cross(crossBoth,b));
 
@@ -539,7 +545,7 @@ float shortestDistanceLines(vec3 a0,vec3 a1, vec3 b0, vec3 b1,inout int type){
 
 	if(sign(dot1_1) != sign(dot1_2) && sign(dot2_1) != sign(dot2_2)){
 		// from the perspective of the cross vector, the lines overlap. We can calculate simple infinite distance
-		float distanceInfinite = abs(dot(crossBoth,a1-b1)); 
+		 
 		maxDistance = distanceInfinite;
 		type = 0;
 	} else if(sign(dot1_1) != sign(dot1_2)){
@@ -674,6 +680,9 @@ void main(void)
 	for(int i=0;i<dLightsCountUniform;i++){
 		vec4 eyeCoordLight = worldModelViewMatrixUniform*vec4(dLightsUniform[i].origin,1.0);
 		vec3 lightVector1 = eyeCoordLight.xyz-eyeSpaceCoordsGeom.xyz;
+		if(dot(lightVector1,normal) <= 0.0){
+			continue; // this is the normal of the surface itself, not just of the current pixel. if the light is behind the surface... dont bother.
+		}
 		vec3 lightVectorNorm = normalize( lightVector1);
 		float intensity = max(dot(lightNormal,lightVectorNorm),0.0);
 		float dist = length(lightVector1);
@@ -698,7 +707,7 @@ void main(void)
 				}
 
 				int type= 0;
-				float maxDistance = shortestDistanceLines(worldPixel,dLightsUniform[i].origin,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz,type);
+				float maxDistance = shortestDistanceLines(worldPixel,dLightsUniform[i].origin,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz,type,shadowLines[s].width);
 				
 				float lightIntensityHere = max(0.0f,maxDistance / shadowLines[s].width);
 				shadowedIntensity = min(lightIntensityHere*lightIntensityHere,shadowedIntensity);
@@ -816,7 +825,7 @@ void main(void)
 						}
 						int type= 0;
 						// We can reuse shadowedIntensity if it was already calculated for the main light but otherwise we have to recalculate it here.
-						float maxDistance = shortestDistanceLines(worldPixel,dLightsUniform[i].origin,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz,type);
+						float maxDistance = shortestDistanceLines(worldPixel,dLightsUniform[i].origin,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz,type,shadowLines[s].width);
 						float lightIntensityHere = max(0.0f,maxDistance / shadowLines[s].width);
 						shadowedIntensity = min(lightIntensityHere*lightIntensityHere,shadowedIntensity);
 					
