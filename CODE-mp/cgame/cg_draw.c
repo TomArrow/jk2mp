@@ -6210,8 +6210,8 @@ void strafehelper3DDrawRawLine(const vec3_t start, const vec3_t end, float width
 
 static void DrawStrafeLine(vec3_t velocity, float diff, qboolean active, int moveDir, qboolean only3d) { //moveDir is 1-7 for wasd combinations, and 8 for the centerline in cpm style, 9 and 10 for backwards a/d lines
 	vec3_t start, angs, forward, delta, line;
-	vec3_t start3D,  delta3D, line3D;
-	float x, y, startx, starty, lineWidth;
+	vec3_t start3D,  delta3D, line3D, velocity2d;
+	float x, y, startx, starty, lineWidth, velocity3DScaleBase, velocityScale3d;
 	int sensitivity = cg_strafeHelperPrecision.integer;
 	static const int LINE_HEIGHT = 230; //240 is midpoint, so it should be a little higher so crosshair is always on it.
 	static const vec4_t activeColor = { 0, 1, 0, 0.75 }, normalColor = { 1, 1, 1, 0.75 }, invertColor = { 0.5f, 1, 1, 0.75 }, wColor = { 1, 0.5, 0.5, 0.75 }, rearColor = { 0.5, 1,1, 0.75 }, centerColor = { 0.5, 1, 1, 0.75 };
@@ -6262,12 +6262,30 @@ static void DrawStrafeLine(vec3_t velocity, float diff, qboolean active, int mov
 	//else //gay
 	//	VectorCopy(cg.predictedPlayerState.origin, start); //This created problems for some peoplem, use refdef instead? (avygeil fix)
 
+	velocityScale3d = 1.0f;
+	if (cg_strafeHelper3DVelocityScale.integer && cg_strafeHelper.integer & SHELPER_3D) {
+		if (moveDir == 8) {
+			VectorCopy(cg.predictedPlayerState.velocity, velocity2d);
+			velocity2d[2] = 0;
+			velocity3DScaleBase = VectorLength(velocity2d);
+		}
+		else {
+			velocity3DScaleBase = cg.predictedPlayerState.speed ? cg.predictedPlayerState.speed : 250;
+		}
+		velocityScale3d = velocity3DScaleBase / 500.0f;
+		if (cg_strafeHelper3DVelocityScale.integer == 2) {
+			// square-rooted, for less extreme, but not rly accurate
+			velocityScale3d = sqrt(velocityScale3d);
+		}
+	}
+
+
 	VectorCopy(velocity, angs);
 	angs[PITCH] = 0.0;
 	angs[YAW] += diff;
 	AngleVectors(angs, forward, NULL, NULL);
 	VectorScale(forward, sensitivity, delta); // line length
-	VectorScale(forward, cg_strafeHelper3DDistance.integer, delta3D); // line length
+	VectorScale(forward, cg_strafeHelper3DDistance.integer* velocityScale3d, delta3D); // line length
 
 	line[0] = delta[0] + start[0];
 	line[1] = delta[1] + start[1];

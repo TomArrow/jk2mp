@@ -548,6 +548,7 @@ vmCvar_t	cg_showpos;
 vmCvar_t	cg_strafeHelperCutoff;
 vmCvar_t	cg_strafeHelper;
 vmCvar_t	cg_strafeHelper3DDistance;
+vmCvar_t	cg_strafeHelper3DVelocityScale;
 vmCvar_t	cg_strafeHelperPrecision;
 vmCvar_t	cg_strafeHelperLineWidth;
 vmCvar_t	cg_strafeHelperActiveColor;
@@ -853,6 +854,7 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cg_strafeHelperCutoff, "cg_strafeHelperCutoff", "240", NULL, CVAR_ARCHIVE },
 	{ &cg_strafeHelper, "cg_strafeHelper", "992", NULL, CVAR_ARCHIVE },
 	{ &cg_strafeHelper3DDistance, "cg_strafeHelper3DDistance", "100", NULL, 0 },
+	{ &cg_strafeHelper3DVelocityScale, "cg_strafeHelper3DVelocityScale", "2", NULL, 0 },
 	{ &cg_strafeHelperPrecision, "cg_strafeHelperPrecision", "256", NULL, 0 },
 	{ &cg_strafeHelperLineWidth, "cg_strafeHelperLineWidth", "1", NULL, CVAR_ARCHIVE },
 	{ &cg_strafeHelperActiveColor, "cg_strafeHelperActiveColor", "0 255 0 200", NULL, CVAR_ARCHIVE },
