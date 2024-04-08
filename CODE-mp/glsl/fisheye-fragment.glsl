@@ -70,7 +70,13 @@ struct shadowline_t {
 	float			width;
 	float			a;
 	float			b;
+	float			c;
+	float			d;
+	float			e;
 	int				flags; // 1 = use point1 for feet shadow
+	// automatically calculated:
+	float			halfLineLength;
+	vec4			middle;
 };
 
 uniform int shadowLinesCountUniform;
@@ -643,6 +649,9 @@ void main(void)
 		// Bit of boring standard shadow and ambient occlusion to replace cg_shadows 1
 		for(int s=0;s<shadowLinesCountUniform;s++){
 
+			//if(distance(worldPixel.xyz,shadowLines[s].middle.xyz) > (shadowLines[s].halfLineLength+max(shadowLines[s].width,shadowLines[s].a))){
+			//	continue;
+			//}
 			if(0 < (shadowLines[s].flags & 1)){ // Flag 1 means foot shadow
 				vec3 delta = shadowLines[s].point1.xyz-worldPixel;
 
@@ -705,6 +714,9 @@ void main(void)
 				if(0 < (shadowLines[s].flags & 2)){ // this one's just used for some simplistic ambient occlusion
 					continue;
 				}
+				//if(dot(shadowLines[s].point2.xyz-worldPixel,normal) <=0.0 && dot(shadowLines[s].point1.xyz-worldPixel,normal) <=0.0){ // actually makes performance worse
+				//	continue;
+				//}
 
 				int type= 0;
 				float maxDistance = shortestDistanceLines(worldPixel,dLightsUniform[i].origin,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz,type,shadowLines[s].width);

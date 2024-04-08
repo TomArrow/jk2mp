@@ -385,6 +385,7 @@ RE_AddShadowLineToScene
 */
 void RE_AddShadowLineToScene( const vec3_t p1, const vec3_t p2, float width, float a, float b, int flags ) {
 	shadowline_t	*sl;
+	vec4_t p1ToP2;
 
 	if ( !tr.registered ) {
 		return;
@@ -397,6 +398,9 @@ void RE_AddShadowLineToScene( const vec3_t p1, const vec3_t p2, float width, flo
 
 	VectorCopy (p1, sl->point1);
 	VectorCopy (p2, sl->point2);
+	VectorSubtract(p2, p1, p1ToP2);
+	VectorMA(p1,0.5f,p1ToP2,sl->middle);
+	sl->halfLineLength = VectorLength(p1ToP2)*0.5f;
 	sl->width = width;
 	sl->a = a;
 	sl->b = b;

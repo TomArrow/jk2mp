@@ -76,7 +76,13 @@ typedef struct shadowline_s {
 	float			width;
 	float			a;
 	float			b; 
+	float			c; 
+	float			d; 
+	float			e; 
 	int				flags; // 1 = use point1 for feet shadow
+	// automatically calculated:
+	vec4_t			middle;
+	float			halfLineLength;
 } shadowline_t;
 
 
