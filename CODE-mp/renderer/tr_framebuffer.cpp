@@ -202,7 +202,7 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 	//TODO
 	return qfalse;
 #else
-	if (!fishEyeShader->IsWorking())
+	if (!fishEyeShader || !fishEyeShader->IsWorking())
 		return qfalse;
 
 	fbo.screenWidth = glMMEConfig.glWidth;
@@ -318,7 +318,7 @@ qboolean R_FrameBuffer_SendDLightInfo() {
 	return qfalse;
 #else
 	qboolean tess = fbo.fishEyeData.tessellationActive;
-	if (!fishEyeShader->IsWorking())
+	if (!fishEyeShader || !fishEyeShader->IsWorking())
 		return qfalse;
 
 	fbo.screenWidth = glMMEConfig.glWidth;
@@ -511,10 +511,10 @@ qboolean R_FrameBuffer_FishEyeActivateTessellation() {
 	//TODO
 	return qfalse;
 #else
-	if (!fishEyeShader->IsWorking())
+	if (!fishEyeShader || !fishEyeShader->IsWorking())
 		return qfalse;
 
-	if (!fishEyeShaderTess->IsWorking())
+	if (!fishEyeShaderTess || !fishEyeShaderTess->IsWorking())
 		return qfalse;
 
 	if (fbo.fishEyeData.tessellationActive) {
@@ -535,10 +535,10 @@ qboolean R_FrameBuffer_FishEyeDeactivateTessellation() {
 	//TODO
 	return qfalse;
 #else
-	if (!fishEyeShader->IsWorking())
+	if (!fishEyeShader || !fishEyeShader->IsWorking())
 		return qfalse;
 
-	if (!fishEyeShaderTess->IsWorking())
+	if (!fishEyeShaderTess || !fishEyeShaderTess->IsWorking())
 		return qfalse;
 
 	if (!fbo.fishEyeData.tessellationActive) {
