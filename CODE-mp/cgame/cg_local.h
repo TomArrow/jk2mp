@@ -1891,6 +1891,7 @@ extern	vmCvar_t		cg_strafeHelperCutoff;
 extern	vmCvar_t		cg_strafeHelper;
 extern	vmCvar_t		cg_strafeHelper3DDistance;
 extern	vmCvar_t		cg_strafeHelper3DVelocityScale;
+extern	vmCvar_t		cg_strafeHelper3DVelocityScaleAccel;
 extern	vmCvar_t		cg_strafeHelperPrecision;
 extern	vmCvar_t		cg_strafeHelperLineWidth;
 extern	vmCvar_t		cg_strafeHelperActiveColor;
