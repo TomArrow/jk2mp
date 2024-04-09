@@ -26,6 +26,9 @@ uniform float serverTimeUniform;
 uniform int isLightmapUniform; 
 uniform int isWorldBrushUniform; 
 uniform int noiseFuckeryUniform; 
+uniform int noiseFuckeryLightmapUniform; 
+uniform float noiseFuckeryHDRIntensityUniform; 
+uniform float noiseFuckeryLightmapIntensityUniform; 
 uniform vec3 viewOriginUniform; 
 
 varying vec4 eyeSpaceCoordsGeom;
@@ -575,6 +578,11 @@ float shortestDistanceLines(vec3 a0,vec3 a1, vec3 b0, vec3 b1,inout int type, fl
 	return maxDistance;
 }
 
+// 	1.660317619104158771	-0.58757266606617910577	-0.072916573137668344234
+//	-0.12440670211719027597	1.1328007408693037184	-0.0083489374502384976625
+//	-0.018111363657382022825	-0.10059653109674500886	1.1187664817637203281
+const mat3 HDRtoSRGB = mat3(1.660317619104158771,	-0.58757266606617910577,	-0.072916573137668344234, -0.12440670211719027597,	1.1328007408693037184,	-0.0083489374502384976625, -0.018111363657382022825,	-0.10059653109674500886	,1.1187664817637203281);
+
 void main(void)
 {
     //const float depth = 5.0f;
@@ -628,10 +636,20 @@ void main(void)
 			gl_FragColor.xyz = perlinNoiseVariation6Stack(pureVertexCoordsGeom,viewOriginUniform);
 				break;
 			}
+			if(noiseFuckeryHDRIntensityUniform == 1.0){
+				gl_FragColor.xyz *= HDRtoSRGB;
+			} else if(noiseFuckeryHDRIntensityUniform != 0.0){
+				gl_FragColor.xyz = gl_FragColor.xyz*(1.0-noiseFuckeryHDRIntensityUniform)+(noiseFuckeryHDRIntensityUniform*(gl_FragColor.xyz*HDRtoSRGB));
+			}
 		}
-		if(isLightmapUniform > 0 && isWorldBrushUniform > 0 && perlinFuckery > 0 && perlinFuckery!=3 && perlinFuckery!=1){
-			gl_FragColor.xyz = vec3(1.0,1.0,1.0);
-		}
+		if(isLightmapUniform > 0 && isWorldBrushUniform > 0 && perlinFuckery > 0){
+			if(noiseFuckeryLightmapUniform == 0 && perlinFuckery!=3 && perlinFuckery!=1 || noiseFuckeryLightmapUniform == 2){
+				gl_FragColor.xyz = vec3(1.0,1.0,1.0);
+			}
+			else if(perlinFuckery > 0 && noiseFuckeryLightmapIntensityUniform != 1.0) {
+				gl_FragColor.xyz = vec3(1.0)*(1.0-noiseFuckeryLightmapIntensityUniform)+(noiseFuckeryLightmapIntensityUniform*gl_FragColor.xyz);
+			}
+		} 
 		//gl_FragColor.xyz+=eyeSpaceCoordsGeom.xyz/1000.0f; // cool effect lol
 	}
 
