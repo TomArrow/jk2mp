@@ -589,14 +589,14 @@ void R_MME_JitterView( float *pixels, float *eyes ) {
 		}
 	}
 
-	if ( !shotData.take || tr.finishStereo ) {
-		shotData.take = qfalse;
-		return;
-	}
-	if ( blurControl->totalFrames ) {
+	if (blurControl->totalFrames) {
 		int i = blurControl->totalIndex;
 		pixels[0] = mme_blurJitter->value * blurData.jitter[i][0];
 		pixels[1] = mme_blurJitter->value * blurData.jitter[i][1];
+	}
+	if ( !shotData.take || tr.finishStereo ) {
+		shotData.take = qfalse;
+		return;
 	}
 	if ( passControl->totalFrames ) {
 		int i = passControl->totalIndex;
