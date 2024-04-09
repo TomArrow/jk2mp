@@ -587,9 +587,9 @@ void RB_BeginDrawingView (void) {
 			qglClearColor( skyColor[0], skyColor[1], skyColor[2], 1.0f );
 		} else if (r_fastsky->integer || r_fboFishEye->integer) {
 			clearBits |= GL_COLOR_BUFFER_BIT;	// FIXME: only if sky shaders have been used
-#ifdef _DEBUG
-			qglClearColor( 0.8f, 0.7f, 0.4f, 1.0f );	// FIXME: get color of sky
-#else
+//#ifdef _DEBUG
+//			qglClearColor( 0.8f, 0.7f, 0.4f, 1.0f );	// FIXME: get color of sky
+//#else
 			if (tr.mmeSkyColorIsSet) {
 				qglClearColor(tr.mmeSkyColor[0], tr.mmeSkyColor[1], tr.mmeSkyColor[2], tr.mmeSkyColor[3]);	// FIXME: get color of sky
 			}
@@ -597,7 +597,7 @@ void RB_BeginDrawingView (void) {
 				qglClearColor(0.0f, 0.0f, 0.0f, 1.0f);	// FIXME: get color of sky
 			}
 			
-#endif
+//#endif
 		}
 	}
 
