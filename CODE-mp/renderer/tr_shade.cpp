@@ -1803,7 +1803,8 @@ void RB_StageIteratorGeneric( void )
 
 	// Tell GLSL that this is a world brush. Dumb?
 	bool isWorldshader = input->shader->isWorldShader;
-	R_FrameBuffer_SetDynamicUniforms(NULL, NULL, &isWorldshader);
+	bool isSaberShader = input->shader->isSaber;
+	R_FrameBuffer_SetDynamicUniforms(NULL, NULL, &isWorldshader, &isSaberShader);
 
 	//
 	// if there is only a single pass then we can enable color

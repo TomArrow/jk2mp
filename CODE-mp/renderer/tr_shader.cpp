@@ -3893,7 +3893,8 @@ qhandle_t RE_RegisterShaderWithFlags( const char *name, int shaderFlags ) {
 
 	sh = R_FindShader( name, lightmaps2d, stylesDefault, (shaderFlags&SHAD_NOMIP) ? qfalse : qtrue );
 	
-	sh->isHud = (shaderFlags & SHAD_HUD) ? qfalse : qtrue;
+	sh->isHud = (shaderFlags & SHAD_HUD) ? qtrue : qfalse; // why was qfalse/qtrue reversed?!
+	sh->isSaber = (shaderFlags & SHAD_SABER) ? qtrue : qfalse;
 	sh->shaderFlags = shaderFlags;
 
 	// we want to return 0 if the shader failed to

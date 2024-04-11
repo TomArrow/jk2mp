@@ -25,6 +25,7 @@ uniform float parallaxMapGammaUniform;
 uniform float serverTimeUniform;
 uniform int isLightmapUniform; 
 uniform int isWorldBrushUniform; 
+uniform int isSaberUniform; 
 uniform int noiseFuckeryUniform; 
 uniform int noiseFuckeryLightmapUniform; 
 uniform float noiseFuckeryHDRIntensityUniform; 
@@ -706,124 +707,127 @@ void main(void)
 	vec3 boringShadowSubtractVal = baseColorForLightingReal * (1.0f - boringShadowingIntensity);
 	
 	vec3 addValue = vec3(0.0);
-	for(int i=0;i<dLightsCountUniform;i++){
-		vec4 eyeCoordLight = worldModelViewMatrixUniform*vec4(dLightsUniform[i].origin,1.0);
-		vec3 lightVector1 = eyeCoordLight.xyz-eyeSpaceCoordsGeom.xyz;
-		if(dot(lightVector1,normal) <= 0.0){
-			continue; // this is the normal of the surface itself, not just of the current pixel. if the light is behind the surface... dont bother.
-		}
-		vec3 lightVectorNorm = normalize( lightVector1);
-		float intensity = max(dot(lightNormal,lightVectorNorm),0.0);
-		float dist = length(lightVector1);
+	if(isSaberUniform == 0){ // Don't cast light onto saberblades
+		for(int i=0;i<dLightsCountUniform;i++){
+			vec4 eyeCoordLight = worldModelViewMatrixUniform*vec4(dLightsUniform[i].origin,1.0);
+			vec3 lightVector1 = eyeCoordLight.xyz-eyeSpaceCoordsGeom.xyz;
+			if(dot(lightVector1,normal) <= 0.0){
+				continue; // this is the normal of the surface itself, not just of the current pixel. if the light is behind the surface... dont bother.
+			}
+			vec3 lightVectorNorm = normalize( lightVector1);
+			float intensity = max(dot(lightNormal,lightVectorNorm),0.0);
+			float dist = length(lightVector1);
 
-		vec3 value = (baseColorForLighting*dLightsUniform[i].color*dLightsUniform[i].radius*50.0*dLightIntensityUniform)*intensity/(dist*dist);
+			vec3 value = (baseColorForLighting*dLightsUniform[i].color*dLightsUniform[i].radius*50.0*dLightIntensityUniform)*intensity/(dist*dist);
 
-		bool fastSkip = intensity <= 0.0 || length(value) < dLightFastSkipThresholdUniform;
-		//bool fastSkip = intensity <= 0.0 || length(value) < 0.1f;
+			bool fastSkip = intensity <= 0.0 || length(value) < dLightFastSkipThresholdUniform;
+			//bool fastSkip = intensity <= 0.0 || length(value) < 0.1f;
 		
-		bool mainLightShadowLinesCalculated = false;
-		float shadowedIntensity = 1.0f;
+			bool mainLightShadowLinesCalculated = false;
+			float shadowedIntensity = 1.0f;
 
-		if(!fastSkip){
+			if(!fastSkip){
 		
-			mainLightShadowLinesCalculated = true;
-			vec3 shadowDebugColor = vec3(1.0,1.0,1.0);
-			vec3 lightVectorAbs = worldPixel-dLightsUniform[i].origin;
-			vec3 lightVectorAbsNorm = normalize(lightVectorAbs);
-			for(int s=0;s<shadowLinesCountUniform;s++){
+				mainLightShadowLinesCalculated = true;
+				vec3 shadowDebugColor = vec3(1.0,1.0,1.0);
+				vec3 lightVectorAbs = worldPixel-dLightsUniform[i].origin;
+				vec3 lightVectorAbsNorm = normalize(lightVectorAbs);
+				for(int s=0;s<shadowLinesCountUniform;s++){
 
-				if(0 < (shadowLines[s].flags & 2)){ // this one's just used for some simplistic ambient occlusion
-					continue;
-				}
-				//if(dot(shadowLines[s].point2.xyz-worldPixel,normal) <=0.0 && dot(shadowLines[s].point1.xyz-worldPixel,normal) <=0.0){ // actually makes performance worse
-				//	continue;
-				//}
+					if(0 < (shadowLines[s].flags & 2)){ // this one's just used for some simplistic ambient occlusion
+						continue;
+					}
+					//if(dot(shadowLines[s].point2.xyz-worldPixel,normal) <=0.0 && dot(shadowLines[s].point1.xyz-worldPixel,normal) <=0.0){ // actually makes performance worse
+					//	continue;
+					//}
 
-				int type= 0;
-				float maxDistance = shortestDistanceLines(worldPixel,dLightsUniform[i].origin,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz,type,shadowLines[s].width);
+					int type= 0;
+					float maxDistance = shortestDistanceLines(worldPixel,dLightsUniform[i].origin,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz,type,shadowLines[s].width);
 				
-				float lightIntensityHere = max(0.0f,maxDistance / shadowLines[s].width);
-				shadowedIntensity = min(lightIntensityHere*lightIntensityHere,shadowedIntensity);
+					float lightIntensityHere = max(0.0f,maxDistance / shadowLines[s].width);
+					shadowedIntensity = min(lightIntensityHere*lightIntensityHere,shadowedIntensity);
 
-				switch(type){
-					case 0:
-					shadowDebugColor = vec3(1.0,0.0,0.0);
-					break;
-					case 1:
-					shadowDebugColor = vec3(0.0,1.0,0.0);
-					break;
-					case 2:
-					shadowDebugColor = vec3(0.0,0.0,1.0);
-					break;
-					case 3:
-					shadowDebugColor = vec3(1.0,1.0,0.0);
-					break;
+					switch(type){
+						case 0:
+						shadowDebugColor = vec3(1.0,0.0,0.0);
+						break;
+						case 1:
+						shadowDebugColor = vec3(0.0,1.0,0.0);
+						break;
+						case 2:
+						shadowDebugColor = vec3(0.0,0.0,1.0);
+						break;
+						case 3:
+						shadowDebugColor = vec3(1.0,1.0,0.0);
+						break;
+					}
+
 				}
 
+				addValue+= value*shadowedIntensity;
+				if(shadowedIntensity < 1.0){
+					//gl_FragColor.xyz += shadowDebugColor*(1.0-shadowedIntensity);
+				}
 			}
-
-			addValue+= value*shadowedIntensity;
-			if(shadowedIntensity < 1.0){
-				//gl_FragColor.xyz += shadowDebugColor*(1.0-shadowedIntensity);
-			}
-		}
-		if(intensity > 0.0){
-			// specular
+			if(intensity > 0.0){
+				// specular
 			
-			vec3 lightVector = eyeSpaceCoordsGeom.xyz-eyeCoordLight.xyz;
-			vec3 lightVectorNorm = normalize(lightVector);
+				vec3 lightVector = eyeSpaceCoordsGeom.xyz-eyeCoordLight.xyz;
+				vec3 lightVectorNorm = normalize(lightVector);
 
-			// now mirror the lightVector around the normal
-			vec3 mirroredVec = lightVectorNorm - 2.0*lightNormal*dot(lightVectorNorm,lightNormal);
-			vec3 mirroredVecNorm = normalize(mirroredVec);
+				// now mirror the lightVector around the normal
+				vec3 mirroredVec = lightVectorNorm - 2.0*lightNormal*dot(lightVectorNorm,lightNormal);
+				vec3 mirroredVecNorm = normalize(mirroredVec);
 
-			vec3 viewerVector = -eyeSpaceCoordsGeom.xyz;
-			vec3 viewerVectorNorm = normalize(viewerVector);
+				vec3 viewerVector = -eyeSpaceCoordsGeom.xyz;
+				vec3 viewerVectorNorm = normalize(viewerVector);
 
-			float specIntensity = pow(max(0.0,dot(mirroredVecNorm,viewerVectorNorm)),dLightSpecGammaUniform);
+				float specIntensity = pow(max(0.0,dot(mirroredVecNorm,viewerVectorNorm)),dLightSpecGammaUniform);
 
-			float totalDist = dist + length(viewerVector);
+				float totalDist = dist + length(viewerVector);
 
-			vec3 addVal = (baseColorForLighting*dLightsUniform[i].color*dLightsUniform[i].radius)*specIntensity*dLightSpecIntensityUniform/totalDist;
+				vec3 addVal = (baseColorForLighting*dLightsUniform[i].color*dLightsUniform[i].radius)*specIntensity*dLightSpecIntensityUniform/totalDist;
 
-			bool fastSkip2 =  length(value) < dLightFastSkipThresholdUniform || specIntensity <= 0;
+				bool fastSkip2 =  length(value) < dLightFastSkipThresholdUniform || specIntensity <= 0;
 			
-			if(!fastSkip2){
-				if( !mainLightShadowLinesCalculated){
+				if(!fastSkip2){
+					if( !mainLightShadowLinesCalculated){
 
-					for(int s=0;s<shadowLinesCountUniform;s++){
+						for(int s=0;s<shadowLinesCountUniform;s++){
 
-						if(0 < (shadowLines[s].flags & 2)){ // this one's just used for some simplistic ambient occlusion
-							continue;
-						}
-						int type= 0;
-						// We can reuse shadowedIntensity if it was already calculated for the main light but otherwise we have to recalculate it here.
-						float maxDistance = shortestDistanceLines(worldPixel,dLightsUniform[i].origin,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz,type,shadowLines[s].width);
-						float lightIntensityHere = max(0.0f,maxDistance / shadowLines[s].width);
-						shadowedIntensity = min(lightIntensityHere*lightIntensityHere,shadowedIntensity);
+							if(0 < (shadowLines[s].flags & 2)){ // this one's just used for some simplistic ambient occlusion
+								continue;
+							}
+							int type= 0;
+							// We can reuse shadowedIntensity if it was already calculated for the main light but otherwise we have to recalculate it here.
+							float maxDistance = shortestDistanceLines(worldPixel,dLightsUniform[i].origin,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz,type,shadowLines[s].width);
+							float lightIntensityHere = max(0.0f,maxDistance / shadowLines[s].width);
+							shadowedIntensity = min(lightIntensityHere*lightIntensityHere,shadowedIntensity);
 					
 				
-						// Actually dont do this, looks bad :) already occluded by geometry
-						//float maxDistance = shortestDistanceLines(worldPixel,worldViewer,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz,type);
-						//float lightIntensityHere = max(0.0f,maxDistance / shadowLines[s].width);
-						//shadowedIntensity = min(lightIntensityHere*lightIntensityHere,shadowedIntensity);
+							// Actually dont do this, looks bad :) already occluded by geometry
+							//float maxDistance = shortestDistanceLines(worldPixel,worldViewer,shadowLines[s].point1.xyz,shadowLines[s].point2.xyz,type);
+							//float lightIntensityHere = max(0.0f,maxDistance / shadowLines[s].width);
+							//shadowedIntensity = min(lightIntensityHere*lightIntensityHere,shadowedIntensity);
+						}
 					}
+					//gl_FragColor.xyz += addVal * shadowedIntensity;
+					addValue += addVal * shadowedIntensity;
 				}
-				//gl_FragColor.xyz += addVal * shadowedIntensity;
-				addValue += addVal * shadowedIntensity;
+
 			}
 
 		}
 
+		if(isLightmapUniform > 0){ // this is super lame xd. idk, cba to code something that actually makes sense :) at least it kinda works
+			baseColorForLighting.x = max(baseColorForLightingReal.x,addValue.x);
+			baseColorForLighting.y = max(baseColorForLightingReal.y,addValue.y);
+			baseColorForLighting.z = max(baseColorForLightingReal.z,addValue.z);
+			addValue *= baseColorForLighting;
+		} 
+	
 	}
 
-	if(isLightmapUniform > 0){ // this is super lame xd. idk, cba to code something that actually makes sense :) at least it kinda works
-		baseColorForLighting.x = max(baseColorForLightingReal.x,addValue.x);
-		baseColorForLighting.y = max(baseColorForLightingReal.y,addValue.y);
-		baseColorForLighting.z = max(baseColorForLightingReal.z,addValue.z);
-		addValue *= baseColorForLighting;
-	} 
-	
 	gl_FragColor.xyz += addValue;
 	gl_FragColor.xyz -= boringShadowSubtractVal;
 

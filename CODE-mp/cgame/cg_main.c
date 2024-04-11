@@ -1291,69 +1291,69 @@ static void CG_RegisterSounds( void ) {
 	cgs.media.count1Sound = trap_S_RegisterSound( "sound/chars/mothma/misc/40MOM037" );
 	cgs.media.countFightSound = trap_S_RegisterSound( "sound/chars/mothma/misc/40MOM038" );
 
-	cgs.media.redSaberGlowShader		= trap_R_RegisterShader( "gfx/effects/sabers/red_glow" );
-	cgs.media.redSaberCoreShader		= trap_R_RegisterShader( "gfx/effects/sabers/red_line" );
-	cgs.media.orangeSaberGlowShader		= trap_R_RegisterShader( "gfx/effects/sabers/orange_glow" );
-	cgs.media.orangeSaberCoreShader		= trap_R_RegisterShader( "gfx/effects/sabers/orange_line" );
-	cgs.media.yellowSaberGlowShader		= trap_R_RegisterShader( "gfx/effects/sabers/yellow_glow" );
-	cgs.media.yellowSaberCoreShader		= trap_R_RegisterShader( "gfx/effects/sabers/yellow_line" );
-	cgs.media.greenSaberGlowShader		= trap_R_RegisterShader( "gfx/effects/sabers/green_glow" );
-	cgs.media.greenSaberCoreShader		= trap_R_RegisterShader( "gfx/effects/sabers/green_line" );
-	cgs.media.blueSaberGlowShader		= trap_R_RegisterShader( "gfx/effects/sabers/blue_glow" );
-	cgs.media.blueSaberCoreShader		= trap_R_RegisterShader( "gfx/effects/sabers/blue_line" );
-	cgs.media.purpleSaberGlowShader		= trap_R_RegisterShader( "gfx/effects/sabers/purple_glow" );
-	cgs.media.purpleSaberCoreShader		= trap_R_RegisterShader( "gfx/effects/sabers/purple_line" );
-	cgs.media.saberBlurShader			= trap_R_RegisterShader( "gfx/effects/sabers/saberBlur" );
+	cgs.media.redSaberGlowShader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/red_glow", SHAD_SABER);
+	cgs.media.redSaberCoreShader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/red_line", SHAD_SABER);
+	cgs.media.orangeSaberGlowShader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/orange_glow", SHAD_SABER);
+	cgs.media.orangeSaberCoreShader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/orange_line", SHAD_SABER);
+	cgs.media.yellowSaberGlowShader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/yellow_glow", SHAD_SABER);
+	cgs.media.yellowSaberCoreShader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/yellow_line", SHAD_SABER);
+	cgs.media.greenSaberGlowShader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/green_glow", SHAD_SABER);
+	cgs.media.greenSaberCoreShader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/green_line", SHAD_SABER);
+	cgs.media.blueSaberGlowShader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/blue_glow", SHAD_SABER);
+	cgs.media.blueSaberCoreShader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/blue_line", SHAD_SABER);
+	cgs.media.purpleSaberGlowShader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/purple_glow", SHAD_SABER);
+	cgs.media.purpleSaberCoreShader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/purple_line", SHAD_SABER);
+	cgs.media.saberBlurShader			= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/saberBlur", SHAD_SABER);
 
 	//[RGBSabers]
 	//if no ja++ shader
 		//then try ja+ shader
-	cgs.media.rgbSaberGlowShader		= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBglow1" );
+	cgs.media.rgbSaberGlowShader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBglow1", SHAD_SABER|SHAD_NOMIP);
 	if (!cgs.media.rgbSaberGlowShader)
-		cgs.media.rgbSaberGlowShader	= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBGlow" );
-	cgs.media.rgbSaberCoreShader		= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBcore1" );
+		cgs.media.rgbSaberGlowShader	= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBGlow", SHAD_SABER | SHAD_NOMIP);
+	cgs.media.rgbSaberCoreShader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBcore1", SHAD_SABER | SHAD_NOMIP);
 	if (!cgs.media.rgbSaberCoreShader)
-		cgs.media.rgbSaberCoreShader	= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBLine" );
+		cgs.media.rgbSaberCoreShader	= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBLine", SHAD_SABER | SHAD_NOMIP);
 
 	//Flame 1
-	cgs.media.rgbSaberGlow2Shader		= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBglow2" );
+	cgs.media.rgbSaberGlow2Shader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBglow2", SHAD_SABER | SHAD_NOMIP);
 	if (!cgs.media.rgbSaberGlow2Shader)
-		cgs.media.rgbSaberGlow2Shader	= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBGlow" );
-	cgs.media.rgbSaberCore2Shader		= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBcore2" );
-	cgs.media.rgbSaberTrail2Shader		= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBtrail2" );
+		cgs.media.rgbSaberGlow2Shader	= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBGlow", SHAD_SABER | SHAD_NOMIP);
+	cgs.media.rgbSaberCore2Shader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBcore2", SHAD_SABER | SHAD_NOMIP);
+	cgs.media.rgbSaberTrail2Shader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBtrail2", SHAD_SABER | SHAD_NOMIP);
 
 	//Electric 1
-	cgs.media.rgbSaberGlow3Shader		= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBglow3" );
+	cgs.media.rgbSaberGlow3Shader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBglow3", SHAD_SABER | SHAD_NOMIP);
 	if (!cgs.media.rgbSaberGlow3Shader)
-		cgs.media.rgbSaberGlow3Shader	= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBGlow" );
-	cgs.media.rgbSaberCore3Shader		= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBcore3" );
-	cgs.media.rgbSaberTrail3Shader		= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBtrail3" );
+		cgs.media.rgbSaberGlow3Shader	= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBGlow", SHAD_SABER | SHAD_NOMIP);
+	cgs.media.rgbSaberCore3Shader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBcore3", SHAD_SABER | SHAD_NOMIP);
+	cgs.media.rgbSaberTrail3Shader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBtrail3", SHAD_SABER | SHAD_NOMIP);
 
 	//Flame 2
-	cgs.media.rgbSaberGlow4Shader		= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBglow4" );
-	cgs.media.rgbSaberCore4Shader		= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBcore4" );
-	cgs.media.rgbSaberTrail4Shader		= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBtrail4" );
+	cgs.media.rgbSaberGlow4Shader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBglow4", SHAD_SABER | SHAD_NOMIP);
+	cgs.media.rgbSaberCore4Shader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBcore4", SHAD_SABER | SHAD_NOMIP);
+	cgs.media.rgbSaberTrail4Shader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBtrail4", SHAD_SABER | SHAD_NOMIP);
 
 	//Electric 2
-	cgs.media.rgbSaberGlow5Shader		= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBglow5" );
+	cgs.media.rgbSaberGlow5Shader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBglow5", SHAD_SABER | SHAD_NOMIP);
 	if (!cgs.media.rgbSaberGlow5Shader)
-		cgs.media.rgbSaberGlow5Shader	= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBGlow" );
-	cgs.media.rgbSaberCore5Shader		= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/RGBcore5" );
-	cgs.media.rgbSaberTrail5Shader		= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/swordTrail" );
+		cgs.media.rgbSaberGlow5Shader	= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBGlow", SHAD_SABER | SHAD_NOMIP);
+	cgs.media.rgbSaberCore5Shader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/RGBcore5", SHAD_SABER | SHAD_NOMIP);
+	cgs.media.rgbSaberTrail5Shader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/swordTrail", SHAD_SABER | SHAD_NOMIP);
 
 	//Black
-	cgs.media.blackSaberGlowShader		= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/blackglow" );
+	cgs.media.blackSaberGlowShader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/blackglow", SHAD_SABER | SHAD_NOMIP);
 	if (!cgs.media.blackSaberGlowShader)
-		cgs.media.blackSaberGlowShader	= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/black_glow" );
-	cgs.media.blackSaberCoreShader		= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/blackcore" );
+		cgs.media.blackSaberGlowShader	= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/black_glow", SHAD_SABER | SHAD_NOMIP);
+	cgs.media.blackSaberCoreShader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/blackcore", SHAD_SABER | SHAD_NOMIP);
 	if (!cgs.media.blackSaberCoreShader)
-		cgs.media.blackSaberCoreShader	= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/black_line" );
-	cgs.media.blackBlurShader			= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/blacktrail" );
+		cgs.media.blackSaberCoreShader	= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/black_line", SHAD_SABER | SHAD_NOMIP);
+	cgs.media.blackBlurShader			= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/blacktrail", SHAD_SABER | SHAD_NOMIP);
 	if (!cgs.media.blackBlurShader)
-		cgs.media.blackBlurShader		= trap_R_RegisterShaderNoMip( "gfx/effects/sabers/blacksaberBlur" );
+		cgs.media.blackBlurShader		= trap_R_RegisterShaderWithFlags( "gfx/effects/sabers/blacksaberBlur", SHAD_SABER | SHAD_NOMIP);
 	//[/RGBSabers]
 
-	cgs.media.yellowDroppedSaberShader	= trap_R_RegisterShader("gfx/effects/yellow_glow");
+	cgs.media.yellowDroppedSaberShader	= trap_R_RegisterShaderWithFlags("gfx/effects/yellow_glow",SHAD_SABER);
 
 	cgs.media.rivetMarkShader			= trap_R_RegisterShader( "gfx/damage/rivetmark" );
 

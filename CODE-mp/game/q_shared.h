@@ -958,7 +958,8 @@ typedef enum shaderFlags_t {
 	SHAD_HUD,
 	SHAD_NOMIP,
 	SHAD_LEFTRIGHTHUD,
-	SHAD_FONT
+	SHAD_FONT,
+	SHAD_SABER
 };
 
 #if	1

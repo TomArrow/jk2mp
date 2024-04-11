@@ -495,6 +495,7 @@ Ghoul2 Insert End
 #endif
 
 	qboolean isHud; // If it's a HUD shader, we want to scale the brightness with r_HUDBrightness
+	qboolean isSaber; // If it's a saber shader, we want to avoid dlights affecting it directly (and maybe do other stuff?)
 	int shaderFlags;
 
   struct shader_s *remappedShader;                  // current shader this one is remapped too
@@ -2152,6 +2153,7 @@ typedef struct {
 	float texAverageBrightness;
 	bool isLightmap;
 	bool isWorldBrush;
+	bool isSaber;
 } fishEyeData_t;
 
 typedef struct {
@@ -2191,7 +2193,7 @@ qboolean R_FrameBuffer_Blur(float scale, int frame, int total);
 qboolean R_FrameBuffer_ApplyExposure();
 qboolean R_FrameBuffer_HDRConvert(HDRConvertSource source= HDRCONVSOURCE_MAINFBO, int param=0);
 qboolean R_FrameBuffer_ActivateFisheye(vec_t* pixelJitter3D,vec_t* dofJitter3D, float dofFocus, float dofRadius, float fovX,float fovY);
-qboolean R_FrameBuffer_SetDynamicUniforms(float* texAverageBrightness = NULL, bool* isLightmap = NULL, bool* isWorldBrush=NULL);
+qboolean R_FrameBuffer_SetDynamicUniforms(float* texAverageBrightness = NULL, bool* isLightmap = NULL, bool* isWorldBrush=NULL, bool* isSaber = NULL);
 qboolean R_FrameBuffer_SendDLightInfo();
 qboolean R_FrameBuffer_DeactivateFisheye();
 qboolean R_FrameBuffer_StartHDRRead();

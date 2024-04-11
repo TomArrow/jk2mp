@@ -79,6 +79,7 @@ typedef struct uniformLocations_t {
 	GLint texAverageBrightnessUniform;
 	GLint isLightmapUniform;
 	GLint isWorldBrushUniform;
+	GLint isSaberUniform;
 	GLint parallaxMapLayersUniform;
 	GLint parallaxMapDepthUniform;
 	GLint parallaxMapGammaUniform;
@@ -247,6 +248,7 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1f(uniformLocationsTess.texAverageBrightnessUniform, fbo.fishEyeData.texAverageBrightness);
 		qglUniform1i(uniformLocationsTess.isLightmapUniform, fbo.fishEyeData.isLightmap ? 1 : 0);
 		qglUniform1i(uniformLocationsTess.isWorldBrushUniform, fbo.fishEyeData.isWorldBrush ? 1 : 0);
+		qglUniform1i(uniformLocationsTess.isSaberUniform, fbo.fishEyeData.isSaber ? 1 : 0);
 		qglUniform1i(uniformLocationsTess.parallaxMapLayersUniform, r_fboGLSLParallaxMappingLayers->integer);
 		qglUniform1f(uniformLocationsTess.parallaxMapDepthUniform, r_fboGLSLParallaxMappingDepth->value);
 		qglUniform1f(uniformLocationsTess.parallaxMapGammaUniform, r_fboGLSLParallaxMappingGamma->value);
@@ -292,6 +294,7 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1f(uniformLocations.texAverageBrightnessUniform, fbo.fishEyeData.texAverageBrightness);
 		qglUniform1i(uniformLocations.isLightmapUniform, fbo.fishEyeData.isLightmap ? 1 : 0);
 		qglUniform1i(uniformLocations.isWorldBrushUniform, fbo.fishEyeData.isWorldBrush ? 1 : 0);
+		qglUniform1i(uniformLocations.isSaberUniform, fbo.fishEyeData.isSaber ? 1 : 0);
 		qglUniform1i(uniformLocations.parallaxMapLayersUniform, r_fboGLSLParallaxMappingLayers->integer);
 		qglUniform1f(uniformLocations.parallaxMapDepthUniform, r_fboGLSLParallaxMappingDepth->value);
 		qglUniform1f(uniformLocations.parallaxMapGammaUniform, r_fboGLSLParallaxMappingGamma->value);
@@ -479,7 +482,7 @@ qboolean R_FrameBuffer_ActivateFisheye(vec_t* pixelJitter3D, vec_t* dofJitter3D,
 #endif
 }
 
-qboolean R_FrameBuffer_SetDynamicUniforms(float* texAverageBrightness, bool* isLightmap, bool* isWorldBrush) {
+qboolean R_FrameBuffer_SetDynamicUniforms(float* texAverageBrightness, bool* isLightmap, bool* isWorldBrush, bool* isSaber) {
 #ifdef HAVE_GLES
 	//TODO
 	return qfalse;
@@ -496,6 +499,9 @@ qboolean R_FrameBuffer_SetDynamicUniforms(float* texAverageBrightness, bool* isL
 	}
 	if (isWorldBrush) {
 		fbo.fishEyeData.isWorldBrush = *isWorldBrush;
+	}
+	if (isSaber) {
+		fbo.fishEyeData.isSaber = *isSaber;
 	}
 
 	R_FrameBuffer_FishEyeSetUniforms(fbo.fishEyeData.tessellationActive);
@@ -1012,6 +1018,7 @@ static void R_FrameBufferInitUniformLocs(R_GLSL* program,uniformLocations_t* loc
 	locs->texAverageBrightnessUniform = qglGetUniformLocation(program->ShaderId(), "texAverageBrightnessUniform");
 	locs->isLightmapUniform = qglGetUniformLocation(program->ShaderId(), "isLightmapUniform");
 	locs->isWorldBrushUniform = qglGetUniformLocation(program->ShaderId(), "isWorldBrushUniform");
+	locs->isSaberUniform = qglGetUniformLocation(program->ShaderId(), "isSaberUniform");
 	locs->parallaxMapLayersUniform = qglGetUniformLocation(program->ShaderId(), "parallaxMapLayersUniform");
 	locs->parallaxMapDepthUniform = qglGetUniformLocation(program->ShaderId(), "parallaxMapDepthUniform");
 	locs->parallaxMapGammaUniform = qglGetUniformLocation(program->ShaderId(), "parallaxMapGammaUniform");
