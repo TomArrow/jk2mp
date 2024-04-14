@@ -8960,6 +8960,11 @@ doEssentialThree:
 		cent->miscTime = 0;
 	}
 
+	if (cg_otherPlayerAlpha.value < 1.0f && cent->currentState.clientNum != cg.snap->ps.clientNum) {
+		legs.renderfx |= RF_FORCE_ENT_ALPHA;
+		legs.shaderRGBA[3] = cg_otherPlayerAlpha.value * 255.0f;
+	}
+
 	trap_R_AddRefEntityToScene(&legs);
 
 	if (cent->isATST) {

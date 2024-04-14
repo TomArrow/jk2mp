@@ -530,6 +530,8 @@ vmCvar_t	cg_duelHeadAngles;
 vmCvar_t	cg_speedTrail;
 vmCvar_t	cg_auraShell;
 
+vmCvar_t	cg_otherPlayerAlpha;
+
 vmCvar_t	cg_animBlend;
 
 vmCvar_t	cg_dismember;
@@ -838,6 +840,8 @@ static cvarTable_t cvarTable[] = { // bk001129
 
 	{ &cg_speedTrail, "cg_speedTrail", "1", NULL, CVAR_ARCHIVE },
 	{ &cg_auraShell, "cg_auraShell", "1", NULL, CVAR_ARCHIVE },
+
+	{ &cg_otherPlayerAlpha, "cg_otherPlayerAlpha", "1.0", NULL, CVAR_ARCHIVE },
 
 	{ &cg_animBlend, "cg_animBlend", "1", NULL, 0 },
 

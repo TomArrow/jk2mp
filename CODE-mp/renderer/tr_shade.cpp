@@ -1750,7 +1750,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (backEnd.currentEntity && (backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA))
 			{
-				ForceAlpha((float *) tess.svars.colors, backEnd.currentEntity->e.shaderRGBA[3]);
+				//ForceAlpha((float *) tess.svars.colors, backEnd.currentEntity->e.shaderRGBA[3]);
+				ForceAlpha((float *) tess.svars.colorsScaled, backEnd.currentEntity->e.shaderRGBA[3]* floatColorsScaleFactor);
 				GL_State(GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 			}
 			else

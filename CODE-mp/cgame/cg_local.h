@@ -1873,6 +1873,8 @@ extern	vmCvar_t		cg_duelHeadAngles;
 extern	vmCvar_t		cg_speedTrail;
 extern	vmCvar_t		cg_auraShell;
 
+extern	vmCvar_t		cg_otherPlayerAlpha;
+
 extern	vmCvar_t		cg_animBlend;
 
 extern	vmCvar_t		cg_dismember;
