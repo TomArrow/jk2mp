@@ -129,7 +129,7 @@ void S_DMA_Update( float scale ) {
 		speed = 1;
 
 	
-	qboolean lowQuality = (qboolean)(tr.captureIsActive || s_lowQualityResample->integer); // If we are actively capturing, use low quality resampling for the preview sound (captured sound is still high quality). Otherwise too high CPU and RAM usage at high fps capture.
+	qboolean lowQuality = (qboolean)(tr.captureIsActive || s_lowQualityResample->integer || s_lowQualityResampleForNonCapture->integer); // If we are actively capturing, use low quality resampling for the preview sound (captured sound is still high quality). Otherwise too high CPU and RAM usage at high fps capture.
 
 	/* Mix sound or fill with silence depending on speed */
 	if ( speed > 0 ) {

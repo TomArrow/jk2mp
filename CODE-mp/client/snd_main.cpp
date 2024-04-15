@@ -64,6 +64,7 @@ cvar_t		*s_minSpeed; // minimum speed at which soudns can be played back when sp
 cvar_t		*s_musicVolume;
 cvar_t		*s_language;
 cvar_t		*s_lowQualityResample;
+cvar_t		*s_lowQualityResampleForNonCapture;
 
 cvar_t		*s_doppler;
 cvar_t		*s_dopplerSpeed;
@@ -123,6 +124,7 @@ void S_Init( void ) {
 	s_minSpeed = Cvar_Get ("s_minSpeed", "0", CVAR_ARCHIVE);
 	s_musicVolume = Cvar_Get ("s_musicvolume", "0", CVAR_ARCHIVE);
 	s_lowQualityResample = Cvar_Get ("s_lowQualityResample", "0", CVAR_ARCHIVE);
+	s_lowQualityResampleForNonCapture = Cvar_Get ("s_lowQualityResampleForNonCapture", "1", CVAR_ARCHIVE);
 
 	s_language = Cvar_Get("s_language","english",CVAR_ARCHIVE | CVAR_NORESTART);
 
