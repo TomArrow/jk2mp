@@ -6416,6 +6416,11 @@ void CG_G2Animated( centity_t *cent )
 	CG_G2EntAnimation( cent, &legs.oldframe, &legs.frame, &legs.backlerp,
 		 &torso.oldframe, &torso.frame, &torso.backlerp );
 
+	if (cg_otherPlayerAlpha.value < 1.0f && cent->currentState.clientNum != cg.snap->ps.clientNum) {
+		legs.renderfx |= RF_FORCE_ENT_ALPHA;
+		legs.shaderRGBA[3] = cg_otherPlayerAlpha.value * 255.0f;
+	}
+
 	trap_R_AddRefEntityToScene(&legs);
 
 
@@ -7201,7 +7206,10 @@ void CG_Player( centity_t *cent ) {
 	qboolean		gotLHandMatrix = qfalse;
 	qboolean		g2HasWeapon = qfalse;
 	qboolean		spriteDrawn = qfalse;
+	qboolean		forceSaberOn = qfalse;
 	refdef_t		*refdef = &cg.refdef;
+
+	forceSaberOn = (cg_saberForceOn.integer & 1) && cent->currentState.clientNum == cg.predictedPlayerState.clientNum || (cg_saberForceOn.integer & 2) && cent->currentState.clientNum != cg.predictedPlayerState.clientNum;
 
 	if (cgQueueLoad)
 	{
@@ -7497,7 +7505,7 @@ skipEffectOverride:
 
 		if (!(cg.snap->ps.pm_flags & PMF_FOLLOW))
 		{
-			if (cent->weapon == WP_SABER && cent->weapon != cent->currentState.weapon && !(cent->currentState.shouldtarget &&!cg_saberForceOn.integer))
+			if (cent->weapon == WP_SABER && cent->weapon != cent->currentState.weapon && !(cent->currentState.shouldtarget &&!forceSaberOn))
 			{ //switching away from the saber
 				trap_S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_AUTO, trap_S_RegisterSound( "sound/weapons/saber/saberoffquick.wav" ));
 			}
@@ -8594,7 +8602,7 @@ skipPowerType3:
 		CG_DrawPlayerSphere(cent, cent->lerpOrigin, 1.4, cgs.media.invulnerabilityShader );
 	}
 stillDoSaber:
-	if (cent->currentState.weapon == WP_SABER && !(cent->currentState.shouldtarget && !cg_saberForceOn.integer))
+	if (cent->currentState.weapon == WP_SABER && !(cent->currentState.shouldtarget && !forceSaberOn))
 	{
 		if (!cent->currentState.saberInFlight && !(cent->currentState.eFlags & EF_DEAD))
 		{

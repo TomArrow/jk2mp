@@ -822,7 +822,7 @@ void CG_PredictPlayerState( void ) {
 
 	cg_pmove.pmove_fixed = pmove_fixed.integer;// | cg_pmove_fixed.integer;
 	cg_pmove.pmove_msec = pmove_msec.integer;
-	cg_pmove.forceSaberOn = cg_saberForceOn.integer;
+	cg_pmove.forceSaberOn = cg_saberForceOn.integer & 1;
 
 	// run cmds
 	moved = qfalse;
