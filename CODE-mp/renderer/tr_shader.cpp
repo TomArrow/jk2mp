@@ -3318,7 +3318,7 @@ static shader_t *FinishShader( void ) {
 	shader.numUnfoggedPasses = stage;
 
 	// fogonly shaders don't have any normal passes
-	if ( stage == 0 ) {
+	if ( stage == 0 && !shader.isSky ) {
 		shader.sort = SS_FOG;
 	}
 
