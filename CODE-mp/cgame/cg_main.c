@@ -973,10 +973,10 @@ Ghoul2 Insert End
 	{ &mme_chaseViewHeightFix,	"mme_chaseViewHeightFix",	"1",	NULL,	CVAR_ARCHIVE	},
 	{ &mme_soundDeformIntensity,	"mme_soundDeformIntensity",	"50.0",	NULL,	CVAR_ARCHIVE	},
 	{ &mme_soundDeformOrigin,	"mme_soundDeformOrigin",	"1",	NULL,	CVAR_ARCHIVE	},
-	{ &mme_soundDeformSpreadSpeed,	"mme_soundDeformSpreadSpeed",	"22144",	NULL,	CVAR_ARCHIVE	},
+	{ &mme_soundDeformSpreadSpeed,	"mme_soundDeformSpreadSpeed",	"22144",	NULL,	CVAR_ARCHIVE	}, // 40000 was ok.
 	{ &mme_soundDeformTimeBase,	"mme_soundDeformTimeBase",	"1",	NULL,	CVAR_ARCHIVE	},
 	{ &mme_soundDeformSampleAvgWidth,	"mme_soundDeformSampleAvgWidth",	"1",	NULL,	CVAR_ARCHIVE	},
-	{ &mme_soundDeformDistanceScale,	"mme_soundDeformDistanceScale",	"2.0",	NULL,	CVAR_ARCHIVE	},
+	{ &mme_soundDeformDistanceScale,	"mme_soundDeformDistanceScale",	"0.1",	NULL,	CVAR_ARCHIVE	},
 	{ &mme_soundDeformOffsetMode,	"mme_soundDeformOffsetMode",	"1",	NULL,	CVAR_ARCHIVE	},
 	{ &mov_chatBeep,		"mov_chatBeep",			"0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_fragsOnly,		"mov_fragsOnly",		"0",			NULL,	CVAR_ARCHIVE	},

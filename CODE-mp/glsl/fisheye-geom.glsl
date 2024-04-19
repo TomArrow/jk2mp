@@ -125,13 +125,13 @@ void standard(vec3 myNormal){
 	{
 		vec4 positionAdjustment = vec4(0.0);
 		//vec3 colorAdd = vec3(0.0);
-		float redAdd = 0.0;
+		//float redAdd = 0.0;
 		if(musicDeformSampleCount>0 && isWorldBrushUniform > 0){
 			// TODO implement soundDeformSampleAvgWidthUniform
 			vec3 eyeSpaceSoundDeformOrigin = (worldModelViewMatrixUniform*vec4(soundDeformOriginUniform,1.0)).xyz;
 			vec3 pointToOrigin = eyeSpaceSoundDeformOrigin-eyeSpaceCoords[i].xyz;
 			float distanceToPoint = length(pointToOrigin);
-			redAdd+= distanceToPoint/1000.0f;
+			//redAdd+= distanceToPoint/1000.0f;
 			//colorAdd += eyeSpaceSoundDeformOrigin/1000.0f;
 			float samplePosition = (float(soundDeformTimeUniform))*float(soundDeformSampleRateUniform)-(distanceToPoint/soundDeformSpreadSpeedUniform*float(soundDeformSampleRateUniform));
 			int realSamplePos = samplePosition< 0 ? 0: int(samplePosition)%musicDeformSampleCount;
@@ -179,7 +179,7 @@ void standard(vec3 myNormal){
 
 		vertColor = color[i];
 		//vertColor.xyz += colorAdd;
-		vertColor.x += redAdd;
+		//vertColor.x += redAdd;
 		EmitVertex();
 	}
 	
