@@ -3,7 +3,7 @@
 #include "../game/q_shared.h"
 #include "qcommon.h"
 
-#define	MAX_CMD_BUFFER	16384
+#define	MAX_CMD_BUFFER	32768
 #define	MAX_CMD_LINE	1024
 
 typedef struct {

@@ -1326,6 +1326,13 @@ void RE_Shutdown( qboolean destroyWindow ) {
 	ri.Cmd_RemoveCommand ("modelcacheinfo");
 	ri.Cmd_RemoveCommand ("imagecacheinfo");
 
+	if (tr.mmeMusicDeform) {
+		delete[] tr.mmeMusicDeform;
+		tr.mmeMusicDeform = NULL;
+		tr.mmeMusicDeformIndex = 0;
+		tr.mmeMusicDeformLength = 0;
+	}
+
 #ifdef JEDIACADEMY_GLOW
 	if ( r_DynamicGlow && r_DynamicGlow->integer )
 	{

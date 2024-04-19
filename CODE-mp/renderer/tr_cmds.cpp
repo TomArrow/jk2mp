@@ -1,4 +1,5 @@
 #include "tr_local.h"
+#include "../client/snd_local.h"
 
 volatile renderCommandList_t	*renderCommandList;
 
@@ -447,6 +448,31 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 			tr.mmeSkyShader = 0;
 		}
 		mme_skyShader->modified = qfalse;
+	}
+	
+	if (mme_musicdeform->modified) {
+		if (tr.mmeMusicDeform) {
+			delete[] tr.mmeMusicDeform;
+			tr.mmeMusicDeform = NULL;
+			tr.mmeMusicDeformIndex = 0;
+			tr.mmeMusicDeformLength = 0;
+		}
+		if (S_FileExists(mme_musicdeform->string)) {
+			openSound_t* thesound = S_SoundOpen(mme_musicdeform->string);
+			tr.mmeMusicDeformLength = thesound->totalSamples;
+			tr.mmeMusicDeformIndex++;
+			tr.mmeMusicDeformSampleRate = thesound->rate;
+			tr.mmeMusicDeform = new short[thesound->totalSamples];
+			S_SoundRead(thesound, qfalse, thesound->totalSamples, tr.mmeMusicDeform);
+			S_SoundClose(thesound);
+		}
+		/*if (R_FindShaderText(mme_musicdeform->string)) {
+
+			tr.mmeSkyShader = R_FindShader(mme_skyShader->string, lightmapsNone, stylesDefault, qtrue );
+		} else {
+			tr.mmeSkyShader = 0;
+		}*/
+		mme_musicdeform->modified = qfalse;
 	}
 
 	if (mme_worldDeform->modified) {

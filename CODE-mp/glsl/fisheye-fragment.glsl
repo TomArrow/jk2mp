@@ -86,7 +86,7 @@ struct shadowline_t {
 uniform int shadowLinesCountUniform;
 //uniform shadowline_t shadowLinesUniform[64*18]; 
 
-layout(std430, binding = 3) buffer layoutName
+layout(std430, binding = 3) buffer shadowLinesLayout
 {
     shadowline_t shadowLines[64*18];
 };

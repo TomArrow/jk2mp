@@ -1160,6 +1160,10 @@ typedef struct {
 	qboolean				mmeSkyColorIsSet;
 	qboolean				mmeSkyTintIsSet;
 	qboolean				mmeFBOImageTintIsSet;
+	int16_t*				mmeMusicDeform;
+	int						mmeMusicDeformLength;
+	int						mmeMusicDeformIndex;
+	int						mmeMusicDeformSampleRate;
 
 	int						numSkins;
 	skin_t					*skins[MAX_SKINS];
@@ -1388,6 +1392,7 @@ extern cvar_t	*mme_pngCompression;
 extern cvar_t	*mme_skykey;
 extern cvar_t	*mme_worldShader;
 extern cvar_t	*mme_skyShader;
+extern cvar_t	*mme_musicdeform;
 extern cvar_t*	mme_worldDeform;
 extern cvar_t*	mme_worldBlend;
 extern cvar_t* mme_worldNoCull;
@@ -2174,6 +2179,9 @@ typedef struct {
 	int fishEyeTempDisabled;
 	int screenWidth, screenHeight;
 	fishEyeData_t fishEyeData;
+	int soundDeformLastIndex;
+	int soundDeformSampleRate;
+	int soundDeformSampleCount;
 } fbo_t;
 
 

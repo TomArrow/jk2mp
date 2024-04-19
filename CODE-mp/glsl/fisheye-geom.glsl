@@ -1,4 +1,5 @@
 #version 400 compatibility
+#extension GL_ARB_shader_storage_buffer_object : enable
 
 // Geometry Shader
 #extension GL_ARB_geometry_shader4 : enable
@@ -35,6 +36,15 @@ uniform float fovXUniform;
 uniform float fovYUniform;
 uniform int pixelWidthUniform;
 uniform int pixelHeightUniform;
+
+uniform float serverTimeUniform;
+uniform int soundDeformSampleRateUniform;
+uniform int soundDeformSampleCountUniform;
+
+layout(std430, binding = 4) buffer soundDeformSampleLayout
+{
+    vec4 soundDeformSamples[]; // theyre actually shorts but glsl doesnt knoww what that is :) we just shift things around
+};
 
 //
 //
@@ -98,12 +108,22 @@ void makeUVTransformationMatrix(in vec3 vec1i, in vec2 vec1o, in vec3 vec2i, in 
 //
 //
 void standard(){
-
+	
+	int musicDeformSampleCount = soundDeformSampleCountUniform;//soundDeformSamples.length()*2; 
 
 	//setDebugColor(1,0,0);
 	for (int i = 0; i < 3; i++)
 	{
-		gl_Position = projectionMatrix[0]* gl_PositionIn[i];
+		vec4 positionAdjustment = vec4(0.0);
+		if(musicDeformSampleCount>0){
+			float samplePosition = (float(serverTimeUniform)/1000.0)*float(soundDeformSampleRateUniform)+length(gl_PositionIn[i].xyz);
+			int realSamplePos = int(samplePosition)%musicDeformSampleCount;
+			vec4 vecAtPos = soundDeformSamples[realSamplePos/4]; // gotta work with vec4 due to alignment
+			float actualValue =vecAtPos[realSamplePos % 4];
+			positionAdjustment.z = 10.0*float(actualValue)/32767.0 ;
+		}
+		//positionAdjustment.z = musicDeformSampleCount;
+		gl_Position = projectionMatrix[0]* (gl_PositionIn[i]+positionAdjustment);
 		//gl_TexCoord[0] = gl_TexCoordIn[i][0];
 		gl_TexCoord[0] = geomTexCoord[i];
 		//gl_TexCoord[0].s = dot(gl_PositionIn[i].xyz,uvtransform[0]);
@@ -114,6 +134,8 @@ void standard(){
 		vertColor = color[i];
 		EmitVertex();
 	}
+	
+
 	EndPrimitive();
 
 }

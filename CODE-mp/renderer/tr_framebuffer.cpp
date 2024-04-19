@@ -89,6 +89,8 @@ typedef struct uniformLocations_t {
 	GLint noiseFuckeryHDRIntensityUniform;
 	GLint noiseFuckeryLightmapIntensityUniform;
 	GLint worldModelViewMatrixUniform;
+	GLint soundDeformSampleRateUniform;
+	GLint soundDeformSampleCountUniform;
 	GLint dLightIntensityUniform;
 	GLint dLightFastSkipThresholdUniform;
 	GLint dLightSpecIntensityUniform;
@@ -109,7 +111,9 @@ uniformLocations_t uniformLocationsTess;
 uniformLocations_t uniformLocations;
 
 static GLuint shadowLineSSBOReference = 0;
+static GLuint musicDeformSSBOReference = 0;
 static shadowline_t shadowLineSSBO[MAX_SHADOWLINES];
+static float* musicDeformSSBOData = NULL;
 
 void R_FrameBuffer_CreateRollingShutterBuffers(int width, int height, int flags);
 
@@ -258,6 +262,8 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1f(uniformLocationsTess.noiseFuckeryLightmapIntensityUniform, r_fboGLSLNoiseFuckeryLightmapIntensity->value);
 		qglUniform1f(uniformLocationsTess.noiseFuckeryHDRIntensityUniform, r_fboGLSLNoiseFuckeryHDRIntensity->value);
 		qglUniformMatrix4fv(uniformLocationsTess.worldModelViewMatrixUniform, 1, GL_FALSE, backEnd.viewParms.world.modelMatrix);
+		qglUniform1i(uniformLocationsTess.soundDeformSampleRateUniform, fbo.soundDeformSampleRate);
+		qglUniform1i(uniformLocationsTess.soundDeformSampleCountUniform, fbo.soundDeformSampleCount);
 		qglUniform1i(uniformLocationsTess.dLightsCountUniform, r_fboGLSLDLights->integer?  backEnd.refdef.num_dlights : 0);
 		qglUniform1f(uniformLocationsTess.dLightSpecGammaUniform, r_fboGLSLDLightsSpecGamma->value);
 		qglUniform1f(uniformLocationsTess.dLightSpecIntensityUniform, r_fboGLSLDLightsSpecIntensity->value);
@@ -304,6 +310,8 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1f(uniformLocations.noiseFuckeryLightmapIntensityUniform, r_fboGLSLNoiseFuckeryLightmapIntensity->value);
 		qglUniform1f(uniformLocations.noiseFuckeryHDRIntensityUniform, r_fboGLSLNoiseFuckeryHDRIntensity->value);
 		qglUniformMatrix4fv(uniformLocations.worldModelViewMatrixUniform, 1, GL_FALSE, backEnd.viewParms.world.modelMatrix);
+		qglUniform1i(uniformLocations.soundDeformSampleRateUniform, fbo.soundDeformSampleRate);
+		qglUniform1i(uniformLocations.soundDeformSampleCountUniform, fbo.soundDeformSampleCount);
 		qglUniform1i(uniformLocations.dLightsCountUniform, r_fboGLSLDLights->integer ? backEnd.refdef.num_dlights : 0);
 		qglUniform1f(uniformLocations.dLightSpecGammaUniform, r_fboGLSLDLightsSpecGamma->value);
 		qglUniform1f(uniformLocations.dLightSpecIntensityUniform, r_fboGLSLDLightsSpecIntensity->value);
@@ -577,7 +585,7 @@ qboolean R_FrameBuffer_FishEyeDeactivateTessellation() {
 static GLenum fishEyeProcessGLMode(GLenum mode) {
 	if (!fbo.fishEyeActive) return mode;
 
-	if (r_fboFishEye->integer && r_fboFishEyeTessellate->integer && mode == GL_TRIANGLES) { // Tessellation only for triangles rn
+	if (((r_fboFishEye->integer && r_fboFishEyeTessellate->integer) || musicDeformSSBOData) && mode == GL_TRIANGLES) { // Tessellation only for triangles rn
 		if (R_FrameBuffer_FishEyeActivateTessellation()) {
 			return GL_PATCHES;
 		}
@@ -1028,6 +1036,8 @@ static void R_FrameBufferInitUniformLocs(R_GLSL* program,uniformLocations_t* loc
 	locs->noiseFuckeryLightmapIntensityUniform = qglGetUniformLocation(program->ShaderId(), "noiseFuckeryLightmapIntensityUniform");
 	locs->noiseFuckeryHDRIntensityUniform = qglGetUniformLocation(program->ShaderId(), "noiseFuckeryHDRIntensityUniform");
 	locs->worldModelViewMatrixUniform = qglGetUniformLocation(program->ShaderId(), "worldModelViewMatrixUniform");
+	locs->soundDeformSampleRateUniform = qglGetUniformLocation(program->ShaderId(), "soundDeformSampleRateUniform");
+	locs->soundDeformSampleCountUniform = qglGetUniformLocation(program->ShaderId(), "soundDeformSampleCountUniform");
 	locs->dLightSpecGammaUniform = qglGetUniformLocation(program->ShaderId(), "dLightSpecGammaUniform");
 	locs->dLightSpecIntensityUniform = qglGetUniformLocation(program->ShaderId(), "dLightSpecIntensityUniform");
 	locs->dLightIntensityUniform = qglGetUniformLocation(program->ShaderId(), "dLightIntensityUniform");
@@ -1096,6 +1106,8 @@ void R_FrameBuffer_Init( void ) {
 
 	superSampleMultiplier = pow(2, r_fboSuperSample->integer);
 	rollingShutterSuperSampleMultiplier = pow(2, min(r_fboRollingShutterSuperSample->integer, r_fboSuperSample->integer)); // Can't go any higher than normal supersample.
+
+	fbo.soundDeformSampleRate = 44100; // safety
 
 	// make sure all the commands added here are also		
 
@@ -1211,6 +1223,7 @@ void R_FrameBuffer_Init( void ) {
 		else {
 			if (g_SSBOsSupported) {
 				qglGenBuffersARB(1,&shadowLineSSBOReference);
+				qglGenBuffersARB(1,&musicDeformSSBOReference);
 			}
 
 			R_FrameBufferInitUniformLocs(fishEyeShader,&uniformLocations);
@@ -1301,6 +1314,46 @@ void R_FrameBuffer_StartFrame( void ) {
 
 	r_fboFishEyeTessellate = ri.Cvar_Get("r_fboFishEyeTessellate", "1", CVAR_ARCHIVE); // Updated on every frame.
 	r_fboFishEye = ri.Cvar_Get("r_fboFishEye", "0", CVAR_ARCHIVE);
+
+	fbo.soundDeformSampleCount = 0;
+	if (r_fboGLSL->integer) {
+		if (tr.mmeMusicDeformIndex != fbo.soundDeformLastIndex) {
+			static float empty[1]{ 0 };
+			if (g_SSBOsSupported) {
+				if (musicDeformSSBOData) {
+					delete[] musicDeformSSBOData;
+					musicDeformSSBOData = NULL;
+				}
+				int sampleCount = 0;
+				float* dataSource = empty;
+				if (tr.mmeMusicDeform) {
+					fbo.soundDeformSampleCount = tr.mmeMusicDeformLength;
+					int sampleCountVec4Align = (tr.mmeMusicDeformLength/4*4) + ((tr.mmeMusicDeformLength % 4) ? 4 : 0);// glsl doesnt support short
+					musicDeformSSBOData = new float[sampleCountVec4Align];
+					if (tr.mmeMusicDeformLength % 4) {
+						musicDeformSSBOData[sampleCountVec4Align - 3] = 0;
+						musicDeformSSBOData[sampleCountVec4Align - 2] = 0;
+						musicDeformSSBOData[sampleCountVec4Align - 1] = 0;
+					}
+					for (int i = 0; i < tr.mmeMusicDeformLength; i++) {
+						musicDeformSSBOData[i] = tr.mmeMusicDeform[i];
+					}
+					//Com_Memcpy(musicDeformSSBOData, tr.mmeMusicDeform, tr.mmeMusicDeformLength * sizeof(short));
+					//if (tr.mmeMusicDeformLength % 4) {
+					//	musicDeformSSBOData[sampleCountIntAlign - 1] = 0;
+					//}
+					dataSource = musicDeformSSBOData;
+					sampleCount = sampleCountVec4Align;
+				}
+				qglBindBufferARB(GL_SHADER_STORAGE_BUFFER, musicDeformSSBOReference);
+				qglBufferDataARB(GL_SHADER_STORAGE_BUFFER, sampleCount * sizeof(float), dataSource, GL_DYNAMIC_DRAW_ARB);
+				qglBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, musicDeformSSBOReference);
+				qglBindBufferARB(GL_SHADER_STORAGE_BUFFER, 0);
+			}
+			fbo.soundDeformSampleRate = tr.mmeMusicDeformSampleRate ? tr.mmeMusicDeformSampleRate : 44100;
+			fbo.soundDeformLastIndex = tr.mmeMusicDeformIndex;
+		}
+	}
 
 #endif
 }
