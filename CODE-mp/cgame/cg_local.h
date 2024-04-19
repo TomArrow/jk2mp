@@ -2039,6 +2039,14 @@ extern	vmCvar_t	mov_sortObjects;
 extern	vmCvar_t	mme_demoFileName;
 extern	vmCvar_t	mme_chaseViewHeightFix;
 
+extern	vmCvar_t	mme_soundDeformIntensity;
+extern	vmCvar_t	mme_soundDeformOrigin;  // 1 = player, 2 = camera, alternatively use 3 numbers to set origin
+extern	vmCvar_t	mme_soundDeformSpreadSpeed;
+extern	vmCvar_t	mme_soundDeformTimeBase; // 1 = demo time, 2 = servertime underlying
+extern	vmCvar_t	mme_soundDeformSampleAvgWidth;
+extern	vmCvar_t	mme_soundDeformDistanceScale;
+extern	vmCvar_t	mme_soundDeformOffsetMode;
+
 extern	vmCvar_t	fx_Vibrate;
 extern	vmCvar_t	fx_vfps;
 extern	vmCvar_t	cg_saberMarksFps;

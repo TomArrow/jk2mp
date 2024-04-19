@@ -274,6 +274,9 @@ Ghoul2 Insert End
 	CG_R_REGISTERSHADERWITHFLAGS, // For controlling HUD Brightness, special handler
 	CG_R_ADDSHADOWLINE, // For player shadow experiment
 
+
+	CG_MME_SETMUSICDEFORMDATA,
+
 	CG_MVAPI_ENABLE_SUBMODELBYPASS
 } cgameImport_t;
 

@@ -954,6 +954,9 @@ void trap_S_UpdateScale( float scale ) {
 void trap_MME_FakeAdvanceFrame(int count ) {
 	syscall(CG_MME_FAKEADVANCEFRAMES, count );
 }
+void trap_MME_SetMusicDeformData(float intensity, float time,float spreadSpeed,int sampleAvgWidth, const vec3_t origin,float distanceScale, int mode  ) {
+	syscall(CG_MME_SETMUSICDEFORMDATA, PASSFLOAT(intensity), PASSFLOAT(time), PASSFLOAT(spreadSpeed),sampleAvgWidth, origin, PASSFLOAT(distanceScale), mode);
+}
 mmeRollingShutterInfo_t* trap_MME_GetRollingShutterInfo() {
 	static mmeRollingShutterInfo_t  rsInfo;
 	syscall(CG_MME_GETROLLINGSHUTTERINFO, &rsInfo);

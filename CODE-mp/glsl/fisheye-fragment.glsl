@@ -603,13 +603,13 @@ void main(void)
 		color = texture2D(text_in, uvCoords);
 
 		gl_FragColor = color*vertColor; 
-		gl_FragColor.xyz+=debugColor;
+		//gl_FragColor.xyz+=debugColor;
 		
 	} else {
 		
 		color = texture2D(text_in, uvCoords);
 		gl_FragColor = color*vertColor; 
-		gl_FragColor.xyz+=debugColor;
+		//gl_FragColor.xyz+=debugColor;
 	}
 
 	{

@@ -29,6 +29,7 @@ extern void trap_MME_BlurInfo( int* total, int * index );
 extern void trap_MME_Capture( const char *baseName, float fps, float focus, float radius);
 extern int trap_MME_SeekTime( int seekTime );
 extern int trap_MME_FakeAdvanceFrame(int count);
+extern int trap_MME_SetMusicDeformData(float intensity, float time, float spreadSpeed, int sampleAvgWidth, const vec3_t origin, float distanceScale, int mode);
 extern mmeRollingShutterInfo_t* trap_MME_GetRollingShutterInfo();
 extern void trap_MME_Music( const char *musicName, float time, float length );
 extern void trap_MME_Time( int time );
@@ -47,6 +48,19 @@ static void demoSynchMusic( int start, float length ) {
 		lastMusicStart = start;
 	}
 	trap_MME_Music( mov_musicFile.string , start * 0.001f, length );
+}
+
+static void CG_MME_UpdateMusicDeformInfo() {
+	trap_MME_SetMusicDeformData(
+		mme_soundDeformIntensity.value,
+		//mme_soundDeformTimeBase.integer == 1 ? (((float)cg.time + cg.timeFraction)/1000.0f):(mme_soundDeformTimeBase.integer == 2 ? (((float)demo.line.time+cg.timeFraction)/1000.0f) : (float)demo.serverTime/1000.0f),
+		mme_soundDeformTimeBase.integer == 1 ? (((float)demo.play.time + demo.play.fraction) / 1000.0f) :(mme_soundDeformTimeBase.integer == 2 ?  (((float)cg.time + cg.timeFraction) / 1000.0f) : (float)demo.serverTime/1000.0f),
+		mme_soundDeformSpreadSpeed.value,
+		mme_soundDeformSampleAvgWidth.integer,
+		mme_soundDeformOrigin.integer == 1 ? cg.predictedPlayerState.origin : cg.refdef.vieworg,
+		mme_soundDeformDistanceScale.value,
+		mme_soundDeformOffsetMode.integer
+		);
 }
 
 static void CG_DemosUpdatePlayer( void ) {
@@ -770,6 +784,8 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 		CG_StrafeHelper(cent);
 
 	CG_DrawSpeedGraph3D();
+
+	CG_MME_UpdateMusicDeformInfo();
 
 	CG_CalcScreenEffects();
 

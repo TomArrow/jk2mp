@@ -108,14 +108,14 @@ void equirectangular()
 	vec3 pointVec;
 	if(fishEyeModeUniform == 0){
 		//pointVec = (gl_ProjectionMatrix*gl_ModelViewMatrix*gl_Vertex).xyz;
-		pointVec = (gl_ProjectionMatrix*gl_ModelViewMatrix*gl_Vertex).xyz;
+		//pointVec = (gl_ProjectionMatrix*gl_ModelViewMatrix*gl_Vertex).xyz;
 		//gl_Position = vec4(pointVec, 1.0);
 		//gl_Position = gl_ProjectionMatrix*gl_ModelViewMatrix*gl_Vertex;
 		gl_Position = gl_ModelViewMatrix*gl_Vertex;
 		//gl_Position = worldModelViewMatrixUniform*gl_Vertex;
 		//gl_Position = ftransform();
 	} else {
-		pointVec = -(gl_ModelViewMatrix * gl_Vertex).xyz;
+		pointVec = (gl_ModelViewMatrix * gl_Vertex).xyz;
 		gl_Position = vec4(pointVec, 1.0);
 	}
 	//gl_Position = equirect_getPos(pointVec); // TODO Reinstate this IF geometry shader is not available.

@@ -15,6 +15,7 @@ in vec4 gl_TexCoordIn[3][1];
 
 in mat4x4 projectionMatrix[3];
 
+uniform mat4x4 worldModelViewMatrixUniform;
 
 in mat4x4 worldModelViewMatrixReverse[3];
 out mat4x4 worldModelViewMatrixReverseGeom;
@@ -36,8 +37,16 @@ uniform float fovXUniform;
 uniform float fovYUniform;
 uniform int pixelWidthUniform;
 uniform int pixelHeightUniform;
+uniform int isWorldBrushUniform; 
 
 uniform float serverTimeUniform;
+uniform float soundDeformTimeUniform;
+uniform float soundDeformIntensityUniform;
+uniform float soundDeformDistanceScaleUniform;
+uniform float soundDeformSpreadSpeedUniform;
+uniform int soundDeformSampleAvgWidthUniform;
+uniform int soundDeformModeUniform; // 1= Z axis, 2 = normal, 3= direct view, 4= normal with direct view scale
+uniform vec3 soundDeformOriginUniform;
 uniform int soundDeformSampleRateUniform;
 uniform int soundDeformSampleCountUniform;
 
@@ -115,12 +124,35 @@ void standard(){
 	for (int i = 0; i < 3; i++)
 	{
 		vec4 positionAdjustment = vec4(0.0);
-		if(musicDeformSampleCount>0){
-			float samplePosition = (float(serverTimeUniform)/1000.0)*float(soundDeformSampleRateUniform)+length(gl_PositionIn[i].xyz);
-			int realSamplePos = int(samplePosition)%musicDeformSampleCount;
+		if(musicDeformSampleCount>0 && isWorldBrushUniform > 0){
+			// TODO implement soundDeformSampleAvgWidthUniform
+			vec3 eyeSpaceSoundDeformOrigin = (vec4(soundDeformOriginUniform,1.0)*worldModelViewMatrixUniform).xyz;
+			vec3 pointToOrigin = eyeSpaceSoundDeformOrigin-eyeSpaceCoords[i].xyz;
+			float distanceToPoint = length(pointToOrigin);
+			float samplePosition = (float(soundDeformTimeUniform))*float(soundDeformSampleRateUniform)-(distanceToPoint/soundDeformSpreadSpeedUniform*float(soundDeformSampleRateUniform));
+			int realSamplePos = samplePosition< 0 ? 0: int(samplePosition)%musicDeformSampleCount;
 			vec4 vecAtPos = soundDeformSamples[realSamplePos/4]; // gotta work with vec4 due to alignment
 			float actualValue =vecAtPos[realSamplePos % 4];
-			positionAdjustment.z = 10.0*float(actualValue)/32767.0 ;
+			float deformIntensity = soundDeformIntensityUniform*float(actualValue)/32767.0*soundDeformDistanceScaleUniform*distanceToPoint/1000.0f;
+			switch(soundDeformModeUniform){
+				default:
+				case 1: // Z axis
+				vec4 worldPos = (worldModelViewMatrixReverse[0]*eyeSpaceCoords[i]);
+				worldPos.z += deformIntensity;
+				worldPos *= worldModelViewMatrixUniform;
+				positionAdjustment = worldPos-gl_PositionIn[i];
+				positionAdjustment.w = 0.0;
+				break;
+				case 2: // normal
+				positionAdjustment = vec4(normal*deformIntensity,0.0);
+				break;
+				case 3: // direct view
+				positionAdjustment = vec4(-normalize(pointToOrigin)*deformIntensity,0.0);
+				break;
+				case 4: // normal with direct view scale
+				positionAdjustment = vec4(normal*dot(normalize(pointToOrigin),normal),0.0);
+				break;
+			}
 		}
 		//positionAdjustment.z = musicDeformSampleCount;
 		gl_Position = projectionMatrix[0]* (gl_PositionIn[i]+positionAdjustment);
@@ -217,7 +249,7 @@ void equirect(){
 	vec4 positions[3];
 	for (int i = 0; i < 3; i++)
 	{
-		positions[i] = equirect_getPos(gl_PositionIn[i].xyz, i);
+		positions[i] = equirect_getPos(-gl_PositionIn[i].xyz, i);
 	}
 
 	for (int i = 0; i < 3; i++)
@@ -372,8 +404,8 @@ void fisheye(){
 	vec3 postFisheye2DPos[3];
 	for (int i = 0; i < 3; i++)
 	{
-		originalPositions3[i] = gl_PositionIn[i].xyz;
-		positions[i] = fisheye_getPos(gl_PositionIn[i].xyz, i,postFisheye2DPos[i].xy);
+		originalPositions3[i] = -gl_PositionIn[i].xyz;
+		positions[i] = fisheye_getPos(-gl_PositionIn[i].xyz, i,postFisheye2DPos[i].xy);
 		positions3[i] = positions[i].xyz;
 		//postFisheye2DPos[i] = vec3( positions[i].xy,-1);
 		postFisheye2DPos[i].z = -1;
@@ -434,7 +466,7 @@ void main()
 // TODO Apply distortion in TES instead? To have more multithreading? And then send it over as in/out variable?
 	if(fishEyeModeUniform == 2){
 		equirect();
-	} else if(fishEyeModeUniform == 1){
+	} else if(fishEyeModeUniform == 1 ){
 		fisheye();
 	} else {
 		standard();

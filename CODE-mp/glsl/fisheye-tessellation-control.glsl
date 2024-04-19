@@ -12,6 +12,9 @@ out vec4 colorTCS[];
 in mat4x4 worldModelViewMatrixReverse[];
 out mat4x4 worldModelViewMatrixReverseTCS[];
 
+in mat4x4 projectionMatrix[];
+out mat4x4 projectionMatrixTCS[];
+
 in vec3 normal[];
 out vec3 normalTCS[];
 
@@ -21,6 +24,7 @@ out vec4 eyeSpaceCoordsTCS[];
 in vec4 pureVertexCoords[];
 out vec4 pureVertexCoordsTCS[];
 
+uniform int fishEyeModeUniform; //1= fisheye, 2=equirectangular
 
 vec3 getPerpendicularAxis(vec3 point, vec3 mainAxis)
 {
@@ -147,6 +151,7 @@ void main()
 
 
 	worldModelViewMatrixReverseTCS[gl_InvocationID] = worldModelViewMatrixReverse[gl_InvocationID];
+	projectionMatrixTCS[gl_InvocationID] = projectionMatrix[gl_InvocationID];
 	normalTCS[gl_InvocationID] = normal[gl_InvocationID];
 	eyeSpaceCoordsTCS[gl_InvocationID] = eyeSpaceCoords[gl_InvocationID];
 	pureVertexCoordsTCS[gl_InvocationID] = pureVertexCoords[gl_InvocationID];

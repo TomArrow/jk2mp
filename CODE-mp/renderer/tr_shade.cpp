@@ -1022,7 +1022,7 @@ static void ProjectDlightTexture( void ) {
 		return;
 	}
 
-	if ((/*r_fboFishEye->integer ||*/ r_fboGLSL->integer) && r_fboGLSLDLights->integer) {
+	if (( r_fboGLSL->integer) && r_fboGLSLDLights->integer) {
 		return;
 	}
 

@@ -1536,7 +1536,7 @@ static void GLW_InitExtensions( qboolean createFakeContext = qfalse )
 	qglClientActiveTextureARB = NULL;
 	if ( strstr( glConfig.extensions_string, "GL_ARB_multitexture" )  )
 	{
-		if ( r_ext_multitexture->integer && /*!r_fboFishEye->integer &&*/ !r_fboGLSL->integer) // Fisheye uses GLSL. Idk how to make multitexture work with that (yet)
+		if ( r_ext_multitexture->integer && !r_fboGLSL->integer) // Fisheye uses GLSL. Idk how to make multitexture work with that (yet)
 		{
 			qglMultiTexCoord2fARB = ( void ( APIENTRY * ) ( GLenum, GLfloat, GLfloat ) ) qwglGetProcAddress( "glMultiTexCoord2fARB" );
 			qglActiveTextureARB = ( void ( APIENTRY * ) ( GLenum ) ) qwglGetProcAddress( "glActiveTextureARB" );

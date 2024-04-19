@@ -4,6 +4,7 @@
 //layout(quads, equal_spacing, ccw) in;
 layout(triangles, equal_spacing, ccw) in;
 
+out vec3 debugColor;
 out vec4 color;
 out vec4 geomTexCoord;
 in vec4 vertexTexCoord[];
@@ -11,6 +12,9 @@ in vec4 colorTCS[];
 
 in mat4x4 worldModelViewMatrixReverseTCS[];
 out mat4x4 worldModelViewMatrixReverse;
+
+in mat4x4 projectionMatrixTCS[];
+out mat4x4 projectionMatrix;
 
 in vec3 normalTCS[];
 out vec3 normal;
@@ -20,6 +24,8 @@ out vec4 eyeSpaceCoords;
 
 in vec4 pureVertexCoordsTCS[];
 out vec4 pureVertexCoords;
+
+uniform int fishEyeModeUniform; //1= fisheye, 2=equirectangular
 
 //quad interpol
 vec4 interpolate(in vec4 v0, in vec4 v1, in vec4 v2, in vec4 v3)
@@ -44,7 +50,9 @@ void main()
   //geomTexCoord = vertexTexCoord;
 
   
-  worldModelViewMatrixReverse = (gl_TessCoord.x * worldModelViewMatrixReverseTCS[0] + gl_TessCoord.y * worldModelViewMatrixReverseTCS[1] + gl_TessCoord.z * worldModelViewMatrixReverseTCS[2]);
+  //worldModelViewMatrixReverse = (gl_TessCoord.x * worldModelViewMatrixReverseTCS[0] + gl_TessCoord.y * worldModelViewMatrixReverseTCS[1] + gl_TessCoord.z * worldModelViewMatrixReverseTCS[2]);
+  worldModelViewMatrixReverse = worldModelViewMatrixReverseTCS[0];
+  projectionMatrix = projectionMatrixTCS[0];
   normal = (gl_TessCoord.x * normalTCS[0] + gl_TessCoord.y * normalTCS[1] + gl_TessCoord.z * normalTCS[2]);
   eyeSpaceCoords = (gl_TessCoord.x * eyeSpaceCoordsTCS[0] + gl_TessCoord.y * eyeSpaceCoordsTCS[1] + gl_TessCoord.z * eyeSpaceCoordsTCS[2]);
   pureVertexCoords = (gl_TessCoord.x * pureVertexCoordsTCS[0] + gl_TessCoord.y * pureVertexCoordsTCS[1] + gl_TessCoord.z * pureVertexCoordsTCS[2]);

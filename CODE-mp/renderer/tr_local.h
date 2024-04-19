@@ -2162,6 +2162,16 @@ typedef struct {
 } fishEyeData_t;
 
 typedef struct {
+	vec3_t origin;
+	float time;
+	float spreadSpeed;
+	float intensity;
+	int sampleAvgWidth;
+	float distanceScale;
+	int mode;
+} mmeSoundDeformData_t;
+
+typedef struct {
 	frameBufferData_t* current;
 	frameBufferData_t* next;
 } doubleFrameBufferData_t;
@@ -2179,6 +2189,7 @@ typedef struct {
 	int fishEyeTempDisabled;
 	int screenWidth, screenHeight;
 	fishEyeData_t fishEyeData;
+	mmeSoundDeformData_t musicDeformData;
 	int soundDeformLastIndex;
 	int soundDeformSampleRate;
 	int soundDeformSampleCount;

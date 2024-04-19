@@ -708,6 +708,14 @@ vmCvar_t	mov_sortObjects;
 vmCvar_t	mme_demoFileName;
 vmCvar_t	mme_chaseViewHeightFix;
 
+vmCvar_t	mme_soundDeformIntensity;
+vmCvar_t	mme_soundDeformOrigin;  // 1 = player, 2 = camera, alternatively use 3 numbers to set origin
+vmCvar_t	mme_soundDeformSpreadSpeed;
+vmCvar_t	mme_soundDeformTimeBase; // 1 = demo time, 2 = servertime underlying
+vmCvar_t	mme_soundDeformSampleAvgWidth;
+vmCvar_t	mme_soundDeformDistanceScale;
+vmCvar_t	mme_soundDeformOffsetMode; // 1= Z axis, 2 = normal, 3= direct view, 4= normal with direct view scale
+
 vmCvar_t	fx_Vibrate;
 vmCvar_t	fx_vfps;
 vmCvar_t	cg_saberMarksFps;
@@ -963,6 +971,13 @@ Ghoul2 Insert End
 	//mme
 	{ &mme_demoFileName,	"mme_demoFileName",		"",				NULL,	0				},
 	{ &mme_chaseViewHeightFix,	"mme_chaseViewHeightFix",	"1",	NULL,	CVAR_ARCHIVE	},
+	{ &mme_soundDeformIntensity,	"mme_soundDeformIntensity",	"50.0",	NULL,	CVAR_ARCHIVE	},
+	{ &mme_soundDeformOrigin,	"mme_soundDeformOrigin",	"1",	NULL,	CVAR_ARCHIVE	},
+	{ &mme_soundDeformSpreadSpeed,	"mme_soundDeformSpreadSpeed",	"22144",	NULL,	CVAR_ARCHIVE	},
+	{ &mme_soundDeformTimeBase,	"mme_soundDeformTimeBase",	"1",	NULL,	CVAR_ARCHIVE	},
+	{ &mme_soundDeformSampleAvgWidth,	"mme_soundDeformSampleAvgWidth",	"1",	NULL,	CVAR_ARCHIVE	},
+	{ &mme_soundDeformDistanceScale,	"mme_soundDeformDistanceScale",	"2.0",	NULL,	CVAR_ARCHIVE	},
+	{ &mme_soundDeformOffsetMode,	"mme_soundDeformOffsetMode",	"1",	NULL,	CVAR_ARCHIVE	},
 	{ &mov_chatBeep,		"mov_chatBeep",			"0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_fragsOnly,		"mov_fragsOnly",		"0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_drawChatbox,		"mov_drawChatbox",		"1",			NULL,	CVAR_ARCHIVE	},

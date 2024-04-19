@@ -91,6 +91,15 @@ typedef struct uniformLocations_t {
 	GLint worldModelViewMatrixUniform;
 	GLint soundDeformSampleRateUniform;
 	GLint soundDeformSampleCountUniform;
+
+	GLint soundDeformTimeUniform;
+	GLint soundDeformIntensityUniform;
+	GLint soundDeformSpreadSpeedUniform;
+	GLint soundDeformSampleAvgWidthUniform;
+	GLint soundDeformOriginUniform;
+	GLint soundDeformDistanceScaleUniform;
+	GLint soundDeformModeUniform;
+
 	GLint dLightIntensityUniform;
 	GLint dLightFastSkipThresholdUniform;
 	GLint dLightSpecIntensityUniform;
@@ -256,7 +265,7 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1i(uniformLocationsTess.parallaxMapLayersUniform, r_fboGLSLParallaxMappingLayers->integer);
 		qglUniform1f(uniformLocationsTess.parallaxMapDepthUniform, r_fboGLSLParallaxMappingDepth->value);
 		qglUniform1f(uniformLocationsTess.parallaxMapGammaUniform, r_fboGLSLParallaxMappingGamma->value);
-		qglUniform1f(uniformLocationsTess.serverTimeUniform, backEnd.refdef.floatTime); 
+		qglUniform1f(uniformLocationsTess.serverTimeUniform, (backEnd.refdef.time + backEnd.refdef.timeFraction) * 0.001f);
 		qglUniform1i(uniformLocationsTess.noiseFuckeryUniform, r_fboGLSLNoiseFuckery->integer);
 		qglUniform1i(uniformLocationsTess.noiseFuckeryLightmapUniform, r_fboGLSLNoiseFuckeryLightmap->integer);
 		qglUniform1f(uniformLocationsTess.noiseFuckeryLightmapIntensityUniform, r_fboGLSLNoiseFuckeryLightmapIntensity->value);
@@ -264,6 +273,15 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniformMatrix4fv(uniformLocationsTess.worldModelViewMatrixUniform, 1, GL_FALSE, backEnd.viewParms.world.modelMatrix);
 		qglUniform1i(uniformLocationsTess.soundDeformSampleRateUniform, fbo.soundDeformSampleRate);
 		qglUniform1i(uniformLocationsTess.soundDeformSampleCountUniform, fbo.soundDeformSampleCount);
+
+		qglUniform1f(uniformLocationsTess.soundDeformTimeUniform, fbo.musicDeformData.time);
+		qglUniform1f(uniformLocationsTess.soundDeformIntensityUniform, fbo.musicDeformData.intensity);
+		qglUniform1f(uniformLocationsTess.soundDeformSpreadSpeedUniform, fbo.musicDeformData.spreadSpeed);
+		qglUniform1i(uniformLocationsTess.soundDeformSampleAvgWidthUniform, fbo.musicDeformData.sampleAvgWidth);
+		qglUniform3fv(uniformLocationsTess.soundDeformOriginUniform, 1, fbo.musicDeformData.origin);
+		qglUniform1f(uniformLocationsTess.soundDeformDistanceScaleUniform, fbo.musicDeformData.distanceScale);
+		qglUniform1i(uniformLocationsTess.soundDeformModeUniform, fbo.musicDeformData.mode);
+
 		qglUniform1i(uniformLocationsTess.dLightsCountUniform, r_fboGLSLDLights->integer?  backEnd.refdef.num_dlights : 0);
 		qglUniform1f(uniformLocationsTess.dLightSpecGammaUniform, r_fboGLSLDLightsSpecGamma->value);
 		qglUniform1f(uniformLocationsTess.dLightSpecIntensityUniform, r_fboGLSLDLightsSpecIntensity->value);
@@ -304,7 +322,7 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1i(uniformLocations.parallaxMapLayersUniform, r_fboGLSLParallaxMappingLayers->integer);
 		qglUniform1f(uniformLocations.parallaxMapDepthUniform, r_fboGLSLParallaxMappingDepth->value);
 		qglUniform1f(uniformLocations.parallaxMapGammaUniform, r_fboGLSLParallaxMappingGamma->value);
-		qglUniform1f(uniformLocations.serverTimeUniform, backEnd.refdef.floatTime);
+		qglUniform1f(uniformLocations.serverTimeUniform, (backEnd.refdef.time+ backEnd.refdef.timeFraction)*0.001f);
 		qglUniform1i(uniformLocations.noiseFuckeryUniform, r_fboGLSLNoiseFuckery->integer);
 		qglUniform1i(uniformLocations.noiseFuckeryLightmapUniform, r_fboGLSLNoiseFuckeryLightmap->integer);
 		qglUniform1f(uniformLocations.noiseFuckeryLightmapIntensityUniform, r_fboGLSLNoiseFuckeryLightmapIntensity->value);
@@ -312,6 +330,15 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniformMatrix4fv(uniformLocations.worldModelViewMatrixUniform, 1, GL_FALSE, backEnd.viewParms.world.modelMatrix);
 		qglUniform1i(uniformLocations.soundDeformSampleRateUniform, fbo.soundDeformSampleRate);
 		qglUniform1i(uniformLocations.soundDeformSampleCountUniform, fbo.soundDeformSampleCount);
+
+		qglUniform1f(uniformLocations.soundDeformTimeUniform, fbo.musicDeformData.time);
+		qglUniform1f(uniformLocations.soundDeformIntensityUniform, fbo.musicDeformData.intensity);
+		qglUniform1f(uniformLocations.soundDeformSpreadSpeedUniform, fbo.musicDeformData.spreadSpeed);
+		qglUniform1i(uniformLocations.soundDeformSampleAvgWidthUniform, fbo.musicDeformData.sampleAvgWidth);
+		qglUniform3fv(uniformLocations.soundDeformOriginUniform,1, fbo.musicDeformData.origin);
+		qglUniform1f(uniformLocations.soundDeformDistanceScaleUniform, fbo.musicDeformData.distanceScale);
+		qglUniform1i(uniformLocations.soundDeformModeUniform, fbo.musicDeformData.mode);
+
 		qglUniform1i(uniformLocations.dLightsCountUniform, r_fboGLSLDLights->integer ? backEnd.refdef.num_dlights : 0);
 		qglUniform1f(uniformLocations.dLightSpecGammaUniform, r_fboGLSLDLightsSpecGamma->value);
 		qglUniform1f(uniformLocations.dLightSpecIntensityUniform, r_fboGLSLDLightsSpecIntensity->value);
@@ -433,7 +460,7 @@ static qboolean R_FrameBuffer_ReactivateFisheye() {
 	if (!fishEyeShader || !fishEyeShader->IsWorking())
 		return qfalse;
 
-	if (/*!r_fboFishEye->integer &&*/ !r_fboGLSL->integer) {
+	if ( !r_fboGLSL->integer) {
 		if (fbo.fishEyeActive) {
 			R_FrameBuffer_DeactivateFisheye();
 		}
@@ -467,7 +494,7 @@ qboolean R_FrameBuffer_ActivateFisheye(vec_t* pixelJitter3D, vec_t* dofJitter3D,
 	if (!fishEyeShader || !fishEyeShader->IsWorking())
 		return qfalse;
 
-	if (/*!r_fboFishEye->integer &&*/ !r_fboGLSL->integer) {
+	if ( !r_fboGLSL->integer) {
 		if (fbo.fishEyeActive) {
 			R_FrameBuffer_DeactivateFisheye();
 		}
@@ -495,7 +522,7 @@ qboolean R_FrameBuffer_SetDynamicUniforms(float* texAverageBrightness, bool* isL
 	//TODO
 	return qfalse;
 #else
-	if (!r_fboGLSL->integer/* && !r_fboFishEye->integer*/) {
+	if (!r_fboGLSL->integer) {
 		return qfalse;
 	}
 
@@ -511,6 +538,29 @@ qboolean R_FrameBuffer_SetDynamicUniforms(float* texAverageBrightness, bool* isL
 	if (isSaber) {
 		fbo.fishEyeData.isSaber = *isSaber;
 	}
+
+	R_FrameBuffer_FishEyeSetUniforms(fbo.fishEyeData.tessellationActive);
+
+	return qtrue;
+#endif
+}
+
+qboolean R_FrameBuffer_SetMusicDeformData(float intensity, float time, float spreadSpeed, int sampleAvgWidth, const vec3_t origin, float distanceScale,int mode) {
+#ifdef HAVE_GLES
+	//TODO
+	return qfalse;
+#else
+	if (!r_fboGLSL->integer) {
+		return qfalse;
+	}
+
+	fbo.musicDeformData.intensity = intensity;
+	fbo.musicDeformData.time = time;
+	fbo.musicDeformData.spreadSpeed = spreadSpeed;
+	fbo.musicDeformData.sampleAvgWidth = sampleAvgWidth;
+	VectorCopy(origin,fbo.musicDeformData.origin);
+	fbo.musicDeformData.distanceScale = distanceScale;
+	fbo.musicDeformData.mode = mode;
 
 	R_FrameBuffer_FishEyeSetUniforms(fbo.fishEyeData.tessellationActive);
 
@@ -1038,6 +1088,15 @@ static void R_FrameBufferInitUniformLocs(R_GLSL* program,uniformLocations_t* loc
 	locs->worldModelViewMatrixUniform = qglGetUniformLocation(program->ShaderId(), "worldModelViewMatrixUniform");
 	locs->soundDeformSampleRateUniform = qglGetUniformLocation(program->ShaderId(), "soundDeformSampleRateUniform");
 	locs->soundDeformSampleCountUniform = qglGetUniformLocation(program->ShaderId(), "soundDeformSampleCountUniform");
+
+	locs->soundDeformTimeUniform = qglGetUniformLocation(program->ShaderId(), "soundDeformTimeUniform");
+	locs->soundDeformIntensityUniform = qglGetUniformLocation(program->ShaderId(), "soundDeformIntensityUniform");
+	locs->soundDeformSpreadSpeedUniform = qglGetUniformLocation(program->ShaderId(), "soundDeformSpreadSpeedUniform");
+	locs->soundDeformSampleAvgWidthUniform = qglGetUniformLocation(program->ShaderId(), "soundDeformSampleAvgWidthUniform");
+	locs->soundDeformOriginUniform = qglGetUniformLocation(program->ShaderId(), "soundDeformOriginUniform");
+	locs->soundDeformDistanceScaleUniform = qglGetUniformLocation(program->ShaderId(), "soundDeformDistanceScaleUniform");
+	locs->soundDeformModeUniform = qglGetUniformLocation(program->ShaderId(), "soundDeformModeUniform");
+
 	locs->dLightSpecGammaUniform = qglGetUniformLocation(program->ShaderId(), "dLightSpecGammaUniform");
 	locs->dLightSpecIntensityUniform = qglGetUniformLocation(program->ShaderId(), "dLightSpecIntensityUniform");
 	locs->dLightIntensityUniform = qglGetUniformLocation(program->ShaderId(), "dLightIntensityUniform");
@@ -1068,6 +1127,8 @@ void R_FrameBuffer_Init( void ) {
 	fbo.fishEyeActive = qfalse;
 	fbo.fishEyeData.tessellationActive = qfalse;
 	fbo.fishEyeTempDisabled = 0;
+	fbo.soundDeformSampleCount = 0;
+	fbo.soundDeformSampleRate = 44100;
 
 	memset( &fbo, 0, sizeof( fbo ) );
 	r_fbo = ri.Cvar_Get( "r_fbo", "1", CVAR_ARCHIVE | CVAR_LATCH);
@@ -1315,9 +1376,9 @@ void R_FrameBuffer_StartFrame( void ) {
 	r_fboFishEyeTessellate = ri.Cvar_Get("r_fboFishEyeTessellate", "1", CVAR_ARCHIVE); // Updated on every frame.
 	r_fboFishEye = ri.Cvar_Get("r_fboFishEye", "0", CVAR_ARCHIVE);
 
-	fbo.soundDeformSampleCount = 0;
 	if (r_fboGLSL->integer) {
 		if (tr.mmeMusicDeformIndex != fbo.soundDeformLastIndex) {
+			fbo.soundDeformSampleCount = 0;
 			static float empty[1]{ 0 };
 			if (g_SSBOsSupported) {
 				if (musicDeformSSBOData) {
