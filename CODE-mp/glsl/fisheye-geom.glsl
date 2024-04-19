@@ -116,7 +116,7 @@ void makeUVTransformationMatrix(in vec3 vec1i, in vec2 vec1o, in vec3 vec2i, in 
 // Standard stuff 
 //
 //
-void standard(){
+void standard(vec3 myNormal){
 	
 	int musicDeformSampleCount = soundDeformSampleCountUniform;//soundDeformSamples.length()*2; 
 
@@ -124,33 +124,47 @@ void standard(){
 	for (int i = 0; i < 3; i++)
 	{
 		vec4 positionAdjustment = vec4(0.0);
+		//vec3 colorAdd = vec3(0.0);
+		float redAdd = 0.0;
 		if(musicDeformSampleCount>0 && isWorldBrushUniform > 0){
 			// TODO implement soundDeformSampleAvgWidthUniform
-			vec3 eyeSpaceSoundDeformOrigin = (vec4(soundDeformOriginUniform,1.0)*worldModelViewMatrixUniform).xyz;
+			vec3 eyeSpaceSoundDeformOrigin = (worldModelViewMatrixUniform*vec4(soundDeformOriginUniform,1.0)).xyz;
 			vec3 pointToOrigin = eyeSpaceSoundDeformOrigin-eyeSpaceCoords[i].xyz;
 			float distanceToPoint = length(pointToOrigin);
+			redAdd+= distanceToPoint/1000.0f;
+			//colorAdd += eyeSpaceSoundDeformOrigin/1000.0f;
 			float samplePosition = (float(soundDeformTimeUniform))*float(soundDeformSampleRateUniform)-(distanceToPoint/soundDeformSpreadSpeedUniform*float(soundDeformSampleRateUniform));
 			int realSamplePos = samplePosition< 0 ? 0: int(samplePosition)%musicDeformSampleCount;
 			vec4 vecAtPos = soundDeformSamples[realSamplePos/4]; // gotta work with vec4 due to alignment
 			float actualValue =vecAtPos[realSamplePos % 4];
-			float deformIntensity = soundDeformIntensityUniform*float(actualValue)/32767.0*soundDeformDistanceScaleUniform*distanceToPoint/1000.0f;
+			float deformIntensity = soundDeformIntensityUniform*float(actualValue)/32767.0*(1.0+soundDeformDistanceScaleUniform*distanceToPoint/1000.0f);
 			switch(soundDeformModeUniform){
 				default:
 				case 1: // Z axis
 				vec4 worldPos = (worldModelViewMatrixReverse[0]*eyeSpaceCoords[i]);
 				worldPos.z += deformIntensity;
-				worldPos *= worldModelViewMatrixUniform;
+				worldPos.w = 1.0;
+				worldPos = worldModelViewMatrixUniform*worldPos;
 				positionAdjustment = worldPos-gl_PositionIn[i];
 				positionAdjustment.w = 0.0;
 				break;
 				case 2: // normal
-				positionAdjustment = vec4(normal*deformIntensity,0.0);
+				positionAdjustment = vec4(myNormal*deformIntensity,0.0);
 				break;
 				case 3: // direct view
 				positionAdjustment = vec4(-normalize(pointToOrigin)*deformIntensity,0.0);
 				break;
 				case 4: // normal with direct view scale
-				positionAdjustment = vec4(normal*dot(normalize(pointToOrigin),normal),0.0);
+				positionAdjustment = vec4(-deformIntensity*myNormal*dot(normalize(pointToOrigin),myNormal),0.0);
+				break;
+				case 5: // mixture of 1 and 5
+				vec4 worldPos2 = (worldModelViewMatrixReverse[0]*eyeSpaceCoords[i]);
+				worldPos.z += deformIntensity;
+				worldPos.w = 1.0;
+				worldPos = worldModelViewMatrixUniform*worldPos2;
+				positionAdjustment = worldPos-gl_PositionIn[i];
+				positionAdjustment.w = 0.0;
+				positionAdjustment += vec4(-deformIntensity*myNormal*dot(normalize(pointToOrigin),myNormal),0.0);
 				break;
 			}
 		}
@@ -164,6 +178,8 @@ void standard(){
 		pureVertexCoordsGeom = pureVertexCoords[i];
 
 		vertColor = color[i];
+		//vertColor.xyz += colorAdd;
+		vertColor.x += redAdd;
 		EmitVertex();
 	}
 	
@@ -453,7 +469,8 @@ void main()
 	vec3 uvtransform[2];
 	makeUVTransformationMatrix(gl_PositionIn[0].xyz,geomTexCoord[0].st,gl_PositionIn[1].xyz,geomTexCoord[1].st,gl_PositionIn[2].xyz,geomTexCoord[2].st,uvtransform);
 	texUVTransform= uvtransform;*/
-	normal = normalize(cross(normalize(eyeSpaceCoords[2].xyz-eyeSpaceCoords[0].xyz),normalize(eyeSpaceCoords[1].xyz-eyeSpaceCoords[0].xyz)));
+	vec3 myNormal = normalize(cross(normalize(eyeSpaceCoords[2].xyz-eyeSpaceCoords[0].xyz),normalize(eyeSpaceCoords[1].xyz-eyeSpaceCoords[0].xyz)));
+	normal = myNormal;
 
 	// Calculate UV vectors (dunno what im doing, i want parallax mapping lol)
 	vec3 uvtransform[2];
@@ -469,6 +486,6 @@ void main()
 	} else if(fishEyeModeUniform == 1 ){
 		fisheye();
 	} else {
-		standard();
+		standard(myNormal);
 	}
 }
