@@ -714,6 +714,7 @@ vmCvar_t	mme_soundDeformSpreadSpeed;
 vmCvar_t	mme_soundDeformTimeBase; // 1 = demo time, 2 = servertime underlying
 vmCvar_t	mme_soundDeformSampleAvgWidth;
 vmCvar_t	mme_soundDeformDistanceScale;
+vmCvar_t	mme_soundDeformShortDistanceReduction;
 vmCvar_t	mme_soundDeformOffsetMode; // 1= Z axis, 2 = normal, 3= direct view, 4= normal with direct view scale
 
 vmCvar_t	fx_Vibrate;
@@ -977,6 +978,7 @@ Ghoul2 Insert End
 	{ &mme_soundDeformTimeBase,	"mme_soundDeformTimeBase",	"1",	NULL,	CVAR_ARCHIVE	},
 	{ &mme_soundDeformSampleAvgWidth,	"mme_soundDeformSampleAvgWidth",	"1",	NULL,	CVAR_ARCHIVE	},
 	{ &mme_soundDeformDistanceScale,	"mme_soundDeformDistanceScale",	"0.1",	NULL,	CVAR_ARCHIVE	},
+	{ &mme_soundDeformShortDistanceReduction,	"mme_soundDeformShortDistanceReduction",	"200",	NULL,	CVAR_ARCHIVE	},
 	{ &mme_soundDeformOffsetMode,	"mme_soundDeformOffsetMode",	"1",	NULL,	CVAR_ARCHIVE	},
 	{ &mov_chatBeep,		"mov_chatBeep",			"0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_fragsOnly,		"mov_fragsOnly",		"0",			NULL,	CVAR_ARCHIVE	},

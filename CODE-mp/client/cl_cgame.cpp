@@ -42,7 +42,7 @@ extern qboolean loadCamera(const char *name);
 extern void startCamera(int time);
 extern qboolean getCameraInfo(int time, vec3_t *origin, vec3_t *angles);
 
-extern qboolean R_FrameBuffer_SetMusicDeformData(float intensity, float time, float spreadSpeed, int sampleAvgWidth, const vec3_t origin, float distanceScale,int mode);
+extern qboolean R_FrameBuffer_SetMusicDeformData(float intensity, float time, float spreadSpeed, int sampleAvgWidth, const vec3_t origin, float distanceScale,int mode, float shortDistanceReduction);
 
 extern void demoGetSnapshotNumber( int *snapNumber, int *serverTime );
 extern qboolean demoGetSnapshot( int snapNumber, snapshot_t *snap );
@@ -1247,7 +1247,7 @@ Ghoul2 Insert End
 		re.MMEFakeAdvanceFrames(args[1]);
 		return 0;
 	case CG_MME_SETMUSICDEFORMDATA:
-		R_FrameBuffer_SetMusicDeformData(VMF(1),VMF(2),VMF(3),args[4], (const vec_t*)VMA(5),VMF(6),args[7]);
+		R_FrameBuffer_SetMusicDeformData(VMF(1),VMF(2),VMF(3),args[4], (const vec_t*)VMA(5),VMF(6),args[7],VMF(8));
 		return 0;
 	case CG_MME_GETROLLINGSHUTTERINFO:
 		{

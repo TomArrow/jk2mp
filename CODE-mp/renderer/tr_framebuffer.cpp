@@ -98,6 +98,7 @@ typedef struct uniformLocations_t {
 	GLint soundDeformSampleAvgWidthUniform;
 	GLint soundDeformOriginUniform;
 	GLint soundDeformDistanceScaleUniform;
+	GLint soundDeformShortDistanceReductionUniform;
 	GLint soundDeformModeUniform;
 
 	GLint dLightIntensityUniform;
@@ -280,6 +281,7 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1i(uniformLocationsTess.soundDeformSampleAvgWidthUniform, fbo.musicDeformData.sampleAvgWidth);
 		qglUniform3fv(uniformLocationsTess.soundDeformOriginUniform, 1, fbo.musicDeformData.origin);
 		qglUniform1f(uniformLocationsTess.soundDeformDistanceScaleUniform, fbo.musicDeformData.distanceScale);
+		qglUniform1f(uniformLocationsTess.soundDeformShortDistanceReductionUniform, fbo.musicDeformData.shortDistanceReduction);
 		qglUniform1i(uniformLocationsTess.soundDeformModeUniform, fbo.musicDeformData.mode);
 
 		qglUniform1i(uniformLocationsTess.dLightsCountUniform, r_fboGLSLDLights->integer?  backEnd.refdef.num_dlights : 0);
@@ -337,6 +339,7 @@ qboolean R_FrameBuffer_FishEyeSetUniforms(qboolean tess) {
 		qglUniform1i(uniformLocations.soundDeformSampleAvgWidthUniform, fbo.musicDeformData.sampleAvgWidth);
 		qglUniform3fv(uniformLocations.soundDeformOriginUniform,1, fbo.musicDeformData.origin);
 		qglUniform1f(uniformLocations.soundDeformDistanceScaleUniform, fbo.musicDeformData.distanceScale);
+		qglUniform1f(uniformLocations.soundDeformShortDistanceReductionUniform, fbo.musicDeformData.shortDistanceReduction);
 		qglUniform1i(uniformLocations.soundDeformModeUniform, fbo.musicDeformData.mode);
 
 		qglUniform1i(uniformLocations.dLightsCountUniform, r_fboGLSLDLights->integer ? backEnd.refdef.num_dlights : 0);
@@ -545,7 +548,7 @@ qboolean R_FrameBuffer_SetDynamicUniforms(float* texAverageBrightness, bool* isL
 #endif
 }
 
-qboolean R_FrameBuffer_SetMusicDeformData(float intensity, float time, float spreadSpeed, int sampleAvgWidth, const vec3_t origin, float distanceScale,int mode) {
+qboolean R_FrameBuffer_SetMusicDeformData(float intensity, float time, float spreadSpeed, int sampleAvgWidth, const vec3_t origin, float distanceScale,int mode, float shortDistanceReduction) {
 #ifdef HAVE_GLES
 	//TODO
 	return qfalse;
@@ -561,6 +564,7 @@ qboolean R_FrameBuffer_SetMusicDeformData(float intensity, float time, float spr
 	VectorCopy(origin,fbo.musicDeformData.origin);
 	fbo.musicDeformData.distanceScale = distanceScale;
 	fbo.musicDeformData.mode = mode;
+	fbo.musicDeformData.shortDistanceReduction = shortDistanceReduction;
 
 	R_FrameBuffer_FishEyeSetUniforms(fbo.fishEyeData.tessellationActive);
 
@@ -1095,6 +1099,7 @@ static void R_FrameBufferInitUniformLocs(R_GLSL* program,uniformLocations_t* loc
 	locs->soundDeformSampleAvgWidthUniform = qglGetUniformLocation(program->ShaderId(), "soundDeformSampleAvgWidthUniform");
 	locs->soundDeformOriginUniform = qglGetUniformLocation(program->ShaderId(), "soundDeformOriginUniform");
 	locs->soundDeformDistanceScaleUniform = qglGetUniformLocation(program->ShaderId(), "soundDeformDistanceScaleUniform");
+	locs->soundDeformShortDistanceReductionUniform = qglGetUniformLocation(program->ShaderId(), "soundDeformShortDistanceReductionUniform");
 	locs->soundDeformModeUniform = qglGetUniformLocation(program->ShaderId(), "soundDeformModeUniform");
 
 	locs->dLightSpecGammaUniform = qglGetUniformLocation(program->ShaderId(), "dLightSpecGammaUniform");

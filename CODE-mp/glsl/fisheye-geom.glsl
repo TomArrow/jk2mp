@@ -43,6 +43,7 @@ uniform float serverTimeUniform;
 uniform float soundDeformTimeUniform;
 uniform float soundDeformIntensityUniform;
 uniform float soundDeformDistanceScaleUniform;
+uniform float soundDeformShortDistanceReductionUniform;
 uniform float soundDeformSpreadSpeedUniform;
 uniform int soundDeformSampleAvgWidthUniform;
 uniform int soundDeformModeUniform; // 1= Z axis, 2 = normal, 3= direct view, 4= normal with direct view scale
@@ -137,34 +138,55 @@ void standard(vec3 myNormal){
 			int realSamplePos = samplePosition< 0 ? 0: int(samplePosition)%musicDeformSampleCount;
 			vec4 vecAtPos = soundDeformSamples[realSamplePos/4]; // gotta work with vec4 due to alignment
 			float actualValue =vecAtPos[realSamplePos % 4];
-			float deformIntensity = soundDeformIntensityUniform*float(actualValue)/32767.0*(1.0+soundDeformDistanceScaleUniform*distanceToPoint/1000.0f);
+			float shortDistanceRatio = clamp((distanceToPoint/soundDeformShortDistanceReductionUniform),0.0,1.0);
+			float deformIntensity = soundDeformIntensityUniform*float(actualValue)/32767.0*(1.0+soundDeformDistanceScaleUniform*distanceToPoint/1000.0f)*shortDistanceRatio*shortDistanceRatio;
 			switch(soundDeformModeUniform){
 				default:
 				case 1: // Z axis
-				vec4 worldPos = (worldModelViewMatrixReverse[0]*eyeSpaceCoords[i]);
-				worldPos.z += deformIntensity;
-				worldPos.w = 1.0;
-				worldPos = worldModelViewMatrixUniform*worldPos;
-				positionAdjustment = worldPos-gl_PositionIn[i];
-				positionAdjustment.w = 0.0;
+					vec4 worldPos = (worldModelViewMatrixReverse[0]*eyeSpaceCoords[i]);
+					worldPos.z += deformIntensity;
+					worldPos.w = 1.0;
+					worldPos = worldModelViewMatrixUniform*worldPos;
+					positionAdjustment = worldPos-gl_PositionIn[i];
+					positionAdjustment.w = 0.0;
 				break;
 				case 2: // normal
-				positionAdjustment = vec4(myNormal*deformIntensity,0.0);
+					positionAdjustment = vec4(myNormal*deformIntensity,0.0);
 				break;
 				case 3: // direct view
-				positionAdjustment = vec4(-normalize(pointToOrigin)*deformIntensity,0.0);
+					positionAdjustment = vec4(-normalize(pointToOrigin)*deformIntensity,0.0);
 				break;
 				case 4: // normal with direct view scale
-				positionAdjustment = vec4(-deformIntensity*myNormal*dot(normalize(pointToOrigin),myNormal),0.0);
+					positionAdjustment = vec4(-deformIntensity*myNormal*dot(normalize(pointToOrigin),myNormal),0.0);
 				break;
-				case 5: // mixture of 1 and 5
-				vec4 worldPos2 = (worldModelViewMatrixReverse[0]*eyeSpaceCoords[i]);
-				worldPos.z += deformIntensity;
-				worldPos.w = 1.0;
-				worldPos = worldModelViewMatrixUniform*worldPos2;
-				positionAdjustment = worldPos-gl_PositionIn[i];
-				positionAdjustment.w = 0.0;
-				positionAdjustment += vec4(-deformIntensity*myNormal*dot(normalize(pointToOrigin),myNormal),0.0);
+				case 5: // mixture of 1 and 4
+					vec4 worldPos2 = (worldModelViewMatrixReverse[0]*eyeSpaceCoords[i]);
+					worldPos2.z += deformIntensity;
+					worldPos2.w = 1.0;
+					worldPos2 = worldModelViewMatrixUniform*worldPos2;
+					positionAdjustment = worldPos2-gl_PositionIn[i];
+					positionAdjustment.w = 0.0;
+					positionAdjustment += vec4(-deformIntensity*myNormal*dot(normalize(pointToOrigin),myNormal),0.0);
+				break;
+				case 6: // deform on all 3 axes in direction of movement, sorta. meh? ( doesnt work)
+					vec4 worldPos3 = (worldModelViewMatrixReverse[0]*eyeSpaceCoords[i]);
+					vec3 originToPointWorldNormal = normalize(worldPos3.xyz-soundDeformOriginUniform);
+					worldPos3.x += deformIntensity * sign(originToPointWorldNormal.x);
+					worldPos3.y += deformIntensity * sign(originToPointWorldNormal.y);
+					worldPos3.z += deformIntensity * sign(originToPointWorldNormal.z);
+					worldPos3.w = 1.0;
+					worldPos3 = worldModelViewMatrixUniform*worldPos3;
+					positionAdjustment = worldPos-gl_PositionIn[i];
+					positionAdjustment.w = 0.0;
+				break;
+				case 7: // mixture of 1 and 3
+					vec4 worldPos4 = (worldModelViewMatrixReverse[0]*eyeSpaceCoords[i]);
+					worldPos4.z += deformIntensity;
+					worldPos4.w = 1.0;
+					worldPos4 = worldModelViewMatrixUniform*worldPos4;
+					positionAdjustment = worldPos4-gl_PositionIn[i];
+					positionAdjustment.w = 0.0;
+					positionAdjustment += vec4(-normalize(pointToOrigin)*deformIntensity,0.0);
 				break;
 			}
 		}

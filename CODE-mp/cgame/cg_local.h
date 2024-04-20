@@ -2045,6 +2045,7 @@ extern	vmCvar_t	mme_soundDeformSpreadSpeed;
 extern	vmCvar_t	mme_soundDeformTimeBase; // 1 = demo time, 2 = servertime underlying
 extern	vmCvar_t	mme_soundDeformSampleAvgWidth;
 extern	vmCvar_t	mme_soundDeformDistanceScale;
+extern	vmCvar_t	mme_soundDeformShortDistanceReduction;
 extern	vmCvar_t	mme_soundDeformOffsetMode;
 
 extern	vmCvar_t	fx_Vibrate;

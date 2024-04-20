@@ -2168,6 +2168,7 @@ typedef struct {
 	float intensity;
 	int sampleAvgWidth;
 	float distanceScale;
+	float shortDistanceReduction;
 	int mode;
 } mmeSoundDeformData_t;
 

@@ -29,7 +29,7 @@ extern void trap_MME_BlurInfo( int* total, int * index );
 extern void trap_MME_Capture( const char *baseName, float fps, float focus, float radius);
 extern int trap_MME_SeekTime( int seekTime );
 extern int trap_MME_FakeAdvanceFrame(int count);
-extern int trap_MME_SetMusicDeformData(float intensity, float time, float spreadSpeed, int sampleAvgWidth, const vec3_t origin, float distanceScale, int mode);
+extern int trap_MME_SetMusicDeformData(float intensity, float time, float spreadSpeed, int sampleAvgWidth, const vec3_t origin, float distanceScale, int mode, float shortDistanceReduction);
 extern mmeRollingShutterInfo_t* trap_MME_GetRollingShutterInfo();
 extern void trap_MME_Music( const char *musicName, float time, float length );
 extern void trap_MME_Time( int time );
@@ -59,7 +59,8 @@ static void CG_MME_UpdateMusicDeformInfo() {
 		mme_soundDeformSampleAvgWidth.integer,
 		mme_soundDeformOrigin.integer == 1 ? cg.predictedPlayerState.origin : cg.refdef.vieworg,
 		mme_soundDeformDistanceScale.value,
-		mme_soundDeformOffsetMode.integer
+		mme_soundDeformOffsetMode.integer,
+		mme_soundDeformShortDistanceReduction.integer
 		);
 }
 
