@@ -2499,6 +2499,8 @@ void CL_SetForcePowers_f( void ) {
 #define G2_VERT_SPACE_CLIENT_SIZE 256
 #endif
 
+void R_FrameBuffer_ReloadGLSL();
+
 /*
 ====================
 CL_Init
@@ -2668,6 +2670,8 @@ void CL_Init( void ) {
 	Cmd_AddCommand ("demoCut", CL_DemoCut_f);
 	Cmd_AddCommand ("demoListNext", CL_DemoListNext_f );
 
+	Cmd_AddCommand ("reloadGLSL", R_FrameBuffer_ReloadGLSL);
+
 	CL_InitRef();
 
 	SCR_Init ();
@@ -2739,6 +2743,8 @@ void CL_Shutdown( void ) {
 	Cmd_RemoveCommand ("showip");
 	Cmd_RemoveCommand ("model");
 	Cmd_RemoveCommand ("forcepowers");
+
+	Cmd_RemoveCommand ("reloadGLSL");
 
 	Cvar_Set( "cl_running", "0" );
 

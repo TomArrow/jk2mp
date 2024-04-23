@@ -2194,6 +2194,7 @@ typedef struct {
 	int soundDeformLastIndex;
 	int soundDeformSampleRate;
 	int soundDeformSampleCount;
+	qboolean reloadGLSL;
 } fbo_t;
 
 

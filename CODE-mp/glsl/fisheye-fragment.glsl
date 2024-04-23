@@ -1,6 +1,8 @@
 #version 400 compatibility
 #extension GL_ARB_shader_storage_buffer_object : enable
 
+#define PERLINFVCKERY 1
+
 uniform sampler2D text_in;
 
 in vec3 debugColor;
@@ -131,11 +133,32 @@ vec2 parallaxMapSteep(inout vec3 finalPosition){
 		uvCoords.s = dot(currentPlace,texUVTransform[0]);
 		uvCoords.t = dot(currentPlace,texUVTransform[1]);
 
+		float oldtexDepth = 0.0;
+		float texDepth = 0.0f;
 		for(int i=0; i< layers;i++){
 			
 			vec4 color = texture2D(text_in, uvCoords);
-			float texDepth = parallaxMapDepthUniform*(pow(max(min((color.x + color.y + color.z)/3.0f/texAverageBrightnessUniform,1.0f),0.0f),gamma)-1.0f);
-			if(texDepth >= -(layerDepth * float(i))){
+			oldtexDepth = texDepth;
+			texDepth = parallaxMapDepthUniform*(pow(max(min((color.x + color.y + color.z)/3.0f/texAverageBrightnessUniform,1.0f),0.0f),gamma)-1.0f);
+			
+			float newLayerDepth = -(layerDepth * float(i));
+			if(texDepth > newLayerDepth){
+				if(i > 0){
+					//float oldLayerDepth = -(layerDepth * float(i-1));
+					//float weight = (texDepth-newLayerDepth)/(oldLayerDepth-newLayerDepth-oldtexDepth+texDepth);
+					float weight = (texDepth-newLayerDepth)/(layerDepth-oldtexDepth+texDepth);
+					
+					//float a = texDepth-(-(layerDepth * float(i)));
+					//float b =  -(layerDepth * float(i-1)) - oldtexDepth;
+					//float weight = b/(a+b);
+					
+					vec3 newPlace = currentPlace + oneLayerProgressVec;
+					vec2 newUv;
+					newUv.s =  dot(newPlace,texUVTransform[0]);
+					newUv.t =  dot(newPlace,texUVTransform[1]);
+					currentPlace = newPlace*(1.0-weight) + currentPlace*weight;
+					uvCoords = newUv*(1.0-weight)+uvCoords*weight;
+				}
 				break;
 			} else {
 				currentPlace += oneLayerProgressVec;
@@ -143,6 +166,9 @@ vec2 parallaxMapSteep(inout vec3 finalPosition){
 				//uvCoords.t = mod(dot(currentPlace,texUVTransform[1]),1);
 				uvCoords.s = dot(currentPlace,texUVTransform[0]);
 				uvCoords.t = dot(currentPlace,texUVTransform[1]);
+			}
+			if(texDepth == newLayerDepth){
+				break;
 			}
 		}
 
@@ -162,7 +188,7 @@ vec2 parallaxMapSteep(inout vec3 finalPosition){
 		
 		return uvCoords;
 }
-
+#ifdef PERLINFUCKERY
 vec3 perlinNoiseVariation1(){ // Looks a bit like marble?
 	vec3 res;
 	vec4 coords = pureVertexCoordsGeom/2.0;
@@ -474,7 +500,7 @@ vec3 perlinNoiseVariation6Stack(vec4 coords,vec3 vieworg){
 	res.z = max(0.0,pow(res.z,2.4));
 	return res;
 }
-
+#endif
 vec3 calculateTextureNormal(vec2 uvCoords, vec3 startPosition){
 		//uvCoords.s = dot(eyeSpaceCoordsGeom.xyz,texUVTransform[0]);
 		//uvCoords.t = dot(eyeSpaceCoordsGeom.xyz,texUVTransform[1]);
@@ -612,7 +638,9 @@ void main(void)
 		//gl_FragColor.xyz+=debugColor;
 	}
 
-	{
+#ifdef PERLINFUCKERY
+	//{
+		gl_FragColor.x =1;
 		vec4 startCooords = pureVertexCoordsGeom*0.25;
 		if(isWorldBrushUniform > 0 && isLightmapUniform == 0 && perlinFuckery > 0){
 			//gl_FragColor.xyz+=pureVertexCoordsGeom.xyz/1000.0f; 
@@ -651,9 +679,10 @@ void main(void)
 				gl_FragColor.xyz = vec3(1.0)*(1.0-noiseFuckeryLightmapIntensityUniform)+(noiseFuckeryLightmapIntensityUniform*gl_FragColor.xyz);
 			}
 		} 
-		//gl_FragColor.xyz+=eyeSpaceCoordsGeom.xyz/1000.0f; // cool effect lol
-	}
 
+		//gl_FragColor.xyz+=eyeSpaceCoordsGeom.xyz/1000.0f; // cool effect lol
+	//}
+#endif
 
 	//vec3 lightNormal = normal;
 	vec3 lightNormal = calculateTextureNormal(uvCoords,effectiveUVPixelPos);
@@ -836,7 +865,7 @@ void main(void)
 
 
 
-
+#ifdef PERLINFUCKERY
 
 //
 // Description : Array and textureless GLSL 2D/3D/4D simplex
@@ -966,3 +995,6 @@ float snoise(vec4 v)
                + dot(m1*m1, vec2( dot( p3, x3 ), dot( p4, x4 ) ) ) ) ;
 
   }
+
+  #endif
+

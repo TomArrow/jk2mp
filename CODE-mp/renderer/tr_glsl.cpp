@@ -16,10 +16,19 @@ R_GLSL::R_GLSL(char* filenameVertexShader, char* filenameTessellationControlShad
 	const char* tessellationControlText;
 	const char* tessellationEvaluationText;
 	const char* fragmentText;
+	char* fragmentTextPerlinFuckery;
 	bool success = true;
 	try {
 		vertexText = (new std::string(std::istreambuf_iterator<char>(std::ifstream(filenameVertexShader).rdbuf()), std::istreambuf_iterator<char>()))->c_str();
 		fragmentText = (new std::string(std::istreambuf_iterator<char>(std::ifstream(filenameFragmentShader).rdbuf()), std::istreambuf_iterator<char>()))->c_str();
+		int fragmentLength = strlen(fragmentText)+1;
+		fragmentTextPerlinFuckery = new char[fragmentLength + 1];
+		for (int i = fragmentLength-1; i >= 0; i--) {
+			fragmentTextPerlinFuckery[i] = fragmentText[i];
+			if (fragmentTextPerlinFuckery[i] == '#' && !_strnicmp(fragmentTextPerlinFuckery+i,"#define PERLINFVCKERY",sizeof("#define PERLINFVCKERY")-1)) {
+				fragmentTextPerlinFuckery[i + strlen("#define PERLINF")] = 'U';
+			}
+		}
 		if (doGeometryShader) {
 			geometryText = (new std::string(std::istreambuf_iterator<char>(std::ifstream(filenameGeometryShader).rdbuf()), std::istreambuf_iterator<char>()))->c_str();
 		}
@@ -40,6 +49,7 @@ R_GLSL::R_GLSL(char* filenameVertexShader, char* filenameTessellationControlShad
 	}
 
 	if (success == false) {
+		delete fragmentTextPerlinFuckery;
 		return;
 	}
 
@@ -93,6 +103,18 @@ R_GLSL::R_GLSL(char* filenameVertexShader, char* filenameTessellationControlShad
 		success = false;
 	}
 
+	GLuint fragmentShaderPerlinId = qglCreateShader(GL_FRAGMENT_SHADER);
+	ri.Printf(PRINT_WARNING, "DEBUG: Fragment shader (perlin fuckery) id is %d.\n", (int)fragmentShaderPerlinId);
+	//const char* withPerlin[2] = {"#define PERLINFUCKERY\n",fragmentText };
+	//std::string perlinFragment = fragmentText.rep
+	const char* tmp = fragmentTextPerlinFuckery;
+	qglShaderSource(fragmentShaderPerlinId, 1, &tmp, NULL);
+	qglCompileShader(fragmentShaderPerlinId);
+	if (hasErrored(fragmentShaderPerlinId, filenameFragmentShader, false)) {
+		success = false;
+	}
+
+	// Normal shader
 	shaderId = qglCreateProgram();
 	ri.Printf(PRINT_WARNING, "DEBUG: Program shader id is %d.\n", (int)shaderId);
 	qglAttachShader(shaderId, vertexShaderId);
@@ -111,8 +133,35 @@ R_GLSL::R_GLSL(char* filenameVertexShader, char* filenameTessellationControlShad
 	}
 	qglLinkProgram(shaderId);
 	if (hasErrored(shaderId, "[shader program]", true)) {
+		qglDeleteProgram(shaderId);
+		shaderId = 0;
 		success = false;
 	}
+
+	// Shader with perlin fuckery (thanks AMD for not letting me include it in the normal shader program because you like to create graphical artifacts from code that is literally never executed)
+	shaderIdPerlinFuckery = qglCreateProgram();
+	ri.Printf(PRINT_WARNING, "DEBUG: Program shader (perlin fuckery) id is %d.\n", (int)shaderId);
+	qglAttachShader(shaderIdPerlinFuckery, vertexShaderId);
+	if (doTessellationShader) {
+		qglAttachShader(shaderIdPerlinFuckery, tessellationControlShaderId);
+		qglAttachShader(shaderIdPerlinFuckery, tessellationEvaluationShaderId);
+	}
+	if (doGeometryShader) {
+		qglAttachShader(shaderIdPerlinFuckery, geometryShaderId);
+		qglProgramParameteri(shaderIdPerlinFuckery, GL_GEOMETRY_VERTICES_OUT_ARB, 6);
+		qglProgramParameteri(shaderIdPerlinFuckery, GL_GEOMETRY_INPUT_TYPE_ARB, GL_TRIANGLES);
+		qglProgramParameteri(shaderIdPerlinFuckery, GL_GEOMETRY_OUTPUT_TYPE_ARB, GL_TRIANGLE_STRIP);
+	}
+	if (!noFragment) {
+		qglAttachShader(shaderIdPerlinFuckery, fragmentShaderPerlinId);
+	}
+	qglLinkProgram(shaderIdPerlinFuckery);
+	if (hasErrored(shaderId, "[shader program perlin]", true)) {
+		qglDeleteProgram(shaderIdPerlinFuckery);
+		shaderIdPerlinFuckery = 0;
+		success = false;
+	}
+
 
 	if (doGeometryShader) {
 		qglDeleteShader(geometryShaderId);
@@ -124,7 +173,12 @@ R_GLSL::R_GLSL(char* filenameVertexShader, char* filenameTessellationControlShad
 	qglDeleteShader(vertexShaderId);
 	qglDeleteShader(fragmentShaderId);
 
+	//if (!success && shaderId) {
+		//qglDeleteProgram(shaderId);
+	//}
+
 	isWorking = success;
+	delete fragmentTextPerlinFuckery;
 }
 
 
