@@ -540,7 +540,7 @@ void Conbuf_AppendText( const char *pMsg )
 			b[1] = '\n';
 			b += 2;
 		}
-		else if ( ((demo15detected || mme_forceDM15Optics->integer > 1) && ntModDetected && Q_IsColorStringNT( &msg[i] ) )
+		else if ( ((demo15detected || (mme_forceDM15Optics && mme_forceDM15Optics->integer > 1)) && ntModDetected && Q_IsColorStringNT( &msg[i] ) )
 			|| Q_IsColorString( &msg[i] ) || Q_IsColorString_1_02(&msg[i]) || Q_IsColorString_Extended(&msg[i]))
 		{
 			i++;

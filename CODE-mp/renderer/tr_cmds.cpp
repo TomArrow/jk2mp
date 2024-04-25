@@ -457,14 +457,18 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 			tr.mmeMusicDeformIndex = 0;
 			tr.mmeMusicDeformLength = 0;
 		}
-		if (S_FileExists(mme_musicdeform->string)) {
-			openSound_t* thesound = S_SoundOpen(mme_musicdeform->string);
-			tr.mmeMusicDeformLength = thesound->totalSamples;
-			tr.mmeMusicDeformIndex++;
-			tr.mmeMusicDeformSampleRate = thesound->rate;
-			tr.mmeMusicDeform = new short[thesound->totalSamples];
-			S_SoundRead(thesound, qfalse, thesound->totalSamples, tr.mmeMusicDeform);
-			S_SoundClose(thesound);
+		if (mme_musicdeform->string && !(strlen(mme_musicdeform->string) == 1 && mme_musicdeform->string[0] == '0')) {
+			char musicDeformSoundName[MAX_QPATH];
+			Q_strncpyz(musicDeformSoundName, mme_musicdeform->string, sizeof(musicDeformSoundName));
+			if (S_FileExists(musicDeformSoundName)) {
+				openSound_t* thesound = S_SoundOpen(musicDeformSoundName);
+				tr.mmeMusicDeformLength = thesound->totalSamples;
+				tr.mmeMusicDeformIndex++;
+				tr.mmeMusicDeformSampleRate = thesound->rate;
+				tr.mmeMusicDeform = new short[thesound->totalSamples];
+				S_SoundRead(thesound, qfalse, thesound->totalSamples, tr.mmeMusicDeform);
+				S_SoundClose(thesound);
+			}
 		}
 		/*if (R_FindShaderText(mme_musicdeform->string)) {
 

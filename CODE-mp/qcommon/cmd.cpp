@@ -4,7 +4,7 @@
 #include "qcommon.h"
 
 #define	MAX_CMD_BUFFER	32768
-#define	MAX_CMD_LINE	1024
+#define	MAX_CMD_LINE	2048
 
 typedef struct {
 	byte	*data;

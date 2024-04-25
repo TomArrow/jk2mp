@@ -9,6 +9,7 @@ typedef std::vector<cvar_t *> cvarvec_t;
 
 cvar_t		*cvar_vars;
 cvar_t		*cvar_cheats;
+cvar_t		*mme_forceDM15Optics=NULL;
 int			cvar_modifiedFlags;
 
 #define	MAX_CVARS	2048
@@ -958,6 +959,7 @@ Reads in all archived cvars
 */
 void Cvar_Init (void) {
 	cvar_cheats = Cvar_Get("sv_cheats", "1", CVAR_ROM | CVAR_SYSTEMINFO );
+	mme_forceDM15Optics = Cvar_Get("mme_forceDM15Optics", "2", CVAR_ARCHIVE);
 
 	Cmd_AddCommand ("toggle", Cvar_Toggle_f);
 	Cmd_AddCommand ("set", Cvar_Set_f);
