@@ -349,7 +349,7 @@ static void CG_Set2DRatio(void) {
 		trap_MME_FontRatioFix(cgs.widthRatioCoef);
 }
 void CG_ForceNTDemo(void) {
-	if (!demo15detected)
+	if (!(demo15detected||mme_forceDM15Optics.integer > 1))
 		return;
 	if (mov_forceNTdemo.integer) {
 		cg.ntModDetected = qtrue;
@@ -717,6 +717,8 @@ vmCvar_t	mme_soundDeformDistanceScale;
 vmCvar_t	mme_soundDeformShortDistanceReduction;
 vmCvar_t	mme_soundDeformOffsetMode; // 1= Z axis, 2 = normal, 3= direct view, 4= normal with direct view scale
 
+vmCvar_t	mme_forceDM15Optics;
+
 vmCvar_t	fx_Vibrate;
 vmCvar_t	fx_vfps;
 vmCvar_t	cg_saberMarksFps;
@@ -980,6 +982,7 @@ Ghoul2 Insert End
 	{ &mme_soundDeformDistanceScale,	"mme_soundDeformDistanceScale",	"0.1",	NULL,	CVAR_ARCHIVE	},
 	{ &mme_soundDeformShortDistanceReduction,	"mme_soundDeformShortDistanceReduction",	"200",	NULL,	CVAR_ARCHIVE	},
 	{ &mme_soundDeformOffsetMode,	"mme_soundDeformOffsetMode",	"1",	NULL,	CVAR_ARCHIVE	},
+	{ &mme_forceDM15Optics,	"mme_forceDM15Optics",	"",			NULL,	0	},
 	{ &mov_chatBeep,		"mov_chatBeep",			"0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_fragsOnly,		"mov_fragsOnly",		"0",			NULL,	CVAR_ARCHIVE	},
 	{ &mov_drawChatbox,		"mov_drawChatbox",		"1",			NULL,	CVAR_ARCHIVE	},

@@ -568,7 +568,7 @@ static void CG_AddToTeamChat( const char *str ) {
 			}
 			lastcolor[skipCount] = '\0';
 		}
-		else if ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( str ) ) {
+		else if ( (demo15detected||mme_forceDM15Optics.integer>1) && cg.ntModDetected && Q_IsColorStringNT( str ) ) {
 			*p++ = *str++;
 			lastcolor[0] = *str;
 			lastcolor[1] = '\0';

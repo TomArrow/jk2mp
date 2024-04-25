@@ -723,7 +723,7 @@ int RE_Font_StrLenPixels(const char *psText, const int iFontHandle, const float 
 		int iAdvanceCount;
 		unsigned int uiLetter = AnyLanguage_ReadCharFromString( psText, &iAdvanceCount, NULL );
 		psText += iAdvanceCount;
-		if (demo15detected && ntModDetected && uiLetter == '^' && *psText >= 0x00 && *psText <= 0x7F) {
+		if ((demo15detected || mme_forceDM15Optics->integer > 1) && ntModDetected && uiLetter == '^' && *psText >= 0x00 && *psText <= 0x7F) {
 			// then this is colour, so skip it from width considerations
 		} else if (!ntModDetected && uiLetter == '^' && *psText >= '0' && *psText <= '9') {
 			// then this is colour, so skip it from width considerations
@@ -963,7 +963,7 @@ void RE_Font_DrawStringReal(fontDrawPosition_t drawPosition, const char *psText,
 		v4DKGREY2[2] = R_sRGBToLinear(v4DKGREY2[2]);
 		//v4DKGREY2[3] = R_sRGBToLinear(v4DKGREY2[3]);
 	}*/
-	if(!demo15detected && iFontHandle & STYLE_DROPSHADOW) {
+	if(!(demo15detected || mme_forceDM15Optics->integer > 1) && iFontHandle & STYLE_DROPSHADOW) {
 
 		offset = curfont->GetPointSize() * fScale * 0.075f;
 		
@@ -985,7 +985,7 @@ void RE_Font_DrawStringReal(fontDrawPosition_t drawPosition, const char *psText,
 		//RE_Font_DrawString(ox + offset * fontRatioFix, oy + offset, psText, v4DKGREY2, iFontHandle & SET_MASK, iCharLimit, fScale);
 		RE_Font_DrawStringReal(shadowDrawPos, psText, v4DKGREY2, iFontHandle & SET_MASK, iCharLimit, fScale);
 		gbInShadow = qfalse;
-	} else if (demo15detected && iFontHandle & STYLE_DROPSHADOW) {
+	} else if ((demo15detected || mme_forceDM15Optics->integer > 1) && iFontHandle & STYLE_DROPSHADOW) {
 		int i = 0, r = 0;
 		static char dropShadowText[1024];
 
@@ -1110,7 +1110,7 @@ void RE_Font_DrawStringReal(fontDrawPosition_t drawPosition, const char *psText,
 				break;
 			}
 			
-			/*if (demo15detected && ntModDetected) {
+			/*if ((demo15detected || mme_forceDM15Optics->integer > 1) && ntModDetected) {
 				vec4_t color;
 				colour = ColorIndexNT(*psText++);
 				Com_Memcpy( color, g_color_table_nt[colour], sizeof( color ) );
@@ -1123,7 +1123,7 @@ void RE_Font_DrawStringReal(fontDrawPosition_t drawPosition, const char *psText,
 				}
 			} else {
 				colour = ColorIndex(*psText++);
-				if (!gbInShadow || demo15detected) {
+				if (!gbInShadow || (demo15detected || mme_forceDM15Optics->integer > 1)) {
 					vec4_t color;
 					Com_Memcpy( color, g_color_table[colour], sizeof( color ) );
 					color[3] = rgba[3];

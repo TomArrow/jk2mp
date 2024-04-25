@@ -197,7 +197,7 @@ void SCR_DrawStringExt( int x, int y, float size, const char *string, float *set
 			s += 1 + skipCount;
 			continue;
 		}
-		else if ( ( demo15detected && ntModDetected && Q_IsColorStringNT( s ) )
+		else if ( ((demo15detected || mme_forceDM15Optics->integer > 1) && ntModDetected && Q_IsColorStringNT( s ) )
 			|| Q_IsColorString( s ) || Q_IsColorString_1_02(s) || Q_IsColorString_Extended(s)) {
 			s += 2;
 			continue;
@@ -223,7 +223,7 @@ void SCR_DrawStringExt( int x, int y, float size, const char *string, float *set
 			}
 			continue;
 		}
-		else if ( demo15detected && ntModDetected && Q_IsColorStringNT( s ) ) {
+		else if ((demo15detected || mme_forceDM15Optics->integer > 1) && ntModDetected && Q_IsColorStringNT( s ) ) {
 			if ( !forceColor ) {
 				Com_Memcpy( color, g_color_table_nt[ColorIndexNT(*(s+1))], sizeof( color ) );
 				color[3] = setColor[3];
@@ -264,7 +264,7 @@ static void SCR_DrawStringExt2( float x, float y, float charWidth, float charHei
 			s += 1 + skipCount;
 			continue;
 		}
-		else if ( ( demo15detected && ntModDetected && Q_IsColorStringNT( s ) )
+		else if ( ((demo15detected || mme_forceDM15Optics->integer > 1) && ntModDetected && Q_IsColorStringNT( s ) )
 			|| Q_IsColorString( s ) || Q_IsColorString_1_02(s) || Q_IsColorString_Extended(s)) {
 			s += 2;
 			continue;
@@ -290,7 +290,7 @@ static void SCR_DrawStringExt2( float x, float y, float charWidth, float charHei
 			}
 			continue;
 		}
-		else if ( demo15detected && ntModDetected && Q_IsColorStringNT( s ) ) {
+		else if ((demo15detected || mme_forceDM15Optics->integer > 1) && ntModDetected && Q_IsColorStringNT( s ) ) {
 			if ( !forceColor ) {
 				Com_Memcpy( color, g_color_table_nt[ColorIndexNT(*(s+1))], sizeof( color ) );
 				color[3] = setColor[3];
@@ -360,7 +360,7 @@ void SCR_DrawSmallStringExt( int x, int y, const char *string, float *setColor, 
 			}
 			continue;
 		}
-		else if ( demo15detected && ntModDetected && Q_IsColorStringNT( s ) ) {
+		else if ((demo15detected || mme_forceDM15Optics->integer > 1) && ntModDetected && Q_IsColorStringNT( s ) ) {
 			if ( !forceColor ) {
 				Com_Memcpy( color, g_color_table_nt[ColorIndexNT(*(s+1))], sizeof( color ) );
 				color[3] = setColor[3];
@@ -399,7 +399,7 @@ static int SCR_Strlen( const char *str ) {
 			Q_parseColorHex(s + 1, 0, &skipCount);
 			s += 1 + skipCount;
 		}
-		else if ( ( demo15detected && ntModDetected && Q_IsColorStringNT( s ) )
+		else if ( ((demo15detected || mme_forceDM15Optics->integer > 1) && ntModDetected && Q_IsColorStringNT( s ) )
 			|| Q_IsColorString( s ) || Q_IsColorString_1_02(s) || Q_IsColorString_Extended(s)) {
 			s += 2;
 		} else {

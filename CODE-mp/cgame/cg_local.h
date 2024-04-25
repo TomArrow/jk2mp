@@ -2048,6 +2048,8 @@ extern	vmCvar_t	mme_soundDeformDistanceScale;
 extern	vmCvar_t	mme_soundDeformShortDistanceReduction;
 extern	vmCvar_t	mme_soundDeformOffsetMode;
 
+extern	vmCvar_t	mme_forceDM15Optics;
+
 extern	vmCvar_t	fx_Vibrate;
 extern	vmCvar_t	fx_vfps;
 extern	vmCvar_t	cg_saberMarksFps;

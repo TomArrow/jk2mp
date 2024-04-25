@@ -138,6 +138,8 @@ cvar_t* r_LightBrightness;
 
 cvar_t* r_hideMissingModels;
 
+cvar_t* mme_forceDM15Optics;
+
 
 cvar_t	*r_ignoreGLErrors;
 cvar_t	*r_logFile;
@@ -979,6 +981,8 @@ void R_Register( void )
 	r_LightBrightness = ri.Cvar_Get("r_LightBrightness", "1.0", CVAR_ARCHIVE);
 
 	r_hideMissingModels = ri.Cvar_Get("r_hideMissingModels", "1", CVAR_ARCHIVE);
+
+	mme_forceDM15Optics = ri.Cvar_Get("mme_forceDM15Optics", "2", CVAR_ARCHIVE);
 
 	r_flares = ri.Cvar_Get ("r_flares", "0", CVAR_ARCHIVE );
 	r_znear = ri.Cvar_Get( "r_znear", "1", CVAR_CHEAT );

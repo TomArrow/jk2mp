@@ -79,7 +79,7 @@ void CG_LoadingClient( int clientNum ) {
 	}
 */
 	Q_strncpyz( personality, Info_ValueForKey( info, "n" ), sizeof(personality) );
-	if (demo15detected && cg.ntModDetected)
+	if ((demo15detected||mme_forceDM15Optics.integer > 1) && cg.ntModDetected)
 		Q_CleanStrNT( personality );
 	else
 		Q_CleanStr( personality );
@@ -148,7 +148,7 @@ void CG_DrawInformation( void ) {
 	int			value, valueNOFP;
 	qhandle_t	levelshot;
 	char		buf[1024];
-	int			iPropHeight = demo15detected?PROP_HEIGHT:18;	// I know, this is total crap, but as a post release asian-hack....  -Ste
+	int			iPropHeight = (demo15detected||mme_forceDM15Optics.integer)?PROP_HEIGHT:18;	// I know, this is total crap, but as a post release asian-hack....  -Ste
 
 	info = CG_ConfigString( CS_SERVERINFO );
 	sysInfo = CG_ConfigString( CS_SYSTEMINFO );
@@ -187,7 +187,7 @@ void CG_DrawInformation( void ) {
 	if ( !atoi( buf ) ) {
 		// server hostname
 		Q_strncpyz(buf, Info_ValueForKey( info, "sv_hostname" ), 1024);
-		if (demo15detected && cg.ntModDetected)
+		if ((demo15detected||mme_forceDM15Optics.integer>1) && cg.ntModDetected)
 			Q_CleanStrNT(buf);
 		else
 			Q_CleanStr(buf);

@@ -417,7 +417,7 @@ void CL_ConsolePrint( char *txt ) {
 			txt += 1 + skipCount;
 			continue;
 		}
-		else if ( demo15detected && ntModDetected && Q_IsColorStringNT( (unsigned char*) txt ) ) {
+		else if ( (demo15detected || mme_forceDM15Optics->integer > 1) && ntModDetected && Q_IsColorStringNT( (unsigned char*) txt ) ) {
 			color = ColorIndexNT( *(txt+1) );
 			Vector4Copy(g_color_table_nt[color], colorVec);
 			txt += 2;
@@ -601,7 +601,7 @@ void Con_DrawNotify (void)
 					Vector4Copy(text[x].color,currentColor);
 					//currentColor = (text[x]>>8)&7;
 					//strcat(sTemp,va("^%i", (text[x]>>8)&7) );
-					strcat(sTemp,va("^%s", Q_colorToHex(currentColor, (qboolean)(demo15detected && ntModDetected))) );
+					strcat(sTemp,va("^%s", Q_colorToHex(currentColor, (qboolean)((demo15detected || mme_forceDM15Optics->integer > 1) && ntModDetected))) );
 				}
 				//strcat(sTemp,va("%c",text[x] & 0xFF));				
 				strcat(sTemp,va("%c",text[x].letter));				
@@ -831,7 +831,7 @@ void Con_DrawSolidConsole( float frac ) {
 					//currentColor = (text[x]>>8)&7;
 					Vector4Copy(text[x].color, currentColor);
 					//strcat(sTemp,va("^%i", (text[x]>>8)&7) );
-					strcat(sTemp,va("^%i",Q_colorToHex(text[x].color,(qboolean)( demo15detected && ntModDetected))));
+					strcat(sTemp,va("^%i",Q_colorToHex(text[x].color,(qboolean)((demo15detected || mme_forceDM15Optics->integer > 1) && ntModDetected))));
 				}
 				//strcat(sTemp,va("%c",text[x] & 0xFF));				
 				strcat(sTemp,va("%c",text[x].letter));				

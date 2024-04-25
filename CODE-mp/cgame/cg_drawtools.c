@@ -225,7 +225,7 @@ int CG_Text_Width2(const char *text, float scale, int limit) {
 				s += 1 + skipCount;
 				continue;
 			}
-			else if ( ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) ) || Q_IsColorString( s ) ) {
+			else if ( ( (demo15detected || mme_forceDM15Optics.integer > 1) && cg.ntModDetected && Q_IsColorStringNT( s ) ) || Q_IsColorString( s ) ) {
 				s += 2;
 				continue;
 			} else {
@@ -261,7 +261,7 @@ int CG_Text_Height2(const char *text, float scale, int limit) {
 				s += 1 + skipCount;
 				continue;
 			}
-			else if ( ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) ) || Q_IsColorString( s ) ) {
+			else if ( ((demo15detected || mme_forceDM15Optics.integer > 1) && cg.ntModDetected && Q_IsColorStringNT( s ) ) || Q_IsColorString( s ) ) {
 				s += 2;
 				continue;
 			} else {
@@ -311,7 +311,7 @@ void CG_Text_Paint2(float x, float y, float scale, vec4_t color, const char *tex
 				trap_R_SetColor(newColor);
 				continue;
 			}
-			else if ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) ) {
+			else if ((demo15detected || mme_forceDM15Optics.integer > 1) && cg.ntModDetected && Q_IsColorStringNT( s ) ) {
 				memcpy( newColor, g_color_table_nt[ColorIndexNT(*(s+1))], sizeof( newColor ) );
 				newColor[3] = color[3];
 				trap_R_SetColor( newColor );
@@ -404,7 +404,7 @@ void CG_DrawStringExt( int x, int y, const char *string, const float *setColor,
 					s += 1 + skipCount;
 					continue;
 				}
-				else if ( ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) ) || Q_IsColorString( s ) ) {
+				else if ( ((demo15detected || mme_forceDM15Optics.integer > 1) && cg.ntModDetected && Q_IsColorStringNT( s ) ) || Q_IsColorString( s ) ) {
 					s += 2;
 					continue;
 				}
@@ -429,7 +429,7 @@ void CG_DrawStringExt( int x, int y, const char *string, const float *setColor,
 				}
 				continue;
 			}
-			else if ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) ) {
+			else if ((demo15detected || mme_forceDM15Optics.integer > 1) && cg.ntModDetected && Q_IsColorStringNT( s ) ) {
 				if ( !forceColor ) {
 					memcpy( color, g_color_table_nt[ColorIndexNT(*(s+1))], sizeof( color ) );
 					color[3] = setColor[3];
@@ -495,7 +495,7 @@ int CG_DrawStrlen( const char *str ) {
 			Q_parseColorHex(s + 1, 0, &skipCount);
 			s += 1 + skipCount;
 		}
-		else if ( ( demo15detected && cg.ntModDetected && Q_IsColorStringNT( s ) )
+		else if ( ((demo15detected || mme_forceDM15Optics.integer > 1) && cg.ntModDetected && Q_IsColorStringNT( s ) )
 			|| Q_IsColorString( s ) || Q_IsColorString_1_02(s) || Q_IsColorString_Extended(s)) {
 			s += 2;
 		} else {
@@ -803,7 +803,7 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 
 	// the best fix in the world
 	Q_strncpyz(s, str, sizeof(s) - 2);
-	if (demo15detected && cg.ntModDetected)
+	if ((demo15detected || mme_forceDM15Optics.integer >1) && cg.ntModDetected)
 		Q_StripColorNewNT(s);
 	else
 		Q_StripColorNew(s);

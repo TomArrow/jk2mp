@@ -87,7 +87,7 @@ int CG_Text_Width(const char *text, float scale, int iMenuFont)
 	char s[1024];	
 	int iFontIndex = MenuFontToHandle(iMenuFont);
 	Q_strncpyz(s, text, sizeof(s));
-	if (demo15detected && cg.ntModDetected)
+	if ((demo15detected || mme_forceDM15Optics.integer > 1) && cg.ntModDetected)
 		Q_StripColorNewNT(s);
 	else
 		Q_StripColorNew(s);
