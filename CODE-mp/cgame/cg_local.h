@@ -226,6 +226,25 @@ typedef struct {
 
 //=================================================
 
+typedef struct
+{
+	// Actual trail stuff
+	int		inAction;	// controls whether should we even consider starting one
+	int		duration;	// how long each trail seg stays in existence
+	int		lastTime;	// time a saber segement was last stored
+	vec3_t	base;
+	vec3_t	tip;
+
+	vec3_t	dualbase;
+	vec3_t	dualtip;
+
+	// Marks stuff
+	int			lastTimeMark;
+	qboolean	haveOldPos[2];
+	vec3_t		oldPos[2];
+	vec3_t		oldNormal[2];	// store this in case we don't have a connect-the-dots situation
+							//	..then we'll need the normal to project a mark blob onto the impact point
+} saberTrail_t;
 
 typedef enum {
 	DISM_HEAD = 0,
@@ -264,6 +283,9 @@ typedef struct psHistory_s {
 	int		nextSlot;
 	timedPlayerState_t	states[MAX_STATE_HISTORY];
 } psHistory_t;
+
+
+
 
 void demoTrajectory(const trajectory_t* tr, int time, float timeFraction, vec3_t result);
 void demoNowTrajectory( const trajectory_t *tr, vec3_t result );
@@ -363,6 +385,9 @@ typedef struct centity_s {
 	} dism;
 
 	qboolean		isGibbing;
+
+	saberTrail_t	entSaberTrail; // for ET_GRAPPLE/npcs
+	int				saberHitWallSoundDebounceTime;// for ET_GRAPPLE/npcs
 } centity_t;
 
 
@@ -565,25 +590,6 @@ typedef struct {
 // usually as a result of a userinfo (name, model, etc) change
 #define	MAX_CUSTOM_SOUNDS	32
 
-typedef struct 
-{
-	// Actual trail stuff
-	int		inAction;	// controls whether should we even consider starting one
-	int		duration;	// how long each trail seg stays in existence
-	int		lastTime;	// time a saber segement was last stored
-	vec3_t	base;
-	vec3_t	tip;
-
-	vec3_t	dualbase;
-	vec3_t	dualtip;
-
-	// Marks stuff
-	int			lastTimeMark;
-	qboolean	haveOldPos[2];
-	vec3_t		oldPos[2];		
-	vec3_t		oldNormal[2];	// store this in case we don't have a connect-the-dots situation
-							//	..then we'll need the normal to project a mark blob onto the impact point
-} saberTrail_t;
 
 typedef struct {
 	qhandle_t rtibia;

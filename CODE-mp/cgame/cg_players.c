@@ -4271,7 +4271,7 @@ static void CG_RGBForSaberColor(saber_colors_t color, vec3_t rgb, int cnum) {
 		break;
 	default:
 	case SABER_RGB:
-		if (cnum < MAX_CLIENTS) {
+		if (cnum < MAX_CLIENTS && cnum >= 0) {
 			int i;
 			clientInfo_t *ci = &cgs.clientinfo[cnum];
 			VectorCopy(ci->rgb1, rgb);
@@ -4400,7 +4400,7 @@ void CG_DoSaber(vec3_t origin, vec3_t dir, float length, saber_colors_t color, i
 	// Jeff, I did this because I foolishly wished to have a bright halo as the saber is unleashed.  
 	// It's not quite what I'd hoped tho.  If you have any ideas, go for it!  --Pat
 	//if (length < SABER_LENGTH_MAX) {
-	if (length < cgs.clientinfo[cnum].saberLength) {
+	if (length < (cnum < 0 ? SABER_LENGTH_MAX : cgs.clientinfo[cnum].saberLength)) {
 		radiusmult = 1.0 + (2.0 / length);		// Note this creates a curve, and length cannot be < 0.5.
 	} else {
 		radiusmult = 1.0;
@@ -4814,6 +4814,9 @@ void CG_AddSaberBlade( centity_t *cent, centity_t *scent, refEntity_t *saber, in
 	int scolor = 0;
 	vec3_t otherPos, otherDir, otherEnd;
 	float dualLen = 0.7;
+	qboolean nonPlayer = cent->currentState.number >= MAX_CLIENTS;
+	int thisPlayerSaberLength = nonPlayer ? SABER_LENGTH_MAX : cgs.clientinfo[cent->currentState.number].saberLength;
+	int* saberHitWallSoundDebounceTime;
 
 	saberEnt = &cg_entities[cent->currentState.saberEntityNum];
 
@@ -4825,12 +4828,12 @@ void CG_AddSaberBlade( centity_t *cent, centity_t *scent, refEntity_t *saber, in
 		}
 
 		//if (cent->saberLength < SABER_LENGTH_MAX) {
-		if (cent->saberLength < cgs.clientinfo[cent->currentState.number].saberLength) {
-			cent->saberLength += ((cg.time - cent->saberExtendTime) + cg.timeFraction)*(0.05f* cgs.clientinfo[cent->currentState.number].saberLength / SABER_LENGTH_MAX);
+		if (cent->saberLength < thisPlayerSaberLength) {
+			cent->saberLength += ((cg.time - cent->saberExtendTime) + cg.timeFraction)*(0.05f* thisPlayerSaberLength / SABER_LENGTH_MAX);
 		}
 
-		if (cent->saberLength > cgs.clientinfo[cent->currentState.number].saberLength) {
-			cent->saberLength = cgs.clientinfo[cent->currentState.number].saberLength;
+		if (cent->saberLength > thisPlayerSaberLength) {
+			cent->saberLength = thisPlayerSaberLength;
 		}
 
 		cent->saberExtendTime = cg.time;
@@ -4889,7 +4892,7 @@ Ghoul2 Insert Start
 
 	client = &cgs.clientinfo[cent->currentState.number];
 
-	if (!client)
+	if (!client && !nonPlayer)
 	{ //something horrible has apparently happened
 		return;
 	}
@@ -4926,13 +4929,18 @@ Ghoul2 Insert Start
 		VectorAdd( otherEnd, otherDir, otherEnd );
 	}
 
-	scolor = cgs.clientinfo[cent->currentState.number].icolor1;
+	if (nonPlayer) {
+		scolor = 1; // for now. TODO tunnel that through the entity somehow
+	}
+	else {
+		scolor = cgs.clientinfo[cent->currentState.number].icolor1;
 
-	if (cgs.gametype >= GT_TEAM && (!cgs.jediVmerc || demo15detected) && mov_saberTeamColour.integer) {
-		if (cgs.clientinfo[cent->currentState.number].team == TEAM_RED)
-			scolor = SABER_RED;
-		else if (cgs.clientinfo[cent->currentState.number].team == TEAM_BLUE)
-			scolor = SABER_BLUE;
+		if (cgs.gametype >= GT_TEAM && (!cgs.jediVmerc || demo15detected) && mov_saberTeamColour.integer) {
+			if (cgs.clientinfo[cent->currentState.number].team == TEAM_RED)
+				scolor = SABER_RED;
+			else if (cgs.clientinfo[cent->currentState.number].team == TEAM_BLUE)
+				scolor = SABER_BLUE;
+		}
 	}
 
 	if (!cg_saberContact.integer) {
@@ -4949,11 +4957,14 @@ Ghoul2 Insert Start
 	int saberMarksFps = cg_saberMarksFps.integer ? cg_saberMarksFps.integer : fx_vfps.integer;
 	int iterations = cg_saberMarksDoubleSided.integer ? 2 : 1;
 
-	if (cg.time < client->saberTrail.lastTimeMark) // In case we rewind.
-		client->saberTrail.lastTimeMark = cg.time;
+	saberTrail = nonPlayer ? &cent->entSaberTrail : &client->saberTrail;
+	saberHitWallSoundDebounceTime = nonPlayer ? &cent->saberHitWallSoundDebounceTime : &client->saberHitWallSoundDebounceTime;
 
-	if (cg.time > client->saberTrail.lastTimeMark + 1000 / saberMarksFps) {
-		client->saberTrail.lastTimeMark = cg.time;
+	if (cg.time < saberTrail->lastTimeMark) // In case we rewind.
+		saberTrail->lastTimeMark = cg.time;
+
+	if (cg.time > saberTrail->lastTimeMark + 1000 / saberMarksFps) {
+		saberTrail->lastTimeMark = cg.time;
 		for (i = 0; i < iterations; i++)//was 2 because it would go through architecture and leave saber trails on either side of the brush - but still looks bad if we hit a corner, blade is still 8 longer than hit
 		{
 			if (i)
@@ -4988,19 +4999,19 @@ Ghoul2 Insert Start
 				}
 				// All I need is a bool to mark whether I have a previous point to work with.
 				//....come up with something better..
-				if (client->saberTrail.haveOldPos[i])
+				if (saberTrail->haveOldPos[i])
 				{
 					if (trace.entityNum == ENTITYNUM_WORLD)
 					{//only put marks on architecture
 						// Let's do some cool burn/glowing mark bits!!!
-						CG_CreateSaberMarks(client->saberTrail.oldPos[i], trace.endpos, trace.plane.normal);
+						CG_CreateSaberMarks(saberTrail->oldPos[i], trace.endpos, trace.plane.normal);
 
 						// Draw more sparks if we scratched a particularly long distance. The more distance we scratch over, the more sparks there should be! - TA
 						if (cg_saberSparksPerDistance.integer) {
 							vec3_t direction, sparkPosition;
-							VectorSubtract(trace.endpos,client->saberTrail.oldPos[i],direction);
-							VectorCopy(client->saberTrail.oldPos[i],sparkPosition);
-							int distance = VectorDistance(client->saberTrail.oldPos[i], trace.endpos);
+							VectorSubtract(trace.endpos, saberTrail->oldPos[i],direction);
+							VectorCopy(saberTrail->oldPos[i],sparkPosition);
+							int distance = VectorDistance(saberTrail->oldPos[i], trace.endpos);
 							int newSparksCount = distance / cg_saberSparksPerDistance.integer -1; // Don't need one at the old position itself
 							VectorScale(direction,1.0f/(float)newSparksCount,direction);
 							for (int sp = 0; sp < newSparksCount; sp++) {
@@ -5009,13 +5020,13 @@ Ghoul2 Insert Start
 							}
 						}
 
-						if (client->saberHitWallSoundDebounceTime > cg.time) {
-							client->saberHitWallSoundDebounceTime = 0;
+						if (*saberHitWallSoundDebounceTime > cg.time) {
+							*saberHitWallSoundDebounceTime = 0;
 						}
 						//make a sound
-						if (cg.time - client->saberHitWallSoundDebounceTime >= 100)
+						if (cg.time - *saberHitWallSoundDebounceTime >= 100)
 						{//ugh, need to have a real sound debouncer... or do this game-side
-							client->saberHitWallSoundDebounceTime = cg.time;
+							*saberHitWallSoundDebounceTime = cg.time;
 							if (cg.frametime > 0
 								&& ((cg.frametime < 50 && cg.time % 50 <= cg.frametime)
 									|| cg.frametime >= 50))
@@ -5026,14 +5037,14 @@ Ghoul2 Insert Start
 				else
 				{
 					// if we impact next frame, we'll mark a slash mark
-					client->saberTrail.haveOldPos[i] = qtrue;
-					//				CG_ImpactMark( cgs.media.rivetMarkShader, client->saberTrail.oldPos[i], client->saberTrail.oldNormal[i],
+					saberTrail->haveOldPos[i] = qtrue;
+					//				CG_ImpactMark( cgs.media.rivetMarkShader, saberTrail->oldPos[i], saberTrail->oldNormal[i],
 					//						0.0f, 1.0f, 1.0f, 1.0f, 1.0f, qfalse, 1.1f, qfalse );
 				}
 
 				// stash point so we can connect-the-dots later
-				VectorCopy(trace.endpos, client->saberTrail.oldPos[i]);
-				VectorCopy(trace.plane.normal, client->saberTrail.oldNormal[i]);
+				VectorCopy(trace.endpos, saberTrail->oldPos[i]);
+				VectorCopy(trace.plane.normal, saberTrail->oldNormal[i]);
 			}
 			else
 			{
@@ -5042,17 +5053,17 @@ Ghoul2 Insert Start
 					break;
 				}
 
-				if (client->saberTrail.haveOldPos[i])
+				if (saberTrail->haveOldPos[i])
 				{
 					// Hmmm, no impact this frame, but we have an old point
 					// Let's put the mark there, we should use an endcap mark to close the line, but we 
 					//	can probably just get away with a round mark
-	//					CG_ImpactMark( cgs.media.rivetMarkShader, client->saberTrail.oldPos[i], client->saberTrail.oldNormal[i],
+	//					CG_ImpactMark( cgs.media.rivetMarkShader, saberTrail->oldPos[i], saberTrail->oldNormal[i],
 	//							0.0f, 1.0f, 1.0f, 1.0f, 1.0f, qfalse, 1.1f, qfalse );
 				}
 
 				// we aren't impacting, so turn off our mark tracking mechanism
-				client->saberTrail.haveOldPos[i] = qfalse;
+				saberTrail->haveOldPos[i] = qfalse;
 			}
 		}
 	}
@@ -5092,7 +5103,6 @@ CheckTrail:
 		goto JustDoIt;
 	}
 	
-	saberTrail = &client->saberTrail;
 
 	// if we happen to be timescaled or running in a high framerate situation, we don't want to flood
 	//	the system with very small trail slices...but perhaps doing it by distance would yield better results?
@@ -5138,7 +5148,10 @@ CheckTrail:
 				case SABER_RGB:
 					{
 						int cnum = cent->currentState.clientNum;
-						if(cnum < MAX_CLIENTS) {
+						if (nonPlayer) {
+							VectorSet( rgb1, 0.0f, 64.0f, 255.0f );
+						}
+						else if(cnum < MAX_CLIENTS) {
 							clientInfo_t *ci = &cgs.clientinfo[cnum];
 							VectorCopy(ci->rgb1, rgb1);
 						} else {
@@ -5315,18 +5328,18 @@ JustDoIt:
 	if (cg_saberTrail.integer && cg.time < saberTrail->lastTime)
 		saberTrail->lastTime = cg.time;
 
-	if (client && cent->currentState.bolt2) {
+	if ((client || nonPlayer) && cent->currentState.bolt2) {
 		float sideOneLen = saberLen*dualLen;
 		float sideTwoLen = dualSaberLen*dualLen;
 		if (sideOneLen < 1) {
 			sideOneLen = 1;
 		}		
-		CG_DoSaber(org_, axis_[0], sideOneLen, scolor, renderfx, cent->currentState.clientNum);
-		CG_DoSaber(otherPos, otherDir, sideTwoLen, scolor, renderfx, cent->currentState.clientNum);
+		CG_DoSaber(org_, axis_[0], sideOneLen, scolor, renderfx, nonPlayer ? -1: cent->currentState.clientNum);
+		CG_DoSaber(otherPos, otherDir, sideTwoLen, scolor, renderfx, nonPlayer ? -1 : cent->currentState.clientNum);
 	} else {
 		// Pass in the renderfx flags attached to the saber weapon model...this is done so that saber glows
 		//	will get rendered properly in a mirror...not sure if this is necessary??
-		CG_DoSaber(org_, axis_[0], saberLen, scolor, renderfx, cent->currentState.clientNum);
+		CG_DoSaber(org_, axis_[0], saberLen, scolor, renderfx, nonPlayer ? -1 : cent->currentState.clientNum);
 	}
 }
 
@@ -6250,7 +6263,14 @@ void CG_G2Animated( centity_t *cent )
 	vec3_t			posDif;
 	float			smoothFactor = 0.4f;
 	int				k = 0;
-#endif
+#endif	
+	qboolean		g2HasWeapon = qfalse;
+	qboolean		forceSaberOn = qfalse;
+	vec3_t			efOrg;
+	mdxaBone_t 		boltMatrix, lHandMatrix;
+
+	forceSaberOn = (cg_saberForceOn.integer & 1) && cent->currentState.clientNum == cg.predictedPlayerState.clientNum || (cg_saberForceOn.integer & 2) && cent->currentState.clientNum != cg.predictedPlayerState.clientNum;
+	
 
 	cent->ghoul2 = cg_entities[cent->currentState.number].ghoul2;
 
@@ -6272,8 +6292,16 @@ void CG_G2Animated( centity_t *cent )
 		return;
 	}
 
+
+	g2HasWeapon = trap_G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), 1);
+
+	if (!g2HasWeapon)
+	{ //force a redup of the weapon instance onto the client instance
+		cent->ghoul2weapon = NULL;
+	}
+
 	if (cent->currentState.weapon &&
-		!trap_G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), 1) &&
+		!g2HasWeapon &&
 		!(cent->currentState.eFlags & EF_DEAD))
 	{ //if the server says we have a weapon and we haven't copied one onto ourselves yet, then do so.
 		trap_G2API_CopySpecificGhoul2Model(g2WeaponInstances[cent->currentState.weapon], 0, cent->ghoul2, 1);
@@ -6469,6 +6497,218 @@ void CG_G2Animated( centity_t *cent )
 	if (cent->currentState.genericenemyindex > cg.time)
 	{
 		CG_DrawNoForceSphere(cent, cent->lerpOrigin, 1.4, cgs.media.ysalimariShader );
+	}
+
+	if (cent->currentState.weapon == WP_SABER && !(cent->currentState.shouldtarget && !forceSaberOn))
+	{
+		if (!cent->currentState.saberInFlight && !(cent->currentState.eFlags & EF_DEAD))
+		{
+			//they yell all the time about being not precached
+#ifndef _DEBUG
+			if (cg.playerCent && cent->currentState.number == cg.playerCent->currentState.number)
+			{
+				trap_S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin,
+					trap_S_RegisterSound("sound/weapons/saber/saberhum1.wav")); // Modified: I want the hum to come from the saber position.
+				//trap_S_AddLoopingSound( cent->currentState.number, cg.refdef.vieworg, vec3_origin, 
+				//	trap_S_RegisterSound( "sound/weapons/saber/saberhum1.wav" ) );
+			}
+			else
+			{
+				trap_S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin,
+					trap_S_RegisterSound("sound/weapons/saber/saberhum1.wav"));
+			}
+#endif
+		}
+
+		/*if (iwantout && !cent->currentState.saberInFlight) {
+			if (cent->currentState.eFlags & EF_DEAD) {
+				if (cent->ghoul2 && cent->currentState.saberInFlight && g2HasWeapon) {
+					//special case, kill the saber on a freshly dead player if another source says to.
+					trap_G2API_RemoveGhoul2Model(&(cent->ghoul2), 1);
+					g2HasWeapon = qfalse;
+				}
+			}
+			//return;
+			goto endOfCall;
+		}*/
+
+		if (cent->currentState.saberInFlight && cent->currentState.saberEntityNum) {
+			centity_t* saberEnt;
+
+			saberEnt = &cg_entities[cent->currentState.saberEntityNum];
+
+			if (/*!cent->bolt4 &&*/ g2HasWeapon) {
+				//saber is in flight, do not have it as a standard weapon model
+				trap_G2API_RemoveGhoul2Model(&(cent->ghoul2), 1);
+				g2HasWeapon = qfalse;
+
+				//cent->bolt4 = 1;
+
+				saberEnt->currentState.pos.trTime = cg.time;
+				saberEnt->currentState.apos.trTime = cg.time;
+
+				VectorCopy(saberEnt->currentState.pos.trBase, saberEnt->lerpOrigin);
+				VectorCopy(saberEnt->currentState.apos.trBase, saberEnt->lerpAngles);
+
+				cent->bolt3 = saberEnt->currentState.apos.trBase[0];
+				cent->bolt2 = 0;
+
+				saberEnt->currentState.bolt2 = 123;
+
+				if (saberEnt->ghoul2) {
+					// now set up the gun bolt on it
+					trap_G2API_AddBolt(saberEnt->ghoul2, 0, "*flash");
+				}
+				else {
+					//const char* saberModel = ci->saberModel;
+					//if (saberModel && saberModel[0])
+					//	trap_G2API_InitGhoul2Model(&saberEnt->ghoul2, va("models/weapons2/%s/saber_w.glm", saberModel), 0, 0, 0, 0, 0);
+					//else
+						trap_G2API_InitGhoul2Model(&saberEnt->ghoul2, "models/weapons2/saber/saber_w.glm", 0, 0, 0, 0, 0);
+
+					if (saberEnt->ghoul2) {
+						trap_G2API_AddBolt(saberEnt->ghoul2, 0, "*flash");
+						//cent->bolt4 = 2;
+
+						VectorCopy(saberEnt->currentState.pos.trBase, saberEnt->lerpOrigin);
+						VectorCopy(saberEnt->currentState.apos.trBase, saberEnt->lerpAngles);
+						saberEnt->currentState.pos.trTime = cg.time;
+						saberEnt->currentState.apos.trTime = cg.time;
+					}
+				}
+			}
+			/*else if (cent->bolt4 != 2)
+			{
+				if (saberEnt->ghoul2)
+				{
+					trap_G2API_AddBolt(saberEnt->ghoul2, 0, "*flash");
+					cent->bolt4 = 2;
+				}
+			}*/
+
+			if (saberEnt && saberEnt->ghoul2 /*&& cent->bolt4 == 2*/) {
+				vec3_t bladeAngles;
+
+				if (!cent->bolt2) {
+					cent->bolt2 = cg.time;
+				}
+				if (cent->bolt3 != 90 && cg.frametime) {
+					if (cent->bolt3 < 90) {
+						cent->bolt3 += ((cg.time - cent->bolt2) + cg.timeFraction) * 0.5f;
+						if (cent->bolt3 > 90) {
+							cent->bolt3 = 90;
+						}
+					}
+					else if (cent->bolt3 > 90) {
+						cent->bolt3 -= ((cg.time - cent->bolt2) + cg.timeFraction) * 0.5f;
+						if (cent->bolt3 < 90) {
+							cent->bolt3 = 90;
+						}
+					}
+				}
+
+				cent->bolt2 = cg.time;
+
+				saberEnt->currentState.apos.trBase[0] = cent->bolt3;
+				saberEnt->lerpAngles[0] = cent->bolt3;
+
+				if (!saberEnt->currentState.saberInFlight && saberEnt->currentState.bolt2 != 123)
+				{ //owner is pulling is back
+					vec3_t owndir;
+
+					VectorSubtract(saberEnt->lerpOrigin, cent->lerpOrigin, owndir);
+					VectorNormalize(owndir);
+
+					vectoangles(owndir, owndir);
+
+					owndir[0] += 90;
+
+					VectorCopy(owndir, saberEnt->currentState.apos.trBase);
+					VectorCopy(owndir, saberEnt->lerpAngles);
+					VectorClear(saberEnt->currentState.apos.trDelta);
+				}
+
+				//We don't actually want to rely entirely on server updates to render the position of the saber, because we actually know generally where
+				//it's going to be before the first position update even gets here, and it needs to start getting rendered the instant the saber model is
+				//removed from the player hand. So we'll just render it manually and let normal rendering for the entity be ignored.
+				if (!saberEnt->currentState.saberInFlight && saberEnt->currentState.bolt2 != 123)
+				{ //tell it that we're a saber and to render the glow around our handle because we're being pulled back
+					saberEnt->bolt3 = 999;
+				}
+
+				saberEnt->currentState.modelGhoul2 = 1;
+				CG_ManualEntityRender(saberEnt);
+				saberEnt->bolt3 = 0;
+				saberEnt->currentState.modelGhoul2 = 127;
+
+				VectorCopy(saberEnt->lerpAngles, bladeAngles);
+				bladeAngles[ROLL] = 0;
+				CG_AddSaberBlade(cent, saberEnt, NULL, 0, 0, saberEnt->lerpOrigin, bladeAngles, qtrue);
+
+				//Make the player's hand glow while guiding the saber
+				{
+					vec3_t tAng;
+					float wv;
+					addspriteArgStruct_t fxSArgs;
+
+					VectorSet(tAng, cent->turAngles[PITCH], cent->turAngles[YAW], cent->turAngles[ROLL]);
+
+					//trap_G2API_GetBoltMatrix(cent->ghoul2, 0, cgs.clientinfo[cent->currentState.number].bolt_rhand, &boltMatrix, tAng, cent->lerpOrigin, cg.time, cgs.gameModels, cent->modelScale);
+					// TODO can we do this nicer? without string comparison to r_hand?
+					trap_G2API_GetBoltMatrix(cent->ghoul2, 0, trap_G2API_AddBolt(cent->ghoul2, 0, "*r_hand"), &boltMatrix, tAng, cent->lerpOrigin, cg.time, cgs.gameModels, cent->modelScale);
+
+					efOrg[0] = boltMatrix.matrix[0][3];
+					efOrg[1] = boltMatrix.matrix[1][3];
+					efOrg[2] = boltMatrix.matrix[2][3];
+
+					wv = sin(cg.time * 0.003 + cg.timeFraction * 0.003) * 0.08f + 0.1f;
+
+					//trap_FX_AddSprite( NULL, efOrg, NULL, NULL, 8.0f, 8.0f, wv, wv, 0.0f, 0.0f, 1.0f, cgs.media.yellowSaberGlowShader, 0x08000000 );
+					VectorCopy(efOrg, fxSArgs.origin);
+					VectorClear(fxSArgs.vel);
+					VectorClear(fxSArgs.accel);
+					fxSArgs.scale = 8.0f;
+					fxSArgs.dscale = 8.0f;
+					fxSArgs.sAlpha = wv;
+					fxSArgs.eAlpha = wv;
+					fxSArgs.rotation = 0.0f;
+					fxSArgs.bounce = 0.0f;
+					fxSArgs.life = 1.0f;
+					fxSArgs.shader = cgs.media.yellowDroppedSaberShader;
+					fxSArgs.flags = 0x08000000;
+					trap_FX_AddSprite(&fxSArgs);
+				}
+			}
+		}
+		else
+		{
+			centity_t* saberEnt;
+
+			saberEnt = &cg_entities[cent->currentState.saberEntityNum];
+
+			if (/*cent->bolt4 && */!g2HasWeapon)
+			{
+				trap_G2API_CopySpecificGhoul2Model(g2WeaponInstances[WP_SABER], 0, cent->ghoul2, 1);
+
+				if (saberEnt && saberEnt->ghoul2)
+				{
+					trap_G2API_CleanGhoul2Models(&(saberEnt->ghoul2));
+				}
+
+				saberEnt->currentState.modelindex = 0;
+				saberEnt->ghoul2 = NULL;
+				VectorClear(saberEnt->currentState.pos.trBase);
+			}
+			CG_AddSaberBlade(cent, cent, NULL, 0, 0, legs.origin, rootAngles, qfalse);
+			cent->bolt3 = 0;
+			cent->bolt2 = 0;
+
+			//cent->bolt4 = 0;
+		}
+	}
+	else
+	{
+		cent->saberLength = 0;
 	}
 }
 //rww - here ends the majority of my g2animent stuff.
