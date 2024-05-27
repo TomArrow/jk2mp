@@ -6307,7 +6307,7 @@ void CG_G2Animated( centity_t *cent )
 		trap_G2API_CopySpecificGhoul2Model(g2WeaponInstances[cent->currentState.weapon], 0, cent->ghoul2, 1);
 	}
 
-	if (cent->torsoBolt && !(cent->currentState.eFlags & EF_DEAD))
+	if ((cent->anyDismember || cent->torsoBolt) && !(cent->currentState.eFlags & EF_DEAD))
 	{ //he's alive and has a limb missing still, reattach it and reset the weapon
 		CG_ReattachLimb(cent);
 	}
@@ -7499,14 +7499,16 @@ void CG_Player( centity_t *cent ) {
 		cent->ghoul2weapon = NULL;
 	}
 
-	if (cent->torsoBolt && !(cent->currentState.eFlags & EF_DEAD))
+	if ((cent->anyDismember || cent->torsoBolt) && !(cent->currentState.eFlags & EF_DEAD))
 	{ //he's alive and has a limb missing still, reattach it and reset the weapon
 		CG_ReattachLimb(cent);
 	}
-	else if (cg_entities[cent->currentState.number].torsoBolt && !(cent->currentState.eFlags & EF_DEAD))
+	else if ((cg_entities[cent->currentState.number].torsoBolt || cg_entities[cent->currentState.number].anyDismember) && !(cent->currentState.eFlags & EF_DEAD))
 	{ //It happens. (usually between odd level change events)
 		cent->torsoBolt = cg_entities[cent->currentState.number].torsoBolt;
+		cent->dism = cg_entities[cent->currentState.number].dism; // idk does this make sense? idk.
 		cg_entities[cent->currentState.number].torsoBolt = 0;
+		cg_entities[cent->currentState.number].anyDismember = qfalse;
 		CG_ReattachLimb(cent);
 	}
 
@@ -7739,7 +7741,7 @@ void CG_Player( centity_t *cent ) {
 skipEffectOverride:
 	if (cent->ghoul2 && 
 		cent->ghoul2weapon != g2WeaponInstances[cent->currentState.weapon] &&
-		!(cent->currentState.eFlags & EF_DEAD) && !cent->torsoBolt && !cent->isATST)
+		!(cent->currentState.eFlags & EF_DEAD) && !(cent->torsoBolt || cent->anyDismember) && !cent->isATST)
 	{
 		CG_CopyG2WeaponInstance(cent, cent->currentState.weapon, cent->ghoul2);
 
@@ -7758,7 +7760,7 @@ skipEffectOverride:
 		cent->weapon = cent->currentState.weapon;
 		cent->ghoul2weapon = g2WeaponInstances[cent->currentState.weapon];
 	}
-	else if ((cent->currentState.eFlags & EF_DEAD) || cent->torsoBolt)
+	else if ((cent->currentState.eFlags & EF_DEAD) || cent->torsoBolt || cent->anyDismember)
 	{
 		cent->ghoul2weapon = NULL; //be sure to update after respawning/getting limb regrown
 		if (mov_dismember.integer && trap_G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), 1))
@@ -8131,7 +8133,7 @@ doEssentialOne:
 			trap_G2API_SetSurfaceOnOff( cent->ghoul2, "headb_eyes_mouth", TURN_OFF );
 
 		}
-		else
+		else if(!cent->dism.cut[DISM_HEAD])
 		{
 			trap_G2API_SetSurfaceOnOff( cent->ghoul2, "head_eyes_mouth", TURN_ON );
 			trap_G2API_SetSurfaceOnOff( cent->ghoul2, "heada_eyes_mouth", TURN_ON );
@@ -8144,7 +8146,7 @@ doEssentialOne:
 
 		}
 	}
-	else if ( !(cent->torsoBolt & (1 << (G2_MODELPART_HEAD-10) )) )
+	else if ( !(cent->torsoBolt & (1 << (G2_MODELPART_HEAD-10) ))  && !cent->dism.cut[DISM_HEAD]) // ?!?! since when is this a bitmask?
 	{
 		trap_G2API_SetSurfaceOnOff( cent->ghoul2, "head_eyes_mouth", TURN_ON );
 		trap_G2API_SetSurfaceOnOff( cent->ghoul2, "heada_eyes_mouth", TURN_ON );

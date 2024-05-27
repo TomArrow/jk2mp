@@ -194,7 +194,10 @@ static void demoDismember( centity_t *cent , vec3_t dir, int part, vec3_t limbor
 	
 	le->limbpart = part;
 	cg_entities[clientnum].dism.cut[part] = qtrue;	
-	cg_entities[clientnum].torsoBolt = 1;
+	if (mov_dismemberDisallowNative.integer) {
+		cg_entities[clientnum].torsoBolt = 1;
+	}
+	cg_entities[clientnum].anyDismember = qtrue;
 	
 	////EFFECTS
 	if (cg_dismemberSaberHitSounds.integer) {

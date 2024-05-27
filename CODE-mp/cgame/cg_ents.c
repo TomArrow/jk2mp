@@ -515,7 +515,7 @@ static void CG_General( centity_t *cent ) {
 		centity_t *clEnt;
 		int dismember_settings = cg_dismember.integer;
 		
-		if (!mov_dismember.integer) {
+		if (mov_dismember.integer && mov_dismemberDisallowNative.integer) {
 			return;
 		}
 
@@ -537,7 +537,8 @@ static void CG_General( centity_t *cent ) {
 			return;
 		}
 
-		if (!cent->ghoul2)
+		//if (!cent->ghoul2)
+		if (!clEnt->torsoBolt || !cent->ghoul2)
 		{
 			const char *limbBone;
 			const char *rotateBone;
@@ -549,8 +550,9 @@ static void CG_General( centity_t *cent ) {
 			int limb_anim;
 			int newBolt;
 			int mG2 = cent->currentState.modelGhoul2;
+			dismpart_t dismemberPart;
 
-			if (clEnt && clEnt->torsoBolt)
+			if (clEnt && clEnt->torsoBolt && !cg_dismemberAllowMultiple.integer)
 			{ //already have a limb missing!
 				return;
 			}
@@ -572,6 +574,7 @@ static void CG_General( centity_t *cent ) {
 				stubCapName = "torso_cap_head_off";
 				limbTagName = "*head_cap_torso";
 				stubTagName = "*torso_cap_head";
+				dismemberPart = DISM_HEAD;
 				limb_anim = demo15detected?BOTH_DISMEMBER_HEAD1_15:BOTH_DISMEMBER_HEAD1;
 			} else if ((demo15detected && mG2 == G2_MODELPART_WAIST_15) || (!demo15detected && mG2 == G2_MODELPART_WAIST)) {
 				limbBone = "pelvis";
@@ -581,6 +584,7 @@ static void CG_General( centity_t *cent ) {
 				stubCapName = "hips_cap_torso_off";
 				limbTagName = "*torso_cap_hips";
 				stubTagName = "*hips_cap_torso";
+				dismemberPart = DISM_WAIST;
 				limb_anim = demo15detected?BOTH_DISMEMBER_TORSO1_15:BOTH_DISMEMBER_TORSO1;
 			} else if ((demo15detected && mG2 == G2_MODELPART_LARM_15) || (!demo15detected && mG2 == G2_MODELPART_LARM)) {
 				limbBone = "lhumerus";
@@ -590,6 +594,7 @@ static void CG_General( centity_t *cent ) {
 				stubCapName = "torso_cap_l_arm_off";
 				limbTagName = "*l_arm_cap_torso";
 				stubTagName = "*torso_cap_l_arm";
+				dismemberPart = DISM_LARM;
 				limb_anim = demo15detected?BOTH_DISMEMBER_LARM_15:BOTH_DISMEMBER_LARM;
 			} else if ((demo15detected && mG2 == G2_MODELPART_RARM_15) || (!demo15detected && mG2 == G2_MODELPART_RARM)) {
 				limbBone = "rhumerus";
@@ -599,6 +604,7 @@ static void CG_General( centity_t *cent ) {
 				stubCapName = "torso_cap_r_arm_off";
 				limbTagName = "*r_arm_cap_torso";
 				stubTagName = "*torso_cap_r_arm";
+				dismemberPart = DISM_RARM;
 				limb_anim = demo15detected?BOTH_DISMEMBER_RARM_15:BOTH_DISMEMBER_RARM;
 			} else if (!demo15detected && mG2 == G2_MODELPART_RHAND) {
 				limbBone = "rradiusX";
@@ -608,6 +614,7 @@ static void CG_General( centity_t *cent ) {
 				stubCapName = "r_arm_cap_r_hand_off";
 				limbTagName = "*r_hand_cap_r_arm";
 				stubTagName = "*r_arm_cap_r_hand";
+				dismemberPart = DISM_RHAND;
 				limb_anim = BOTH_DISMEMBER_RARM;
 			//different
 			} else if ((demo15detected && mG2 == G2_MODELPART_LLEG_15) || (!demo15detected && mG2 == G2_MODELPART_LLEG)) {
@@ -618,6 +625,7 @@ static void CG_General( centity_t *cent ) {
 				stubCapName = "hips_cap_l_leg_off";
 				limbTagName = "*l_leg_cap_hips";
 				stubTagName = "*hips_cap_l_leg";
+				dismemberPart = DISM_LLEG;
 				limb_anim = demo15detected?BOTH_DISMEMBER_LLEG_15:BOTH_DISMEMBER_LLEG;
 			//different
 			} else if ((demo15detected && mG2 == G2_MODELPART_RLEG_15) || (!demo15detected && mG2 == G2_MODELPART_RLEG)) {
@@ -628,6 +636,7 @@ static void CG_General( centity_t *cent ) {
 				stubCapName = "hips_cap_r_leg_off";
 				limbTagName = "*r_leg_cap_hips";
 				stubTagName = "*hips_cap_r_leg";
+				dismemberPart = DISM_RLEG;
 				limb_anim = demo15detected?BOTH_DISMEMBER_RLEG_15:BOTH_DISMEMBER_RLEG;
 			} else {
 				limbBone = "rfemurYZ";
@@ -637,8 +646,25 @@ static void CG_General( centity_t *cent ) {
 				stubCapName = "hips_cap_r_leg_off";
 				limbTagName = "*r_leg_cap_hips";
 				stubTagName = "*hips_cap_r_leg";
+				dismemberPart = DISM_RLEG;
 				limb_anim = demo15detected?BOTH_DISMEMBER_RLEG_15:BOTH_DISMEMBER_RLEG;
 			}
+
+			if (clEnt && clEnt->dism.cut[dismemberPart]) {
+				return; // this body part is already dismembered.
+			}
+			
+			if (clEnt->dism.cut[DISM_WAIST] == qtrue)
+				if (dismemberPart >= DISM_HEAD && dismemberPart <= DISM_RARM)  //connected to waist
+					return;
+
+			if (clEnt->dism.cut[DISM_LARM] == qtrue)
+				if (dismemberPart == DISM_LHAND) //connected to left arm
+					return;
+
+			if (clEnt->dism.cut[DISM_RARM] == qtrue)
+				if (dismemberPart == DISM_RHAND) //connected to right arm
+					return;
 
 			if (clEnt && clEnt->ghoul2)
 			{
@@ -671,7 +697,10 @@ static void CG_General( centity_t *cent ) {
 						anim = &bgGlobalAnimations[ limb_anim ];
 				}
 
-				trap_G2API_DuplicateGhoul2Instance(clEnt->ghoul2, &cent->ghoul2);
+				if (!cent->ghoul2) {
+
+					trap_G2API_DuplicateGhoul2Instance(clEnt->ghoul2, &cent->ghoul2);
+				}
 
 				if (anim) {
 					int aNum;
@@ -760,6 +789,8 @@ static void CG_General( centity_t *cent ) {
 			}
 
 			clEnt->torsoBolt = cent->currentState.modelGhoul2; //reinit model after copying limbless one to queue
+			clEnt->anyDismember = qtrue;
+			clEnt->dism.cut[dismemberPart] = qtrue;
 
 			return;
 		}
@@ -978,7 +1009,7 @@ Ghoul2 Insert End
 		//Rotate them
 		VectorCopy( cg.autoAngles, cent->lerpAngles );
 		AxisCopy( cg.autoAxis, ent.axis );
-	} else if (!doNotSetModel || demo15detected) {
+	} else if (!doNotSetModel /* || demo15detected*/) { // this was a bug in 1.02 i think, don't stay "compatible"
 		ent.hModel = cgs.gameModels[s1->modelindex];
 	}
 

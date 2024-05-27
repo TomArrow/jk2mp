@@ -635,8 +635,9 @@ void CG_PainEvent( centity_t *cent, int health ) {
 void CG_ReattachLimb(centity_t *source) {
 	char *limbName;
 	char *stubCapName;
+	dismpart_t dismemberPart;
 
-	if (mov_dismember.integer) {
+	if (1 /*mov_dismember.integer*/) {
 		int part;
 		trap_G2API_SetSurfaceOnOff(source->ghoul2, "hips", 0); // Makes no sense for dismemberment but needed to restore gibbing.
 		for (part = 0; part < 8; part++) {
@@ -714,6 +715,7 @@ void CG_ReattachLimb(centity_t *source) {
 			break;
 		default:
 			source->torsoBolt = 0;
+			source->anyDismember = qfalse;
 			source->ghoul2weapon = NULL;
 			return;
 		}
@@ -755,6 +757,8 @@ void CG_ReattachLimb(centity_t *source) {
 		trap_G2API_SetSurfaceOnOff(source->ghoul2, stubCapName, 0x00000100);
 	}
 	source->torsoBolt = 0;
+	source->anyDismember = qfalse;
+	memset(&source->dism.cut, 0, sizeof(source->dism.cut));
 
 	source->ghoul2weapon = NULL;
 }
@@ -850,7 +854,7 @@ static void CG_BodyQueueCopy(centity_t *cent, int clientNum, int knownWeapon)
 	}
 
 	//After we create the bodyqueue, regenerate any limbs on the real instance
-	if (source->torsoBolt || mov_dismember.integer) {
+	if (source->torsoBolt || source->anyDismember || mov_dismember.integer) {
 		CG_ReattachLimb(source);
 	}
 }
@@ -1245,6 +1249,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			cl_ent->atstSwinging = 0;
 			if (demo15detected)
 				cl_ent->torsoBolt = 0;
+			cl_ent->anyDismember = qfalse;
 			cl_ent->bolt1 = 0;
 			cl_ent->bolt2 = 0;
 			cl_ent->bolt3 = 0;
@@ -2058,7 +2063,8 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			trap_S_StartSound (NULL, es->number, CHAN_AUTO, cgs.media.teleInSound );
 			
 			cg.fallingToDeath = 0;
-			if (mov_dismember.integer)
+			//if (mov_dismember.integer)
+			if (cg_entities[es->number].anyDismember)
 				CG_ReattachLimb(&cg_entities[es->number]);
 
 			if (tr.fraction == 1)

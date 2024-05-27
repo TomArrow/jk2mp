@@ -2246,7 +2246,7 @@ void CG_CheckPlayerG2Weapons(playerState_t *ps, centity_t *cent)
 		return;
 	}
 
-	if (cent->torsoBolt)
+	if (cent->torsoBolt || cent->anyDismember)
 	{ //got our limb cut off, no updating weapons until it's restored
 		cent->ghoul2weapon = NULL;
 		return;

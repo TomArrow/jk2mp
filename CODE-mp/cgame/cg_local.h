@@ -384,6 +384,8 @@ typedef struct centity_s {
 		int lastkiller;	
 	} dism;
 
+	qboolean		anyDismember;
+
 	qboolean		isGibbing;
 
 	saberTrail_t	entSaberTrail; // for ET_GRAPPLE/npcs
@@ -1884,6 +1886,7 @@ extern	vmCvar_t		cg_otherPlayerAlpha;
 extern	vmCvar_t		cg_animBlend;
 
 extern	vmCvar_t		cg_dismember;
+extern	vmCvar_t		cg_dismemberAllowMultiple;
 
 //jk2pro Client Cvars - start (ported from eternaljk2mv)
 //extern	vmCvar_t		cg_raceTimer;
@@ -2032,6 +2035,7 @@ extern	vmCvar_t	mov_wallhack;
 extern	vmCvar_t	mov_camerafps;
 
 extern	vmCvar_t	mov_dismember;
+extern	vmCvar_t	mov_dismemberDisallowNative;
 extern	vmCvar_t	mov_dismemberCheckSegments;
 extern	vmCvar_t	mov_gib;
 extern	vmCvar_t	mov_forceNTdemo;

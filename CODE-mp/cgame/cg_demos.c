@@ -695,8 +695,11 @@ void CG_DemosDrawActiveFrame(int serverTime, stereoFrame_t stereoView) {
 		
 		for (i = 0; i < MAX_CHATBOX_ITEMS; i++)
 			cg.chatItems[i].time = 0;
-		for (i = 0; i < MAX_CLIENTS && mov_dismember.integer; i++)
-			CG_ReattachLimb(&cg_entities[i]);
+		for (i = 0; i < MAX_GENTITIES /*MAX_CLIENTS  && mov_dismember.integer*/; i++) {
+			if (cg_entities[i].anyDismember) {
+				CG_ReattachLimb(&cg_entities[i]);
+			}
+		}
 		CG_LoadDeferredPlayers();
 	} else if (cg.frametime > 100) {
 		hadSkip = qtrue;
@@ -1467,6 +1470,7 @@ void CG_DemoDismembermentEvent( centity_t *cent, vec3_t position ) {
 						//cg_entities[targetent->currentState.number].dism.cut[DISM_TOTAL] = 
 							qtrue;
 					cg_entities[targetent->currentState.number].torsoBolt = 1;
+					cg_entities[targetent->currentState.number].anyDismember = qtrue;
 					cg_entities[targetent->currentState.number].ghoul2weapon = NULL;
 					//trap_G2API_SetSurfaceOnOff(cent->ghoul2, stubCapName, 0);
 				}

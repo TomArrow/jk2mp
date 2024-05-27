@@ -653,6 +653,7 @@ void CG_KillCEntityInstances()
 		cg_entities[i].ghoul2weapon = NULL;
 		if (demo15detected)
 			cg_entities[i].torsoBolt = 0;
+		cg_entities[i].anyDismember = qfalse;
 		cg_entities[i].trailTime = 0;
 		cg_entities[i].frame_hold_time = 0;
 		cg_entities[i].frame_hold_refreshed = 0;
