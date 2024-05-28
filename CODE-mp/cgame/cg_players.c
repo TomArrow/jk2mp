@@ -9027,7 +9027,7 @@ stillDoSaber:
 
 			saberEnt = &cg_entities[cent->currentState.saberEntityNum];
 
-			if (/*cent->bolt4 && */!g2HasWeapon)
+			if (/*cent->bolt4 && */!g2HasWeapon && !cent->anyDismember)
 			{
 				trap_G2API_CopySpecificGhoul2Model(g2WeaponInstances[WP_SABER], 0, cent->ghoul2, 1);
 

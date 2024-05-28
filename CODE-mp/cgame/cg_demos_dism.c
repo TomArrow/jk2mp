@@ -63,6 +63,342 @@ void demoSaberDismember(centity_t *cent, vec3_t dir) {
 		trap_G2API_RemoveGhoul2Model(&(cent->ghoul2), 1);
 }
 
+void CG_G2PlayerAnglesSimple(centity_t* ent, vec3_t legs[3], vec3_t legsAngles) {
+	vec3_t		velocity;
+	float		speed;
+	int			dir;
+
+	VectorClear(legsAngles);
+
+	dir = ent->currentState.angles2[YAW];
+	if (dir < 0 || dir > 7) {
+		return;
+	}
+
+	// lean towards the direction of travel
+	VectorCopy(ent->currentState.pos.trDelta, velocity);
+	speed = VectorNormalize(velocity);
+
+	if (speed) {
+		vec3_t	axis[3];
+		float	side;
+
+		speed *= 0.05;
+
+		AnglesToAxis(legsAngles, axis);
+
+		side = speed * DotProduct(velocity, axis[0]);
+		legsAngles[PITCH] += side;
+	}
+
+
+	legsAngles[YAW] = ent->lerpAngles[YAW];
+
+	legsAngles[ROLL] = 0;
+}
+
+/*
+void CG_G2PlayerAngles(centity_t* ent, vec3_t legs[3], vec3_t legsAngles) {
+	vec3_t		torsoAngles, headAngles;
+	// float		dest;
+	static	int	movementOffsets[8] = { 0, 22, 45, -22, 0, 22, -45, -22 };
+	vec3_t		velocity;
+	float		speed;
+	int			dir;
+	vec3_t		velPos, velAng;
+	int			adddir = 0;
+	float		dif;
+	float		degrees_negative = 0;
+	float		degrees_positive = 0;
+	vec3_t		ulAngles, llAngles, viewAngles, angles, thoracicAngles = { 0,0,0 };
+
+	VectorCopy(ent->lerpAngles, headAngles);
+	headAngles[YAW] = AngleMod(headAngles[YAW]);
+	VectorClear(legsAngles);
+	VectorClear(torsoAngles);
+
+	// --------- yaw -------------
+
+	// adjust legs for movement dir
+	dir = ent->currentState.angles2[YAW];
+	if (dir < 0 || dir > 7) {
+		return;
+	}
+
+	torsoAngles[YAW] = headAngles[YAW] + 0.25 * movementOffsets[dir];
+
+	// --------- pitch -------------
+	*/
+	/*
+	// only show a fraction of the pitch angle in the torso
+	if ( headAngles[PITCH] > 180 ) {
+		dest = (-360 + headAngles[PITCH]) * 0.75;
+	} else {
+		dest = headAngles[PITCH] * 0.75;
+	}
+	*/
+/*
+	torsoAngles[PITCH] = ent->lerpAngles[PITCH];
+
+	// --------- roll -------------
+
+
+	// lean towards the direction of travel
+	VectorCopy(ent->currentState.pos.trDelta, velocity);
+	speed = VectorNormalize(velocity);
+
+	if (speed) {
+		vec3_t	axis[3];
+		float	side;
+
+		speed *= 0.05;
+
+		AnglesToAxis(legsAngles, axis);
+		side = speed * DotProduct(velocity, axis[1]);
+		legsAngles[ROLL] -= side;
+
+		side = speed * DotProduct(velocity, axis[0]);
+		legsAngles[PITCH] += side;
+	}
+
+	//rww - crazy velocity-based leg angle calculation
+	legsAngles[YAW] = headAngles[YAW];
+	velPos[0] = ent->lerpOrigin[0] + velocity[0];
+	velPos[1] = ent->lerpOrigin[1] + velocity[1];
+	velPos[2] = ent->lerpOrigin[2] + velocity[2];
+
+	if (ent->currentState.groundEntityNum == ENTITYNUM_NONE)
+	{ //off the ground, no direction-based leg angles
+		VectorCopy(ent->lerpOrigin, velPos);
+	}
+
+	VectorSubtract(ent->lerpOrigin, velPos, velAng);
+
+	if (!VectorCompare(velAng, vec3_origin))
+	{
+		vectoangles(velAng, velAng);
+
+		if (velAng[YAW] <= legsAngles[YAW])
+		{
+			degrees_negative = (legsAngles[YAW] - velAng[YAW]);
+			degrees_positive = (360 - legsAngles[YAW]) + velAng[YAW];
+		}
+		else
+		{
+			degrees_negative = legsAngles[YAW] + (360 - velAng[YAW]);
+			degrees_positive = (velAng[YAW] - legsAngles[YAW]);
+		}
+
+		if (degrees_negative < degrees_positive)
+		{
+			dif = degrees_negative;
+			adddir = 0;
+		}
+		else
+		{
+			dif = degrees_positive;
+			adddir = 1;
+		}
+
+		if (dif > 90)
+		{
+			dif = (180 - dif);
+		}
+
+		if (dif > 60)
+		{
+			dif = 60;
+		}
+
+		//Slight hack for when playing is running backward
+		if (dir == 3 || dir == 5)
+		{
+			dif = -dif;
+		}
+
+		if (adddir)
+		{
+			legsAngles[YAW] -= dif;
+		}
+		else
+		{
+			legsAngles[YAW] += dif;
+		}
+	}
+
+	legsAngles[YAW] = ent->lerpAngles[YAW];
+
+	legsAngles[ROLL] = 0;
+	torsoAngles[ROLL] = 0;
+
+	// pull the angles back out of the hierarchial chain
+	AnglesSubtract(headAngles, torsoAngles, headAngles);
+	AnglesSubtract(torsoAngles, legsAngles, torsoAngles);
+	AnglesToAxis(legsAngles, legs);
+	// we assume that model 0 is the player model.
+
+	VectorCopy(ent->lerpAngles, viewAngles);
+
+	if (viewAngles[PITCH] > 290)
+	{ //keep the same general range as lerpAngles on the client so we can use the same spine correction
+		viewAngles[PITCH] -= 360;
+	}
+
+	viewAngles[YAW] = viewAngles[ROLL] = 0;
+	viewAngles[PITCH] *= 0.5;
+
+	if (!demo15detected)
+	{
+		VectorCopy(legsAngles, angles);
+	}
+	else
+	{
+		VectorCopy(ent->lerpAngles, angles);
+		angles[PITCH] = 0;
+	}
+
+	G_G2ClientSpineAngles(ent, viewAngles, angles, thoracicAngles, ulAngles, llAngles);
+
+	if (!demo15detected)
+	{
+		ulAngles[YAW] += torsoAngles[YAW] * 0.3;
+		llAngles[YAW] += torsoAngles[YAW] * 0.3;
+		thoracicAngles[YAW] += torsoAngles[YAW] * 0.4;
+
+		ulAngles[PITCH] = torsoAngles[PITCH] * 0.3;
+		llAngles[PITCH] = torsoAngles[PITCH] * 0.3;
+		thoracicAngles[PITCH] = torsoAngles[PITCH] * 0.4;
+
+		ulAngles[ROLL] += torsoAngles[ROLL] * 0.3;
+		llAngles[ROLL] += torsoAngles[ROLL] * 0.3;
+		thoracicAngles[ROLL] += torsoAngles[ROLL] * 0.4;
+	}
+
+	//trap_G2API_SetBoneAngles(ent->ghoul2, 0, "upper_lumbar", ulAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, NULL, 0, level.time);
+	//trap_G2API_SetBoneAngles(ent->ghoul2, 0, "lower_lumbar", llAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, NULL, 0, level.time);
+	//trap_G2API_SetBoneAngles(ent->ghoul2, 0, "thoracic", thoracicAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, NULL, 0, level.time);
+}*/
+void CG_GetDismemberBolt(centity_t* self, vec3_t boltPoint, dismpart_t limbType)
+{
+	int useBolt = 0;// self->bolt;
+	vec3_t properOrigin, properAngles;// , addVel;
+	vec3_t legAxis[3];
+	mdxaBone_t	boltMatrix;
+	float fVSpeed = 0;
+
+	switch (limbType)
+	{
+	case DISM_HEAD:
+		useBolt = trap_G2API_AddBolt(self->ghoul2, 0, "cranium");
+		break;
+	case DISM_WAIST:
+		useBolt = trap_G2API_AddBolt(self->ghoul2, 0, "thoracic");
+		break;
+	case DISM_LARM:
+		useBolt = trap_G2API_AddBolt(self->ghoul2, 0, "lradius");
+		break;
+	case DISM_RARM:
+		useBolt = trap_G2API_AddBolt(self->ghoul2, 0, "rradius");
+		break;
+	case DISM_RHAND:
+		useBolt = trap_G2API_AddBolt(self->ghoul2, 0, "rhand");
+		break;
+	case DISM_LHAND: // Added by me
+		useBolt = trap_G2API_AddBolt(self->ghoul2, 0, "lhand");
+		break;
+	case DISM_LLEG:
+		useBolt = trap_G2API_AddBolt(self->ghoul2, 0, "ltibia");
+		break;
+	case DISM_RLEG:
+		useBolt = trap_G2API_AddBolt(self->ghoul2, 0, "rtibia");
+		break;
+	default:
+		useBolt = trap_G2API_AddBolt(self->ghoul2, 0, "cranium");
+		break;
+	}
+
+	//VectorCopy(self->client->ps.origin, properOrigin);
+	//VectorCopy(self->client->ps.viewangles, properAngles);
+	VectorCopy(self->lerpOrigin, properOrigin);
+	VectorCopy(self->lerpAngles, properAngles);
+
+	//try to predict the origin based on velocity so it's more like what the client is seeing (no need for this in cgame)
+	/*VectorCopy(self->currentState.pos.trDelta, addVel);
+	VectorNormalize(addVel);
+	
+	if (self->currentState.pos.trDelta[0] < 0)
+	{
+		fVSpeed += (-self->currentState.pos.trDelta[0]);
+	}
+	else
+	{
+		fVSpeed += self->currentState.pos.trDelta[0];
+	}
+	if (self->currentState.pos.trDelta[1] < 0)
+	{
+		fVSpeed += (-self->currentState.pos.trDelta[1]);
+	}
+	else
+	{
+		fVSpeed += self->currentState.pos.trDelta[1];
+	}
+	if (self->currentState.pos.trDelta[2] < 0)
+	{
+		fVSpeed += (-self->currentState.pos.trDelta[2]);
+	}
+	else
+	{
+		fVSpeed += self->currentState.pos.trDelta[2];
+	}
+
+	fVSpeed *= 0.08;
+
+	properOrigin[0] += addVel[0] * fVSpeed;
+	properOrigin[1] += addVel[1] * fVSpeed;
+	properOrigin[2] += addVel[2] * fVSpeed*/
+
+	properAngles[0] = 0;
+	properAngles[1] = self->lerpAngles[YAW];
+	properAngles[2] = 0;
+
+	AnglesToAxis(properAngles, legAxis);
+	CG_G2PlayerAnglesSimple(self, legAxis, properAngles);
+
+	trap_G2API_GetBoltMatrix(self->ghoul2, 0, useBolt, &boltMatrix, properAngles, properOrigin, cg.time, NULL, vec3_origin);
+
+	boltPoint[0] = boltMatrix.matrix[0][3];
+	boltPoint[1] = boltMatrix.matrix[1][3];
+	boltPoint[2] = boltMatrix.matrix[2][3];
+
+	if (!demo15detected)
+	{
+		//trap_G2API_GetBoltMatrix(self->ghoul2, 1, 0, &boltMatrix, properAngles, properOrigin, cg.time, NULL, vec3_origin);
+
+		if (/*self->client  && */limbType == G2_MODELPART_RHAND)
+		{ //Make some saber hit sparks over the severed wrist area
+			/*vec3_t boltAngles;
+			centity_t* te;
+
+			boltAngles[0] = -boltMatrix.matrix[0][1];
+			boltAngles[1] = -boltMatrix.matrix[1][1];
+			boltAngles[2] = -boltMatrix.matrix[2][1];*/
+
+			//te = G_TempEntity(boltPoint, EV_SABER_HIT);
+
+			//VectorCopy(boltPoint, te->s.origin);
+			//VectorCopy(boltAngles, te->s.angles);
+
+			//if (!te->s.angles[0] && !te->s.angles[1] && !te->s.angles[2])
+			//{ //don't let it play with no direction
+			//	te->s.angles[1] = 1;
+			//}
+
+			//te->s.eventParm = 16; //lots of sparks
+		}
+	}
+}
+
+
 //Main dismemberment function
 static void demoDismember( centity_t *cent , vec3_t dir, int part, vec3_t limborg, vec3_t limbang ) {
 	localEntity_t	*le;
@@ -73,6 +409,7 @@ static void demoDismember( centity_t *cent , vec3_t dir, int part, vec3_t limbor
 	char *stubCapName;
 	int  limb_anim;
 	int clientnum = cent->currentState.number;
+	vec3_t	boltPoint;
 		
 	if (!cent->ghoul2 || cg_entities[clientnum].dism.cut[part] == qtrue)
 		return;
@@ -180,6 +517,14 @@ static void demoDismember( centity_t *cent , vec3_t dir, int part, vec3_t limbor
 			break;
 		default:
 			return;	
+	}
+
+	if (mov_dismemberClassical.integer) {
+		vec3_t centerToBoltPoint;
+		CG_GetDismemberBolt(cent, boltPoint, part);
+		VectorSubtract(boltPoint, cent->lerpOrigin, centerToBoltPoint);
+		VectorNormalize(centerToBoltPoint);
+		VectorMA(cent->currentState.pos.trDelta, 100, centerToBoltPoint, le->pos.trDelta);
 	}
 
 	//FIXME: FREEZE THE ANIMATION
