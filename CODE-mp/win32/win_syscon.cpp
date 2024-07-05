@@ -15,6 +15,10 @@
 #include <io.h>
 #include <conio.h>
 
+#include <mutex>
+#include <thread>
+
+
 #define COPY_ID			1
 #define QUIT_ID			2
 #define CLEAR_ID		3
@@ -143,8 +147,8 @@ static LONG WINAPI ConWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		{
 			//SendMessage( s_wcd.hwndBuffer, EM_SETSEL, 0, -1 );
 			//SendMessage( s_wcd.hwndBuffer, WM_COPY, 0, 0 );
-			PostMessageA( s_wcd.hwndBuffer, EM_SETSEL, 0, -1 );
-			PostMessageA( s_wcd.hwndBuffer, WM_COPY, 0, 0 );
+			SendMessageTimeout( s_wcd.hwndBuffer, EM_SETSEL, 0, -1, 0, 10, NULL );
+			SendMessageTimeout( s_wcd.hwndBuffer, WM_COPY, 0, 0, 0, 10, NULL);
 		}
 		else if ( wParam == QUIT_ID )
 		{
@@ -162,8 +166,8 @@ static LONG WINAPI ConWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		{
 			//SendMessage( s_wcd.hwndBuffer, EM_SETSEL, 0, -1 );
 			//SendMessage( s_wcd.hwndBuffer, EM_REPLACESEL, FALSE, ( LPARAM ) "" );
-			PostMessageA( s_wcd.hwndBuffer, EM_SETSEL, 0, -1 );
-			PostMessageA( s_wcd.hwndBuffer, EM_REPLACESEL, FALSE, ( LPARAM ) "" );
+			SendMessageTimeout( s_wcd.hwndBuffer, EM_SETSEL, 0, -1, 0, 10, NULL);
+			SendMessageTimeout( s_wcd.hwndBuffer, EM_REPLACESEL, FALSE, ( LPARAM ) "", 0, 10, NULL);
 			UpdateWindow( s_wcd.hwndBuffer );
 		}
 		break;
@@ -234,7 +238,7 @@ LONG WINAPI InputLineWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				CompleteCommand();
 				SetWindowText( s_wcd.hwndInputLine, kg.g_consoleField.buffer);
 				//SendMessage(s_wcd.hwndInputLine, EM_SETSEL, strlen(kg.g_consoleField.buffer) , MAKELONG(0xffff, 0xffff) );
-				PostMessageA(s_wcd.hwndInputLine, EM_SETSEL, strlen(kg.g_consoleField.buffer) , MAKELONG(0xffff, 0xffff) );
+				SendMessageTimeout(s_wcd.hwndInputLine, EM_SETSEL, strlen(kg.g_consoleField.buffer) , MAKELONG(0xffff, 0xffff), 0, 10, NULL);
 			}
 
 		case WM_KEYDOWN:
@@ -247,7 +251,7 @@ LONG WINAPI InputLineWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				kg.g_consoleField = kg.historyEditLines[ kg.historyLine % COMMAND_HISTORY ];
 				SetWindowText( s_wcd.hwndInputLine, kg.g_consoleField.buffer);
 				//SendMessage(s_wcd.hwndInputLine, EM_SETSEL, strlen(kg.g_consoleField.buffer) , MAKELONG(0xffff, 0xffff) );
-				PostMessageA(s_wcd.hwndInputLine, EM_SETSEL, strlen(kg.g_consoleField.buffer) , MAKELONG(0xffff, 0xffff) );
+				SendMessageTimeout(s_wcd.hwndInputLine, EM_SETSEL, strlen(kg.g_consoleField.buffer) , MAKELONG(0xffff, 0xffff), 0, 10, NULL);
 				return 0;
 			}
 			else if (wParam == VK_DOWN)
@@ -260,7 +264,7 @@ LONG WINAPI InputLineWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				kg.g_consoleField = kg.historyEditLines[ kg.historyLine % COMMAND_HISTORY ];
 				SetWindowText( s_wcd.hwndInputLine, kg.g_consoleField.buffer);
 				//SendMessage(s_wcd.hwndInputLine, EM_SETSEL, strlen(kg.g_consoleField.buffer) , MAKELONG(0xffff, 0xffff) );
-				PostMessageA(s_wcd.hwndInputLine, EM_SETSEL, strlen(kg.g_consoleField.buffer) , MAKELONG(0xffff, 0xffff) );
+				SendMessageTimeout(s_wcd.hwndInputLine, EM_SETSEL, strlen(kg.g_consoleField.buffer) , MAKELONG(0xffff, 0xffff), 0, 10, NULL);
 				return 0;
 			}
 			break;
@@ -370,7 +374,7 @@ void Sys_CreateConsole( void )
 												( HMENU ) COPY_ID,	// child window ID
 												g_wv.hInstance, NULL );
 	//SendMessage( s_wcd.hwndButtonCopy, WM_SETTEXT, 0, ( LPARAM ) "Copy" );
-	PostMessageA( s_wcd.hwndButtonCopy, WM_SETTEXT, 0, ( LPARAM ) "Copy" );
+	SendMessageTimeout( s_wcd.hwndButtonCopy, WM_SETTEXT, 0, ( LPARAM ) "Copy", 0, 10, NULL);
 
 	s_wcd.hwndButtonClear = CreateWindow( "button", NULL, BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | WS_TABSTOP,
 												82, 425, 72, 24,
@@ -378,7 +382,7 @@ void Sys_CreateConsole( void )
 												( HMENU ) CLEAR_ID,	// child window ID
 												g_wv.hInstance, NULL );
 	//SendMessage( s_wcd.hwndButtonClear, WM_SETTEXT, 0, ( LPARAM ) "Clear" );
-	PostMessageA( s_wcd.hwndButtonClear, WM_SETTEXT, 0, ( LPARAM ) "Clear" );
+	SendMessageTimeout( s_wcd.hwndButtonClear, WM_SETTEXT, 0, ( LPARAM ) "Clear", 0, 10, NULL);
 
 	s_wcd.hwndButtonQuit = CreateWindow( "button", NULL, BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | WS_TABSTOP,
 												s_wcd.windowWidth-92, 425, 72, 24,
@@ -386,7 +390,7 @@ void Sys_CreateConsole( void )
 												( HMENU ) QUIT_ID,	// child window ID
 												g_wv.hInstance, NULL );
 	//SendMessage( s_wcd.hwndButtonQuit, WM_SETTEXT, 0, ( LPARAM ) "Quit" );
-	PostMessageA( s_wcd.hwndButtonQuit, WM_SETTEXT, 0, ( LPARAM ) "Quit" );
+	SendMessageTimeout( s_wcd.hwndButtonQuit, WM_SETTEXT, 0, ( LPARAM ) "Quit", 0, 10, NULL);
 
 
 	//
@@ -399,14 +403,14 @@ void Sys_CreateConsole( void )
 												( HMENU ) EDIT_ID,	// child window ID
 												g_wv.hInstance, NULL );
 	//SendMessage( s_wcd.hwndBuffer, WM_SETFONT, ( WPARAM ) s_wcd.hfBufferFont, 0 );
-	PostMessageA( s_wcd.hwndBuffer, WM_SETFONT, ( WPARAM ) s_wcd.hfBufferFont, 0 );
+	SendMessageTimeout( s_wcd.hwndBuffer, WM_SETFONT, ( WPARAM ) s_wcd.hfBufferFont, 0, 0, 10, NULL);
 
 	//s_wcd.SysInputLineWndProc = ( WNDPROC ) SetWindowLong( s_wcd.hwndInputLine, GWL_WNDPROC, ( long ) InputLineWndProc );
 	s_wcd.SysInputLineWndProc = ( WNDPROC ) SetWindowLongPtr( s_wcd.hwndInputLine, GWLP_WNDPROC, ( LONG_PTR ) InputLineWndProc ); // TODO Did I do this correctly? No idea
 	//SendMessage( s_wcd.hwndInputLine, WM_SETFONT, ( WPARAM ) s_wcd.hfBufferFont, 0 );
 	//SendMessage( s_wcd.hwndBuffer, EM_LIMITTEXT, ( WPARAM ) 0x7fff, 0 );
-	PostMessageA( s_wcd.hwndInputLine, WM_SETFONT, ( WPARAM ) s_wcd.hfBufferFont, 0 );
-	PostMessageA( s_wcd.hwndBuffer, EM_LIMITTEXT, ( WPARAM ) 0x7fff, 0 );
+	SendMessageTimeout( s_wcd.hwndInputLine, WM_SETFONT, ( WPARAM ) s_wcd.hfBufferFont, 0, 0, 10, NULL);
+	SendMessageTimeout( s_wcd.hwndBuffer, EM_LIMITTEXT, ( WPARAM ) 0x7fff, 0, 0, 10, NULL);
 
 	ShowWindow( s_wcd.hWnd, SW_SHOWDEFAULT);
 	UpdateWindow( s_wcd.hWnd );
@@ -461,7 +465,7 @@ void Sys_ShowConsole( int visLevel, qboolean quitOnClose )
 	case 1:
 		ShowWindow( s_wcd.hWnd, SW_SHOWNORMAL );
 		//SendMessage( s_wcd.hwndBuffer, EM_LINESCROLL, 0, 0xffff );
-		PostMessageA( s_wcd.hwndBuffer, EM_LINESCROLL, 0, 0xffff );
+		SendMessageTimeout( s_wcd.hwndBuffer, EM_LINESCROLL, 0, 0xffff, 0, 10, NULL);
 		break;
 	case 2:
 		ShowWindow( s_wcd.hWnd, SW_MINIMIZE );
@@ -563,7 +567,7 @@ void Conbuf_AppendText( const char *pMsg )
 	if ( s_totalChars > 0x7fff )
 	{
 		//SendMessage( s_wcd.hwndBuffer, EM_SETSEL, 0, -1 );
-		PostMessageA( s_wcd.hwndBuffer, EM_SETSEL, 0, -1 );
+		SendMessageTimeout( s_wcd.hwndBuffer, EM_SETSEL, 0, -1, 0, 10, NULL);
 		s_totalChars = bufLen;
 	}
 
@@ -573,9 +577,9 @@ void Conbuf_AppendText( const char *pMsg )
 	//SendMessage( s_wcd.hwndBuffer, EM_LINESCROLL, 0, 0xffff );
 	//SendMessage( s_wcd.hwndBuffer, EM_SCROLLCARET, 0, 0 );
 	//SendMessage( s_wcd.hwndBuffer, EM_REPLACESEL, 0, (LPARAM) buffer );
-	PostMessageA( s_wcd.hwndBuffer, EM_LINESCROLL, 0, 0xffff );
-	PostMessageA( s_wcd.hwndBuffer, EM_SCROLLCARET, 0, 0 );
-	PostMessageA( s_wcd.hwndBuffer, EM_REPLACESEL, 0, (LPARAM) buffer );
+	SendMessageTimeout( s_wcd.hwndBuffer, EM_LINESCROLL, 0, 0xffff, 0, 10, NULL);
+	SendMessageTimeout( s_wcd.hwndBuffer, EM_SCROLLCARET, 0, 0, 0, 10, NULL);
+	SendMessageTimeout( s_wcd.hwndBuffer, EM_REPLACESEL, 0, (LPARAM) buffer, 0, 10, NULL);
 }
 
 /*
@@ -593,7 +597,7 @@ void Sys_SetErrorText( const char *buf )
 													( HMENU ) ERRORBOX_ID,	// child window ID
 													g_wv.hInstance, NULL );
 		//SendMessage( s_wcd.hwndErrorBox, WM_SETFONT, ( WPARAM ) s_wcd.hfBufferFont, 0 );
-		PostMessageA( s_wcd.hwndErrorBox, WM_SETFONT, ( WPARAM ) s_wcd.hfBufferFont, 0 );
+		SendMessageTimeout( s_wcd.hwndErrorBox, WM_SETFONT, ( WPARAM ) s_wcd.hfBufferFont, 0, 0, 10, NULL);
 		SetWindowText( s_wcd.hwndErrorBox, s_wcd.errorString );
 
 		DestroyWindow( s_wcd.hwndInputLine );

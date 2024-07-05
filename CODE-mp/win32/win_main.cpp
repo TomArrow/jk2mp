@@ -14,6 +14,14 @@
 #include <string>
 #include "../qcommon/strip.h"
 
+#include <thread>
+#include <mutex>
+
+std::thread::id main_thread_id;
+std::vector<std::string> syscon_text_queue;
+std::vector<std::string> syscon_error_queue;
+std::recursive_mutex syscon_text_queue_mutex; // make it recursive just to be safe? eh idk
+
 #define	CD_BASEDIR	"gamedata\\gamedata"
 #define	CD_EXE		"jk2sp.exe"
 #define	CD_BASEDIR_LINUX	"bin\\x86\\glibc-2.1"
@@ -63,6 +71,13 @@ void QDECL Sys_Error( const char *error, ... ) {
 	vsprintf (text, error, argptr);
 	va_end (argptr);
 
+	if (std::this_thread::get_id() != main_thread_id) {
+		// This is very weirdly done I don't think this actually holds up but whatever.
+		std::lock_guard<std::recursive_mutex> syscon_lock(syscon_text_queue_mutex);
+		syscon_error_queue.push_back(text);
+		return;
+	}
+
 	Conbuf_AppendText( text );
 	Conbuf_AppendText( "\n" );
 
@@ -109,7 +124,13 @@ Sys_Print
 ==============
 */
 void Sys_Print( const char *msg ) {
-	Conbuf_AppendText( msg );
+	if (std::this_thread::get_id() == main_thread_id) {
+		Conbuf_AppendText(msg);
+	}
+	else {
+		std::lock_guard<std::recursive_mutex> syscon_lock(syscon_text_queue_mutex);
+		syscon_text_queue.push_back(msg);
+	}
 }
 
 
@@ -828,11 +849,38 @@ sysEvent_t Sys_GetEvent( void ) {
 	char		*s;
 	msg_t		netmsg;
 	netadr_t	adr;
+	std::vector<std::string> syscon_local_queue;
 
 	// return if we have data
 	if ( eventHead > eventTail ) {
 		eventTail++;
 		return eventQue[ ( eventTail - 1 ) & MASK_QUED_EVENTS ];
+	}
+
+	if (std::this_thread::get_id() == main_thread_id) { // Message to system console applied now.
+		{
+			// Text for dedi console from other threads
+			std::lock_guard<std::recursive_mutex> syscon_queue_lock(syscon_text_queue_mutex);
+			for (auto it = syscon_text_queue.begin(); it != syscon_text_queue.end(); it++) {
+				syscon_local_queue.push_back(*it);
+			}
+			syscon_text_queue.clear(); 
+		}
+		for (auto it = syscon_local_queue.begin(); it != syscon_local_queue.end(); it++) {
+			Sys_Print(it->c_str());
+		}
+		syscon_local_queue.clear();
+		{
+			// errors from other threads (I dont think this is a good way to handle this (especially it being a vector since a single error already kills all) but I'm too lazy to refactor everything)
+			std::lock_guard<std::recursive_mutex> syscon_queue_lock(syscon_text_queue_mutex);
+			for (auto it = syscon_error_queue.begin(); it != syscon_error_queue.end(); it++) {
+				syscon_local_queue.push_back(*it);
+			}
+			syscon_error_queue.clear();
+		}
+		for (auto it = syscon_local_queue.begin(); it != syscon_local_queue.end(); it++) {
+			Sys_Error("%s",it->c_str());
+		}
 	}
 
 	// pump the message loop
@@ -1212,6 +1260,8 @@ WinMain
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 	char		cwd[MAX_OSPATH];
 //	int			startTime, endTime;
+
+	main_thread_id = std::this_thread::get_id();
 
     // should never get a previous instance in Win32
     if ( hPrevInstance ) {
