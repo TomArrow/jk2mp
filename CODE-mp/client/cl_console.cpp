@@ -250,7 +250,7 @@ void Con_CheckResize (void)
 		if (con.linewidth < numchars)
 			numchars = con.linewidth;
 
-		Com_Memcpy (tbuf, con.text, CON_TEXTSIZE * sizeof(short));
+		Com_Memcpy (tbuf, con.text, CON_TEXTSIZE * sizeof(consoleLetter_t));
 		for (i = 0; i < CON_TEXTSIZE; i++) {
 
 			//con.text[i] = (ColorIndex(COLOR_WHITE)<<8) | ' ';
