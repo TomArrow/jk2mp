@@ -7,6 +7,8 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#include <stdexcept>
+#include <setjmp.h>
 
 qboolean demo15detected = qfalse;
 qboolean ntModDetected = qfalse;
@@ -46,6 +48,9 @@ extern char cl_cdkey[34];
 #endif // USE_CD_KEY
 
 FILE *debuglogfile;
+
+static jmp_buf abortframe;		// an ERR_DROP occured, exit the entire frame
+
 static fileHandle_t logfile;
 fileHandle_t	com_journalFile;			// events are written here
 fileHandle_t	com_journalDataFile;		// config files are written here
@@ -289,14 +294,17 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 		CL_Disconnect( qtrue );
 		CL_FlushMemory( );
 		com_errorEntered = qfalse;
-		throw ("DISCONNECTED\n");
+		longjmp(abortframe, -1);
+		//throw std::runtime_error("DISCONNECTED\n");
 	} else if ( code == ERR_DROP || code == ERR_DISCONNECT ) {
 		Com_Printf ("********************\nERROR: %s\n********************\n", com_errorMessage);
 		SV_Shutdown (va("Server crashed: %s\n",  com_errorMessage));
 		CL_Disconnect( qtrue );
 		CL_FlushMemory( );
 		com_errorEntered = qfalse;
-		throw ("DROPPED\n");
+		//throw ("DROPPED\n");
+		//throw std::runtime_error("DROPPED\n");
+		longjmp(abortframe, -1);
 	} else if ( code == ERR_NEED_CD ) {
 		SV_Shutdown( "Server didn't have CD\n" );
 		if ( com_cl_running && com_cl_running->integer ) {
@@ -306,7 +314,8 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 		} else {
 			Com_Printf("Server didn't have CD\n" );
 		}
-		throw ("NEED CD\n");
+		//throw std::runtime_error("NEED CD\n");
+		longjmp(abortframe, -1);
 	} else {
 		CL_Shutdown ();
 		SV_Shutdown (va("Server fatal crashed: %s\n", com_errorMessage));
@@ -2472,6 +2481,10 @@ void Com_Init( char *commandLine ) {
 
 	Com_Printf( "%s %s %s\n", Q3_VERSION, CPUSTRING, __DATE__ );
 
+	if (setjmp(abortframe)) {
+		Sys_Error("Error during initialization\n");
+	}
+
 	try
 	{
 	  // bk001129 - do this before anything else decides to push events
@@ -2645,8 +2658,9 @@ void Com_Init( char *commandLine ) {
 
 	}
 
-	catch (const char* reason) {
-		Sys_Error ("Error during initialization: %s", reason);
+	//catch (const char* reason) {
+	catch (const std::exception& e) {
+		Sys_Error ("Error during initialization: %s", e.what());
 	}
 }
 
@@ -2790,10 +2804,10 @@ Com_Frame
 =================
 */
 void Com_Frame( void ) {
-#ifdef _DEBUG
+//#ifdef _DEBUG
 try
 {
-#endif
+//#endif
 	double msec;
 	double		minMsec;
 	static double	lastTime;
@@ -2817,6 +2831,10 @@ try
 
 	// old net chan encryption key
 	key = 0x87243987;
+
+	if (setjmp(abortframe)) {
+		return;			// an ERR_DROP was thrown
+	}
 
 	// write config file if anything changed
 	Com_WriteConfiguration(); 
@@ -2951,13 +2969,15 @@ try
 
 	com_frameNumber++;
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
 }//try
-	catch (const char* reason) {
-		Com_Printf (reason);
+	//catch (const char* reason) {
+	catch (const std::exception& e) {
+		//Com_Printf (reason);
+		Com_Printf (e.what());
 		return;			// an ERR_DROP was thrown
 	}
-#endif
+//#endif
 }
 
 /*
